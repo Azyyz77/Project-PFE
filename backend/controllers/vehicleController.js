@@ -1,58 +1,161 @@
 const { getConnection, sql } = require('../config/database');
 
+const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
+const VEHICLE_FIELD_LIMITS = {
+  immatriculation: 20,
+  numero_chassis: 17,
+  couleur: 50,
+};
+const TUNIS_STANDARD_PLATE_REGEX = /^(\d{1,3})\s*تونس\s*(\d{1,3})$/u;
+const NT_PLATE_REGEX = /^(\d{1,5})\s*ن\.ت$/u;
+
+const VEHICLE_WITH_RELATIONS_SELECT = `
+  SELECT
+    vh.id,
+    vh.client_id,
+    vh.version_id,
+    vh.immatriculation,
+    vh.numero_chassis,
+    vh.couleur,
+    vh.annee,
+    vh.date_ajout,
+    ve.nom AS version_nom,
+    ve.motorisation,
+    ve.transmission,
+    mo.nom AS modele_nom,
+    ma.nom AS marque_nom,
+    u.prenom AS client_prenom,
+    u.nom AS client_nom,
+    u.email AS client_email,
+    u.telephone AS client_tel
+  FROM Vehicule vh
+  JOIN Version ve ON ve.id = vh.version_id
+  JOIN Modele mo ON mo.id = ve.modele_id
+  JOIN Marque ma ON ma.id = mo.marque_id
+  JOIN Utilisateur u ON u.id = vh.client_id
+`;
+
+const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, couleur, annee }) => {
+  if (!immatriculation || !numero_chassis || !version_id || !annee) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Champs requis manquants',
+        required: ['immatriculation', 'numero_chassis', 'version_id', 'annee']
+      }
+    };
+  }
+
+  const normalizedImmatriculation = String(immatriculation).trim();
+  const normalizedNumeroChassis = String(numero_chassis).trim();
+  const normalizedCouleur = couleur ? String(couleur).trim() : null;
+  const normalizedAnnee = Number(annee);
+
+  if (normalizedImmatriculation.length > VEHICLE_FIELD_LIMITS.immatriculation) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Immatriculation invalide',
+        message: `L'immatriculation ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.immatriculation} caractères.`
+      }
+    };
+  }
+
+  if (!TUNIS_STANDARD_PLATE_REGEX.test(normalizedImmatriculation) && !NT_PLATE_REGEX.test(normalizedImmatriculation)) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Immatriculation invalide',
+        message: 'Le format doit être soit "123 تونس 456" soit "12345 ن.ت".'
+      }
+    };
+  }
+
+  if (normalizedNumeroChassis.length > VEHICLE_FIELD_LIMITS.numero_chassis) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Numéro de châssis invalide',
+        message: `Le numéro de châssis ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.numero_chassis} caractères.`
+      }
+    };
+  }
+
+  if (normalizedCouleur && normalizedCouleur.length > VEHICLE_FIELD_LIMITS.couleur) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Couleur invalide',
+        message: `La couleur ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.couleur} caractères.`
+      }
+    };
+  }
+
+  if (Number.isNaN(normalizedAnnee) || normalizedAnnee < 1950 || normalizedAnnee > 2100) {
+    return {
+      status: 400,
+      payload: {
+        error: 'Année invalide',
+        message: 'L\'année doit être comprise entre 1950 et 2100.'
+      }
+    };
+  }
+
+  return {
+    status: 200,
+    payload: {
+      immatriculation: normalizedImmatriculation,
+      numero_chassis: normalizedNumeroChassis,
+      couleur: normalizedCouleur,
+      version_id: Number(version_id),
+      annee: normalizedAnnee,
+    }
+  };
+};
+
 const addVehicle = async (req, res) => {
   try {
-    const {
-      registration_number, vin, carte_grise_code,
-      brand, model, version, color, year, mileage
-    } = req.body;
+    const validation = validateVehiclePayload(req.body);
 
-    const user_id = req.user.id;
-
-    if (!registration_number || !vin || !carte_grise_code || !model || !version || !year) {
-      return res.status(400).json({
-        error: 'Champs requis manquants',
-        required: ['registration_number', 'vin', 'carte_grise_code', 'model', 'version', 'year']
-      });
+    if (validation.status !== 200) {
+      return res.status(validation.status).json(validation.payload);
     }
+
+    const { immatriculation, numero_chassis, version_id, couleur, annee } = validation.payload;
+    const client_id = req.user.id;
 
     const pool = await getConnection();
 
     const checkResult = await pool.request()
-      .input('registration_number', sql.VarChar, registration_number)
-      .query('SELECT id FROM Vehicles WHERE registration_number = @registration_number');
+      .input('immatriculation', sql.NVarChar(VEHICLE_FIELD_LIMITS.immatriculation), immatriculation)
+      .query('SELECT id FROM Vehicule WHERE immatriculation = @immatriculation');
 
     if (checkResult.recordset.length > 0) {
       return res.status(409).json({ error: 'Ce numéro d\'immatriculation existe déjà' });
     }
 
-    const vehicleBrand = brand || 'CHERY';
+    const versionResult = await pool.request()
+      .input('version_id', sql.BigInt, version_id)
+      .query('SELECT id FROM Version WHERE id = @version_id AND actif = 1');
+
+    if (versionResult.recordset.length === 0) {
+      return res.status(400).json({ error: 'Version de véhicule introuvable ou inactive' });
+    }
 
     const insertQuery = `
-      INSERT INTO Vehicles (
-        user_id, registration_number, vin, carte_grise_code,
-        brand, model, version, color, year, mileage, created_at
-      )
-      OUTPUT INSERTED.id, INSERTED.user_id, INSERTED.registration_number, INSERTED.vin,
-             INSERTED.carte_grise_code, INSERTED.brand, INSERTED.model, INSERTED.version,
-             INSERTED.color, INSERTED.year, INSERTED.mileage, INSERTED.created_at
-      VALUES (
-        @user_id, @registration_number, @vin, @carte_grise_code,
-        @brand, @model, @version, @color, @year, @mileage, GETDATE()
-      )
+      INSERT INTO Vehicule (client_id, version_id, immatriculation, numero_chassis, couleur, annee, date_ajout)
+      OUTPUT INSERTED.id, INSERTED.client_id, INSERTED.version_id, INSERTED.immatriculation,
+             INSERTED.numero_chassis, INSERTED.couleur, INSERTED.annee, INSERTED.date_ajout
+      VALUES (@client_id, @version_id, @immatriculation, @numero_chassis, @couleur, @annee, GETDATE())
     `;
 
     const result = await pool.request()
-      .input('user_id', sql.Int, user_id)
-      .input('registration_number', sql.VarChar, registration_number)
-      .input('vin', sql.VarChar, vin)
-      .input('carte_grise_code', sql.VarChar, carte_grise_code)
-      .input('brand', sql.VarChar, vehicleBrand)
-      .input('model', sql.VarChar, model)
-      .input('version', sql.VarChar, version)
-      .input('color', sql.VarChar, color || null)
-      .input('year', sql.Int, year)
-      .input('mileage', sql.Int, mileage || 0)
+      .input('client_id', sql.BigInt, client_id)
+      .input('version_id', sql.BigInt, version_id)
+      .input('immatriculation', sql.NVarChar(VEHICLE_FIELD_LIMITS.immatriculation), immatriculation)
+      .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
+      .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
+      .input('annee', sql.SmallInt, annee)
       .query(insertQuery);
 
     res.status(201).json({
@@ -61,6 +164,12 @@ const addVehicle = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de l\'ajout du véhicule:', error);
+    if (error.number === 2628) {
+      return res.status(400).json({
+        error: 'Données véhicule invalides',
+        message: 'Une valeur dépasse la taille autorisée par la base de données.'
+      });
+    }
     res.status(500).json({ error: 'Erreur lors de l\'ajout du véhicule', message: error.message });
   }
 };
@@ -69,10 +178,7 @@ const getVehiclesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    if (req.user.id !== parseInt(userId) &&
-        req.user.role !== 'ADMIN' &&
-        req.user.role !== 'AGENT_SAV' &&
-        req.user.role !== 'RESPONSABLE_ATELIER') {
+    if (req.user.id !== parseInt(userId, 10) && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         error: 'Accès non autorisé',
         message: 'Vous ne pouvez voir que vos propres véhicules'
@@ -82,17 +188,8 @@ const getVehiclesByUser = async (req, res) => {
     const pool = await getConnection();
 
     const result = await pool.request()
-      .input('userId', sql.Int, userId)
-      .query(`
-        SELECT
-          v.id, v.user_id, v.registration_number, v.vin, v.carte_grise_code,
-          v.brand, v.model, v.version, v.color, v.year, v.mileage, v.created_at,
-          u.first_name, u.last_name, u.email
-        FROM Vehicles v
-        INNER JOIN Users u ON v.user_id = u.id
-        WHERE v.user_id = @userId
-        ORDER BY v.created_at DESC
-      `);
+      .input('userId', sql.BigInt, userId)
+      .query(`${VEHICLE_WITH_RELATIONS_SELECT} WHERE vh.client_id = @userId ORDER BY vh.date_ajout DESC`);
 
     res.json({ count: result.recordset.length, vehicles: result.recordset });
   } catch (error) {
@@ -108,16 +205,8 @@ const getVehicleById = async (req, res) => {
     const pool = await getConnection();
 
     const result = await pool.request()
-      .input('id', sql.Int, id)
-      .query(`
-        SELECT
-          v.id, v.user_id, v.registration_number, v.vin, v.carte_grise_code,
-          v.brand, v.model, v.version, v.color, v.year, v.mileage, v.created_at,
-          u.first_name, u.last_name, u.email, u.phone
-        FROM Vehicles v
-        INNER JOIN Users u ON v.user_id = u.id
-        WHERE v.id = @id
-      `);
+      .input('id', sql.BigInt, id)
+      .query(`${VEHICLE_WITH_RELATIONS_SELECT} WHERE vh.id = @id`);
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ error: 'Véhicule non trouvé' });
@@ -125,10 +214,7 @@ const getVehicleById = async (req, res) => {
 
     const vehicle = result.recordset[0];
 
-    if (vehicle.user_id !== req.user.id &&
-        req.user.role !== 'ADMIN' &&
-        req.user.role !== 'AGENT_SAV' &&
-        req.user.role !== 'RESPONSABLE_ATELIER') {
+    if (vehicle.client_id !== req.user.id && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({ error: 'Accès non autorisé' });
     }
 
@@ -139,51 +225,158 @@ const getVehicleById = async (req, res) => {
   }
 };
 
-const updateMileage = async (req, res) => {
+const updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { mileage } = req.body;
+    const validation = validateVehiclePayload(req.body);
 
-    if (!mileage || mileage < 0) {
-      return res.status(400).json({
-        error: 'Kilométrage invalide',
-        message: 'Le kilométrage doit être un nombre positif'
-      });
+    if (validation.status !== 200) {
+      return res.status(validation.status).json(validation.payload);
     }
+
+    const { immatriculation, numero_chassis, version_id, couleur, annee } = validation.payload;
 
     const pool = await getConnection();
 
-    const checkResult = await pool.request()
-      .input('id', sql.Int, id)
-      .query('SELECT user_id FROM Vehicles WHERE id = @id');
+    const existingVehicleResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query('SELECT id, client_id FROM Vehicule WHERE id = @id');
 
-    if (checkResult.recordset.length === 0) {
+    if (existingVehicleResult.recordset.length === 0) {
       return res.status(404).json({ error: 'Véhicule non trouvé' });
     }
 
-    const vehicle = checkResult.recordset[0];
+    const existingVehicle = existingVehicleResult.recordset[0];
+    if (existingVehicle.client_id !== req.user.id && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Accès non autorisé' });
+    }
 
-    if (vehicle.user_id !== req.user.id &&
-        req.user.role !== 'ADMIN' &&
-        req.user.role !== 'AGENT_SAV' &&
-        req.user.role !== 'RESPONSABLE_ATELIER') {
+    const versionResult = await pool.request()
+      .input('version_id', sql.BigInt, version_id)
+      .query('SELECT id FROM Version WHERE id = @version_id AND actif = 1');
+
+    if (versionResult.recordset.length === 0) {
+      return res.status(400).json({ error: 'Version de véhicule introuvable ou inactive' });
+    }
+
+    const duplicateImmatResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .input('immatriculation', sql.NVarChar(VEHICLE_FIELD_LIMITS.immatriculation), immatriculation)
+      .query('SELECT id FROM Vehicule WHERE immatriculation = @immatriculation AND id <> @id');
+
+    if (duplicateImmatResult.recordset.length > 0) {
+      return res.status(409).json({ error: 'Ce numéro d\'immatriculation existe déjà' });
+    }
+
+    const duplicateChassisResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
+      .query('SELECT id FROM Vehicule WHERE numero_chassis = @numero_chassis AND id <> @id');
+
+    if (duplicateChassisResult.recordset.length > 0) {
+      return res.status(409).json({ error: 'Ce numéro de châssis existe déjà' });
+    }
+
+    await pool.request()
+      .input('id', sql.BigInt, id)
+      .input('version_id', sql.BigInt, version_id)
+      .input('immatriculation', sql.NVarChar(VEHICLE_FIELD_LIMITS.immatriculation), immatriculation)
+      .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
+      .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
+      .input('annee', sql.SmallInt, annee)
+      .query(`
+        UPDATE Vehicule
+        SET
+          version_id = @version_id,
+          immatriculation = @immatriculation,
+          numero_chassis = @numero_chassis,
+          couleur = @couleur,
+          annee = @annee
+        WHERE id = @id
+      `);
+
+    const updatedResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query(`${VEHICLE_WITH_RELATIONS_SELECT} WHERE vh.id = @id`);
+
+    res.json({
+      message: 'Véhicule mis à jour avec succès',
+      vehicle: updatedResult.recordset[0]
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du véhicule:', error);
+    if (error.number === 2628) {
+      return res.status(400).json({
+        error: 'Données véhicule invalides',
+        message: 'Une valeur dépasse la taille autorisée par la base de données.'
+      });
+    }
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du véhicule', message: error.message });
+  }
+};
+
+const deleteVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await getConnection();
+
+    const existingVehicleResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query('SELECT id, client_id FROM Vehicule WHERE id = @id');
+
+    if (existingVehicleResult.recordset.length === 0) {
+      return res.status(404).json({ error: 'Véhicule non trouvé' });
+    }
+
+    const existingVehicle = existingVehicleResult.recordset[0];
+    if (existingVehicle.client_id !== req.user.id && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({ error: 'Accès non autorisé' });
     }
 
     await pool.request()
-      .input('id', sql.Int, id)
-      .input('mileage', sql.Int, mileage)
-      .query('UPDATE Vehicles SET mileage = @mileage WHERE id = @id');
+      .input('id', sql.BigInt, id)
+      .query('DELETE FROM Vehicule WHERE id = @id');
 
-    res.json({
-      message: 'Kilométrage mis à jour avec succès',
-      vehicle_id: parseInt(id),
-      new_mileage: mileage
-    });
+    res.json({ message: 'Véhicule supprimé avec succès' });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du kilométrage:', error);
-    res.status(500).json({ error: 'Erreur lors de la mise à jour du kilométrage', message: error.message });
+    console.error('Erreur lors de la suppression du véhicule:', error);
+    res.status(500).json({ error: 'Erreur lors de la suppression du véhicule', message: error.message });
   }
 };
 
-module.exports = { addVehicle, getVehiclesByUser, getVehicleById, updateMileage };
+const getVersionCatalog = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    const result = await pool.request().query(`
+      SELECT
+        ve.id,
+        ve.nom AS version_nom,
+        ve.motorisation,
+        ve.transmission,
+        mo.id AS modele_id,
+        mo.nom AS modele_nom,
+        ma.id AS marque_id,
+        ma.nom AS marque_nom
+      FROM Version ve
+      JOIN Modele mo ON mo.id = ve.modele_id
+      JOIN Marque ma ON ma.id = mo.marque_id
+      WHERE ve.actif = 1 AND mo.actif = 1 AND ma.actif = 1
+      ORDER BY ma.nom, mo.nom, ve.nom
+    `);
+
+    res.json({ count: result.recordset.length, versions: result.recordset });
+  } catch (error) {
+    console.error('Erreur lors de la récupération du catalogue versions:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération du catalogue versions', message: error.message });
+  }
+};
+
+module.exports = {
+  addVehicle,
+  getVehiclesByUser,
+  getVehicleById,
+  updateVehicle,
+  deleteVehicle,
+  getVersionCatalog
+};

@@ -2,27 +2,27 @@
  * Types TypeScript pour l'authentification
  */
 
-export type UserRole = 'CLIENT' | 'ADMIN' | 'AGENT_SAV' | 'RESPONSABLE_ATELIER';
+export type UserRole = 'CLIENT' | 'AGENT' | 'ADMIN' | 'DIRECTION';
 
 export interface User {
   id: number;
-  first_name: string;
-  last_name: string;
+  prenom: string;
+  nom: string;
   email: string;
-  phone: string;
-  role: UserRole;
-  is_active?: boolean;
-  created_at?: string;
+  telephone: string;
+  type_utilisateur: UserRole;
+  actif?: boolean;
+  date_creation?: string;
 }
 
 export interface RegisterData {
-  first_name: string;
-  last_name: string;
-  phone: string;
+  prenom: string;
+  nom: string;
+  telephone: string;
   email: string;
   password: string;
   confirmPassword?: string;
-  role?: UserRole;
+  type_utilisateur?: UserRole;
 }
 
 export interface LoginData {

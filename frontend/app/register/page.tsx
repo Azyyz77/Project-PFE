@@ -4,7 +4,7 @@
  * Page d'inscription
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -12,13 +12,13 @@ import { UserRole } from '@/types/auth';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    phone: '',
+    prenom: '',
+    nom: '',
+    telephone: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'CLIENT' as UserRole,
+    type_utilisateur: 'CLIENT' as UserRole,
   });
   
   const [error, setError] = useState('');
@@ -27,9 +27,13 @@ export default function RegisterPage() {
   const { register, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // Si déjà authentifié, rediriger vers dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
+
   if (isAuthenticated) {
-    router.push('/dashboard');
     return null;
   }
 
@@ -45,7 +49,7 @@ export default function RegisterPage() {
     setError('');
 
     // Validation
-    if (!formData.first_name || !formData.last_name || !formData.phone || !formData.email || !formData.password) {
+    if (!formData.prenom || !formData.nom || !formData.telephone || !formData.email || !formData.password) {
       setError('Tous les champs sont obligatoires');
       return;
     }
@@ -93,49 +97,49 @@ export default function RegisterPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Prénom */}
             <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="prenom" className="block text-sm font-medium text-gray-700">
                 Prénom
               </label>
               <input
-                id="first_name"
-                name="first_name"
+                id="prenom"
+                name="prenom"
                 type="text"
                 required
-                value={formData.first_name}
+                value={formData.prenom}
                 onChange={handleChange}
                 className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Jean"
+                placeholder="Ahmed"
               />
             </div>
 
             {/* Nom */}
             <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
                 Nom
               </label>
               <input
-                id="last_name"
-                name="last_name"
+                id="nom"
+                name="nom"
                 type="text"
                 required
-                value={formData.last_name}
+                value={formData.nom}
                 onChange={handleChange}
                 className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Dupont"
+                placeholder="Ben Ali"
               />
             </div>
 
             {/* Téléphone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">
                 Téléphone
               </label>
               <input
-                id="phone"
-                name="phone"
+                id="telephone"
+                name="telephone"
                 type="tel"
                 required
-                value={formData.phone}
+                value={formData.telephone}
                 onChange={handleChange}
                 className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
                 placeholder="+216 12 345 678"

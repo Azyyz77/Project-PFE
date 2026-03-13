@@ -12,6 +12,19 @@ import { loginUser, registerUser } from '@/lib/api/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function normalizeUser(rawUser: any): User {
+  return {
+    id: rawUser?.id,
+    prenom: rawUser?.prenom ?? rawUser?.first_name ?? '',
+    nom: rawUser?.nom ?? rawUser?.last_name ?? '',
+    email: rawUser?.email ?? '',
+    telephone: rawUser?.telephone ?? rawUser?.phone ?? '',
+    type_utilisateur: rawUser?.type_utilisateur ?? rawUser?.role ?? 'CLIENT',
+    actif: rawUser?.actif ?? rawUser?.is_active,
+    date_creation: rawUser?.date_creation ?? rawUser?.created_at,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -24,8 +37,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem('user');
 
     if (storedToken && storedUser) {
+      const parsedUser = normalizeUser(JSON.parse(storedUser));
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      setUser(parsedUser);
+      localStorage.setItem('user', JSON.stringify(parsedUser));
     }
     
     setIsLoading(false);
@@ -37,13 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (data: LoginData) => {
     try {
       const response = await loginUser(data);
+      const normalizedUser = normalizeUser(response.user);
       
       // Stocker le token et les données utilisateur
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
       
       setToken(response.token);
-      setUser(response.user);
+      setUser(normalizedUser);
       
       // Rediriger vers le dashboard
       router.push('/dashboard');

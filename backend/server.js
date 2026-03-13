@@ -55,8 +55,7 @@ app.get('/', (req, res) => {
       getUser: 'GET /api/users/:id (JWT requis)',
       addVehicle: 'POST /api/vehicles (JWT requis)',
       getUserVehicles: 'GET /api/vehicles/user/:userId (JWT requis)',
-      getVehicle: 'GET /api/vehicles/:id (JWT requis)',
-      updateMileage: 'PUT /api/vehicles/:id/mileage (JWT requis)'
+      getVehicle: 'GET /api/vehicles/:id (JWT requis)'
     },
     timestamp: new Date().toISOString()
   });

@@ -31,30 +31,30 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'integer' },
-            first_name: { type: 'string' },
-            last_name: { type: 'string' },
-            phone: { type: 'string' },
+            prenom: { type: 'string' },
+            nom: { type: 'string' },
+            telephone: { type: 'string' },
             email: { type: 'string', format: 'email' },
-            role: {
+            type_utilisateur: {
               type: 'string',
-              enum: ['CLIENT', 'ADMIN', 'AGENT_SAV', 'RESPONSABLE_ATELIER']
+              enum: ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION']
             },
-            is_active: { type: 'boolean' },
-            created_at: { type: 'string', format: 'date-time' }
+            actif: { type: 'boolean' },
+            date_creation: { type: 'string', format: 'date-time' }
           }
         },
         RegisterRequest: {
           type: 'object',
-          required: ['first_name', 'last_name', 'phone', 'email', 'password'],
+          required: ['prenom', 'nom', 'telephone', 'email', 'password'],
           properties: {
-            first_name: { type: 'string', example: 'Ahmed' },
-            last_name: { type: 'string', example: 'Ben Ali' },
-            phone: { type: 'string', example: '21698765432' },
+            prenom: { type: 'string', example: 'Ahmed' },
+            nom: { type: 'string', example: 'Ben Ali' },
+            telephone: { type: 'string', example: '+21698765432' },
             email: { type: 'string', format: 'email', example: 'ahmed@example.com' },
             password: { type: 'string', format: 'password', example: 'password123' },
-            role: {
+            type_utilisateur: {
               type: 'string',
-              enum: ['CLIENT', 'ADMIN', 'AGENT_SAV', 'RESPONSABLE_ATELIER'],
+              enum: ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'],
               default: 'CLIENT'
             }
           }
@@ -79,17 +79,16 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'integer' },
-            user_id: { type: 'integer' },
-            registration_number: { type: 'string' },
-            vin: { type: 'string' },
-            carte_grise_code: { type: 'string' },
-            brand: { type: 'string' },
-            model: { type: 'string' },
-            version: { type: 'string' },
-            color: { type: 'string' },
-            year: { type: 'integer' },
-            mileage: { type: 'integer' },
-            created_at: { type: 'string', format: 'date-time' }
+            client_id: { type: 'integer' },
+            version_id: { type: 'integer' },
+            immatriculation: { type: 'string', maxLength: 20 },
+            numero_chassis: { type: 'string', maxLength: 17 },
+            couleur: { type: 'string', maxLength: 50 },
+            annee: { type: 'integer' },
+            date_ajout: { type: 'string', format: 'date-time' },
+            marque_nom: { type: 'string' },
+            modele_nom: { type: 'string' },
+            version_nom: { type: 'string' }
           }
         },
         Error: {

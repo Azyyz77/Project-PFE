@@ -4,12 +4,12 @@ const { getConnection, sql } = require('../config/database');
 
 const register = async (req, res) => {
   try {
-    const { first_name, last_name, phone, email, password, role } = req.body;
+    const { prenom, nom, telephone, email, password, type_utilisateur } = req.body;
 
-    if (!first_name || !last_name || !phone || !email || !password) {
+    if (!prenom || !nom || !telephone || !email || !password) {
       return res.status(400).json({
         error: 'Tous les champs sont obligatoires',
-        required: ['first_name', 'last_name', 'phone', 'email', 'password']
+        required: ['prenom', 'nom', 'telephone', 'email', 'password']
       });
     }
 
@@ -18,38 +18,48 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Format email invalide' });
     }
 
+    const typeUtilisateur = type_utilisateur || 'CLIENT';
+    const validTypes = ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'];
+    if (!validTypes.includes(typeUtilisateur)) {
+      return res.status(400).json({ error: 'Type utilisateur invalide', validTypes });
+    }
+
     const pool = await getConnection();
 
     const checkResult = await pool.request()
-      .input('email', sql.VarChar, email)
-      .query('SELECT id FROM Users WHERE email = @email');
+      .input('email', sql.NVarChar, email)
+      .query('SELECT id FROM Utilisateur WHERE email = @email');
 
     if (checkResult.recordset.length > 0) {
       return res.status(409).json({ error: 'Cet email est déjà utilisé' });
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const roleResult = await pool.request()
+      .input('rolenom', sql.NVarChar, typeUtilisateur)
+      .query('SELECT id FROM Role WHERE nom = @rolenom');
 
-    const userRole = role || 'CLIENT';
-    const validRoles = ['CLIENT', 'ADMIN', 'AGENT_SAV', 'RESPONSABLE_ATELIER'];
-    if (!validRoles.includes(userRole)) {
-      return res.status(400).json({ error: 'Rôle invalide', validRoles });
+    if (roleResult.recordset.length === 0) {
+      return res.status(500).json({ error: 'Rôle introuvable en base' });
     }
+    const role_id = roleResult.recordset[0].id;
+
+    const mot_de_passe = await bcrypt.hash(password, 10);
 
     const insertQuery = `
-      INSERT INTO Users (first_name, last_name, phone, email, password_hash, role, is_active, created_at)
-      OUTPUT INSERTED.id, INSERTED.first_name, INSERTED.last_name, INSERTED.email,
-             INSERTED.phone, INSERTED.role, INSERTED.is_active, INSERTED.created_at
-      VALUES (@first_name, @last_name, @phone, @email, @password_hash, @role, 1, GETDATE())
+      INSERT INTO Utilisateur (type_utilisateur, nom, prenom, telephone, email, mot_de_passe, actif, date_creation, role_id)
+      OUTPUT INSERTED.id, INSERTED.nom, INSERTED.prenom, INSERTED.email,
+             INSERTED.telephone, INSERTED.type_utilisateur, INSERTED.actif, INSERTED.date_creation
+      VALUES (@type_utilisateur, @nom, @prenom, @telephone, @email, @mot_de_passe, 1, GETDATE(), @role_id)
     `;
 
     const result = await pool.request()
-      .input('first_name', sql.VarChar, first_name)
-      .input('last_name', sql.VarChar, last_name)
-      .input('phone', sql.VarChar, phone)
-      .input('email', sql.VarChar, email)
-      .input('password_hash', sql.VarChar, password_hash)
-      .input('role', sql.VarChar, userRole)
+      .input('type_utilisateur', sql.NVarChar, typeUtilisateur)
+      .input('nom', sql.NVarChar, nom)
+      .input('prenom', sql.NVarChar, prenom)
+      .input('telephone', sql.NVarChar, telephone)
+      .input('email', sql.NVarChar, email)
+      .input('mot_de_passe', sql.NVarChar, mot_de_passe)
+      .input('role_id', sql.BigInt, role_id)
       .query(insertQuery);
 
     const newUser = result.recordset[0];
@@ -58,13 +68,13 @@ const register = async (req, res) => {
       message: 'Utilisateur créé avec succès',
       user: {
         id: newUser.id,
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
+        prenom: newUser.prenom,
+        nom: newUser.nom,
         email: newUser.email,
-        phone: newUser.phone,
-        role: newUser.role,
-        is_active: newUser.is_active,
-        created_at: newUser.created_at
+        telephone: newUser.telephone,
+        type_utilisateur: newUser.type_utilisateur,
+        actif: newUser.actif,
+        date_creation: newUser.date_creation
       }
     });
   } catch (error) {
@@ -84,10 +94,13 @@ const login = async (req, res) => {
     const pool = await getConnection();
 
     const result = await pool.request()
-      .input('email', sql.VarChar, email)
+      .input('email', sql.NVarChar, email)
       .query(`
-        SELECT id, first_name, last_name, email, phone, password_hash, role, is_active, created_at
-        FROM Users WHERE email = @email
+        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
+               u.type_utilisateur, u.actif, u.date_creation, r.nom AS role_nom
+        FROM Utilisateur u
+        JOIN Role r ON r.id = u.role_id
+        WHERE u.email = @email
       `);
 
     if (result.recordset.length === 0) {
@@ -96,17 +109,17 @@ const login = async (req, res) => {
 
     const user = result.recordset[0];
 
-    if (!user.is_active) {
+    if (!user.actif) {
       return res.status(403).json({ error: 'Compte désactivé. Contactez l\'administrateur.' });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    const isPasswordValid = await bcrypt.compare(password, user.mot_de_passe);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: user.email, role: user.role_nom },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
@@ -116,12 +129,12 @@ const login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        prenom: user.prenom,
+        nom: user.nom,
         email: user.email,
-        phone: user.phone,
-        role: user.role,
-        created_at: user.created_at
+        telephone: user.telephone,
+        type_utilisateur: user.type_utilisateur,
+        date_creation: user.date_creation
       }
     });
   } catch (error) {
@@ -137,10 +150,13 @@ const getUserById = async (req, res) => {
     const pool = await getConnection();
 
     const result = await pool.request()
-      .input('id', sql.Int, id)
+      .input('id', sql.BigInt, id)
       .query(`
-        SELECT id, first_name, last_name, email, phone, role, is_active, created_at
-        FROM Users WHERE id = @id
+        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.type_utilisateur, u.actif, u.date_creation,
+               r.nom AS role_nom
+        FROM Utilisateur u
+        JOIN Role r ON r.id = u.role_id
+        WHERE u.id = @id
       `);
 
     if (result.recordset.length === 0) {

@@ -28,12 +28,12 @@ export async function registerUser(data: RegisterData): Promise<RegisterResponse
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        first_name: data.first_name,
-        last_name: data.last_name,
-        phone: data.phone,
+        prenom: data.prenom,
+        nom: data.nom,
+        telephone: data.telephone,
         email: data.email,
         password: data.password,
-        role: data.role || 'CLIENT',
+        type_utilisateur: data.type_utilisateur || 'CLIENT',
       }),
     });
 

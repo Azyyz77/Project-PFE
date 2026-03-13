@@ -5,6 +5,7 @@
  */
 
 import { useState, FormEvent } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -20,9 +21,13 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
 
-  // Si déjà authentifié, rediriger vers dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
+
   if (isAuthenticated) {
-    router.push('/dashboard');
     return null;
   }
 
