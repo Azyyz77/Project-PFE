@@ -501,12 +501,20 @@ function DashboardContent() {
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-          <button
-            onClick={logout}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-          >
-            Se déconnecter
-          </button>
+          <div className="flex items-center gap-3">
+            <a
+              href="/profile"
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none transition-colors"
+            >
+              Mon profil
+            </a>
+            <button
+              onClick={logout}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+            >
+              Se déconnecter
+            </button>
+          </div>
         </div>
       </header>
 
