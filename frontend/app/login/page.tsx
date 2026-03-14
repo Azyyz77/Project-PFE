@@ -20,6 +20,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
+  const reset = searchParams.get('reset');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -61,6 +62,13 @@ export default function LoginPage() {
           <div className="rounded-md bg-green-50 p-4">
             <p className="text-sm text-green-800">
               ✓ Inscription réussie ! Vous pouvez maintenant vous connecter.
+            </p>
+          </div>
+        )}
+        {reset && (
+          <div className="rounded-md bg-green-50 p-4">
+            <p className="text-sm text-green-800">
+              ✓ Mot de passe réinitialisé avec succès ! Vous pouvez vous connecter.
             </p>
           </div>
         )}
@@ -128,13 +136,26 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm space-y-2">
             <p className="text-gray-600">
               Vous n'avez pas de compte ?{' '}
               <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 S'inscrire
               </Link>
             </p>
+
+            <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500 block">
+              Mot de passe oublié ?
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => router.push(`/verify-otp?email=${encodeURIComponent(email)}`)}
+              disabled={!email}
+              className="mx-auto inline-flex rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Verification OTP
+            </button>
           </div>
         </form>
       </div>

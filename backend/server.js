@@ -8,7 +8,8 @@
  * Port: 3000
  */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
@@ -16,6 +17,7 @@ const swaggerSpec = require('./config/swagger');
 const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const { getConnection } = require('./config/database');
+const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,6 +68,7 @@ app.get('/health', (req, res) => {
   res.json({
     service: 'backend-monolithique',
     status: 'UP',
+    whatsapp: getWhatsAppStatus(),
     timestamp: new Date().toISOString()
   });
 });
@@ -101,4 +104,7 @@ app.listen(PORT, async () => {
     console.error('❌ Erreur de connexion à la base de données:', error.message);
     console.error('⚠️  Le serveur démarre mais la BDD n\'est pas accessible.\n');
   }
+
+  console.log('🟢 Initialisation de WhatsApp Web...');
+  initializeWhatsAppClient();
 });

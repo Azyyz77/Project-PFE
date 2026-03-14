@@ -24,6 +24,13 @@ Thumbs.db
 .vscode/
 .idea/
 
+# WhatsApp Web session (sensitive credentials)
+backend/.wwebjs_auth/
+backend/.wwebjs_cache/
+
+# TypeScript build info
+*.tsbuildinfo
+
 # Coverage and misc
 coverage/
 *.log
