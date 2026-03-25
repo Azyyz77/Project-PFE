@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import {
@@ -533,6 +534,19 @@ function DashboardContent() {
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="rounded-xl bg-white p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Rendez-vous SAV</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Gérez vos prises de rendez-vous et consultez votre historique.
+          </p>
+          <Link
+            href="/dashboard/rendez-vous"
+            className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          >
+            Ouvrir la page Rendez-vous
+          </Link>
         </section>
 
         <section className="rounded-xl bg-white p-6 shadow-lg">
