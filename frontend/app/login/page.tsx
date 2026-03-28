@@ -162,7 +162,7 @@ function LoginPageContent() {
               disabled={!email}
               className="mx-auto inline-flex rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Verification OTP
+              Vérification OTP
             </button>
           </div>
         </form>

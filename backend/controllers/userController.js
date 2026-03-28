@@ -120,9 +120,10 @@ const login = async (req, res) => {
       .input('email', sql.NVarChar, email)
       .query(`
         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
-               u.type_utilisateur, u.actif, u.date_creation, r.nom AS role_nom
+               u.type_utilisateur, u.actif, u.date_creation, u.role_id,
+               ISNULL(r.nom, u.type_utilisateur) AS role_nom
         FROM Utilisateur u
-        JOIN Role r ON r.id = u.role_id
+        LEFT JOIN Role r ON r.id = u.role_id
         WHERE u.email = @email
       `);
 
@@ -136,13 +137,20 @@ const login = async (req, res) => {
       return res.status(403).json({ error: 'Compte désactivé. Contactez l\'administrateur.' });
     }
 
+    // Validate that type_utilisateur matches role_id (consistency check)
+    if (user.role_nom && user.type_utilisateur !== user.role_nom) {
+      console.warn(`Role mismatch for user ${user.id}: type_utilisateur=${user.type_utilisateur}, role_nom=${user.role_nom}`);
+      // Use role_nom as the source of truth if mismatch detected
+      user.type_utilisateur = user.role_nom;
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.mot_de_passe);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role_nom },
+      { id: user.id, email: user.email, role: user.type_utilisateur },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );

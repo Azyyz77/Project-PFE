@@ -5,6 +5,8 @@ import {
   InterventionsResponse,
   MyAppointmentsResponse,
   SlotsResponse,
+  AppointmentDetailsResponse,
+  CancelAppointmentPayload,
 } from '@/types/appointment';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -101,6 +103,39 @@ export async function createAppointment(payload: CreateAppointmentPayload, token
     });
 
     return await parseJson<CreateAppointmentResponse>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+export async function getAppointmentDetails(appointmentId: number, token: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+      method: 'GET',
+      headers: buildAuthHeaders(token),
+    });
+
+    return await parseJson<AppointmentDetailsResponse>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+export async function cancelAppointment(
+  appointmentId: number,
+  payload: CancelAppointmentPayload,
+  token: string
+) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+      method: 'DELETE',
+      headers: buildAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    return await parseJson<{ message: string }>(response);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(500, 'Erreur de connexion au serveur');

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware } = require('../middleware/authMiddleware');
 const appointmentController = require('../controllers/appointmentController');
 
 router.use(authMiddleware);
@@ -138,5 +138,55 @@ router.post('/', appointmentController.createAppointment);
  *         description: Statut mis à jour
  */
 router.patch('/:id/status', appointmentController.updateAppointmentStatus);
+
+/**
+ * @swagger
+ * /api/appointments/{id}:
+ *   get:
+ *     summary: Obtenir les détails d'un rendez-vous
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Détails du rendez-vous
+ *       404:
+ *         description: Rendez-vous non trouvé
+ */
+router.get('/:id', appointmentController.getAppointmentDetails);
+
+/**
+ * @swagger
+ * /api/appointments/{id}:
+ *   delete:
+ *     summary: Annuler un rendez-vous
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               raison:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Rendez-vous annulé
+ */
+router.delete('/:id', appointmentController.cancelAppointment);
 
 module.exports = router;

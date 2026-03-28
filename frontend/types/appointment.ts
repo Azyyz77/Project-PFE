@@ -34,6 +34,7 @@ export interface AppointmentIntervention {
   statut: string;
   sous_type_nom: string;
   type_nom: string;
+  duree_estimee?: number;
 }
 
 export interface Appointment {
@@ -48,7 +49,12 @@ export interface Appointment {
   date_creation?: string;
   agence_nom?: string;
   agence_ville?: string;
+  agence_adresse?: string;
+  agence_telephone?: string;
   immatriculation?: string;
+  numero_chassis?: string;
+  marque_nom?: string;
+  modele_nom?: string;
   interventions?: AppointmentIntervention[];
 }
 
@@ -59,6 +65,10 @@ export interface CreateAppointmentPayload {
   description?: string;
   duree_estimee?: number;
   sous_type_ids?: number[];
+}
+
+export interface CancelAppointmentPayload {
+  raison?: string;
 }
 
 export interface AgenciesResponse {
@@ -79,6 +89,11 @@ export interface InterventionsResponse {
 export interface MyAppointmentsResponse {
   count: number;
   appointments: Appointment[];
+}
+
+export interface AppointmentDetailsResponse {
+  appointment: Appointment;
+  interventions: AppointmentIntervention[];
 }
 
 export interface CreateAppointmentResponse {

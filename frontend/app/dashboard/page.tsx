@@ -78,14 +78,20 @@ function DashboardContent() {
   const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
 
-  const canManageVehicles = useMemo(() => {
+  // Only CLIENT role can manage their own vehicles
+  const isClient = useMemo(() => {
     if (!user) return false;
-    return ['CLIENT', 'ADMIN', 'AGENT', 'DIRECTION'].includes(user.type_utilisateur);
+    return user.type_utilisateur === 'CLIENT';
+  }, [user]);
+
+  const isStaff = useMemo(() => {
+    if (!user) return false;
+    return ['ADMIN', 'AGENT', 'DIRECTION'].includes(user.type_utilisateur);
   }, [user]);
 
   useEffect(() => {
     const loadVehicles = async () => {
-      if (!user || !token || !canManageVehicles) return;
+      if (!user || !token || !isClient) return;
 
       setIsLoadingVehicles(true);
       setVehicleError('');
@@ -101,11 +107,11 @@ function DashboardContent() {
     };
 
     loadVehicles();
-  }, [user, token, canManageVehicles]);
+  }, [user, token, isClient]);
 
   useEffect(() => {
     const loadVersions = async () => {
-      if (!token || !canManageVehicles) return;
+      if (!token || !isClient) return;
 
       setIsLoadingVersions(true);
       try {
@@ -119,7 +125,7 @@ function DashboardContent() {
     };
 
     loadVersions();
-  }, [token, canManageVehicles]);
+  }, [token, isClient]);
 
   if (!user) return null;
 
@@ -129,28 +135,34 @@ function DashboardContent() {
   const initials = `${firstName.charAt(0)}${lastName.charAt(0) || ''}`.toUpperCase();
 
   const getRoleBadgeColor = (role: string) => {
-    switch (role) {
+    const normalizedRole = role.toUpperCase();
+    switch (normalizedRole) {
       case 'ADMIN':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border border-red-300';
       case 'AGENT':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border border-blue-300';
       case 'DIRECTION':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-800 border border-purple-300';
+      case 'CLIENT':
+        return 'bg-green-100 text-green-800 border border-green-300';
       default:
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
     }
   };
 
   const getRoleLabel = (role: string) => {
-    switch (role) {
+    const normalizedRole = role.toUpperCase();
+    switch (normalizedRole) {
       case 'ADMIN':
         return 'Administrateur';
       case 'AGENT':
         return 'Agent SAV';
       case 'DIRECTION':
         return 'Direction';
-      default:
+      case 'CLIENT':
         return 'Client';
+      default:
+        return 'Utilisateur';
     }
   };
 
@@ -501,7 +513,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tableau de bord</h1>
           <div className="flex items-center gap-3">
             <a
               href="/profile"
@@ -583,156 +595,159 @@ function DashboardContent() {
           </div>
         </section>
 
-        <section className="rounded-xl bg-white p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Ajouter un véhicule</h3>
+        {/* Vehicle Management Section - Only for CLIENT users */}
+        {isClient && (
+          <>
+            <section className="rounded-xl bg-white p-6 shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Ajouter un véhicule</h3>
 
-          {vehicleError && <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{vehicleError}</p>}
-          {vehicleSuccess && <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{vehicleSuccess}</p>}
+              {vehicleError && <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{vehicleError}</p>}
+              {vehicleSuccess && <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{vehicleSuccess}</p>}
 
-          <form onSubmit={handleAddVehicle} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <select
-              name="plate_type"
-              value={vehicleForm.plate_type}
-              onChange={handleVehicleInputChange}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-            >
-              <option value="">Choisir le type d'immatriculation</option>
-              <option value="TUNIS">Type Tunisie: 123 تونس 456</option>
-              <option value="NT">Type ن.ت: 12345 ن.ت</option>
-            </select>
-            {vehicleForm.plate_type === 'TUNIS' ? (
-              <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+              <form onSubmit={handleAddVehicle} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <select
+                  name="plate_type"
+                  value={vehicleForm.plate_type}
+                  onChange={handleVehicleInputChange}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                >
+                  <option value="">Choisir le type d'immatriculation</option>
+                  <option value="TUNIS">Type Tunisie: 123 تونس 456</option>
+                  <option value="NT">Type ن.ت: 12345 ن.ت</option>
+                    </select>
+                {vehicleForm.plate_type === 'TUNIS' ? (
+                  <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
+                    <input
+                      type="text"
+                      name="tunis_left"
+                      placeholder="123"
+                      value={vehicleForm.tunis_left}
+                      onChange={handleVehicleInputChange}
+                      maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
+                      inputMode="numeric"
+                      className="rounded-lg border border-gray-300 px-3 py-2"
+                      required
+                    />
+                    <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
+                      {TUNIS_PLATE_LABEL}
+                    </div>
+                    <input
+                      type="text"
+                      name="tunis_right"
+                      placeholder="456"
+                      value={vehicleForm.tunis_right}
+                      onChange={handleVehicleInputChange}
+                      maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
+                      inputMode="numeric"
+                      className="rounded-lg border border-gray-300 px-3 py-2"
+                      required
+                    />
+                  </div>
+                ) : vehicleForm.plate_type === 'NT' ? (
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <input
+                      type="text"
+                      name="nt_serial"
+                      placeholder="12345"
+                      value={vehicleForm.nt_serial}
+                      onChange={handleVehicleInputChange}
+                      maxLength={VEHICLE_FIELD_LIMITS.ntSerial}
+                      inputMode="numeric"
+                      className="rounded-lg border border-gray-300 px-3 py-2"
+                      required
+                    />
+                    <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
+                      {NT_PLATE_LABEL}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500">
+                    Sélectionnez d'abord un type d'immatriculation.
+                  </div>
+                )}
                 <input
                   type="text"
-                  name="tunis_left"
-                  placeholder="123"
-                  value={vehicleForm.tunis_left}
+                  name="numero_chassis"
+                  placeholder="Numéro de châssis"
+                  value={vehicleForm.numero_chassis}
                   onChange={handleVehicleInputChange}
-                  maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                  inputMode="numeric"
+                  maxLength={VEHICLE_FIELD_LIMITS.numeroChassis}
                   className="rounded-lg border border-gray-300 px-3 py-2"
                   required
                 />
-                <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                  {TUNIS_PLATE_LABEL}
-                </div>
-                <input
-                  type="text"
-                  name="tunis_right"
-                  placeholder="456"
-                  value={vehicleForm.tunis_right}
+                <select
+                  name="marque_id"
+                  value={vehicleForm.marque_id}
                   onChange={handleVehicleInputChange}
-                  maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                  inputMode="numeric"
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                >
+                  <option value="">Sélectionner une marque</option>
+                  {brandOptions.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.nom}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  name="modele_id"
+                  value={vehicleForm.modele_id}
+                  onChange={handleVehicleInputChange}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                  disabled={!vehicleForm.marque_id}
+                >
+                  <option value="">Sélectionner un modèle</option>
+                  {vehicleModelOptions.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.nom}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  name="version_id"
+                  value={vehicleForm.version_id}
+                  onChange={handleVehicleInputChange}
+                  className="rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                  disabled={!vehicleForm.modele_id}
+                >
+                  <option value="">Sélectionner une version</option>
+                  {vehicleVersionOptions.map((version) => (
+                    <option key={version.id} value={version.id}>
+                      {version.version_nom}
+                      {version.motorisation ? ` - ${version.motorisation}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  name="annee"
+                  placeholder="Année"
+                  value={vehicleForm.annee}
+                  onChange={handleVehicleInputChange}
                   className="rounded-lg border border-gray-300 px-3 py-2"
                   required
                 />
-              </div>
-            ) : vehicleForm.plate_type === 'NT' ? (
-              <div className="grid grid-cols-[1fr_auto] gap-2">
                 <input
                   type="text"
-                  name="nt_serial"
-                  placeholder="12345"
-                  value={vehicleForm.nt_serial}
+                  name="couleur"
+                  placeholder="Couleur (optionnel)"
+                  value={vehicleForm.couleur}
                   onChange={handleVehicleInputChange}
-                  maxLength={VEHICLE_FIELD_LIMITS.ntSerial}
-                  inputMode="numeric"
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
+                  maxLength={VEHICLE_FIELD_LIMITS.couleur}
+                  className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
                 />
-                <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                  {NT_PLATE_LABEL}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500">
-                Sélectionnez d'abord un type d'immatriculation.
-              </div>
-            )}
-            <input
-              type="text"
-              name="numero_chassis"
-              placeholder="Numéro de châssis"
-              value={vehicleForm.numero_chassis}
-              onChange={handleVehicleInputChange}
-              maxLength={VEHICLE_FIELD_LIMITS.numeroChassis}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-            />
-            <select
-              name="marque_id"
-              value={vehicleForm.marque_id}
-              onChange={handleVehicleInputChange}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-            >
-              <option value="">Sélectionner une marque</option>
-              {brandOptions.map((brand) => (
-                <option key={brand.id} value={brand.id}>
-                  {brand.nom}
-                </option>
-              ))}
-            </select>
-            <select
-              name="modele_id"
-              value={vehicleForm.modele_id}
-              onChange={handleVehicleInputChange}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-              disabled={!vehicleForm.marque_id}
-            >
-              <option value="">Sélectionner un modèle</option>
-              {vehicleModelOptions.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.nom}
-                </option>
-              ))}
-            </select>
-            <select
-              name="version_id"
-              value={vehicleForm.version_id}
-              onChange={handleVehicleInputChange}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-              disabled={!vehicleForm.modele_id}
-            >
-              <option value="">Sélectionner une version</option>
-              {vehicleVersionOptions.map((version) => (
-                <option key={version.id} value={version.id}>
-                  {version.version_nom}
-                  {version.motorisation ? ` - ${version.motorisation}` : ''}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              name="annee"
-              placeholder="Année"
-              value={vehicleForm.annee}
-              onChange={handleVehicleInputChange}
-              className="rounded-lg border border-gray-300 px-3 py-2"
-              required
-            />
-            <input
-              type="text"
-              name="couleur"
-              placeholder="Couleur (optionnel)"
-              value={vehicleForm.couleur}
-              onChange={handleVehicleInputChange}
-              maxLength={VEHICLE_FIELD_LIMITS.couleur}
-              className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
-            />
-            <button
-              type="submit"
-              disabled={isSubmittingVehicle}
-              className="sm:col-span-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-            >
-              {isSubmittingVehicle ? 'Ajout en cours...' : 'Ajouter le véhicule'}
-            </button>
-          </form>
-        </section>
+                <button
+                  type="submit"
+                  disabled={isSubmittingVehicle}
+                  className="sm:col-span-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {isSubmittingVehicle ? 'Ajout en cours...' : 'Ajouter le véhicule'}
+                </button>
+              </form>
+            </section>
 
         <section className="rounded-xl bg-white p-6 shadow-lg">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Mes véhicules</h3>
@@ -931,7 +946,19 @@ function DashboardContent() {
               ))}
             </div>
           )}
-        </section>
+            </section>
+          </>
+        )}
+
+        {/* Staff Dashboard - For ADMIN, AGENT, DIRECTION */}
+        {isStaff && (
+          <section className="rounded-xl bg-white p-6 shadow-lg">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Centre de Gestion</h3>
+            <p className="text-gray-600">
+              Vous êtes connecté(e) en tant que {getRoleLabel(displayRole)}. Votre tableau de bord personnalisé sera disponible bientôt.
+            </p>
+          </section>
+        )}
       </main>
     </div>
   );
