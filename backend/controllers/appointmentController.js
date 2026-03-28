@@ -1,4 +1,5 @@
 const { getConnection, sql } = require('../config/database');
+const { sendWhatsAppMessage, getWhatsAppStatus } = require('../services/whatsappClient');
 
 const STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
 const ALLOWED_STATUSES = ['PLANIFIE', 'CONFIRME', 'EN_COURS', 'TERMINE', 'ANNULE', 'NO_SHOW'];
@@ -19,6 +20,34 @@ const getIsoWeekdayFromDateRef = (dateRef) => {
   }
   const jsDay = date.getDay(); // 0=Sun..6=Sat
   return ((jsDay + 6) % 7) + 1; // 1=Mon..7=Sun
+};
+
+const sendAppointmentWhatsAppNotification = async (userPhone, appointmentDetails) => {
+  try {
+    const status = getWhatsAppStatus();
+    if (!status.ready) {
+      console.warn('WhatsApp n\'est pas prêt - notification non envoyée');
+      return;
+    }
+
+    const { agence_nom, date_heure, sous_type_nom } = appointmentDetails;
+    const formattedDate = new Date(date_heure).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const message = `Bonjour! 🚗\n\nVotre rendez-vous a été confirmé avec succès!\n\n📍 Agence: ${agence_nom}\n📅 Date: ${formattedDate}\n🔧 Service: ${sous_type_nom || 'Service SAV'}\n\nMerci de votre confiance.`;
+
+    await sendWhatsAppMessage(userPhone, message);
+    console.log(`Notification WhatsApp envoyée à ${userPhone}`);
+  } catch (error) {
+    console.warn('Erreur envoi notification WhatsApp:', error.message);
+    // Ne pas bloquer l'opération si WhatsApp échoue
+  }
 };
 
 const createAppointment = async (req, res) => {
@@ -103,6 +132,41 @@ const createAppointment = async (req, res) => {
       return res.status(400).json({ error: 'Ce vehicule n\'appartient pas au client.' });
     }
 
+    // Validate sub-types BEFORE creating the appointment
+    let validatedSubTypeIds = [];
+    if (Array.isArray(sous_type_ids) && sous_type_ids.length > 0) {
+      const uniqueIds = [...new Set(sous_type_ids.map((id) => normalizePositiveInt(id)).filter(Boolean))];
+
+      if (uniqueIds.length > 0) {
+        // Build a parameterized query for sub-type validation
+        const placeholders = uniqueIds.map((_, index) => `@id${index}`).join(',');
+        let subTypeQuery = pool.request();
+        
+        uniqueIds.forEach((id, index) => {
+          subTypeQuery = subTypeQuery.input(`id${index}`, sql.BigInt, id);
+        });
+
+        const checkSubTypes = await subTypeQuery.query(`
+          SELECT id
+          FROM SousTypeIntervention
+          WHERE id IN (${placeholders})
+        `);
+
+        const foundIds = new Set(checkSubTypes.recordset.map((row) => row.id));
+        const missingIds = uniqueIds.filter((id) => !foundIds.has(id));
+
+        if (missingIds.length > 0) {
+          return res.status(400).json({
+            error: 'Sous-types invalides',
+            invalid_ids: missingIds
+          });
+        }
+
+        validatedSubTypeIds = uniqueIds;
+      }
+    }
+
+    // Now create the appointment ONLY if validation passed
     const created = await pool.request()
       .input('client_id', sql.BigInt, clientId)
       .input('vehicule_id', sql.BigInt, vehicleId)
@@ -137,37 +201,15 @@ const createAppointment = async (req, res) => {
       return res.status(500).json({ error: 'Creation du rendez-vous echouee' });
     }
 
-    if (Array.isArray(sous_type_ids) && sous_type_ids.length > 0) {
-      const uniqueIds = [...new Set(sous_type_ids.map((id) => normalizePositiveInt(id)).filter(Boolean))];
-
-      if (uniqueIds.length > 0) {
-        const checkSubTypes = await pool.request()
-          .query(`
-            SELECT id
-            FROM SousTypeIntervention
-            WHERE id IN (${uniqueIds.join(',')})
-          `);
-
-        const foundIds = new Set(checkSubTypes.recordset.map((row) => row.id));
-        const missingIds = uniqueIds.filter((id) => !foundIds.has(id));
-
-        if (missingIds.length > 0) {
-          return res.status(400).json({
-            error: 'Sous-types invalides',
-            invalid_ids: missingIds
-          });
-        }
-
-        for (const sousTypeId of uniqueIds) {
-          await pool.request()
-            .input('rdv_id', sql.BigInt, rdvId)
-            .input('sous_type_id', sql.BigInt, sousTypeId)
-            .query(`
-              INSERT INTO InterventionRDV (rdv_id, sous_type_id, statut)
-              VALUES (@rdv_id, @sous_type_id, 'EN_ATTENTE')
-            `);
-        }
-      }
+    // Insert validated sub-types
+    for (const sousTypeId of validatedSubTypeIds) {
+      await pool.request()
+        .input('rdv_id', sql.BigInt, rdvId)
+        .input('sous_type_id', sql.BigInt, sousTypeId)
+        .query(`
+          INSERT INTO InterventionRDV (rdv_id, sous_type_id, statut)
+          VALUES (@rdv_id, @sous_type_id, 'EN_ATTENTE')
+        `);
     }
 
     const details = await pool.request()
@@ -201,6 +243,20 @@ const createAppointment = async (req, res) => {
         JOIN TypeIntervention ti ON ti.id = st.type_intervention_id
         WHERE ir.rdv_id = @rdv_id
       `);
+
+    // Send WhatsApp notification if phone is available
+    const userInfo = await pool.request()
+      .input('id', sql.BigInt, clientId)
+      .query(`SELECT telephone FROM Utilisateur WHERE id = @id`);
+
+    if (userInfo.recordset.length > 0 && userInfo.recordset[0].telephone) {
+      const appointmentInfo = {
+        agence_nom: details.recordset[0].agence_nom,
+        date_heure: details.recordset[0].date_heure,
+        sous_type_nom: interventions.recordset[0]?.sous_type_nom || 'Service',
+      };
+      await sendAppointmentWhatsAppNotification(userInfo.recordset[0].telephone, appointmentInfo);
+    }
 
     return res.status(201).json({
       message: 'Rendez-vous cree avec succes',
@@ -242,10 +298,18 @@ const getMyAppointments = async (req, res) => {
           r.date_creation,
           ag.nom AS agence_nom,
           ag.ville AS agence_ville,
-          v.immatriculation
+          ag.adresse AS agence_adresse,
+          ag.telephone AS agence_telephone,
+          v.immatriculation,
+          v.numero_chassis,
+          mo.nom AS modele_nom,
+          ma.nom AS marque_nom
         FROM RendezVous r
         JOIN Agence ag ON ag.id = r.agence_id
         JOIN Vehicule v ON v.id = r.vehicule_id
+        JOIN Version ve ON ve.id = v.version_id
+        JOIN Modele mo ON mo.id = ve.modele_id
+        JOIN Marque ma ON ma.id = mo.marque_id
         WHERE r.client_id = @client_id
         ORDER BY r.date_heure DESC
       `);
@@ -254,14 +318,20 @@ const getMyAppointments = async (req, res) => {
     let interventionsByAppointment = {};
 
     if (appointmentIds.length > 0) {
-      const interventions = await pool.request()
-        .query(`
-          SELECT ir.rdv_id, ir.id, ir.statut, st.nom AS sous_type_nom, ti.nom AS type_nom
-          FROM InterventionRDV ir
-          JOIN SousTypeIntervention st ON st.id = ir.sous_type_id
-          JOIN TypeIntervention ti ON ti.id = st.type_intervention_id
-          WHERE ir.rdv_id IN (${appointmentIds.join(',')})
-        `);
+      // Use parameterized query to prevent SQL injection
+      const placeholders = appointmentIds.map((_, i) => `@rdv_id_${i}`).join(',');
+      const request = pool.request();
+      appointmentIds.forEach((id, i) => {
+        request.input(`rdv_id_${i}`, sql.BigInt, id);
+      });
+
+      const interventions = await request.query(`
+        SELECT ir.rdv_id, ir.id, ir.statut, st.nom AS sous_type_nom, ti.nom AS type_nom
+        FROM InterventionRDV ir
+        JOIN SousTypeIntervention st ON st.id = ir.sous_type_id
+        JOIN TypeIntervention ti ON ti.id = st.type_intervention_id
+        WHERE ir.rdv_id IN (${placeholders})
+      `);
 
       interventionsByAppointment = interventions.recordset.reduce((acc, row) => {
         if (!acc[row.rdv_id]) {
@@ -345,7 +415,7 @@ const getAvailableSlots = async (req, res) => {
     const openHour = Number(slotConfig.open_hour);
     const closeHour = Number(slotConfig.close_hour);
     const configuredCapacity = Number(slotConfig.capacite);
-    const capacity = 1;
+    const capacity = configuredCapacity > 0 ? configuredCapacity : 1;
 
     if (Number.isNaN(openHour) || Number.isNaN(closeHour) || openHour >= closeHour) {
       return res.status(500).json({ error: 'Configuration de plage horaire invalide' });
@@ -487,11 +557,169 @@ const updateAppointmentStatus = async (req, res) => {
   }
 };
 
+const getAppointmentDetails = async (req, res) => {
+  try {
+    const clientId = req.user.id;
+    const appointmentId = normalizePositiveInt(req.params.id);
+
+    if (!appointmentId) {
+      return res.status(400).json({ error: 'ID rendez-vous invalide' });
+    }
+
+    const pool = await getConnection();
+
+    const appointment = await pool.request()
+      .input('id', sql.BigInt, appointmentId)
+      .input('client_id', sql.BigInt, clientId)
+      .query(`
+        SELECT
+          r.id,
+          r.client_id,
+          r.vehicule_id,
+          r.agence_id,
+          r.date_heure,
+          r.statut,
+          r.description,
+          r.duree_estimee,
+          r.date_creation,
+          ag.nom AS agence_nom,
+          ag.ville AS agence_ville,
+          ag.adresse AS agence_adresse,
+          ag.telephone AS agence_telephone,
+          v.immatriculation,
+          v.numero_chassis,
+          mo.nom AS modele_nom,
+          ma.nom AS marque_nom
+        FROM RendezVous r
+        JOIN Agence ag ON ag.id = r.agence_id
+        JOIN Vehicule v ON v.id = r.vehicule_id
+        JOIN Version ve ON ve.id = v.version_id
+        JOIN Modele mo ON mo.id = ve.modele_id
+        JOIN Marque ma ON ma.id = mo.marque_id
+        WHERE r.id = @id AND r.client_id = @client_id
+      `);
+
+    if (appointment.recordset.length === 0) {
+      return res.status(404).json({ error: 'Rendez-vous non trouve ou acces refusé' });
+    }
+
+    const interventions = await pool.request()
+      .input('rdv_id', sql.BigInt, appointmentId)
+      .query(`
+        SELECT ir.id, ir.statut, st.nom AS sous_type_nom, ti.nom AS type_nom, st.duree_estimee
+        FROM InterventionRDV ir
+        JOIN SousTypeIntervention st ON st.id = ir.sous_type_id
+        JOIN TypeIntervention ti ON ti.id = st.type_intervention_id
+        WHERE ir.rdv_id = @rdv_id
+      `);
+
+    return res.json({
+      appointment: appointment.recordset[0],
+      interventions: interventions.recordset
+    });
+  } catch (error) {
+    console.error('Erreur chargement details rendez-vous:', error);
+    return res.status(500).json({ error: 'Erreur lors du chargement des details', message: error.message });
+  }
+};
+
+const cancelAppointment = async (req, res) => {
+  try {
+    const clientId = req.user.id;
+    const appointmentId = normalizePositiveInt(req.params.id);
+    const { raison } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({ error: 'ID rendez-vous invalide' });
+    }
+
+    const pool = await getConnection();
+
+    // Verify appointment belongs to client
+    const existingAppointment = await pool.request()
+      .input('id', sql.BigInt, appointmentId)
+      .input('client_id', sql.BigInt, clientId)
+      .query(`
+        SELECT id, statut, date_heure
+        FROM RendezVous
+        WHERE id = @id AND client_id = @client_id
+      `);
+
+    if (existingAppointment.recordset.length === 0) {
+      return res.status(404).json({ error: 'Rendez-vous non trouve' });
+    }
+
+    const appointment = existingAppointment.recordset[0];
+
+    // Check if appointment can be cancelled (not already completed, cancelled, or passed)
+    if (['TERMINE', 'ANNULE', 'NO_SHOW'].includes(appointment.statut)) {
+      return res.status(400).json({ error: `Impossible d'annuler un rendez-vous avec le statut ${appointment.statut}` });
+    }
+
+    const appointmentDate = new Date(appointment.date_heure);
+    if (appointmentDate < new Date()) {
+      return res.status(400).json({ error: 'Impossible d\'annuler un rendez-vous dans le passé' });
+    }
+
+    // Cancel the appointment
+    const result = await pool.request()
+      .input('id', sql.BigInt, appointmentId)
+      .input('raison', sql.NVarChar(sql.MAX), raison || null)
+      .query(`
+        UPDATE RendezVous
+        SET statut = 'ANNULE'
+        WHERE id = @id;
+
+        INSERT INTO Notification (utilisateur_id, titre, message, type, entite_type, entite_id)
+        VALUES (
+          (SELECT client_id FROM RendezVous WHERE id = @id),
+          N'Rendez-vous annulé',
+          N'Votre rendez-vous a été annulé.' + CASE WHEN @raison IS NOT NULL THEN N' Raison: ' + @raison ELSE N'' END,
+          'PUSH',
+          'RDV',
+          @id
+        );
+      `);
+
+    // Send WhatsApp cancellation notification
+    const appointmentInfo = await pool.request()
+      .input('id', sql.BigInt, appointmentId)
+      .query(`
+        SELECT u.telephone, r.date_heure, ag.nom
+        FROM RendezVous r
+        JOIN Utilisateur u ON u.id = r.client_id
+        JOIN Agence ag ON ag.id = r.agence_id
+        WHERE r.id = @id
+      `);
+
+    if (appointmentInfo.recordset.length > 0 && appointmentInfo.recordset[0].telephone) {
+      const appointment = appointmentInfo.recordset[0];
+      const formattedDate = new Date(appointment.date_heure).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const cancelMessage = `Votre rendez-vous du ${formattedDate} à l'agence ${appointment.nom} a été annulé.${raison ? `\n\nRaison: ${raison}` : ''}`;
+      await sendAppointmentWhatsAppNotification(appointment.telephone, { agence_nom: appointment.nom, date_heure: appointment.date_heure });
+    }
+
+    return res.json({ message: 'Rendez-vous annulé avec succès' });
+  } catch (error) {
+    console.error('Erreur annulation rendez-vous:', error);
+    return res.status(500).json({ error: 'Erreur lors de l\'annulation du rendez-vous', message: error.message });
+  }
+};
+
 module.exports = {
   createAppointment,
   getMyAppointments,
   getAgencies,
   getAvailableSlots,
   getInterventionCatalog,
-  updateAppointmentStatus
+  updateAppointmentStatus,
+  getAppointmentDetails,
+  cancelAppointment
 };

@@ -11,9 +11,11 @@ import {
   getAvailableSlots,
   getInterventionCatalog,
   getMyAppointments,
+  cancelAppointment,
+  getAppointmentDetails,
 } from '@/lib/api/appointments';
 import { Vehicle } from '@/types/vehicle';
-import { Agency, Appointment, InterventionType, Slot } from '@/types/appointment';
+import { Agency, Appointment, AppointmentIntervention, InterventionType, Slot } from '@/types/appointment';
 
 type AppointmentFilter = 'all' | 'scheduled' | 'in_progress' | 'completed';
 type BookingStep = 1 | 2 | 3;
@@ -32,6 +34,18 @@ const toLocalISODate = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const isDateValid = (dateString: string): boolean => {
+  const date = new Date(`${dateString}T12:00:00`);
+  return !isNaN(date.getTime());
+};
+
+const isDateInPast = (dateString: string): boolean => {
+  const date = new Date(`${dateString}T12:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date < today;
 };
 
 export default function RendezVousPage() {
@@ -54,12 +68,18 @@ function RendezVousContent() {
   const [isBootLoading, setIsBootLoading] = useState(true);
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   const [globalError, setGlobalError] = useState('');
   const [success, setSuccess] = useState('');
 
   const [activeFilter, setActiveFilter] = useState<AppointmentFilter>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
+  const [selectedAppointmentDetail, setSelectedAppointmentDetail] = useState<Appointment | null>(null);
+  const [appointmentInterventions, setAppointmentInterventions] = useState<AppointmentIntervention[]>([]);
+  const [cancelReason, setCancelReason] = useState('');
   const [step, setStep] = useState<BookingStep>(1);
 
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
@@ -75,6 +95,7 @@ function RendezVousContent() {
   });
 
   const todayISO = useMemo(() => toLocalISODate(new Date()), []);
+  const minDateISO = todayISO; // Can't book for past dates
 
   const getErrorMessage = (value: unknown, fallback: string) => {
     if (value instanceof Error && value.message) {
@@ -180,6 +201,19 @@ function RendezVousContent() {
         return;
       }
 
+      // Validate date
+      if (!isDateValid(selectedDate)) {
+        setGlobalError('Invalid date selected.');
+        setSlots([]);
+        return;
+      }
+
+      if (isDateInPast(selectedDate)) {
+        setGlobalError('Cannot book appointments for past dates.');
+        setSlots([]);
+        return;
+      }
+
       setIsSlotsLoading(true);
       setGlobalError('');
 
@@ -247,6 +281,10 @@ function RendezVousContent() {
         setGlobalError('Please choose date and time slot.');
         return;
       }
+      if (isDateInPast(selectedDate)) {
+        setGlobalError('Cannot book appointments for past dates.');
+        return;
+      }
       setGlobalError('');
       setStep(3);
     }
@@ -273,7 +311,7 @@ function RendezVousContent() {
     setGlobalError('');
     setIsModalOpen(true);
     resetModal();
-    if (presetDate) {
+    if (presetDate && !isDateInPast(presetDate)) {
       setSelectedDate(presetDate);
       setStep(2);
     }
@@ -287,9 +325,37 @@ function RendezVousContent() {
     resetModal();
   };
 
+  const openDetailModal = async (appointmentId: number) => {
+    if (!token) return;
+    try {
+      setGlobalError('');
+      const result = await getAppointmentDetails(appointmentId, token);
+      setSelectedAppointmentId(appointmentId);
+      setSelectedAppointmentDetail(result.appointment);
+      setAppointmentInterventions(result.interventions);
+      setIsDetailModalOpen(true);
+      setCancelReason('');
+    } catch (err: unknown) {
+      setGlobalError(getErrorMessage(err, 'Unable to load appointment details.'));
+    }
+  };
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedAppointmentId(null);
+    setSelectedAppointmentDetail(null);
+    setAppointmentInterventions([]);
+    setCancelReason('');
+  };
+
   const submitAppointment = async () => {
     if (!token || !selectedVehicleId || !selectedAgencyId || !selectedDate || !selectedHour || !selectedServiceSubtypeId) {
       setGlobalError('Missing required booking fields.');
+      return;
+    }
+
+    if (isDateInPast(selectedDate)) {
+      setGlobalError('Cannot book appointments for past dates.');
       return;
     }
 
@@ -321,13 +387,41 @@ function RendezVousContent() {
     }
   };
 
+  const submitCancelAppointment = async () => {
+    if (!token || !selectedAppointmentId) return;
+
+    try {
+      setIsCancelling(true);
+      setGlobalError('');
+
+      await cancelAppointment(selectedAppointmentId, { raison: cancelReason || undefined }, token);
+
+      setSuccess('Appointment cancelled successfully.');
+      await loadAppointments();
+      closeDetailModal();
+    } catch (err: unknown) {
+      setGlobalError(getErrorMessage(err, 'Unable to cancel appointment.'));
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const statusInfo = (status: string) => {
     if (status === 'EN_COURS') return { label: 'In Progress', badge: 'bg-amber-100 text-amber-700' };
     if (status === 'TERMINE') return { label: 'Completed', badge: 'bg-emerald-100 text-emerald-700' };
+    if (status === 'ANNULE') return { label: 'Cancelled', badge: 'bg-red-100 text-red-700' };
     if (status === 'CONFIRME' || status === 'PLANIFIE') {
       return { label: 'Scheduled', badge: 'bg-blue-100 text-blue-700' };
     }
     return { label: status, badge: 'bg-slate-100 text-slate-700' };
+  };
+
+  const canCancelAppointment = (appointment: Appointment): boolean => {
+    if (['TERMINE', 'ANNULE', 'NO_SHOW'].includes(appointment.statut)) {
+      return false;
+    }
+    const appointmentDate = new Date(appointment.date_heure);
+    return appointmentDate > new Date();
   };
 
   if (!user) return null;
@@ -409,19 +503,25 @@ function RendezVousContent() {
                   const isToday = cell.dateISO === todayISO;
                   const isSelected = cell.dateISO === selectedDate;
                   const hasAppointment = appointmentDateSet.has(cell.dateISO);
+                  const isDisabled = isDateInPast(cell.dateISO);
 
                   return (
                     <button
                       key={cell.dateISO}
                       type="button"
+                      disabled={isDisabled}
                       onClick={() => {
-                        setSelectedDate(cell.dateISO as string);
-                        if (!isModalOpen) {
-                          openModal(cell.dateISO as string);
+                        if (!isDisabled) {
+                          setSelectedDate(cell.dateISO as string);
+                          if (!isModalOpen) {
+                            openModal(cell.dateISO as string);
+                          }
                         }
                       }}
                       className={`relative h-10 rounded-lg text-sm font-semibold transition ${
-                        isSelected
+                        isDisabled
+                          ? 'cursor-not-allowed text-slate-300'
+                          : isSelected
                           ? 'bg-[#ff6b00] text-white'
                           : isToday
                           ? 'bg-[#102f63] text-white'
@@ -429,7 +529,7 @@ function RendezVousContent() {
                       }`}
                     >
                       {cell.day}
-                      {hasAppointment && (
+                      {hasAppointment && !isDisabled && (
                         <span
                           className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${
                             isSelected || isToday ? 'bg-white' : 'bg-red-500'
@@ -441,9 +541,15 @@ function RendezVousContent() {
                 })}
               </div>
 
-              <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
-                <span className="h-2 w-2 rounded-full bg-red-500" />
-                <span>Day with appointment</span>
+              <div className="mt-6 space-y-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-red-500" />
+                  <span>Day with appointment</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-[#102f63]" />
+                  <span>Today</span>
+                </div>
               </div>
             </article>
 
@@ -505,33 +611,37 @@ function RendezVousContent() {
                     const status = statusInfo(appointment.statut);
 
                     return (
-                      <article
+                      <button
                         key={appointment.id}
-                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                        type="button"
+                        onClick={() => openDetailModal(appointment.id)}
+                        className="w-full text-left transition hover:bg-slate-50"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                            <span className="text-xl font-bold">{dayNumber}</span>
-                            <span className="text-xs uppercase">{monthLabel}</span>
+                        <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                              <span className="text-xl font-bold">{dayNumber}</span>
+                              <span className="text-xs uppercase">{monthLabel}</span>
+                            </div>
+
+                            <div>
+                              <p className="text-lg font-semibold text-[#102f63]">
+                                {appointment.interventions?.[0]
+                                  ? `${appointment.interventions[0].type_nom} - ${appointment.interventions[0].sous_type_nom}`
+                                  : 'Service appointment'}
+                              </p>
+                              <p className="text-sm text-slate-500">
+                                {appointment.immatriculation || 'Vehicle'} | {appointment.agence_nom || 'Agency'}
+                              </p>
+                              <p className="mt-1 text-sm text-slate-500">{timeLabel}</p>
+                            </div>
                           </div>
 
-                          <div>
-                            <p className="text-lg font-semibold text-[#102f63]">
-                              {appointment.interventions?.[0]
-                                ? `${appointment.interventions[0].type_nom} - ${appointment.interventions[0].sous_type_nom}`
-                                : 'Service appointment'}
-                            </p>
-                            <p className="text-sm text-slate-500">
-                              {appointment.immatriculation || 'Vehicle'} | {appointment.agence_nom || 'Agency'}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500">{timeLabel}</p>
-                          </div>
-                        </div>
-
-                        <span className={`w-fit rounded-full px-3 py-1 text-sm font-semibold ${status.badge}`}>
-                          {status.label}
-                        </span>
-                      </article>
+                          <span className={`w-fit rounded-full px-3 py-1 text-sm font-semibold ${status.badge}`}>
+                            {status.label}
+                          </span>
+                        </article>
+                      </button>
                     );
                   })}
                 </div>
@@ -582,6 +692,12 @@ function RendezVousContent() {
                   );
                 })}
               </ol>
+
+              {globalError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {globalError}
+                </div>
+              )}
 
               {step === 1 && (
                 <section className="space-y-4">
@@ -645,113 +761,224 @@ function RendezVousContent() {
                     <span className="font-semibold text-slate-700">Date</span>
                     <input
                       type="date"
-                      min={todayISO}
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
+                      min={minDateISO}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                     />
                   </label>
 
-                  <div className="space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Time Slot</span>
-                    {isSlotsLoading ? (
-                      <p className="rounded-xl border border-slate-200 px-4 py-3 text-slate-500">Loading slots...</p>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        {slots.length === 0 && (
-                          <p className="col-span-full rounded-xl border border-slate-200 px-4 py-3 text-slate-500">
-                            No slots available for this date.
-                          </p>
-                        )}
+                  {isSlotsLoading ? (
+                    <p className="text-sm text-slate-500">Loading available time slots...</p>
+                  ) : slots.length > 0 ? (
+                    <label className="block space-y-2 text-sm">
+                      <span className="font-semibold text-slate-700">Time Slot</span>
+                      <select
+                        value={selectedHour}
+                        onChange={(e) => setSelectedHour(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
+                      >
+                        <option value="">Select time</option>
                         {slots.map((slot) => (
-                          <button
-                            key={slot.label}
-                            type="button"
-                            onClick={() => !slot.is_full && setSelectedHour(slot.label)}
-                            disabled={slot.is_full}
-                            className={`rounded-xl border px-3 py-3 text-base font-semibold ${
-                              slot.is_full
-                                ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-                                : selectedHour === slot.label
-                                ? 'border-[#ff6b00] bg-[#ff6b00] text-white'
-                                : 'border-slate-300 bg-white text-slate-700 hover:border-[#ff6b00]'
-                            }`}
-                          >
-                            {slot.label}
-                            {slot.is_full && <span className="ml-2 text-xs">Full</span>}
-                          </button>
+                          <option key={slot.hour} value={slot.label} disabled={slot.is_full}>
+                            {slot.label} {slot.is_full ? '(Full)' : `(${slot.available}/${slot.capacity})`}
+                          </option>
                         ))}
-                      </div>
-                    )}
-                  </div>
+                      </select>
+                    </label>
+                  ) : (
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                      No available slots for this date and agency.
+                    </p>
+                  )}
+
+                  <label className="block space-y-2 text-sm">
+                    <span className="font-semibold text-slate-700">Additional Notes (Optional)</span>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Any special requests or comments..."
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
+                      rows={3}
+                    />
+                  </label>
                 </section>
               )}
 
               {step === 3 && (
                 <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Additional Notes</h4>
+                  <h4 className="text-3xl font-bold text-[#102f63]">Review & Confirm</h4>
 
-                  <div className="rounded-2xl bg-slate-100 px-4 py-4 text-sm text-slate-700">
-                    <p>
-                      <span className="font-semibold text-slate-500">Vehicle:</span>{' '}
-                      {selectedVehicle ? selectedVehicle.immatriculation : '-'}
-                    </p>
-                    <p className="mt-1">
-                      <span className="font-semibold text-slate-500">Service:</span>{' '}
-                      {selectedService ? `${selectedService.typeName} - ${selectedService.subTypeName}` : '-'}
-                    </p>
-                    <p className="mt-1">
-                      <span className="font-semibold text-slate-500">Agency:</span>{' '}
-                      {selectedAgency ? `${selectedAgency.nom} (${selectedAgency.ville})` : '-'}
-                    </p>
-                    <p className="mt-1">
-                      <span className="font-semibold text-slate-500">Date and Time:</span>{' '}
-                      {selectedDate && selectedHour ? `${selectedDate} at ${selectedHour}` : '-'}
-                    </p>
+                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div>
+                      <p className="text-sm text-slate-600">Vehicle</p>
+                      <p className="font-semibold text-slate-900">{selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-600">Agency</p>
+                      <p className="font-semibold text-slate-900">{selectedAgency?.nom}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-600">Service</p>
+                      <p className="font-semibold text-slate-900">{selectedService?.label}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-600">Date & Time</p>
+                      <p className="font-semibold text-slate-900">
+                        {selectedDate} at {selectedHour}
+                      </p>
+                    </div>
+                    {notes && (
+                      <div>
+                        <p className="text-sm text-slate-600">Notes</p>
+                        <p className="font-semibold text-slate-900">{notes}</p>
+                      </div>
+                    )}
                   </div>
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Notes (optional)</span>
-                    <textarea
-                      rows={4}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Any additional information..."
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                    />
-                  </label>
                 </section>
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-6 py-4">
-              <button
-                type="button"
-                onClick={goBackStep}
-                disabled={step === 1 || isSubmitting}
-                className="rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Back
-              </button>
-
-              {step < 3 ? (
+            <div className="flex gap-3 pt-4">
+              {step > 1 && (
                 <button
                   type="button"
-                  onClick={goNextStep}
-                  className="rounded-xl bg-[#ff6b00] px-6 py-2.5 font-semibold text-white hover:bg-[#ef6400]"
-                >
-                  Continue
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={submitAppointment}
+                  onClick={goBackStep}
                   disabled={isSubmitting}
-                  className="rounded-xl bg-[#ff6b00] px-6 py-2.5 font-semibold text-white hover:bg-[#ef6400] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Booking...' : 'Confirm Booking'}
+                  Back
                 </button>
               )}
+              <button
+                type="button"
+                onClick={step === 3 ? submitAppointment : goNextStep}
+                disabled={isSubmitting}
+                className="flex-1 rounded-xl bg-[#ff6b00] px-4 py-2.5 font-semibold text-white hover:bg-[#ef6400] disabled:opacity-50"
+              >
+                {isSubmitting ? 'Processing...' : step === 3 ? 'Confirm Booking' : 'Next'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {isDetailModalOpen && selectedAppointmentDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="bg-[#183a74] px-6 py-5 text-white">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-bold leading-none">Appointment Details</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeDetailModal}
+                  className="rounded-lg px-2 py-1 text-2xl text-slate-300 hover:bg-white/10 hover:text-white"
+                >
+                  x
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-6 px-6 py-6">
+              {globalError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {globalError}
+                </div>
+              )}
+
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-slate-600">Status</p>
+                    <p className={`mt-1 rounded-full px-3 py-1 text-sm font-semibold w-fit ${statusInfo(selectedAppointmentDetail.statut).badge}`}>
+                      {statusInfo(selectedAppointmentDetail.statut).label}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Date & Time</p>
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {new Date(selectedAppointmentDetail.date_heure).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-slate-600">Vehicle</p>
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}
+                    </p>
+                    <p className="text-xs text-slate-500">{selectedAppointmentDetail.immatriculation}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Agency</p>
+                    <p className="mt-1 font-semibold text-slate-900">{selectedAppointmentDetail.agence_nom}</p>
+                    <p className="text-xs text-slate-500">{selectedAppointmentDetail.agence_ville}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-slate-600">Services</p>
+                  <div className="mt-2 space-y-2">
+                    {appointmentInterventions.length > 0 ? (
+                      appointmentInterventions.map((intervention) => (
+                        <div key={intervention.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                          <p className="font-semibold text-slate-900">{intervention.type_nom}</p>
+                          <p className="text-sm text-slate-600">{intervention.sous_type_nom}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500">No services specified</p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedAppointmentDetail.description && (
+                  <div>
+                    <p className="text-sm text-slate-600">Notes</p>
+                    <p className="mt-1 text-slate-900">{selectedAppointmentDetail.description}</p>
+                  </div>
+                )}
+
+                {canCancelAppointment(selectedAppointmentDetail) && (
+                  <div>
+                    <label className="block space-y-2 text-sm">
+                      <span className="font-semibold text-slate-700">Cancellation Reason (Optional)</span>
+                      <textarea
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        placeholder="Why are you cancelling this appointment?"
+                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
+                        rows={2}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeDetailModal}
+                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                  disabled={isCancelling}
+                >
+                  Close
+                </button>
+                {canCancelAppointment(selectedAppointmentDetail) && (
+                  <button
+                    type="button"
+                    onClick={submitCancelAppointment}
+                    className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                    disabled={isCancelling}
+                  >
+                    {isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
