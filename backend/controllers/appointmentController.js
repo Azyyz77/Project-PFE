@@ -55,6 +55,15 @@ const createAppointment = async (req, res) => {
     const clientId = req.user.id;
     const { vehicule_id, agence_id, date_heure, description, duree_estimee, sous_type_ids } = req.body;
 
+    console.log('createAppointment request:', {
+      clientId,
+      vehicule_id,
+      agence_id,
+      date_heure,
+      sous_type_ids,
+      sous_type_ids_type: Array.isArray(sous_type_ids) ? 'array' : typeof sous_type_ids,
+    });
+
     const vehicleId = normalizePositiveInt(vehicule_id);
     const agencyId = normalizePositiveInt(agence_id);
     const estimatedDuration = duree_estimee ? normalizePositiveInt(duree_estimee) : 60;
@@ -132,38 +141,13 @@ const createAppointment = async (req, res) => {
       return res.status(400).json({ error: 'Ce vehicule n\'appartient pas au client.' });
     }
 
-    // Validate sub-types BEFORE creating the appointment
+    // Process sub-types to extract valid IDs
     let validatedSubTypeIds = [];
     if (Array.isArray(sous_type_ids) && sous_type_ids.length > 0) {
-      const uniqueIds = [...new Set(sous_type_ids.map((id) => normalizePositiveInt(id)).filter(Boolean))];
-
-      if (uniqueIds.length > 0) {
-        // Build a parameterized query for sub-type validation
-        const placeholders = uniqueIds.map((_, index) => `@id${index}`).join(',');
-        let subTypeQuery = pool.request();
-        
-        uniqueIds.forEach((id, index) => {
-          subTypeQuery = subTypeQuery.input(`id${index}`, sql.BigInt, id);
-        });
-
-        const checkSubTypes = await subTypeQuery.query(`
-          SELECT id
-          FROM SousTypeIntervention
-          WHERE id IN (${placeholders})
-        `);
-
-        const foundIds = new Set(checkSubTypes.recordset.map((row) => row.id));
-        const missingIds = uniqueIds.filter((id) => !foundIds.has(id));
-
-        if (missingIds.length > 0) {
-          return res.status(400).json({
-            error: 'Sous-types invalides',
-            invalid_ids: missingIds
-          });
-        }
-
-        validatedSubTypeIds = uniqueIds;
-      }
+      validatedSubTypeIds = [...new Set(sous_type_ids.map((id) => normalizePositiveInt(id)).filter(Boolean))];
+      console.log('Validated sub-type IDs:', validatedSubTypeIds);
+    } else {
+      console.log('No sub-type IDs provided or invalid format');
     }
 
     // Now create the appointment ONLY if validation passed
@@ -201,15 +185,31 @@ const createAppointment = async (req, res) => {
       return res.status(500).json({ error: 'Creation du rendez-vous echouee' });
     }
 
-    // Insert validated sub-types
+    // Insert validated sub-types with error handling
+    const failedSubTypes = [];
     for (const sousTypeId of validatedSubTypeIds) {
-      await pool.request()
-        .input('rdv_id', sql.BigInt, rdvId)
-        .input('sous_type_id', sql.BigInt, sousTypeId)
-        .query(`
-          INSERT INTO InterventionRDV (rdv_id, sous_type_id, statut)
-          VALUES (@rdv_id, @sous_type_id, 'EN_ATTENTE')
-        `);
+      try {
+        await pool.request()
+          .input('rdv_id', sql.BigInt, rdvId)
+          .input('sous_type_id', sql.BigInt, sousTypeId)
+          .query(`
+            INSERT INTO InterventionRDV (rdv_id, sous_type_id, statut)
+            VALUES (@rdv_id, @sous_type_id, 'EN_ATTENTE')
+          `);
+      } catch (error) {
+        console.warn(`Failed to insert sub-type ${sousTypeId}:`, error.message);
+        failedSubTypes.push(sousTypeId);
+      }
+    }
+
+    if (failedSubTypes.length > 0) {
+      console.error('Invalid sub-type IDs:', failedSubTypes);
+      // Still return the appointment, but note the invalid sub-types
+      return res.status(400).json({
+        error: 'Certains sous-types sont invalides',
+        invalid_sub_types: failedSubTypes,
+        message: 'Rendez-vous créé mais certains services n\'ont pas pu être ajoutés'
+      });
     }
 
     const details = await pool.request()
