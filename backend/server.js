@@ -8,14 +8,17 @@
  * Port: 3000
  */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 const { getConnection } = require('./config/database');
+const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +43,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
@@ -55,7 +59,10 @@ app.get('/', (req, res) => {
       getUser: 'GET /api/users/:id (JWT requis)',
       addVehicle: 'POST /api/vehicles (JWT requis)',
       getUserVehicles: 'GET /api/vehicles/user/:userId (JWT requis)',
-      getVehicle: 'GET /api/vehicles/:id (JWT requis)'
+      getVehicle: 'GET /api/vehicles/:id (JWT requis)',
+      createAppointment: 'POST /api/appointments (JWT requis)',
+      myAppointments: 'GET /api/appointments/my (JWT requis)',
+      appointmentSlots: 'GET /api/appointments/slots?agenceId=&date=YYYY-MM-DD (JWT requis)'
     },
     timestamp: new Date().toISOString()
   });
@@ -66,6 +73,7 @@ app.get('/health', (req, res) => {
   res.json({
     service: 'backend-monolithique',
     status: 'UP',
+    whatsapp: getWhatsAppStatus(),
     timestamp: new Date().toISOString()
   });
 });
@@ -101,4 +109,7 @@ app.listen(PORT, async () => {
     console.error('❌ Erreur de connexion à la base de données:', error.message);
     console.error('⚠️  Le serveur démarre mais la BDD n\'est pas accessible.\n');
   }
+
+  console.log('🟢 Initialisation de WhatsApp Web...');
+  initializeWhatsAppClient();
 });

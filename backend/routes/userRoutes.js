@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware, hasRole } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
@@ -60,6 +60,12 @@ router.post('/register', userController.register);
  *               $ref: '#/components/schemas/Error'
  */
 router.post('/login', userController.login);
+
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/verify-otp', userController.verifyOtp);
+router.post('/reset-password', userController.resetPassword);
+router.put('/:id/profile', authMiddleware, userController.updateProfile);
+router.put('/:id/password', authMiddleware, userController.changePassword);
 
 /**
  * @swagger

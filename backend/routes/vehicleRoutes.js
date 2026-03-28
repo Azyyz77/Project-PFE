@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const vehicleController = require('../controllers/vehicleController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authMiddleware } = require('../middleware/authMiddleware');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 // Toutes les routes véhicules nécessitent une authentification
 router.use(authMiddleware);
@@ -37,6 +38,7 @@ router.use(authMiddleware);
  *       409:
  *         description: Numéro d\'immatriculation déjà existant
  */
+// Any authenticated user can add vehicles for themselves
 router.post('/', vehicleController.addVehicle);
 
 /**
@@ -140,7 +142,7 @@ router.get('/:id', vehicleController.getVehicleById);
  *       404:
  *         description: Véhicule non trouvé
  */
-router.put('/:id', vehicleController.updateVehicle);
+router.put('/:id', authorizeRoles('client', 'admin'), vehicleController.updateVehicle);
 
 /**
  * @swagger
@@ -166,6 +168,6 @@ router.put('/:id', vehicleController.updateVehicle);
  *       404:
  *         description: Véhicule non trouvé
  */
-router.delete('/:id', vehicleController.deleteVehicle);
+router.delete('/:id', authorizeRoles('client', 'admin'), vehicleController.deleteVehicle);
 
 module.exports = router;

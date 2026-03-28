@@ -539,7 +539,7 @@ GO
 --  ETAPE 9 — RECREER LES PROCEDURES STOCKEES
 -- ============================================================
 
-CREATE OR ALTER PROCEDURE SP_CreerRendezVous
+CREATE PROCEDURE dbo.SP_CreerRendezVous
     @client_id   BIGINT,
     @vehicule_id BIGINT,
     @agence_id   BIGINT,
@@ -592,7 +592,7 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROCEDURE SP_ConfirmerRDV
+CREATE PROCEDURE dbo.SP_ConfirmerRDV
     @rdv_id   BIGINT,
     @agent_id BIGINT
 AS
@@ -619,7 +619,7 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROCEDURE SP_ChangerStatutReclamation
+CREATE PROCEDURE dbo.SP_ChangerStatutReclamation
     @rec_id   BIGINT,
     @agent_id BIGINT,
     @statut   VARCHAR(20),
@@ -650,7 +650,7 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROCEDURE SP_RapportJournalier
+CREATE PROCEDURE dbo.SP_RapportJournalier
     @agence_id BIGINT,
     @date      DATE = NULL
 AS
