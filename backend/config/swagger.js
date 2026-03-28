@@ -103,7 +103,8 @@ const options = {
     tags: [
       { name: 'Authentication', description: 'Inscription et connexion' },
       { name: 'Users', description: 'Gestion des utilisateurs' },
-      { name: 'Vehicles', description: 'Gestion des véhicules' }
+      { name: 'Vehicles', description: 'Gestion des véhicules' },
+      { name: 'Appointments', description: 'Gestion des rendez-vous SAV' }
     ]
   },
   apis: ['./routes/*.js', './server.js']

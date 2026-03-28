@@ -1,6 +1,6 @@
 const { getConnection, sql } = require('../config/database');
 
-const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
+const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION','CLIENT']; // Clients can also access their own vehicles
 const VEHICLE_FIELD_LIMITS = {
   immatriculation: 20,
   numero_chassis: 17,

@@ -4,13 +4,21 @@
  * Page de connexion
  */
 
-import { useState, FormEvent } from 'react';
+import { Suspense, useState, FormEvent } from 'react';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -154,7 +162,7 @@ export default function LoginPage() {
               disabled={!email}
               className="mx-auto inline-flex rounded-lg border border-blue-600 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Verification OTP
+              Vérification OTP
             </button>
           </div>
         </form>

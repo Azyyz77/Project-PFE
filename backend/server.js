@@ -16,6 +16,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 const { getConnection } = require('./config/database');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
@@ -42,6 +43,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
@@ -57,7 +59,10 @@ app.get('/', (req, res) => {
       getUser: 'GET /api/users/:id (JWT requis)',
       addVehicle: 'POST /api/vehicles (JWT requis)',
       getUserVehicles: 'GET /api/vehicles/user/:userId (JWT requis)',
-      getVehicle: 'GET /api/vehicles/:id (JWT requis)'
+      getVehicle: 'GET /api/vehicles/:id (JWT requis)',
+      createAppointment: 'POST /api/appointments (JWT requis)',
+      myAppointments: 'GET /api/appointments/my (JWT requis)',
+      appointmentSlots: 'GET /api/appointments/slots?agenceId=&date=YYYY-MM-DD (JWT requis)'
     },
     timestamp: new Date().toISOString()
   });
