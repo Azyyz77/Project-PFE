@@ -27,7 +27,7 @@ type ServiceOption = {
   subTypeName: string;
 };
 
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEK_DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
 const toLocalISODate = (date: Date) => {
   const year = date.getFullYear();
@@ -184,7 +184,7 @@ function RendezVousContent() {
           setSelectedAgencyId(String(allAgencies[0].id));
         }
       } catch (err: unknown) {
-        setGlobalError(getErrorMessage(err, 'Unable to load appointment data.'));
+        setGlobalError(getErrorMessage(err, 'Impossible de charger les données de rendez-vous.'));
       } finally {
         setIsBootLoading(false);
       }
@@ -203,13 +203,13 @@ function RendezVousContent() {
 
       // Validate date
       if (!isDateValid(selectedDate)) {
-        setGlobalError('Invalid date selected.');
+        setGlobalError('Date invalide sélectionnée.');
         setSlots([]);
         return;
       }
 
       if (isDateInPast(selectedDate)) {
-        setGlobalError('Cannot book appointments for past dates.');
+        setGlobalError('Impossible de réserver pour des dates passées.');
         setSlots([]);
         return;
       }
@@ -228,7 +228,7 @@ function RendezVousContent() {
           setSelectedHour('');
         }
       } catch (err: unknown) {
-        setGlobalError(getErrorMessage(err, 'Unable to load available time slots.'));
+        setGlobalError(getErrorMessage(err, 'Impossible de charger les créneaux disponibles.'));
       } finally {
         setIsSlotsLoading(false);
       }
@@ -268,7 +268,7 @@ function RendezVousContent() {
   const goNextStep = () => {
     if (step === 1) {
       if (!selectedVehicleId || !selectedServiceSubtypeId || !selectedAgencyId) {
-        setGlobalError('Please select vehicle, agency and service type.');
+        setGlobalError('Veuillez sélectionner un véhicule, une agence et un type de service.');
         return;
       }
       setGlobalError('');
@@ -278,11 +278,11 @@ function RendezVousContent() {
 
     if (step === 2) {
       if (!selectedDate || !selectedHour) {
-        setGlobalError('Please choose date and time slot.');
+        setGlobalError('Veuillez choisir une date et un créneau horaire.');
         return;
       }
       if (isDateInPast(selectedDate)) {
-        setGlobalError('Cannot book appointments for past dates.');
+        setGlobalError('Impossible de réserver pour des dates passées.');
         return;
       }
       setGlobalError('');
@@ -336,7 +336,7 @@ function RendezVousContent() {
       setIsDetailModalOpen(true);
       setCancelReason('');
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'Unable to load appointment details.'));
+      setGlobalError(getErrorMessage(err, 'Impossible de charger les détails du rendez-vous.'));
     }
   };
 
@@ -350,12 +350,12 @@ function RendezVousContent() {
 
   const submitAppointment = async () => {
     if (!token || !selectedVehicleId || !selectedAgencyId || !selectedDate || !selectedHour || !selectedServiceSubtypeId) {
-      setGlobalError('Missing required booking fields.');
+      setGlobalError('Champs obligatoires manquants pour la réservation.');
       return;
     }
 
     if (isDateInPast(selectedDate)) {
-      setGlobalError('Cannot book appointments for past dates.');
+      setGlobalError('Impossible de réserver pour des dates passées.');
       return;
     }
 
@@ -377,11 +377,11 @@ function RendezVousContent() {
         token
       );
 
-      setSuccess('Appointment booked successfully.');
+      setSuccess('Rendez-vous réservé avec succès.');
       await loadAppointments();
       closeModal();
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'This time slot is not available. Please choose another hour.'));
+      setGlobalError(getErrorMessage(err, 'Ce créneau n\'est pas disponible. Veuillez choisir une autre heure.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -396,22 +396,22 @@ function RendezVousContent() {
 
       await cancelAppointment(selectedAppointmentId, { raison: cancelReason || undefined }, token);
 
-      setSuccess('Appointment cancelled successfully.');
+      setSuccess('Rendez-vous annulé avec succès.');
       await loadAppointments();
       closeDetailModal();
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'Unable to cancel appointment.'));
+      setGlobalError(getErrorMessage(err, 'Impossible d\'annuler le rendez-vous.'));
     } finally {
       setIsCancelling(false);
     }
   };
 
   const statusInfo = (status: string) => {
-    if (status === 'EN_COURS') return { label: 'In Progress', badge: 'bg-amber-100 text-amber-700' };
-    if (status === 'TERMINE') return { label: 'Completed', badge: 'bg-emerald-100 text-emerald-700' };
-    if (status === 'ANNULE') return { label: 'Cancelled', badge: 'bg-red-100 text-red-700' };
+    if (status === 'EN_COURS') return { label: 'En cours', badge: 'bg-amber-100 text-amber-700' };
+    if (status === 'TERMINE') return { label: 'Terminé', badge: 'bg-emerald-100 text-emerald-700' };
+    if (status === 'ANNULE') return { label: 'Annulé', badge: 'bg-red-100 text-red-700' };
     if (status === 'CONFIRME' || status === 'PLANIFIE') {
-      return { label: 'Scheduled', badge: 'bg-blue-100 text-blue-700' };
+      return { label: 'Planifié', badge: 'bg-blue-100 text-blue-700' };
     }
     return { label: status, badge: 'bg-slate-100 text-slate-700' };
   };
@@ -431,8 +431,8 @@ function RendezVousContent() {
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-[#0c2c5d]">Appointments</h1>
-            <p className="mt-1 text-sm text-slate-500">Manage and book your service appointments.</p>
+            <h1 className="text-3xl font-bold text-[#0c2c5d]">Rendez-vous</h1>
+            <p className="mt-1 text-sm text-slate-500">Gérez et réservez vos rendez-vous de service.</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -440,14 +440,14 @@ function RendezVousContent() {
               href="/dashboard"
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
             >
-              Dashboard
+              Tableau de bord
             </Link>
             <button
               type="button"
               onClick={() => openModal()}
               className="rounded-xl bg-[#ff6b00] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ef6400]"
             >
-              + Book Appointment
+              + Réserver un rendez-vous
             </button>
           </div>
         </header>
@@ -461,7 +461,7 @@ function RendezVousContent() {
 
         {isBootLoading ? (
           <section className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">
-            Loading appointment data...
+            Chargement des données de rendez-vous...
           </section>
         ) : (
           <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -544,18 +544,18 @@ function RendezVousContent() {
               <div className="mt-6 space-y-2 text-xs text-slate-500">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-red-500" />
-                  <span>Day with appointment</span>
+                  <span>Jour avec rendez-vous</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-[#102f63]" />
-                  <span>Today</span>
+                  <span>Aujourd'hui</span>
                 </div>
               </div>
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-semibold text-[#0c2c5d]">All Appointments</h2>
+                <h2 className="text-2xl font-semibold text-[#0c2c5d]">Tous les rendez-vous</h2>
 
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -565,7 +565,7 @@ function RendezVousContent() {
                       activeFilter === 'all' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    All
+                    Tous
                   </button>
                   <button
                     type="button"
@@ -574,7 +574,7 @@ function RendezVousContent() {
                       activeFilter === 'scheduled' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    Scheduled
+                    Planifié
                   </button>
                   <button
                     type="button"
@@ -583,7 +583,7 @@ function RendezVousContent() {
                       activeFilter === 'in_progress' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    In Progress
+                    En cours
                   </button>
                   <button
                     type="button"
@@ -592,14 +592,14 @@ function RendezVousContent() {
                       activeFilter === 'completed' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
                     }`}
                   >
-                    Completed
+                    Terminé
                   </button>
                 </div>
               </div>
 
               {filteredAppointments.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
-                  No appointments found for this filter.
+                  Aucun rendez-vous trouvé pour ce filtre.
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -628,10 +628,10 @@ function RendezVousContent() {
                               <p className="text-lg font-semibold text-[#102f63]">
                                 {appointment.interventions?.[0]
                                   ? `${appointment.interventions[0].type_nom} - ${appointment.interventions[0].sous_type_nom}`
-                                  : 'Service appointment'}
+                                  : 'Rendez-vous de service'}
                               </p>
                               <p className="text-sm text-slate-500">
-                                {appointment.immatriculation || 'Vehicle'} | {appointment.agence_nom || 'Agency'}
+                                {appointment.immatriculation || 'Véhicule'} | {appointment.agence_nom || 'Agence'}
                               </p>
                               <p className="mt-1 text-sm text-slate-500">{timeLabel}</p>
                             </div>
@@ -657,8 +657,8 @@ function RendezVousContent() {
             <div className="bg-[#183a74] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-4xl font-bold leading-none">Book Appointment</h3>
-                  <p className="mt-1 text-base text-slate-200">Step {step} of 3</p>
+                  <h3 className="text-4xl font-bold leading-none">Réserver un rendez-vous</h3>
+                  <p className="mt-1 text-base text-slate-200">Étape {step} sur 3</p>
                 </div>
                 <button
                   type="button"
@@ -701,16 +701,16 @@ function RendezVousContent() {
 
               {step === 1 && (
                 <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Select Vehicle and Service</h4>
+                  <h4 className="text-3xl font-bold text-[#102f63]">Sélectionnez un véhicule et un service</h4>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Agency</span>
+                    <span className="font-semibold text-slate-700">Agence</span>
                     <select
                       value={selectedAgencyId}
                       onChange={(e) => setSelectedAgencyId(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                     >
-                      <option value="">Select agency</option>
+                      <option value="">Sélectionner une agence</option>
                       {agencies.map((agency) => (
                         <option key={agency.id} value={agency.id}>
                           {agency.nom} - {agency.ville}
@@ -720,13 +720,13 @@ function RendezVousContent() {
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Vehicle</span>
+                    <span className="font-semibold text-slate-700">Véhicule</span>
                     <select
                       value={selectedVehicleId}
                       onChange={(e) => setSelectedVehicleId(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                     >
-                      <option value="">Select your vehicle</option>
+                      <option value="">Sélectionnez votre véhicule</option>
                       {vehicles.map((vehicle) => (
                         <option key={vehicle.id} value={vehicle.id}>
                           {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
@@ -736,13 +736,13 @@ function RendezVousContent() {
                   </label>
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Service Type</span>
+                    <span className="font-semibold text-slate-700">Type de service</span>
                     <select
                       value={selectedServiceSubtypeId}
                       onChange={(e) => setSelectedServiceSubtypeId(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                     >
-                      <option value="">Select service type</option>
+                      <option value="">Sélectionner un type de service</option>
                       {serviceOptions.map((option) => (
                         <option key={option.id} value={option.id}>
                           {option.label}
@@ -755,7 +755,7 @@ function RendezVousContent() {
 
               {step === 2 && (
                 <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Select Date and Time</h4>
+                  <h4 className="text-3xl font-bold text-[#102f63]">Sélectionnez une date et une heure</h4>
 
                   <label className="block space-y-2 text-sm">
                     <span className="font-semibold text-slate-700">Date</span>
@@ -769,35 +769,35 @@ function RendezVousContent() {
                   </label>
 
                   {isSlotsLoading ? (
-                    <p className="text-sm text-slate-500">Loading available time slots...</p>
+                    <p className="text-sm text-slate-500">Chargement des créneaux disponibles...</p>
                   ) : slots.length > 0 ? (
                     <label className="block space-y-2 text-sm">
-                      <span className="font-semibold text-slate-700">Time Slot</span>
+                      <span className="font-semibold text-slate-700">Créneau horaire</span>
                       <select
                         value={selectedHour}
                         onChange={(e) => setSelectedHour(e.target.value)}
                         className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                       >
-                        <option value="">Select time</option>
+                        <option value="">Sélectionner une heure</option>
                         {slots.map((slot) => (
                           <option key={slot.hour} value={slot.label} disabled={slot.is_full}>
-                            {slot.label} {slot.is_full ? '(Full)' : `(${slot.available}/${slot.capacity})`}
+                            {slot.label} {slot.is_full ? '(Complet)' : `(${slot.available}/${slot.capacity})`}
                           </option>
                         ))}
                       </select>
                     </label>
                   ) : (
                     <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                      No available slots for this date and agency.
+                      Aucun créneau disponible pour cette date et agence.
                     </p>
                   )}
 
                   <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Additional Notes (Optional)</span>
+                    <span className="font-semibold text-slate-700">Notes supplémentaires (Optionnel)</span>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Any special requests or comments..."
+                      placeholder="Toute demande spéciale ou commentaire..."
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                       rows={3}
                     />
@@ -807,15 +807,15 @@ function RendezVousContent() {
 
               {step === 3 && (
                 <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Review & Confirm</h4>
+                  <h4 className="text-3xl font-bold text-[#102f63]">Vérifier et confirmer</h4>
 
                   <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                     <div>
-                      <p className="text-sm text-slate-600">Vehicle</p>
+                      <p className="text-sm text-slate-600">Véhicule</p>
                       <p className="font-semibold text-slate-900">{selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-600">Agency</p>
+                      <p className="text-sm text-slate-600">Agence</p>
                       <p className="font-semibold text-slate-900">{selectedAgency?.nom}</p>
                     </div>
                     <div>
@@ -823,14 +823,14 @@ function RendezVousContent() {
                       <p className="font-semibold text-slate-900">{selectedService?.label}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-600">Date & Time</p>
+                      <p className="text-sm text-slate-600">Date et heure</p>
                       <p className="font-semibold text-slate-900">
-                        {selectedDate} at {selectedHour}
+                        {selectedDate} à {selectedHour}
                       </p>
                     </div>
                     {notes && (
                       <div>
-                        <p className="text-sm text-slate-600">Notes</p>
+                        <p className="text-sm text-slate-600">Remarques</p>
                         <p className="font-semibold text-slate-900">{notes}</p>
                       </div>
                     )}
@@ -870,7 +870,7 @@ function RendezVousContent() {
             <div className="bg-[#183a74] px-6 py-5 text-white">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-bold leading-none">Appointment Details</h3>
+                  <h3 className="text-2xl font-bold leading-none">Détails du rendez-vous</h3>
                 </div>
                 <button
                   type="button"
@@ -892,13 +892,13 @@ function RendezVousContent() {
               <div className="grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-600">Status</p>
+                    <p className="text-sm text-slate-600">Statut</p>
                     <p className={`mt-1 rounded-full px-3 py-1 text-sm font-semibold w-fit ${statusInfo(selectedAppointmentDetail.statut).badge}`}>
                       {statusInfo(selectedAppointmentDetail.statut).label}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Date & Time</p>
+                    <p className="text-sm text-slate-600">Date et heure</p>
                     <p className="mt-1 font-semibold text-slate-900">
                       {new Date(selectedAppointmentDetail.date_heure).toLocaleString()}
                     </p>
@@ -907,14 +907,14 @@ function RendezVousContent() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-600">Vehicle</p>
+                    <p className="text-sm text-slate-600">Véhicule</p>
                     <p className="mt-1 font-semibold text-slate-900">
                       {selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}
                     </p>
                     <p className="text-xs text-slate-500">{selectedAppointmentDetail.immatriculation}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">Agency</p>
+                    <p className="text-sm text-slate-600">Agence</p>
                     <p className="mt-1 font-semibold text-slate-900">{selectedAppointmentDetail.agence_nom}</p>
                     <p className="text-xs text-slate-500">{selectedAppointmentDetail.agence_ville}</p>
                   </div>
@@ -931,14 +931,14 @@ function RendezVousContent() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-slate-500">No services specified</p>
+                      <p className="text-sm text-slate-500">Aucun service spécifié</p>
                     )}
                   </div>
                 </div>
 
                 {selectedAppointmentDetail.description && (
                   <div>
-                    <p className="text-sm text-slate-600">Notes</p>
+                    <p className="text-sm text-slate-600">Remarques</p>
                     <p className="mt-1 text-slate-900">{selectedAppointmentDetail.description}</p>
                   </div>
                 )}
@@ -946,11 +946,11 @@ function RendezVousContent() {
                 {canCancelAppointment(selectedAppointmentDetail) && (
                   <div>
                     <label className="block space-y-2 text-sm">
-                      <span className="font-semibold text-slate-700">Cancellation Reason (Optional)</span>
+                      <span className="font-semibold text-slate-700">Raison d'annulation (Optionnel)</span>
                       <textarea
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
-                        placeholder="Why are you cancelling this appointment?"
+                        placeholder="Pourquoi annulez-vous ce rendez-vous ?"
                         className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                         rows={2}
                       />
@@ -966,7 +966,7 @@ function RendezVousContent() {
                   className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
                   disabled={isCancelling}
                 >
-                  Close
+                  Fermer
                 </button>
                 {canCancelAppointment(selectedAppointmentDetail) && (
                   <button
@@ -975,7 +975,7 @@ function RendezVousContent() {
                     className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
                     disabled={isCancelling}
                   >
-                    {isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+                    {isCancelling ? 'Annulation en cours...' : 'Annuler le rendez-vous'}
                   </button>
                 )}
               </div>

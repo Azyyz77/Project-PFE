@@ -120,7 +120,7 @@ function ProfileContent() {
               href="/dashboard"
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              ← Dashboard
+              ← Tableau de bord
             </Link>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Mon profil</h1>
           </div>
