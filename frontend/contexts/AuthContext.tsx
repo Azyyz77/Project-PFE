@@ -61,8 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(response.token);
       setUser(normalizedUser);
       
-      // Rediriger vers le dashboard
-      router.push('/dashboard');
+      // Redirection basée sur le rôle
+      if (normalizedUser.type_utilisateur === 'AGENT' || normalizedUser.type_utilisateur === 'ADMIN') {
+        router.push('/dashboard/agent');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       // Propager l'erreur pour que le composant puisse l'afficher
       throw error;

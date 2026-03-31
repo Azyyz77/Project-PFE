@@ -24,7 +24,7 @@ function LoginPageContent() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
@@ -32,9 +32,13 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/dashboard');
+      if (user?.type_utilisateur === 'AGENT' || user?.type_utilisateur === 'ADMIN') {
+        router.replace('/dashboard/agent');
+      } else {
+        router.replace('/dashboard');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   if (isAuthenticated) {
     return null;
