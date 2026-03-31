@@ -1,6 +1,6 @@
 const { getConnection, sql } = require('../config/database');
 
-const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION','CLIENT']; // Clients can also access their own vehicles
+const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
 const VEHICLE_FIELD_LIMITS = {
   immatriculation: 20,
   numero_chassis: 17,
@@ -19,6 +19,10 @@ const VEHICLE_WITH_RELATIONS_SELECT = `
     vh.couleur,
     vh.annee,
     vh.date_ajout,
+    vh.statut_validation,
+    vh.motif_refus,
+    vh.date_validation,
+    vh.agent_validateur_id,
     ve.nom AS version_nom,
     ve.motorisation,
     ve.transmission,
@@ -143,10 +147,11 @@ const addVehicle = async (req, res) => {
     }
 
     const insertQuery = `
-      INSERT INTO Vehicule (client_id, version_id, immatriculation, numero_chassis, couleur, annee, date_ajout)
+          INSERT INTO Vehicule (client_id, version_id, immatriculation, numero_chassis, couleur, annee, date_ajout, statut_validation)
       OUTPUT INSERTED.id, INSERTED.client_id, INSERTED.version_id, INSERTED.immatriculation,
-             INSERTED.numero_chassis, INSERTED.couleur, INSERTED.annee, INSERTED.date_ajout
-      VALUES (@client_id, @version_id, @immatriculation, @numero_chassis, @couleur, @annee, GETDATE())
+            INSERTED.numero_chassis, INSERTED.couleur, INSERTED.annee, INSERTED.date_ajout,
+            INSERTED.statut_validation, INSERTED.motif_refus, INSERTED.date_validation, INSERTED.agent_validateur_id
+          VALUES (@client_id, @version_id, @immatriculation, @numero_chassis, @couleur, @annee, GETDATE(), 'EN_ATTENTE')
     `;
 
     const result = await pool.request()
@@ -277,6 +282,8 @@ const updateVehicle = async (req, res) => {
       return res.status(409).json({ error: 'Ce numéro de châssis existe déjà' });
     }
 
+    const isClientOwner = existingVehicle.client_id === req.user.id && req.user.role === 'CLIENT';
+
     await pool.request()
       .input('id', sql.BigInt, id)
       .input('version_id', sql.BigInt, version_id)
@@ -291,7 +298,11 @@ const updateVehicle = async (req, res) => {
           immatriculation = @immatriculation,
           numero_chassis = @numero_chassis,
           couleur = @couleur,
-          annee = @annee
+          annee = @annee,
+          statut_validation = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN 'EN_ATTENTE' ELSE statut_validation END,
+          motif_refus = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN NULL ELSE motif_refus END,
+          date_validation = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN NULL ELSE date_validation END,
+          agent_validateur_id = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN NULL ELSE agent_validateur_id END
         WHERE id = @id
       `);
 

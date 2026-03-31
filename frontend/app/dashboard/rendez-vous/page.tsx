@@ -133,6 +133,11 @@ function RendezVousContent() {
     [vehicles, selectedVehicleId]
   );
 
+  const validatedVehicles = useMemo(
+    () => vehicles.filter((vehicle) => vehicle.statut_validation === 'VALIDE'),
+    [vehicles]
+  );
+
   const selectedService = useMemo(
     () => serviceOptions.find((service) => String(service.id) === selectedServiceSubtypeId),
     [serviceOptions, selectedServiceSubtypeId]
@@ -307,6 +312,11 @@ function RendezVousContent() {
   };
 
   const openModal = (presetDate?: string) => {
+    if (validatedVehicles.length === 0) {
+      setGlobalError('Vous devez attendre la validation de votre véhicule par un agent SAV avant de réserver un rendez-vous.');
+      return;
+    }
+
     setSuccess('');
     setGlobalError('');
     setIsModalOpen(true);
@@ -445,12 +455,19 @@ function RendezVousContent() {
             <button
               type="button"
               onClick={() => openModal()}
-              className="rounded-xl bg-[#ff6b00] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ef6400]"
+              disabled={validatedVehicles.length === 0}
+              className="rounded-xl bg-[#ff6b00] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ef6400] disabled:cursor-not-allowed disabled:opacity-50"
             >
               + Réserver un rendez-vous
             </button>
           </div>
         </header>
+
+        {validatedVehicles.length === 0 && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Votre véhicule est en attente de validation SAV. Vous pourrez réserver un rendez-vous dès qu'un agent valide votre véhicule.
+          </div>
+        )}
 
         {globalError && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{globalError}</div>
@@ -727,7 +744,7 @@ function RendezVousContent() {
                       className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
                     >
                       <option value="">Sélectionnez votre véhicule</option>
-                      {vehicles.map((vehicle) => (
+                      {validatedVehicles.map((vehicle) => (
                         <option key={vehicle.id} value={vehicle.id}>
                           {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
                         </option>

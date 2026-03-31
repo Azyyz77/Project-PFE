@@ -7,6 +7,10 @@ export interface Vehicle {
   couleur: string | null;
   annee: number;
   date_ajout: string;
+  statut_validation?: 'EN_ATTENTE' | 'VALIDE' | 'REFUSE';
+  motif_refus?: string | null;
+  date_validation?: string | null;
+  agent_validateur_id?: number | null;
   marque_nom?: string;
   modele_nom?: string;
   version_nom?: string;

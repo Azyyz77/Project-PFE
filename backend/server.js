@@ -18,6 +18,7 @@ const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const { getConnection } = require('./config/database');
+const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
 const app = express();
@@ -104,6 +105,7 @@ app.listen(PORT, async () => {
   try {
     console.log('\n🔌 Connexion à la base de données...');
     await getConnection();
+    await ensureVehicleValidationSchema();
     console.log('✅ Base de données connectée avec succès!\n');
   } catch (error) {
     console.error('❌ Erreur de connexion à la base de données:', error.message);

@@ -131,7 +131,7 @@ const createAppointment = async (req, res) => {
       .input('client_id', sql.BigInt, clientId)
       .input('vehicule_id', sql.BigInt, vehicleId)
       .query(`
-        SELECT TOP 1 id
+        SELECT TOP 1 id, statut_validation
         FROM Vehicule
         WHERE id = @vehicule_id
           AND client_id = @client_id
@@ -139,6 +139,13 @@ const createAppointment = async (req, res) => {
 
     if (vehicleCheck.recordset.length === 0) {
       return res.status(400).json({ error: 'Ce vehicule n\'appartient pas au client.' });
+    }
+
+    if (vehicleCheck.recordset[0].statut_validation !== 'VALIDE') {
+      return res.status(403).json({
+        error: 'Véhicule non validé',
+        message: 'Votre véhicule doit être validé par un agent SAV avant de prendre un rendez-vous.'
+      });
     }
 
     // Process sub-types to extract valid IDs
