@@ -29,7 +29,6 @@ export default function AppointmentsList({ token }: Props) {
   const statusBadge = (statut: string) => {
     const map: Record<string, string> = {
       EN_ATTENTE: 'bg-amber-500/20 text-amber-500 border-amber-500/50',
-      PLANIFIE:   'bg-amber-500/20 text-amber-500 border-amber-500/50',
       CONFIRME:   'bg-blue-500/20 text-blue-400 border-blue-500/50',
       EN_COURS:   'bg-violet-500/20 text-violet-400 border-violet-500/50',
       TERMINE:    'bg-emerald-500/20 text-emerald-400 border-emerald-500/50',
@@ -48,7 +47,6 @@ export default function AppointmentsList({ token }: Props) {
 
     switch (rdv.statut) {
       case 'EN_ATTENTE':
-      case 'PLANIFIE':
         return btn(() => handleAction(rdv.id, confirmAppointment), 'Confirmer', 'bg-blue-600 hover:bg-blue-500 text-white');
       case 'CONFIRME':
         return btn(() => handleAction(rdv.id, startIntervention), 'Démarrer', 'bg-violet-600 hover:bg-violet-500 text-white');
@@ -74,7 +72,7 @@ export default function AppointmentsList({ token }: Props) {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">Gestion des Rendez-vous</h2>
         <div className="flex gap-2">
-          {['', 'PLANIFIE', 'EN_ATTENTE', 'CONFIRME', 'EN_COURS', 'TERMINE'].map((s) => (
+          {['', 'EN_ATTENTE', 'CONFIRME', 'EN_COURS', 'TERMINE'].map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
