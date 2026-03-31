@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import {
@@ -62,6 +63,7 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user, token, logout } = useAuth();
+  const router = useRouter();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [versions, setVersions] = useState<VersionCatalogItem[]>([]);
@@ -88,6 +90,12 @@ function DashboardContent() {
     if (!user) return false;
     return ['ADMIN', 'AGENT', 'DIRECTION'].includes(user.type_utilisateur);
   }, [user]);
+
+  useEffect(() => {
+    if (user && isStaff) {
+      router.replace('/dashboard/agent');
+    }
+  }, [user, isStaff, router]);
 
   useEffect(() => {
     const loadVehicles = async () => {
@@ -128,6 +136,7 @@ function DashboardContent() {
   }, [token, isClient]);
 
   if (!user) return null;
+  if (isStaff) return null;
 
   const firstName = user.prenom || 'Utilisateur';
   const lastName = user.nom || '';
