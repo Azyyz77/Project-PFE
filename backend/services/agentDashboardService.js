@@ -40,7 +40,7 @@ class AgentDashboardService {
           SELECT COUNT(*) AS cnt
           FROM Reclamation
           WHERE (agent_id = @agent_id OR agent_id IS NULL)
-            AND statut IN ('OUVERTE', 'EN_COURS')
+            AND statut IN ('SOUMISE', 'EN_COURS')
         `);
 
       return {
@@ -544,10 +544,10 @@ class AgentDashboardService {
         .input('statut', sql.VarChar(20), statut)
         .input('now', sql.DateTime2, new Date())
         .query(`
-          UPDATE Reclamation 
+          UPDATE Reclamation
           SET statut = @statut,
               date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
-              date_cloture = CASE WHEN @statut IN ('RESOLUE', 'FERMEE', 'CLOTUREE') THEN @now ELSE NULL END
+              date_cloture = CASE WHEN @statut IN ('TRAITEE', 'CLOTUREE') THEN @now ELSE NULL END
           WHERE id = @id
         `);
 
@@ -559,6 +559,118 @@ class AgentDashboardService {
 
   static async resolveComplaint(complaintId) {
     return this.updateComplaintStatus(complaintId, 'CLOTUREE');
+  }
+
+  static async submitComplaint(clientId, { sujet, description }) {
+    try {
+      // Validate input parameters (clientId can be string or number from JWT)
+      if (!clientId) {
+        throw new Error('clientId invalide ou manquant');
+      }
+
+      const clientIdBigInt = BigInt(clientId);
+      const pool = await getConnection();
+
+      // Verify client exists
+      const clientCheck = await pool.request()
+        .input('client_id', sql.BigInt, clientIdBigInt)
+        .query(`SELECT id FROM Utilisateur WHERE id = @client_id`);
+
+      if (clientCheck.recordset.length === 0) {
+        throw new Error('Client non trouvé');
+      }
+
+      // Generate SIMPLE numeric numero (YYYYMMDDHHMMSS + random)
+      const now = new Date();
+      const timestamp = now.getFullYear().toString() +
+                       String(now.getMonth() + 1).padStart(2, '0') +
+                       String(now.getDate()).padStart(2, '0') +
+                       String(now.getHours()).padStart(2, '0') +
+                       String(now.getMinutes()).padStart(2, '0') +
+                       String(now.getSeconds()).padStart(2, '0');
+      const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      const numero = `${timestamp}${random}`;
+
+      // Validate inputs
+      if (!sujet || sujet.trim().length === 0) {
+        throw new Error('Le sujet est requis');
+      }
+      if (!description || description.trim().length === 0) {
+        throw new Error('La description est requise');
+      }
+
+      const sujetTrimmed = sujet.trim();
+      const descriptionTrimmed = description.trim();
+
+      if (sujetTrimmed.length > 200) {
+        throw new Error('Le sujet ne doit pas dépasser 200 caractères');
+      }
+
+      // Insert complaint
+      const result = await pool.request()
+        .input('client_id', sql.BigInt, clientIdBigInt)
+        .input('numero', sql.NVarChar(30), numero)
+        .input('sujet', sql.NVarChar(200), sujetTrimmed)
+        .input('description', sql.NVarChar(sql.MAX), descriptionTrimmed)
+        .input('date_creation', sql.DateTime2, now)
+        .query(`
+          INSERT INTO Reclamation (client_id, numero, objet, description, statut, date_soumission)
+          VALUES (@client_id, @numero, @sujet, @description, 'SOUMISE', @date_creation);
+          SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS id;
+        `);
+
+      const complaintId = result.recordset?.[0]?.id;
+      if (!complaintId) {
+        throw new Error('Impossible de créer la réclamation (pas d\'ID retourné)');
+      }
+
+      console.log(`✅ Réclamation créée: ID=${complaintId}, client_id=${clientId}, numero=${numero}`);
+
+      return {
+        id: complaintId,
+        numero,
+        sujet: sujetTrimmed,
+        description: descriptionTrimmed,
+        statut: 'SOUMISE',
+        date_creation: now.toISOString()
+      };
+    } catch (error) {
+      console.error('❌ submitComplaint error:', error.message);
+      throw new Error(`Erreur création réclamation: ${error.message}`);
+    }
+  }
+
+  static async getClientComplaints(clientId) {
+    try {
+      if (!clientId) {
+        throw new Error('clientId is required');
+      }
+
+      const clientIdBigInt = BigInt(clientId);
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('client_id', sql.BigInt, clientIdBigInt)
+        .query(`
+          SELECT
+            id,
+            numero,
+            objet as sujet,
+            description,
+            statut,
+            date_soumission as date_creation,
+            date_traitement,
+            date_cloture
+          FROM Reclamation
+          WHERE client_id = @client_id
+          ORDER BY date_soumission DESC
+        `);
+
+      console.log(`✅ Retrieved ${result.recordset.length} complaints for client ${clientId}`);
+      return result.recordset;
+    } catch (error) {
+      console.error(`❌ getClientComplaints error for client ${clientId}:`, error.message);
+      throw new Error(`Erreur récupération réclamations client: ${error.message}`);
+    }
   }
 
   // ============================================================

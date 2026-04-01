@@ -11,6 +11,7 @@ import {
   getVersionCatalog,
   updateVehicle,
 } from '@/lib/api/vehicles';
+import { submitComplaint, fetchClientComplaints } from '@/lib/api/clientDashboard';
 import { Vehicle, VersionCatalogItem } from '@/types/vehicle';
 
 type PlateType = '' | 'TUNIS' | 'NT' | 'RS';
@@ -26,6 +27,11 @@ type VehicleFormState = {
   version_id: string;
   couleur: string;
   annee: string;
+};
+
+type ComplaintFormState = {
+  sujet: string;
+  description: string;
 };
 
 const EMPTY_VEHICLE_FORM: VehicleFormState = {
@@ -65,15 +71,21 @@ function DashboardContent() {
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [versions, setVersions] = useState<VersionCatalogItem[]>([]);
+  const [complaints, setComplaints] = useState<any[]>([]);
 
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
   const [isLoadingVersions, setIsLoadingVersions] = useState(true);
+  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
   const [isSubmittingVehicle, setIsSubmittingVehicle] = useState(false);
+  const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
 
   const [vehicleError, setVehicleError] = useState('');
   const [vehicleSuccess, setVehicleSuccess] = useState('');
+  const [complaintError, setComplaintError] = useState('');
+  const [complaintSuccess, setComplaintSuccess] = useState('');
 
   const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
+  const [complaintForm, setComplaintForm] = useState<ComplaintFormState>({ sujet: '', description: '' });
 
   const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
@@ -126,6 +138,26 @@ function DashboardContent() {
 
     loadVersions();
   }, [token, isClient]);
+
+  useEffect(() => {
+    const loadComplaints = async () => {
+      if (!user || !token || !isClient) return;
+
+      setIsLoadingComplaints(true);
+      setComplaintError('');
+
+      try {
+        const data = await fetchClientComplaints(token);
+        setComplaints(data);
+      } catch (error: any) {
+        setComplaintError(error.message || 'Erreur lors du chargement des réclamations');
+      } finally {
+        setIsLoadingComplaints(false);
+      }
+    };
+
+    loadComplaints();
+  }, [user, token, isClient]);
 
   if (!user) return null;
 
@@ -502,6 +534,67 @@ function DashboardContent() {
     } catch (error: any) {
       setVehicleError(error.message || 'Erreur lors de la suppression du véhicule');
     }
+  };
+
+  const handleComplaintInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setComplaintForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitComplaint = async (e: FormEvent) => {
+    e.preventDefault();
+    setComplaintError('');
+    setComplaintSuccess('');
+
+    if (!token) {
+      setComplaintError('Session invalide, veuillez vous reconnecter.');
+      return;
+    }
+
+    if (!complaintForm.sujet.trim() || !complaintForm.description.trim()) {
+      setComplaintError('Le sujet et la description sont requis.');
+      return;
+    }
+
+    setIsSubmittingComplaint(true);
+
+    try {
+      const created = await submitComplaint(token, {
+        sujet: complaintForm.sujet.trim(),
+        description: complaintForm.description.trim(),
+      });
+
+      setComplaints((prev) => [created, ...prev]);
+      setComplaintForm({ sujet: '', description: '' });
+      setComplaintSuccess('Réclamation créée avec succès.');
+    } catch (error: any) {
+      setComplaintError(error.message || 'Erreur lors de la création de la réclamation');
+    } finally {
+      setIsSubmittingComplaint(false);
+    }
+  };
+
+  const getComplaintStatusBadge = (statut: string) => {
+    const badges: { [key: string]: string } = {
+      SOUMISE: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+      EN_COURS: 'bg-blue-100 text-blue-800 border border-blue-300',
+      TRAITEE: 'bg-green-100 text-green-800 border border-green-300',
+      CLOTUREE: 'bg-gray-100 text-gray-800 border border-gray-300'
+    };
+    return badges[statut] || 'bg-gray-100 text-gray-800 border border-gray-300';
+  };
+
+  const getComplaintStatusLabel = (statut: string) => {
+    const labels: { [key: string]: string } = {
+      SOUMISE: '🟡 Soumise',
+      EN_COURS: '🔵 En cours',
+      TRAITEE: '🟢 Traitée',
+      CLOTUREE: '⚫ Clôturée'
+    };
+    return labels[statut] || statut;
   };
 
   const vehicleModelOptions = getModelOptions(vehicleForm.marque_id);
@@ -946,6 +1039,82 @@ function DashboardContent() {
               ))}
             </div>
           )}
+            </section>
+          </>
+        )}
+
+        {/* Complaints Section - Only for CLIENT users */}
+        {isClient && (
+          <>
+            <section className="rounded-xl bg-white p-6 shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Soumettre une réclamation</h3>
+
+              {complaintError && <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{complaintError}</p>}
+              {complaintSuccess && <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{complaintSuccess}</p>}
+
+              <form onSubmit={handleSubmitComplaint} className="space-y-4">
+                <input
+                  type="text"
+                  name="sujet"
+                  placeholder="Sujet de la réclamation"
+                  value={complaintForm.sujet}
+                  onChange={handleComplaintInputChange}
+                  maxLength={255}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                />
+                <textarea
+                  name="description"
+                  placeholder="Décrivez votre réclamation en détail..."
+                  value={complaintForm.description}
+                  onChange={handleComplaintInputChange}
+                  rows={5}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmittingComplaint}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {isSubmittingComplaint ? 'Envoi en cours...' : 'Soumettre la réclamation'}
+                </button>
+              </form>
+            </section>
+
+            <section className="rounded-xl bg-white p-6 shadow-lg">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Mes réclamations</h3>
+              {isLoadingComplaints ? (
+                <p className="text-gray-600">Chargement des réclamations...</p>
+              ) : complaints.length === 0 ? (
+                <p className="text-gray-600">Aucune réclamation pour le moment.</p>
+              ) : (
+                <div className="space-y-3">
+                  {complaints.map((complaint) => (
+                    <div key={complaint.id} className="rounded-lg border border-gray-200 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-gray-900">{complaint.sujet}</p>
+                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border ${getComplaintStatusBadge(complaint.statut)}`}>
+                              {getComplaintStatusLabel(complaint.statut)}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-700">{complaint.description}</p>
+                          <p className="mt-2 text-xs text-gray-500">
+                            Numéro: {complaint.numero} | Créée le: {new Date(complaint.date_creation).toLocaleDateString('fr-FR')}
+                          </p>
+                          {complaint.date_cloture && (
+                            <p className="text-xs text-gray-500">
+                              Clôturée le: {new Date(complaint.date_cloture).toLocaleDateString('fr-FR')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           </>
         )}

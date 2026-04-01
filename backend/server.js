@@ -18,6 +18,7 @@ const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const agentDashboardRoutes = require('./routes/agentDashboardRoutes');
+const clientDashboardRoutes = require('./routes/clientDashboardRoutes');
 const { getConnection } = require('./config/database');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
@@ -46,6 +47,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/agent-dashboard', agentDashboardRoutes);
+app.use('/api/client-dashboard', clientDashboardRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
