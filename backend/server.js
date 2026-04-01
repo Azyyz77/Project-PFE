@@ -17,9 +17,8 @@ const swaggerSpec = require('./config/swagger');
 const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
-const agentDashboardRoutes = require('./routes/agentDashboardRoutes');
-const clientDashboardRoutes = require('./routes/clientDashboardRoutes');
 const { getConnection } = require('./config/database');
+const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 
 const app = express();
@@ -46,8 +45,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/appointments', appointmentRoutes);
-app.use('/api/agent-dashboard', agentDashboardRoutes);
-app.use('/api/client-dashboard', clientDashboardRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
@@ -108,6 +105,7 @@ app.listen(PORT, async () => {
   try {
     console.log('\n🔌 Connexion à la base de données...');
     await getConnection();
+    await ensureVehicleValidationSchema();
     console.log('✅ Base de données connectée avec succès!\n');
   } catch (error) {
     console.error('❌ Erreur de connexion à la base de données:', error.message);

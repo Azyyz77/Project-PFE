@@ -184,7 +184,7 @@ class AgentDashboardController {
 
   static async updateComplaintStatus(req, res) {
     if (!AgentDashboardController.#isAgent(req)) return AgentDashboardController.#forbidden(res);
-    const validStatuts = ['SOUMISE', 'EN_COURS', 'TRAITEE', 'CLOTUREE'];
+    const validStatuts = ['SOUMISE', 'OUVERTE', 'EN_COURS', 'TRAITEE', 'RESOLUE', 'FERMEE', 'CLOTUREE'];
     if (!validStatuts.includes(req.body.statut)) {
       return res.status(400).json({ error: `Statut invalide. Valeurs: ${validStatuts.join(', ')}` });
     }

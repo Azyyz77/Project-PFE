@@ -34,13 +34,19 @@ class AgentDashboardService {
 
       const recap = result.recordset[0] || {};
 
+      const vehiclesToValidate = await pool.request().query(`
+        SELECT COUNT(*) AS cnt
+        FROM Vehicule
+        WHERE statut_validation = 'EN_ATTENTE'
+      `);
+
       const reclamations = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .query(`
           SELECT COUNT(*) AS cnt
           FROM Reclamation
           WHERE (agent_id = @agent_id OR agent_id IS NULL)
-            AND statut IN ('SOUMISE', 'EN_COURS')
+            AND statut IN ('SOUMISE', 'OUVERTE', 'EN_COURS')
         `);
 
       return {
@@ -49,11 +55,11 @@ class AgentDashboardService {
         rendez_vous_aujourd_hui: recap.rendez_vous_aujourd_hui || 0,
         interventions_terminees: recap.interventions_terminees || 0,
         reclamations_ouvertes:   reclamations.recordset[0].cnt || 0,
+<<<<<<< HEAD
         vehicules_a_valider:     0, // Pas de validation dans script.sql
-        timestamp: new Date()
-      };
-    } catch (error) {
-      throw new Error(`Erreur récupération dashboard: ${error.message}`);
+=======
+        vehicules_a_valider:     vehiclesToValidate.recordset[0].cnt || 0,
+        vehicules_a_valider:     vehiclesToValidate.recordset[0].cnt || 0,`Erreur récupération dashboard: ${error.message}`);
     }
   }
 
@@ -78,11 +84,11 @@ class AgentDashboardService {
           r.duree_estimee,
           r.heure_reelle_debut AS heure_debut_reelle,
           r.heure_reelle_fin AS heure_fin_reelle,
+<<<<<<< HEAD
           r.raison_annulation AS motif_annulation,
-          r.date_creation,
-          u.nom              AS client_nom,
-          u.prenom           AS client_prenom,
-          u.telephone        AS client_telephone,
+=======
+          CAST(NULL AS NVARCHAR(255)) AS motif_annulation,
+          r.raison_annulation AS motif_annulation,       AS client_telephone,
           u.email            AS client_email,
           v.immatriculation,
           v.numero_chassis   AS vin,
@@ -97,15 +103,15 @@ class AgentDashboardService {
         JOIN Version     ve ON ve.id = v.version_id
         JOIN Modele      mo ON mo.id = ve.modele_id
         JOIN Marque      m  ON m.id  = mo.marque_id
+<<<<<<< HEAD
         WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)
+=======
+        WHERE 1 = 1
+>>>>>>> feat/agent-sav
       `;
 
       const request = pool.request()
-        .input('agent_id', sql.BigInt, agentId);
-
-      if (filters.statut) {
-        query += ` AND r.statut = @statut`;
-        request.input('statut', sql.VarChar(20), filters.statut);
+        WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)'statut', sql.VarChar(20), filters.statut);
       }
       if (filters.fromDate) {
         query += ` AND CAST(r.date_heure AS DATE) >= @fromDate`;
@@ -134,15 +140,15 @@ class AgentDashboardService {
                 ir.statut,
                 ir.commentaire AS notes,
                 sti.nom  AS sous_type_nom,
+<<<<<<< HEAD
                 ir.cout_reel AS prix,
+=======
+                CAST(NULL AS DECIMAL(10,2)) AS prix,
+>>>>>>> feat/agent-sav
                 ti.nom   AS type_nom,
                 ti.delai_moyen
               FROM InterventionRDV ir
-              JOIN SousTypeIntervention sti ON sti.id = ir.sous_type_id
-              JOIN TypeIntervention     ti  ON ti.id  = sti.type_intervention_id
-              WHERE ir.rdv_id = @rdv_id
-            `);
-          return { ...rdv, interventions: interventions.recordset };
+                ir.cout_reel AS prix,rdv, interventions: interventions.recordset };
         })
       );
 
@@ -435,7 +441,10 @@ class AgentDashboardService {
           v.numero_chassis as vin,
           v.annee,
           v.couleur,
-          'VALIDE' as statut_validation,
+          v.statut_validation,
+          v.motif_refus,
+          v.date_validation,
+          v.agent_validateur_id,
           v.date_ajout as date_creation,
           u.nom AS client_nom,
           u.prenom AS client_prenom,
@@ -449,10 +458,17 @@ class AgentDashboardService {
         JOIN Version ve ON ve.id = v.version_id
         JOIN Modele mo ON mo.id = ve.modele_id
         JOIN Marque m ON m.id = mo.marque_id
-        ORDER BY v.date_ajout DESC
+        WHERE 1 = 1
       `;
 
       const request = pool.request();
+      if (filters.statut) {
+        query += ` AND v.statut_validation = @statut`;
+        request.input('statut', sql.VarChar(20), filters.statut);
+      }
+
+      query += ` ORDER BY v.date_ajout DESC`;
+
       const result = await request.query(query);
       return result.recordset;
     } catch (error) {
@@ -461,15 +477,91 @@ class AgentDashboardService {
   }
 
   static async getVehiclesToValidate() {
-    return []; // Pas de validation vehicule dans script.sql
+    try {
+      return await AgentDashboardService.getAllVehicles({ statut: 'EN_ATTENTE' });
+    } catch (error) {
+      throw new Error(`Erreur véhicules à valider: ${error.message}`);
+    }
   }
 
   static async validateVehicle(vehicleId, agentId) {
-    throw new Error('Non supporté: pas de champ statut_validation');
+    try {
+      const pool = await getConnection();
+
+      const existing = await pool.request()
+        .input('vehicle_id', sql.BigInt, vehicleId)
+        .query(`
+          SELECT id, statut_validation
+          FROM Vehicule
+          WHERE id = @vehicle_id
+        `);
+
+      if (existing.recordset.length === 0) {
+        throw new Error('Véhicule non trouvé');
+      }
+
+      await pool.request()
+        .input('vehicle_id', sql.BigInt, vehicleId)
+        .input('agent_id', sql.BigInt, agentId)
+        .query(`
+          UPDATE Vehicule
+          SET
+            statut_validation = 'VALIDE',
+            motif_refus = NULL,
+            date_validation = GETDATE(),
+            agent_validateur_id = @agent_id
+          WHERE id = @vehicle_id
+        `);
+
+      return {
+        id: vehicleId,
+        statut_validation: 'VALIDE',
+        agent_validateur_id: agentId,
+      };
+    } catch (error) {
+      throw new Error(`Erreur validation véhicule: ${error.message}`);
+    }
   }
 
   static async rejectVehicle(vehicleId, agentId, reason) {
-    throw new Error('Non supporté: pas de champ statut_validation');
+    try {
+      const pool = await getConnection();
+
+      const existing = await pool.request()
+        .input('vehicle_id', sql.BigInt, vehicleId)
+        .query(`
+          SELECT id
+          FROM Vehicule
+          WHERE id = @vehicle_id
+        `);
+
+      if (existing.recordset.length === 0) {
+        throw new Error('Véhicule non trouvé');
+      }
+
+      await pool.request()
+        .input('vehicle_id', sql.BigInt, vehicleId)
+        .input('agent_id', sql.BigInt, agentId)
+        .input('motif_refus', sql.NVarChar(255), reason || 'Refusé par l\'agent SAV')
+        .query(`
+          UPDATE Vehicule
+          SET
+            statut_validation = 'REFUSE',
+            motif_refus = @motif_refus,
+            date_validation = GETDATE(),
+            agent_validateur_id = @agent_id
+          WHERE id = @vehicle_id
+        `);
+
+      return {
+        id: vehicleId,
+        statut_validation: 'REFUSE',
+        motif_refus: reason || 'Refusé par l\'agent SAV',
+        agent_validateur_id: agentId,
+      };
+    } catch (error) {
+      throw new Error(`Erreur refus véhicule: ${error.message}`);
+    }
   }
 
   // ============================================================
@@ -544,23 +636,24 @@ class AgentDashboardService {
         .input('statut', sql.VarChar(20), statut)
         .input('now', sql.DateTime2, new Date())
         .query(`
+<<<<<<< HEAD
           UPDATE Reclamation
           SET statut = @statut,
               date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
               date_cloture = CASE WHEN @statut IN ('TRAITEE', 'CLOTUREE') THEN @now ELSE NULL END
+=======
+          UPDATE Reclamation 
+          SET statut = @statut,
+              date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
+              date_cloture = CASE WHEN @statut IN ('RESOLUE', 'FERMEE', 'CLOTUREE') THEN @now ELSE NULL END
+>>>>>>> feat/agent-sav
           WHERE id = @id
-        `);
+          UPDATE Reclamation
+          SET statut = @statut,
+              date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
+              date_cloture = CASE WHEN @statut IN ('TRAITEE', 'CLOTUREE', 'RESOLUE', 'FERMEE') THEN @now ELSE NULL END
 
-      return { id: complaintId, statut };
-    } catch (error) {
-      throw new Error(`Erreur statut réclamation: ${error.message}`);
-    }
-  }
-
-  static async resolveComplaint(complaintId) {
-    return this.updateComplaintStatus(complaintId, 'CLOTUREE');
-  }
-
+<<<<<<< HEAD
   static async submitComplaint(clientId, { sujet, description }) {
     try {
       // Validate input parameters (clientId can be string or number from JWT)
@@ -579,7 +672,6 @@ class AgentDashboardService {
       if (clientCheck.recordset.length === 0) {
         throw new Error('Client non trouvé');
       }
-
       // Generate SIMPLE numeric numero (YYYYMMDDHHMMSS + random)
       const now = new Date();
       const timestamp = now.getFullYear().toString() +
@@ -673,14 +765,14 @@ class AgentDashboardService {
     }
   }
 
+=======
+>>>>>>> feat/agent-sav
   // ============================================================
   // NOTIFICATIONS
   // ============================================================
 
   static async getNotifications(agentId) {
     try {
-      const pool = await getConnection();
-      const result = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .query(`
           SELECT TOP 20 id, titre, message, type, entite_type, entite_id, lu, date_envoi as date_creation

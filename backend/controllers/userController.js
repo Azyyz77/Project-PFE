@@ -348,6 +348,27 @@ const updateProfile = async (req, res) => {
     }
 
     const pool = await getConnection();
+
+    if (req.user.role === 'CLIENT') {
+      const validatedVehicleResult = await pool
+        .request()
+        .input('id', sql.BigInt, id)
+        .query(`
+          SELECT COUNT(*) AS validated_count
+          FROM Vehicule
+          WHERE client_id = @id
+            AND statut_validation = 'VALIDE'
+        `);
+
+      const validatedCount = validatedVehicleResult.recordset[0]?.validated_count || 0;
+      if (validatedCount === 0) {
+        return res.status(403).json({
+          error: 'Validation véhicule requise',
+          message: 'Votre profil ne peut être complété qu\'après validation de votre véhicule par un agent SAV.'
+        });
+      }
+    }
+
     const result = await pool
       .request()
       .input('id', sql.BigInt, id)
