@@ -1,10 +1,19 @@
 'use client';
 
+/**
+ * Verify OTP Page - Refactored with shadcn/ui
+ */
+
 import { useState, FormEvent, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Alert } from '@/components/ui/alert';
+import { AuthCard } from '@/components/auth/AuthCard';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { verifyOtp } from '../../lib/api/auth';
+import { validateOtp } from '@/lib/auth-utils';
 
 function VerifyOtpContent() {
   const searchParams = useSearchParams();
@@ -12,8 +21,8 @@ function VerifyOtpContent() {
   const router = useRouter();
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleOtpChange = (index: number, value: string) => {
@@ -44,13 +53,17 @@ function VerifyOtpContent() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    const code = otp.join('');
-    if (code.length !== 6) {
-      setError('Veuillez entrer le code à 6 chiffres.');
+
+    const validationError = validateOtp(otp);
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
     setIsSubmitting(true);
+
     try {
+      const code = otp.join('');
       const result = await verifyOtp(email, code);
       router.push(`/reset-password?token=${encodeURIComponent(result.resetToken)}`);
     } catch (err: any) {
@@ -61,80 +74,75 @@ function VerifyOtpContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Vérification WhatsApp
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Entrez le code à 6 chiffres envoyé par WhatsApp au numéro associé à{' '}
-            <span className="font-medium text-gray-800">{email}</span>.
+    <AuthCard
+      title="Vérification WhatsApp"
+      subtitle={`Entrez le code à 6 chiffres envoyé à ${email}`}
+      bottomLink={{
+        text: "Vous n'avez pas reçu le code ?",
+        href: "/forgot-password",
+        linkText: "Renvoyer"
+      }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Error */}
+        {error && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <p className="text-sm text-red-800">{error}</p>
+          </Alert>
+        )}
+
+        {/* OTP Code */}
+        <div className="space-y-4">
+          <Label className="text-center block">Code OTP</Label>
+          <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => { inputRefs.current[index] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleOtpChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                disabled={isSubmitting}
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg border-2 border-gray-300 text-center text-lg sm:text-xl font-bold text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:bg-gray-100"
+              />
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 text-center">
+            Vous pouvez aussi coller le code
           </p>
         </div>
 
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
-
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg"
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || otp.join('').length !== 6}
+          size="lg"
         >
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-              Code OTP
-            </label>
-            <div className="flex justify-center gap-3" onPaste={handlePaste}>
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => { inputRefs.current[index] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="h-12 w-12 rounded-lg border-2 border-gray-300 text-center text-xl font-bold text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 transition-colors"
-                />
-              ))}
-            </div>
-          </div>
+          {isSubmitting ? 'Vérification en cours...' : 'Vérifier le code'}
+        </Button>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || otp.join('').length !== 6}
-            className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? 'Vérification...' : 'Vérifier le code'}
-          </button>
-
-          <div className="text-center space-y-2 text-sm">
-            <p className="text-gray-600">
-              Vous n&apos;avez pas reçu le code ?{' '}
-              <Link
-                href={`/forgot-password`}
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Renvoyer
-              </Link>
-            </p>
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Retour à la connexion
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Back Link */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => router.push('/login')}
+        >
+          Retour à la connexion
+        </Button>
+      </form>
+    </AuthCard>
   );
 }
 
 export default function VerifyOtpPage() {
   return (
-    <Suspense>
+    <Suspense fallback={null}>
       <VerifyOtpContent />
     </Suspense>
   );

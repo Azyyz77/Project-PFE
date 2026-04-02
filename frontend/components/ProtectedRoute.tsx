@@ -10,21 +10,35 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: string | string[];
   redirectTo?: string;
 }
 
 export default function ProtectedRoute({ 
   children, 
+  requiredRole,
   redirectTo = '/login' 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push(redirectTo);
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push(redirectTo);
+        return;
+      }
+
+      // Check role if required
+      if (requiredRole && user) {
+        const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        if (!allowedRoles.includes(user.role)) {
+          router.push('/dashboard');
+          return;
+        }
+      }
     }
-  }, [isAuthenticated, isLoading, router, redirectTo]);
+  }, [isAuthenticated, isLoading, user, requiredRole, router, redirectTo]);
 
   // Afficher un loader pendant la vérification
   if (isLoading) {

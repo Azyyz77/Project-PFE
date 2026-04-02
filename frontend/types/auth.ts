@@ -10,7 +10,7 @@ export interface User {
   nom: string;
   email: string;
   telephone: string;
-  type_utilisateur: UserRole;
+  role: UserRole;
   actif?: boolean;
   date_creation?: string;
 }

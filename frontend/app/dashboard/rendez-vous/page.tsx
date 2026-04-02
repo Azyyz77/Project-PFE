@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
@@ -16,6 +15,35 @@ import {
 } from '@/lib/api/appointments';
 import { Vehicle } from '@/types/vehicle';
 import { Agency, Appointment, AppointmentIntervention, InterventionType, Slot } from '@/types/appointment';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  MapPin,
+  Car,
+  Wrench,
+  CheckCircle,
+  AlertTriangle,
+  Trash2,
+  X,
+} from 'lucide-react';
 
 type AppointmentFilter = 'all' | 'scheduled' | 'in_progress' | 'completed';
 type BookingStep = 1 | 2 | 3;
@@ -56,6 +84,7 @@ export default function RendezVousPage() {
   );
 }
 
+
 function RendezVousContent() {
   const { user, token } = useAuth();
 
@@ -71,7 +100,6 @@ function RendezVousContent() {
   const [isCancelling, setIsCancelling] = useState(false);
 
   const [globalError, setGlobalError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const [activeFilter, setActiveFilter] = useState<AppointmentFilter>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,7 +123,7 @@ function RendezVousContent() {
   });
 
   const todayISO = useMemo(() => toLocalISODate(new Date()), []);
-  const minDateISO = todayISO; // Can't book for past dates
+  const minDateISO = todayISO;
 
   const getErrorMessage = (value: unknown, fallback: string) => {
     if (value instanceof Error && value.message) {
@@ -160,12 +188,6 @@ function RendezVousContent() {
     return appointments.filter((appointment) => statusMap[activeFilter].includes(appointment.statut));
   }, [appointments, activeFilter]);
 
-  const loadAppointments = useCallback(async () => {
-    if (!token) return;
-    const list = await getMyAppointments(token);
-    setAppointments(list);
-  }, [token]);
-
   useEffect(() => {
     const bootstrap = async () => {
       if (!user || !token) return;
@@ -183,20 +205,25 @@ function RendezVousContent() {
         setVehicles(myVehicles);
         setAgencies(allAgencies);
         setInterventions(catalog);
-        await loadAppointments();
+
+        // Load appointments
+        const list = await getMyAppointments(token);
+        setAppointments(list);
 
         if (allAgencies.length > 0) {
           setSelectedAgencyId(String(allAgencies[0].id));
         }
       } catch (err: unknown) {
-        setGlobalError(getErrorMessage(err, 'Impossible de charger les données de rendez-vous.'));
+        const msg = getErrorMessage(err, 'Impossible de charger les données de rendez-vous.');
+        setGlobalError(msg);
+        toast.error('Erreur', { description: msg });
       } finally {
         setIsBootLoading(false);
       }
     };
 
     bootstrap();
-  }, [loadAppointments, token, user]);
+  }, [token, user]);
 
   useEffect(() => {
     const loadSlots = async () => {
@@ -206,7 +233,6 @@ function RendezVousContent() {
         return;
       }
 
-      // Validate date
       if (!isDateValid(selectedDate)) {
         setGlobalError('Date invalide sélectionnée.');
         setSlots([]);
@@ -233,7 +259,8 @@ function RendezVousContent() {
           setSelectedHour('');
         }
       } catch (err: unknown) {
-        setGlobalError(getErrorMessage(err, 'Impossible de charger les créneaux disponibles.'));
+        const msg = getErrorMessage(err, 'Impossible de charger les créneaux disponibles.');
+        setGlobalError(msg);
       } finally {
         setIsSlotsLoading(false);
       }
@@ -265,7 +292,7 @@ function RendezVousContent() {
     }
 
     return {
-      title: monthCursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
+      title: monthCursor.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
       cells,
     };
   }, [monthCursor]);
@@ -313,11 +340,12 @@ function RendezVousContent() {
 
   const openModal = (presetDate?: string) => {
     if (validatedVehicles.length === 0) {
-      setGlobalError('Vous devez attendre la validation de votre véhicule par un agent SAV avant de réserver un rendez-vous.');
+      const msg = 'Vous devez attendre la validation de votre véhicule par un agent SAV avant de réserver un rendez-vous.';
+      setGlobalError(msg);
+      toast.warning('Attention', { description: msg });
       return;
     }
 
-    setSuccess('');
     setGlobalError('');
     setIsModalOpen(true);
     resetModal();
@@ -346,7 +374,9 @@ function RendezVousContent() {
       setIsDetailModalOpen(true);
       setCancelReason('');
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'Impossible de charger les détails du rendez-vous.'));
+      const msg = getErrorMessage(err, 'Impossible de charger les détails du rendez-vous.');
+      setGlobalError(msg);
+      toast.error('Erreur', { description: msg });
     }
   };
 
@@ -372,7 +402,6 @@ function RendezVousContent() {
     try {
       setIsSubmitting(true);
       setGlobalError('');
-      setSuccess('');
 
       const dateTime = `${selectedDate}T${selectedHour}:00`;
 
@@ -387,11 +416,14 @@ function RendezVousContent() {
         token
       );
 
-      setSuccess('Rendez-vous réservé avec succès.');
-      await loadAppointments();
+      toast.success('Rendez-vous réservé avec succès.');
+      const list = await getMyAppointments(token);
+      setAppointments(list);
       closeModal();
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'Ce créneau n\'est pas disponible. Veuillez choisir une autre heure.'));
+      const msg = getErrorMessage(err, 'Ce créneau n\'est pas disponible. Veuillez choisir une autre heure.');
+      setGlobalError(msg);
+      toast.error('Erreur', { description: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -406,11 +438,14 @@ function RendezVousContent() {
 
       await cancelAppointment(selectedAppointmentId, { raison: cancelReason || undefined }, token);
 
-      setSuccess('Rendez-vous annulé avec succès.');
-      await loadAppointments();
+      toast.success('Rendez-vous annulé avec succès.');
+      const list = await getMyAppointments(token);
+      setAppointments(list);
       closeDetailModal();
     } catch (err: unknown) {
-      setGlobalError(getErrorMessage(err, 'Impossible d\'annuler le rendez-vous.'));
+      const msg = getErrorMessage(err, 'Impossible d\'annuler le rendez-vous.');
+      setGlobalError(msg);
+      toast.error('Erreur', { description: msg });
     } finally {
       setIsCancelling(false);
     }
@@ -434,572 +469,712 @@ function RendezVousContent() {
     return appointmentDate > new Date();
   };
 
+  const isBookingWith24h = useMemo(() => {
+    if (!selectedDate || !selectedHour) return false;
+    const bookingTime = new Date(`${selectedDate}T${selectedHour}:00`);
+    const now = new Date();
+    const hoursUntilBooking = (bookingTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilBooking < 24 && hoursUntilBooking > 0;
+  }, [selectedDate, selectedHour]);
+
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-[#f3f6fb] p-4 sm:p-6">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0c2c5d]">Rendez-vous</h1>
-            <p className="mt-1 text-sm text-slate-500">Gérez et réservez vos rendez-vous de service.</p>
-          </div>
+        {/* Header with Gradient Banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-800 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-950 p-6 sm:p-8 text-white shadow-lg">
+          <div className="absolute -right-20 -top-20 size-40 rounded-full bg-white/5 blur-3xl" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl sm:text-4xl font-bold">Rendez-vous</h1>
+                <Badge variant="secondary" className="text-sm">
+                  {appointments.length} total
+                </Badge>
+              </div>
+              <p className="text-sm text-blue-100">Gérez et réservez vos rendez-vous de service.</p>
+            </div>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-            >
-              Tableau de bord
-            </Link>
-            <button
-              type="button"
-              onClick={() => openModal()}
-              disabled={validatedVehicles.length === 0}
-              className="rounded-xl bg-[#ff6b00] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#ef6400] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              + Réserver un rendez-vous
-            </button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => openModal()}
+                disabled={validatedVehicles.length === 0}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+              >
+                + Réserver un rendez-vous
+              </Button>
+              <Calendar className="size-8 text-blue-200 hidden sm:block" />
+            </div>
           </div>
-        </header>
+        </div>
 
         {validatedVehicles.length === 0 && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Votre véhicule est en attente de validation SAV. Vous pourrez réserver un rendez-vous dès qu'un agent valide votre véhicule.
-          </div>
+          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+            <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              Votre véhicule est en attente de validation SAV. Vous pourrez réserver un rendez-vous dès qu'un agent valide votre véhicule.
+            </AlertDescription>
+          </Alert>
         )}
 
         {globalError && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{globalError}</div>
-        )}
-        {success && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>
+          <Alert variant="destructive">
+            <AlertTriangle className="size-4" />
+            <AlertDescription>{globalError}</AlertDescription>
+          </Alert>
         )}
 
         {isBootLoading ? (
-          <section className="rounded-2xl border border-slate-200 bg-white p-8 text-sm text-slate-500 shadow-sm">
-            Chargement des données de rendez-vous...
-          </section>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="space-y-3">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
+                <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mx-auto animate-pulse" />
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
-                  }
-                  className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
-                >
-                  {'<'}
-                </button>
-                <h2 className="text-xl font-semibold capitalize text-[#0c2c5d]">{monthMeta.title}</h2>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
-                  }
-                  className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100"
-                >
-                  {'>'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold uppercase text-slate-400">
-                {WEEK_DAYS.map((day) => (
-                  <span key={day}>{day}</span>
-                ))}
-              </div>
-
-              <div className="mt-3 grid grid-cols-7 gap-2">
-                {monthMeta.cells.map((cell, index) => {
-                  if (!cell.dateISO || !cell.day) {
-                    return <div key={`empty-${index}`} className="h-10" />;
-                  }
-
-                  const isToday = cell.dateISO === todayISO;
-                  const isSelected = cell.dateISO === selectedDate;
-                  const hasAppointment = appointmentDateSet.has(cell.dateISO);
-                  const isDisabled = isDateInPast(cell.dateISO);
-
-                  return (
-                    <button
-                      key={cell.dateISO}
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        if (!isDisabled) {
-                          setSelectedDate(cell.dateISO as string);
-                          if (!isModalOpen) {
-                            openModal(cell.dateISO as string);
-                          }
-                        }
-                      }}
-                      className={`relative h-10 rounded-lg text-sm font-semibold transition ${
-                        isDisabled
-                          ? 'cursor-not-allowed text-slate-300'
-                          : isSelected
-                          ? 'bg-[#ff6b00] text-white'
-                          : isToday
-                          ? 'bg-[#102f63] text-white'
-                          : 'text-slate-700 hover:bg-slate-100'
-                      }`}
-                    >
-                      {cell.day}
-                      {hasAppointment && !isDisabled && (
-                        <span
-                          className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${
-                            isSelected || isToday ? 'bg-white' : 'bg-red-500'
-                          }`}
-                        />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-6 space-y-2 text-xs text-slate-500">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
-                  <span>Jour avec rendez-vous</span>
+          <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+            {/* Calendar Card */}
+            <Card className="h-fit">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
+                    }
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <CardTitle className="text-base capitalize text-center flex-1">
+                    {monthMeta.title}
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
+                    }
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[#102f63]" />
-                  <span>Aujourd'hui</span>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {WEEK_DAYS.map((day) => (
+                    <span key={day} className="text-xs font-semibold text-slate-500 py-2">
+                      {day}
+                    </span>
+                  ))}
                 </div>
-              </div>
-            </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-semibold text-[#0c2c5d]">Tous les rendez-vous</h2>
+                <div className="grid grid-cols-7 gap-1">
+                  {monthMeta.cells.map((cell, index) => {
+                    if (!cell.dateISO || !cell.day) {
+                      return <div key={`empty-${index}`} className="h-9" />;
+                    }
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter('all')}
-                    className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
-                      activeFilter === 'all' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    Tous
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter('scheduled')}
-                    className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
-                      activeFilter === 'scheduled' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    Planifié
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter('in_progress')}
-                    className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
-                      activeFilter === 'in_progress' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    En cours
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter('completed')}
-                    className={`rounded-full px-4 py-1.5 text-sm font-semibold ${
-                      activeFilter === 'completed' ? 'bg-[#102f63] text-white' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    Terminé
-                  </button>
-                </div>
-              </div>
-
-              {filteredAppointments.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-500">
-                  Aucun rendez-vous trouvé pour ce filtre.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {filteredAppointments.map((appointment) => {
-                    const when = new Date(appointment.date_heure);
-                    const dayNumber = when.getDate();
-                    const monthLabel = when.toLocaleDateString(undefined, { month: 'short' });
-                    const timeLabel = when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const status = statusInfo(appointment.statut);
+                    const isToday = cell.dateISO === todayISO;
+                    const isSelected = cell.dateISO === selectedDate;
+                    const hasAppointment = appointmentDateSet.has(cell.dateISO);
+                    const isDisabled = isDateInPast(cell.dateISO);
 
                     return (
                       <button
-                        key={appointment.id}
+                        key={cell.dateISO}
                         type="button"
-                        onClick={() => openDetailModal(appointment.id)}
-                        className="w-full text-left transition hover:bg-slate-50"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            setSelectedDate(cell.dateISO as string);
+                            if (!isModalOpen) {
+                              openModal(cell.dateISO as string);
+                            }
+                          }
+                        }}
+                        className={`relative h-9 rounded-lg text-xs font-semibold transition-all ${
+                          isDisabled
+                            ? 'cursor-not-allowed text-slate-300 dark:text-slate-600'
+                            : isSelected
+                            ? 'bg-orange-500 text-white'
+                            : isToday
+                            ? 'ring-2 ring-blue-700 dark:ring-blue-400 font-bold text-blue-700 dark:text-blue-400'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
                       >
-                        <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl bg-slate-100 text-slate-700">
-                              <span className="text-xl font-bold">{dayNumber}</span>
-                              <span className="text-xs uppercase">{monthLabel}</span>
-                            </div>
-
-                            <div>
-                              <p className="text-lg font-semibold text-[#102f63]">
-                                {appointment.interventions?.[0]
-                                  ? `${appointment.interventions[0].type_nom} - ${appointment.interventions[0].sous_type_nom}`
-                                  : 'Rendez-vous de service'}
-                              </p>
-                              <p className="text-sm text-slate-500">
-                                {appointment.immatriculation || 'Véhicule'} | {appointment.agence_nom || 'Agence'}
-                              </p>
-                              <p className="mt-1 text-sm text-slate-500">{timeLabel}</p>
-                            </div>
-                          </div>
-
-                          <span className={`w-fit rounded-full px-3 py-1 text-sm font-semibold ${status.badge}`}>
-                            {status.label}
-                          </span>
-                        </article>
+                        {cell.day}
+                        {hasAppointment && !isDisabled && (
+                          <span
+                            className={`absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${
+                              isSelected || isToday ? 'bg-white' : 'bg-red-500'
+                            }`}
+                          />
+                        )}
                       </button>
                     );
                   })}
                 </div>
-              )}
-            </article>
-          </section>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-red-500" />
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Jour avec rendez-vous</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full ring-2 ring-blue-700 dark:ring-blue-400" />
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Aujourd'hui</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Appointments List Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Tous les rendez-vous</CardTitle>
+              </CardHeader>
+
+              <CardContent>
+                <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as AppointmentFilter)}>
+                  <TabsList className="grid w-full grid-cols-4 mb-6">
+                    <TabsTrigger value="all">Tous</TabsTrigger>
+                    <TabsTrigger value="scheduled">Planifié</TabsTrigger>
+                    <TabsTrigger value="in_progress">En cours</TabsTrigger>
+                    <TabsTrigger value="completed">Terminé</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value={activeFilter} className="space-y-3">
+                    {filteredAppointments.length === 0 ? (
+                      <div className="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-8 text-center">
+                        <Calendar className="size-12 mx-auto text-slate-400 dark:text-slate-500 mb-3" />
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Aucun rendez-vous trouvé pour ce filtre.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => openModal()}
+                          disabled={validatedVehicles.length === 0}
+                        >
+                          Réserver maintenant
+                        </Button>
+                      </div>
+                    ) : (
+                      filteredAppointments.map((appointment) => {
+                        const when = new Date(appointment.date_heure);
+                        const dayNumber = when.getDate();
+                        const monthLabel = when.toLocaleDateString('fr-FR', { month: 'short' });
+                        const timeLabel = when.toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        });
+                        const status = statusInfo(appointment.statut);
+
+                        return (
+                          <Card
+                            key={appointment.id}
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => openDetailModal(appointment.id)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                                <div className="flex gap-4">
+                                  <div className="flex flex-col items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-3 min-w-max">
+                                    <span className="text-lg font-bold">{dayNumber}</span>
+                                    <span className="text-xs uppercase text-slate-600 dark:text-slate-400">
+                                      {monthLabel}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-slate-900 dark:text-white">
+                                      {appointment.interventions?.[0]
+                                        ? `${appointment.interventions[0].type_nom} - ${appointment.interventions[0].sous_type_nom}`
+                                        : 'Rendez-vous de service'}
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mt-2 text-xs text-slate-600 dark:text-slate-400">
+                                      <span className="flex items-center gap-1">
+                                        <Car className="size-3" />
+                                        {appointment.immatriculation || 'Véhicule'}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="size-3" />
+                                        {appointment.agence_nom || 'Agence'}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="size-3" />
+                                        {timeLabel}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <Badge className={status.badge}>{status.label}</Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="bg-[#183a74] px-6 py-5 text-white">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-4xl font-bold leading-none">Réserver un rendez-vous</h3>
-                  <p className="mt-1 text-base text-slate-200">Étape {step} sur 3</p>
+      {/* Booking Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Réserver un rendez-vous</DialogTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Étape {step} sur 3</p>
+          </DialogHeader>
+
+          {/* Step Indicator */}
+          <div className="flex gap-4 my-6">
+            {[1, 2, 3].map((item) => {
+              const state = item < step ? 'done' : item === step ? 'active' : 'idle';
+              return (
+                <div key={item} className="flex flex-1 items-center gap-3">
+                  <div
+                    className={`flex items-center justify-center size-8 rounded-full font-bold text-sm transition-all ${
+                      state === 'done'
+                        ? 'bg-green-600 text-white'
+                        : state === 'active'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {state === 'done' ? '✓' : item}
+                  </div>
+                  {item !== 3 && (
+                    <div className={`h-0.5 flex-1 ${state !== 'idle' ? 'bg-slate-300 dark:bg-slate-600' : ''}`} />
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="rounded-lg px-2 py-1 text-2xl text-slate-300 hover:bg-white/10 hover:text-white"
+              );
+            })}
+          </div>
+
+          {globalError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="size-4" />
+              <AlertDescription>{globalError}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Step 1: Vehicle & Service */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Sélectionnez un véhicule et un service</h3>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Agence *</label>
+                <select
+                  value={selectedAgencyId}
+                  onChange={(e) => setSelectedAgencyId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
                 >
-                  x
-                </button>
+                  <option value="">Sélectionner une agence</option>
+                  {agencies.map((agency) => (
+                    <option key={agency.id} value={agency.id}>
+                      {agency.nom} - {agency.ville}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Véhicule *</label>
+                <select
+                  value={selectedVehicleId}
+                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
+                >
+                  <option value="">Sélectionnez votre véhicule</option>
+                  {validatedVehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedVehicle && (
+                <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+                  <CardContent className="p-4 pt-4">
+                    <div className="flex items-center gap-3">
+                      <Car className="size-5 text-blue-600 dark:text-blue-400" />
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {selectedVehicle.marque_nom} {selectedVehicle.modele_nom}
+                        </p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                          {selectedVehicle.immatriculation}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Type de service *</label>
+                <select
+                  value={selectedServiceSubtypeId}
+                  onChange={(e) => setSelectedServiceSubtypeId(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
+                >
+                  <option value="">Sélectionner un type de service</option>
+                  {serviceOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+          )}
 
-            <div className="space-y-6 px-6 py-6">
-              <ol className="flex items-center gap-4">
-                {[1, 2, 3].map((item) => {
-                  const state = item < step ? 'done' : item === step ? 'active' : 'idle';
-                  return (
-                    <li key={item} className="flex flex-1 items-center gap-3">
-                      <span
-                        className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                          state === 'done'
-                            ? 'bg-[#102f63] text-white'
-                            : state === 'active'
-                            ? 'bg-[#102f63] text-white'
-                            : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        {state === 'done' ? 'v' : item}
-                      </span>
-                      {item !== 3 && <span className="h-[2px] flex-1 bg-slate-200" />}
-                    </li>
-                  );
-                })}
-              </ol>
+          {/* Step 2: Date & Time */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Sélectionnez une date et une heure</h3>
 
-              {globalError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {globalError}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Date *</label>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  min={minDateISO}
+                  className="rounded-lg"
+                />
+              </div>
+
+              {isSlotsLoading ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Créneau horaire *</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="h-9 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                    ))}
+                  </div>
                 </div>
-              )}
-
-              {step === 1 && (
-                <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Sélectionnez un véhicule et un service</h4>
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Agence</span>
-                    <select
-                      value={selectedAgencyId}
-                      onChange={(e) => setSelectedAgencyId(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                    >
-                      <option value="">Sélectionner une agence</option>
-                      {agencies.map((agency) => (
-                        <option key={agency.id} value={agency.id}>
-                          {agency.nom} - {agency.ville}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Véhicule</span>
-                    <select
-                      value={selectedVehicleId}
-                      onChange={(e) => setSelectedVehicleId(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                    >
-                      <option value="">Sélectionnez votre véhicule</option>
-                      {validatedVehicles.map((vehicle) => (
-                        <option key={vehicle.id} value={vehicle.id}>
-                          {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Type de service</span>
-                    <select
-                      value={selectedServiceSubtypeId}
-                      onChange={(e) => setSelectedServiceSubtypeId(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                    >
-                      <option value="">Sélectionner un type de service</option>
-                      {serviceOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </section>
-              )}
-
-              {step === 2 && (
-                <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Sélectionnez une date et une heure</h4>
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Date</span>
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      min={minDateISO}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                    />
-                  </label>
-
-                  {isSlotsLoading ? (
-                    <p className="text-sm text-slate-500">Chargement des créneaux disponibles...</p>
-                  ) : slots.length > 0 ? (
-                    <label className="block space-y-2 text-sm">
-                      <span className="font-semibold text-slate-700">Créneau horaire</span>
-                      <select
-                        value={selectedHour}
-                        onChange={(e) => setSelectedHour(e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
+              ) : slots.length > 0 ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Créneau horaire *</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {slots.map((slot) => (
+                      <Button
+                        key={slot.hour}
+                        variant={selectedHour === slot.label ? 'default' : 'outline'}
+                        disabled={slot.is_full}
+                        onClick={() => setSelectedHour(slot.label)}
+                        className={
+                          selectedHour === slot.label
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                            : slot.is_full
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'hover:bg-orange-50 dark:hover:bg-orange-950/20'
+                        }
+                        size="sm"
                       >
-                        <option value="">Sélectionner une heure</option>
-                        {slots.map((slot) => (
-                          <option key={slot.hour} value={slot.label} disabled={slot.is_full}>
-                            {slot.label} {slot.is_full ? '(Complet)' : `(${slot.available}/${slot.capacity})`}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                      Aucun créneau disponible pour cette date et agence.
-                    </p>
-                  )}
-
-                  <label className="block space-y-2 text-sm">
-                    <span className="font-semibold text-slate-700">Notes supplémentaires (Optionnel)</span>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Toute demande spéciale ou commentaire..."
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                      rows={3}
-                    />
-                  </label>
-                </section>
+                        <span className="text-xs">{slot.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
+                    {slots.some((s) => !s.is_full) ? 'Sélectionnez une heure disponible' : 'Aucun créneau disponible'}
+                  </p>
+                </div>
+              ) : (
+                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+                  <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    Aucun créneau disponible pour cette date et agence.
+                  </AlertDescription>
+                </Alert>
               )}
 
-              {step === 3 && (
-                <section className="space-y-4">
-                  <h4 className="text-3xl font-bold text-[#102f63]">Vérifier et confirmer</h4>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Notes supplémentaires (Optionnel)</label>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Toute demande spéciale ou commentaire..."
+                  className="min-h-24"
+                  maxLength={500}
+                />
+                <p className="text-xs text-slate-500">
+                  {notes.length}/500 caractères
+                </p>
+              </div>
+            </div>
+          )}
 
-                  <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          {/* Step 3: Confirmation */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Vérifier et confirmer</h3>
+
+              {isBookingWith24h && (
+                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
+                  <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    Attention: Ce rendez-vous est prévu dans moins de 24h.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Card className="bg-slate-50 dark:bg-slate-900/30">
+                <CardContent className="p-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-slate-600">Véhicule</p>
-                      <p className="font-semibold text-slate-900">{selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600">Agence</p>
-                      <p className="font-semibold text-slate-900">{selectedAgency?.nom}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600">Service</p>
-                      <p className="font-semibold text-slate-900">{selectedService?.label}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-600">Date et heure</p>
-                      <p className="font-semibold text-slate-900">
-                        {selectedDate} à {selectedHour}
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Véhicule</p>
+                      <p className="font-semibold text-sm">
+                        {selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {selectedVehicle?.immatriculation}
                       </p>
                     </div>
-                    {notes && (
-                      <div>
-                        <p className="text-sm text-slate-600">Remarques</p>
-                        <p className="font-semibold text-slate-900">{notes}</p>
-                      </div>
-                    )}
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Agence</p>
+                      <p className="font-semibold text-sm">{selectedAgency?.nom}</p>
+                      <p className="text-xs text-slate-500">{selectedAgency?.ville}</p>
+                    </div>
                   </div>
-                </section>
-              )}
+                  <Separator />
+                  <div>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Service</p>
+                    <p className="font-semibold text-sm">{selectedService?.label}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Date</p>
+                      <p className="font-semibold text-sm">{selectedDate}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Heure</p>
+                      <p className="font-semibold text-sm">{selectedHour}</p>
+                    </div>
+                  </div>
+                  {notes && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">Remarques</p>
+                        <p className="text-sm mt-1">{notes}</p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             </div>
+          )}
 
-            <div className="flex gap-3 pt-4">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={goBackStep}
-                  disabled={isSubmitting}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-                >
-                  Back
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={step === 3 ? submitAppointment : goNextStep}
+          {/* Footer Buttons */}
+          <DialogFooter className="gap-2 sm:gap-0">
+            {step > 1 && (
+              <Button
+                variant="outline"
+                onClick={goBackStep}
                 disabled={isSubmitting}
-                className="flex-1 rounded-xl bg-[#ff6b00] px-4 py-2.5 font-semibold text-white hover:bg-[#ef6400] disabled:opacity-50"
               >
-                {isSubmitting ? 'Processing...' : step === 3 ? 'Confirm Booking' : 'Next'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                Retour
+              </Button>
+            )}
+            {step < 3 && (
+              <Button
+                onClick={goNextStep}
+                disabled={isSubmitting}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                Suivant
+              </Button>
+            )}
+            {step === 3 && (
+              <Button
+                onClick={submitAppointment}
+                disabled={isSubmitting}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isSubmitting ? 'Traitement en cours...' : 'Confirmer le rendez-vous'}
+                {!isSubmitting && <CheckCircle className="size-4 ml-2" />}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Modal */}
-      {isDetailModalOpen && selectedAppointmentDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 p-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="bg-[#183a74] px-6 py-5 text-white">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-2xl font-bold leading-none">Détails du rendez-vous</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeDetailModal}
-                  className="rounded-lg px-2 py-1 text-2xl text-slate-300 hover:bg-white/10 hover:text-white"
-                >
-                  x
-                </button>
-              </div>
-            </div>
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Détails du rendez-vous</DialogTitle>
+          </DialogHeader>
 
-            <div className="space-y-6 px-6 py-6">
-              {globalError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {globalError}
+          {globalError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="size-4" />
+              <AlertDescription>{globalError}</AlertDescription>
+            </Alert>
+          )}
+
+          {selectedAppointmentDetail && (
+            <div className="space-y-6">
+              {/* Status Badge */}
+              <div className="text-center">
+                <Badge className={`${statusInfo(selectedAppointmentDetail.statut).badge} text-base`}>
+                  {statusInfo(selectedAppointmentDetail.statut).label}
+                </Badge>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="bg-slate-50 dark:bg-slate-900/30">
+                  <CardContent className="p-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Véhicule</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Car className="size-4 text-slate-600 dark:text-slate-400" />
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {selectedAppointmentDetail.immatriculation}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-50 dark:bg-slate-900/30">
+                  <CardContent className="p-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Agence</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <MapPin className="size-4 text-slate-600 dark:text-slate-400" />
+                      <div>
+                        <p className="font-semibold text-sm">
+                          {selectedAppointmentDetail.agence_nom}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {selectedAppointmentDetail.agence_ville}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="bg-slate-50 dark:bg-slate-900/30">
+                  <CardContent className="p-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Date et Heure</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Clock className="size-4 text-slate-600 dark:text-slate-400" />
+                      <p className="font-semibold text-sm">
+                        {new Date(selectedAppointmentDetail.date_heure).toLocaleString('fr-FR')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-50 dark:bg-slate-900/30">
+                  <CardContent className="p-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">Services</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
+                      <p className="font-semibold text-sm">
+                        {appointmentInterventions.length} service(s)
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Services List */}
+              <div>
+                <p className="text-sm font-semibold mb-2">Détails des services</p>
+                <div className="space-y-2">
+                  {appointmentInterventions.length > 0 ? (
+                    appointmentInterventions.map((intervention) => (
+                      <Card key={intervention.id}>
+                        <CardContent className="p-3">
+                          <p className="font-semibold text-sm">{intervention.type_nom}</p>
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {intervention.sous_type_nom}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500">Aucun service spécifié</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedAppointmentDetail.description && (
+                <div className="bg-slate-50 dark:bg-slate-900/30 rounded-lg p-3">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Remarques</p>
+                  <p className="text-sm">{selectedAppointmentDetail.description}</p>
                 </div>
               )}
 
-              <div className="grid gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Statut</p>
-                    <p className={`mt-1 rounded-full px-3 py-1 text-sm font-semibold w-fit ${statusInfo(selectedAppointmentDetail.statut).badge}`}>
-                      {statusInfo(selectedAppointmentDetail.statut).label}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Date et heure</p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {new Date(selectedAppointmentDetail.date_heure).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Véhicule</p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}
-                    </p>
-                    <p className="text-xs text-slate-500">{selectedAppointmentDetail.immatriculation}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Agence</p>
-                    <p className="mt-1 font-semibold text-slate-900">{selectedAppointmentDetail.agence_nom}</p>
-                    <p className="text-xs text-slate-500">{selectedAppointmentDetail.agence_ville}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm text-slate-600">Services</p>
-                  <div className="mt-2 space-y-2">
-                    {appointmentInterventions.length > 0 ? (
-                      appointmentInterventions.map((intervention) => (
-                        <div key={intervention.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                          <p className="font-semibold text-slate-900">{intervention.type_nom}</p>
-                          <p className="text-sm text-slate-600">{intervention.sous_type_nom}</p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-500">Aucun service spécifié</p>
-                    )}
-                  </div>
-                </div>
-
-                {selectedAppointmentDetail.description && (
-                  <div>
-                    <p className="text-sm text-slate-600">Remarques</p>
-                    <p className="mt-1 text-slate-900">{selectedAppointmentDetail.description}</p>
-                  </div>
-                )}
-
-                {canCancelAppointment(selectedAppointmentDetail) && (
-                  <div>
-                    <label className="block space-y-2 text-sm">
-                      <span className="font-semibold text-slate-700">Raison d'annulation (Optionnel)</span>
-                      <textarea
+              {/* Cancel Section */}
+              {canCancelAppointment(selectedAppointmentDetail) && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="size-4" />
+                  <AlertDescription>
+                    <div className="space-y-3">
+                      <p className="font-semibold">Annuler ce rendez-vous ?</p>
+                      <Textarea
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
-                        placeholder="Pourquoi annulez-vous ce rendez-vous ?"
-                        className="w-full rounded-xl border border-slate-300 px-4 py-3 text-base"
-                        rows={2}
+                        placeholder="Pourquoi annulez-vous ce rendez-vous ? (optionnel)"
+                        className="min-h-20 dark:bg-slate-900 dark:border-slate-700"
+                        maxLength={300}
                       />
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={closeDetailModal}
-                  className="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
-                  disabled={isCancelling}
-                >
-                  Fermer
-                </button>
-                {canCancelAppointment(selectedAppointmentDetail) && (
-                  <button
-                    type="button"
-                    onClick={submitCancelAppointment}
-                    className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                    disabled={isCancelling}
-                  >
-                    {isCancelling ? 'Annulation en cours...' : 'Annuler le rendez-vous'}
-                  </button>
-                )}
-              </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+          )}
+
+          {/* Footer Buttons */}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={closeDetailModal}
+              disabled={isCancelling}
+            >
+              Fermer
+            </Button>
+            {selectedAppointmentDetail && canCancelAppointment(selectedAppointmentDetail) && (
+              <Button
+                variant="destructive"
+                onClick={submitCancelAppointment}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Annulation en cours...' : 'Annuler le rendez-vous'}
+                {!isCancelling && <Trash2 className="size-4 ml-2" />}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

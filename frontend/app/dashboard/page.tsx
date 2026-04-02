@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,50 +14,35 @@ import {
 } from '@/lib/api/vehicles';
 import { submitComplaint, fetchClientComplaints } from '@/lib/api/clientDashboard';
 import { Vehicle, VersionCatalogItem } from '@/types/vehicle';
+import { Toast } from '@/lib/toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Car, Calendar, FileText, ChevronRight, Plus } from 'lucide-react';
 
-type PlateType = '' | 'TUNIS' | 'NT' | 'RS';
+// Import utilities and constants
+import {
+  EMPTY_VEHICLE_FORM,
+  buildVehicleFormFromVehicle,
+  getBrandOptions,
+  getModelOptions,
+  getVersionOptions,
+  validateVehicleForm,
+  buildImmatriculation,
+  VehicleFormState,
+} from '@/lib/vehicle-utils';
 
-type VehicleFormState = {
-  plate_type: PlateType;
-  tunis_left: string;
-  tunis_right: string;
-  nt_serial: string;
-  numero_chassis: string;
-  marque_id: string;
-  modele_id: string;
-  version_id: string;
-  couleur: string;
-  annee: string;
-};
+import {
+  EMPTY_COMPLAINT_FORM,
+  getComplaintStatusLabel,
+  ComplaintFormState,
+} from '@/lib/complaint-utils';
 
-type ComplaintFormState = {
-  sujet: string;
-  description: string;
-};
-
-const EMPTY_VEHICLE_FORM: VehicleFormState = {
-  plate_type: '',
-  tunis_left: '',
-  tunis_right: '',
-  nt_serial: '',
-  numero_chassis: '',
-  marque_id: '',
-  modele_id: '',
-  version_id: '',
-  couleur: '',
-  annee: '',
-};
-
-const VEHICLE_FIELD_LIMITS = {
-  immatriculation: 20,
-  tunisPart: 3,
-  ntSerial: 5,
-  numeroChassis: 17,
-  couleur: 50,
-};
-
-const TUNIS_PLATE_LABEL = 'تونس';
-const NT_PLATE_LABEL = 'ن.ت';
+// Import components
+import { VehicleForm } from '@/components/dashboard/VehicleForm';
+import { VehicleList } from '@/components/dashboard/VehicleList';
+import { ComplaintForm } from '@/components/dashboard/ComplaintForm';
+import { ComplaintList } from '@/components/dashboard/ComplaintList';
 
 export default function DashboardPage() {
   return (
@@ -68,54 +53,48 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { user, token, logout } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
 
+  // Data state
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [versions, setVersions] = useState<VersionCatalogItem[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
 
+  // Loading state
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
   const [isLoadingVersions, setIsLoadingVersions] = useState(true);
   const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
   const [isSubmittingVehicle, setIsSubmittingVehicle] = useState(false);
   const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
 
+  // Vehicle form state
+  const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
   const [vehicleError, setVehicleError] = useState('');
   const [vehicleSuccess, setVehicleSuccess] = useState('');
-  const [complaintError, setComplaintError] = useState('');
-  const [complaintSuccess, setComplaintSuccess] = useState('');
-
-  const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
-  const [complaintForm, setComplaintForm] = useState<ComplaintFormState>({ sujet: '', description: '' });
-
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [editingVehicleId, setEditingVehicleId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<VehicleFormState>(EMPTY_VEHICLE_FORM);
 
-  // Only CLIENT role can manage their own vehicles
-  const isClient = useMemo(() => {
-    if (!user) return false;
-    return user.type_utilisateur === 'CLIENT';
-  }, [user]);
+  // Complaint form state
+  const [complaintForm, setComplaintForm] = useState<ComplaintFormState>(EMPTY_COMPLAINT_FORM);
+  const [complaintError, setComplaintError] = useState('');
+  const [complaintSuccess, setComplaintSuccess] = useState('');
 
-  const isStaff = useMemo(() => {
-    if (!user) return false;
-    return ['ADMIN', 'AGENT', 'DIRECTION'].includes(user.type_utilisateur);
-  }, [user]);
+  // Check if user is client
+  const isClient = useMemo(() => user?.role === 'CLIENT', [user]);
 
+  // Redirect non-clients
   useEffect(() => {
-    if (user && isStaff) {
+    if (user && !isClient) {
       router.replace('/dashboard/agent');
     }
-  }, [user, isStaff, router]);
+  }, [user, isClient, router]);
 
+  // Load vehicles
   useEffect(() => {
     const loadVehicles = async () => {
       if (!user || !token || !isClient) return;
-
-      setIsLoadingVehicles(true);
-      setVehicleError('');
-
       try {
         const data = await getVehiclesByUser(user.id, token);
         setVehicles(data);
@@ -125,15 +104,13 @@ function DashboardContent() {
         setIsLoadingVehicles(false);
       }
     };
-
     loadVehicles();
   }, [user, token, isClient]);
 
+  // Load versions
   useEffect(() => {
     const loadVersions = async () => {
       if (!token || !isClient) return;
-
-      setIsLoadingVersions(true);
       try {
         const data = await getVersionCatalog(token);
         setVersions(data);
@@ -143,17 +120,13 @@ function DashboardContent() {
         setIsLoadingVersions(false);
       }
     };
-
     loadVersions();
   }, [token, isClient]);
 
+  // Load complaints
   useEffect(() => {
     const loadComplaints = async () => {
       if (!user || !token || !isClient) return;
-
-      setIsLoadingComplaints(true);
-      setComplaintError('');
-
       try {
         const data = await fetchClientComplaints(token);
         setComplaints(data);
@@ -163,980 +136,335 @@ function DashboardContent() {
         setIsLoadingComplaints(false);
       }
     };
-
     loadComplaints();
   }, [user, token, isClient]);
 
-  if (!user) return null;
-  if (isStaff) return null;
+  // Vehicle form handlers
+  const handleVehicleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setVehicleForm((prev) => {
+        if (name === 'plate_type') {
+          return { ...prev, plate_type: value as any, tunis_left: '', tunis_right: '', nt_serial: '' };
+        }
+        if (name === 'marque_id') {
+          return { ...prev, marque_id: value, modele_id: '', version_id: '' };
+        }
+        if (name === 'modele_id') {
+          return { ...prev, modele_id: value, version_id: '' };
+        }
+        return { ...prev, [name]: value };
+      });
+    },
+    []
+  );
 
-  const firstName = user.prenom || 'Utilisateur';
-  const lastName = user.nom || '';
-  const displayRole = user.type_utilisateur || 'CLIENT';
-  const initials = `${firstName.charAt(0)}${lastName.charAt(0) || ''}`.toUpperCase();
+  const handleAddVehicle = useCallback(
+    async (e: FormEvent) => {
+      e.preventDefault();
+      setVehicleError('');
+      setVehicleSuccess('');
 
-  const getRoleBadgeColor = (role: string) => {
-    const normalizedRole = role.toUpperCase();
-    switch (normalizedRole) {
-      case 'ADMIN':
-        return 'bg-red-100 text-red-800 border border-red-300';
-      case 'AGENT':
-        return 'bg-blue-100 text-blue-800 border border-blue-300';
-      case 'DIRECTION':
-        return 'bg-purple-100 text-purple-800 border border-purple-300';
-      case 'CLIENT':
-        return 'bg-green-100 text-green-800 border border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
-    }
-  };
-
-  const getRoleLabel = (role: string) => {
-    const normalizedRole = role.toUpperCase();
-    switch (normalizedRole) {
-      case 'ADMIN':
-        return 'Administrateur';
-      case 'AGENT':
-        return 'Agent SAV';
-      case 'DIRECTION':
-        return 'Direction';
-      case 'CLIENT':
-        return 'Client';
-      default:
-        return 'Utilisateur';
-    }
-  };
-
-  const buildVehicleFormFromVehicle = (vehicle: Vehicle): VehicleFormState => {
-    const selectedVersion = versions.find((version) => version.id === vehicle.version_id);
-    const parsedPlate = parseImmatriculation(vehicle.immatriculation);
-
-    return {
-      plate_type: parsedPlate.plate_type,
-      tunis_left: parsedPlate.tunis_left,
-      tunis_right: parsedPlate.tunis_right,
-      nt_serial: parsedPlate.nt_serial,
-      numero_chassis: vehicle.numero_chassis,
-      marque_id: selectedVersion ? String(selectedVersion.marque_id) : '',
-      modele_id: selectedVersion ? String(selectedVersion.modele_id) : '',
-      version_id: String(vehicle.version_id),
-      couleur: vehicle.couleur || '',
-      annee: String(vehicle.annee),
-    };
-  };
-
-  const brandOptions = useMemo(() => {
-    const uniqueBrands = new Map<number, string>();
-
-    versions.forEach((version) => {
-      if (!uniqueBrands.has(version.marque_id)) {
-        uniqueBrands.set(version.marque_id, version.marque_nom);
+      if (!token) {
+        setVehicleError('Session invalide');
+        Toast.error('Session invalide');
+        return;
       }
-    });
 
-    return Array.from(uniqueBrands.entries()).map(([id, nom]) => ({ id: String(id), nom }));
+      const validationError = validateVehicleForm(vehicleForm);
+      if (validationError) {
+        setVehicleError(validationError);
+        Toast.error(validationError);
+        return;
+      }
+
+      setIsSubmittingVehicle(true);
+      try {
+        const immatriculation = buildImmatriculation(vehicleForm);
+        const created = await createVehicle(
+          {
+            immatriculation,
+            numero_chassis: vehicleForm.numero_chassis.trim(),
+            version_id: Number(vehicleForm.version_id),
+            couleur: vehicleForm.couleur.trim() || undefined,
+            annee: Number(vehicleForm.annee),
+          },
+          token
+        );
+
+        setVehicles((prev) => [created, ...prev]);
+        setVehicleForm(EMPTY_VEHICLE_FORM);
+        setShowVehicleForm(false);
+        Toast.success('Véhicule ajouté');
+      } catch (error: any) {
+        const msg = error.message || 'Erreur lors de la création';
+        setVehicleError(msg);
+        Toast.error(msg);
+      } finally {
+        setIsSubmittingVehicle(false);
+      }
+    },
+    [token, vehicleForm]
+  );
+
+  const handleDeleteVehicle = useCallback(
+    async (vehicleId: number) => {
+      if (!token) return;
+      if (!window.confirm('Êtes-vous sûr ?')) return;
+
+      try {
+        await deleteVehicle(vehicleId, token);
+        setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+        Toast.success('Véhicule supprimé');
+      } catch (error: any) {
+        Toast.error(error.message || 'Erreur lors de la suppression');
+      }
+    },
+    [token]
+  );
+
+  const handleEditVehicle = useCallback((vehicle: Vehicle) => {
+    setEditingVehicleId(vehicle.id);
+    setEditForm(buildVehicleFormFromVehicle(vehicle, versions));
   }, [versions]);
 
-  const getModelOptions = (marqueId: string) => {
-    if (!marqueId) return [];
+  // Complaint form handlers
+  const handleComplaintInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setComplaintForm((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
-    const uniqueModels = new Map<number, string>();
+  const handleSubmitComplaint = useCallback(
+    async (e: FormEvent) => {
+      e.preventDefault();
+      setComplaintError('');
 
-    versions
-      .filter((version) => String(version.marque_id) === marqueId)
-      .forEach((version) => {
-        if (!uniqueModels.has(version.modele_id)) {
-          uniqueModels.set(version.modele_id, version.modele_nom);
-        }
-      });
-
-    return Array.from(uniqueModels.entries()).map(([id, nom]) => ({ id: String(id), nom }));
-  };
-
-  const getVersionOptions = (marqueId: string, modeleId: string) => {
-    if (!marqueId || !modeleId) return [];
-
-    return versions.filter(
-      (version) => String(version.marque_id) === marqueId && String(version.modele_id) === modeleId
-    );
-  };
-
-  const parseImmatriculation = (immatriculation: string): VehicleFormState => {
-    const tunisMatch = immatriculation.match(/^(\d{1,3})\s*تونس\s*(\d{1,3})$/u);
-    if (tunisMatch) {
-      return {
-        ...EMPTY_VEHICLE_FORM,
-        plate_type: 'TUNIS',
-        tunis_left: tunisMatch[1],
-        tunis_right: tunisMatch[2],
-      };
-    }
-
-    const ntMatch = immatriculation.match(/^(\d{1,5})\s*ن\.ت$/u);
-    if (ntMatch) {
-      return {
-        ...EMPTY_VEHICLE_FORM,
-        plate_type: 'NT',
-        nt_serial: ntMatch[1],
-      };
-    }
-
-    return {
-      ...EMPTY_VEHICLE_FORM,
-      plate_type: 'TUNIS',
-    };
-  };
-
-  const buildImmatriculation = (form: VehicleFormState) => {
-    if (form.plate_type === 'TUNIS') {
-      return `${form.tunis_left.trim()} ${TUNIS_PLATE_LABEL} ${form.tunis_right.trim()}`;
-    }
-
-    if (form.plate_type === 'NT') {
-      return `${form.nt_serial.trim()} ${NT_PLATE_LABEL}`;
-    }
-
-    return '';
-  };
-
-  const handleVehicleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    setVehicleForm((prev) => {
-      if (name === 'plate_type') {
-        return {
-          ...prev,
-          plate_type: value as PlateType,
-          tunis_left: '',
-          tunis_right: '',
-          nt_serial: '',
-        };
+      if (!token) {
+        setComplaintError('Session invalide');
+        Toast.error('Session invalide');
+        return;
       }
 
-      if (name === 'marque_id') {
-        return {
-          ...prev,
-          marque_id: value,
-          modele_id: '',
-          version_id: '',
-        };
+      if (!complaintForm.sujet.trim() || !complaintForm.description.trim()) {
+        const msg = 'Remplissez tous les champs';
+        setComplaintError(msg);
+        Toast.error(msg);
+        return;
       }
 
-      if (name === 'modele_id') {
-        return {
-          ...prev,
-          modele_id: value,
-          version_id: '',
-        };
+      setIsSubmittingComplaint(true);
+      try {
+        const created = await submitComplaint(token, {
+          sujet: complaintForm.sujet.trim(),
+          description: complaintForm.description.trim(),
+        });
+
+        setComplaints((prev) => [created, ...prev]);
+        setComplaintForm(EMPTY_COMPLAINT_FORM);
+        Toast.success('Réclamation créée');
+      } catch (error: any) {
+        const msg = error.message || 'Erreur';
+        setComplaintError(msg);
+        Toast.error(msg);
+      } finally {
+        setIsSubmittingComplaint(false);
       }
+    },
+    [token, complaintForm]
+  );
 
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
+  if (!user || !isClient) return null;
 
-  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    setEditForm((prev) => {
-      if (name === 'plate_type') {
-        return {
-          ...prev,
-          plate_type: value as PlateType,
-          tunis_left: '',
-          tunis_right: '',
-          nt_serial: '',
-        };
-      }
-
-      if (name === 'marque_id') {
-        return {
-          ...prev,
-          marque_id: value,
-          modele_id: '',
-          version_id: '',
-        };
-      }
-
-      if (name === 'modele_id') {
-        return {
-          ...prev,
-          modele_id: value,
-          version_id: '',
-        };
-      }
-
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
-
-  const validateVehicleForm = (form: VehicleFormState) => {
-    if (!form.plate_type || !form.numero_chassis || !form.version_id || !form.annee) {
-      return 'Tous les champs obligatoires du véhicule doivent être remplis.';
-    }
-
-    if (form.plate_type === 'TUNIS') {
-      if (!form.tunis_left.trim() || !form.tunis_right.trim()) {
-        return 'Veuillez compléter les deux parties de la plaque tunisienne.';
-      }
-
-      if (!/^\d{1,3}$/.test(form.tunis_left.trim()) || !/^\d{1,3}$/.test(form.tunis_right.trim())) {
-        return 'Le type Tunisie exige deux blocs numériques de 1 à 3 chiffres.';
-      }
-    }
-
-    if (form.plate_type === 'NT') {
-      if (!form.nt_serial.trim()) {
-        return 'Veuillez compléter le numéro du type ن.ت.';
-      }
-
-      if (!/^\d{1,5}$/.test(form.nt_serial.trim())) {
-        return 'Le type ن.ت exige un bloc numérique de 1 à 5 chiffres.';
-      }
-    }
-
-    const builtImmatriculation = buildImmatriculation(form);
-    if (!builtImmatriculation || builtImmatriculation.length > VEHICLE_FIELD_LIMITS.immatriculation) {
-      return `L'immatriculation ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.immatriculation} caractères.`;
-    }
-
-    if (form.numero_chassis.trim().length > VEHICLE_FIELD_LIMITS.numeroChassis) {
-      return `Le numéro de châssis ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.numeroChassis} caractères.`;
-    }
-
-    if (form.couleur.trim().length > VEHICLE_FIELD_LIMITS.couleur) {
-      return `La couleur ne doit pas dépasser ${VEHICLE_FIELD_LIMITS.couleur} caractères.`;
-    }
-
-    const versionId = Number(form.version_id);
-    const annee = Number(form.annee);
-
-    if (Number.isNaN(versionId) || versionId <= 0) {
-      return 'version_id doit être un nombre positif.';
-    }
-
-    if (Number.isNaN(annee) || annee < 1950 || annee > 2100) {
-      return 'Année invalide (1950-2100).';
-    }
-
-    return null;
-  };
-
-  const handleAddVehicle = async (e: FormEvent) => {
-    e.preventDefault();
-    setVehicleError('');
-    setVehicleSuccess('');
-
-    if (!token) {
-      setVehicleError('Session invalide, veuillez vous reconnecter.');
-      return;
-    }
-
-    const validationError = validateVehicleForm(vehicleForm);
-    if (validationError) {
-      setVehicleError(validationError);
-      return;
-    }
-
-    setIsSubmittingVehicle(true);
-
-    try {
-      const immatriculation = buildImmatriculation(vehicleForm);
-
-      const created = await createVehicle(
-        {
-          immatriculation,
-          numero_chassis: vehicleForm.numero_chassis.trim(),
-          version_id: Number(vehicleForm.version_id),
-          couleur: vehicleForm.couleur.trim() || undefined,
-          annee: Number(vehicleForm.annee),
-        },
-        token
-      );
-
-      setVehicles((prev) => [created, ...prev]);
-      setVehicleForm(EMPTY_VEHICLE_FORM);
-      setVehicleSuccess('Véhicule ajouté avec succès.');
-    } catch (error: any) {
-      setVehicleError(error.message || 'Erreur lors de la création du véhicule');
-    } finally {
-      setIsSubmittingVehicle(false);
-    }
-  };
-
-  const startEditVehicle = (vehicle: Vehicle) => {
-    setVehicleError('');
-    setVehicleSuccess('');
-    setEditingVehicleId(vehicle.id);
-    setEditForm(buildVehicleFormFromVehicle(vehicle));
-  };
-
-  const cancelEditVehicle = () => {
-    setEditingVehicleId(null);
-    setEditForm(EMPTY_VEHICLE_FORM);
-  };
-
-  const submitEditVehicle = async (e: FormEvent, vehicleId: number) => {
-    e.preventDefault();
-    setVehicleError('');
-    setVehicleSuccess('');
-
-    if (!token) {
-      setVehicleError('Session invalide, veuillez vous reconnecter.');
-      return;
-    }
-
-    const validationError = validateVehicleForm(editForm);
-    if (validationError) {
-      setVehicleError(validationError);
-      return;
-    }
-
-    try {
-      const immatriculation = buildImmatriculation(editForm);
-
-      const updated = await updateVehicle(
-        vehicleId,
-        {
-          immatriculation,
-          numero_chassis: editForm.numero_chassis.trim(),
-          version_id: Number(editForm.version_id),
-          couleur: editForm.couleur.trim() || undefined,
-          annee: Number(editForm.annee),
-        },
-        token
-      );
-
-      setVehicles((prev) => prev.map((v) => (v.id === vehicleId ? updated : v)));
-      setVehicleSuccess('Véhicule mis à jour avec succès.');
-      cancelEditVehicle();
-    } catch (error: any) {
-      setVehicleError(error.message || 'Erreur lors de la mise à jour du véhicule');
-    }
-  };
-
-  const handleDeleteVehicle = async (vehicleId: number) => {
-    setVehicleError('');
-    setVehicleSuccess('');
-
-    if (!token) {
-      setVehicleError('Session invalide, veuillez vous reconnecter.');
-      return;
-    }
-
-    if (!window.confirm('Voulez-vous vraiment supprimer ce véhicule ?')) {
-      return;
-    }
-
-    try {
-      await deleteVehicle(vehicleId, token);
-      setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
-      setVehicleSuccess('Véhicule supprimé avec succès.');
-      if (editingVehicleId === vehicleId) {
-        cancelEditVehicle();
-      }
-    } catch (error: any) {
-      setVehicleError(error.message || 'Erreur lors de la suppression du véhicule');
-    }
-  };
-
-  const handleComplaintInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setComplaintForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmitComplaint = async (e: FormEvent) => {
-    e.preventDefault();
-    setComplaintError('');
-    setComplaintSuccess('');
-
-    if (!token) {
-      setComplaintError('Session invalide, veuillez vous reconnecter.');
-      return;
-    }
-
-    if (!complaintForm.sujet.trim() || !complaintForm.description.trim()) {
-      setComplaintError('Le sujet et la description sont requis.');
-      return;
-    }
-
-    setIsSubmittingComplaint(true);
-
-    try {
-      const created = await submitComplaint(token, {
-        sujet: complaintForm.sujet.trim(),
-        description: complaintForm.description.trim(),
-      });
-
-      setComplaints((prev) => [created, ...prev]);
-      setComplaintForm({ sujet: '', description: '' });
-      setComplaintSuccess('Réclamation créée avec succès.');
-    } catch (error: any) {
-      setComplaintError(error.message || 'Erreur lors de la création de la réclamation');
-    } finally {
-      setIsSubmittingComplaint(false);
-    }
-  };
-
-  const getComplaintStatusBadge = (statut: string) => {
-    const badges: { [key: string]: string } = {
-      SOUMISE: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-      EN_COURS: 'bg-blue-100 text-blue-800 border border-blue-300',
-      TRAITEE: 'bg-green-100 text-green-800 border border-green-300',
-      CLOTUREE: 'bg-gray-100 text-gray-800 border border-gray-300'
-    };
-    return badges[statut] || 'bg-gray-100 text-gray-800 border border-gray-300';
-  };
-
-  const getComplaintStatusLabel = (statut: string) => {
-    const labels: { [key: string]: string } = {
-      SOUMISE: '🟡 Soumise',
-      EN_COURS: '🔵 En cours',
-      TRAITEE: '🟢 Traitée',
-      CLOTUREE: '⚫ Clôturée'
-    };
-    return labels[statut] || statut;
-  };
-
-  const vehicleModelOptions = getModelOptions(vehicleForm.marque_id);
-  const vehicleVersionOptions = getVersionOptions(vehicleForm.marque_id, vehicleForm.modele_id);
-  const editModelOptions = getModelOptions(editForm.marque_id);
-  const editVersionOptions = getVersionOptions(editForm.marque_id, editForm.modele_id);
+  const initials = `${user.prenom.charAt(0)}${user.nom.charAt(0) || ''}`.toUpperCase();
+  const modelOptions = getModelOptions(vehicleForm.marque_id, versions);
+  const versionOptions = getVersionOptions(vehicleForm.marque_id, vehicleForm.modele_id, versions);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Tableau de bord</h1>
-          <div className="flex items-center gap-3">
-            <a
-              href="/profile"
-              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none transition-colors"
-            >
-              Mon profil
-            </a>
-            <button
-              onClick={logout}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-            >
-              Se déconnecter
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none">
+            <CardContent className="pt-8">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                  <span className="text-2xl font-bold">{initials}</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">Bienvenue, {user.prenom}!</h1>
+                  <p className="text-blue-100 mt-1">Gérez vos véhicules et suivez vos réclamations</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        <section className="rounded-xl bg-white p-6 shadow-lg">
-          <div className="flex items-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white text-2xl font-bold">
-              {initials}
-            </div>
-            <div className="ml-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Bienvenue, {firstName} {lastName}!
-              </h2>
-              <p className="text-gray-600">
-                Vous êtes connecté(e) en tant que {getRoleLabel(displayRole)}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-xl bg-white p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Rendez-vous SAV</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Gérez vos prises de rendez-vous et consultez votre historique.
-          </p>
-          <Link
-            href="/dashboard/rendez-vous"
-            className="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-          >
-            Ouvrir la page Rendez-vous
+        {/* Quick Links */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Link href="/dashboard/rendez-vous">
+            <Card className="hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <Calendar className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">Prendre un Rendez-vous</h3>
+                    <p className="text-sm text-gray-500">Gérez votre SAV</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
           </Link>
-        </section>
 
-        <section className="rounded-xl bg-white p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Informations du compte</h3>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">ID</label>
-              <p className="text-lg text-gray-900">{user.id}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Rôle</label>
-              <span
-                className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${getRoleBadgeColor(displayRole)}`}
-              >
-                {getRoleLabel(displayRole)}
-              </span>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Prénom</label>
-              <p className="text-lg text-gray-900">{firstName}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Nom</label>
-              <p className="text-lg text-gray-900">{lastName || '-'}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
-              <p className="text-lg text-gray-900">{user.email}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Téléphone</label>
-              <p className="text-lg text-gray-900">{user.telephone || '-'}</p>
-            </div>
+          <Link href="/profile">
+            <Card className="hover:shadow-lg hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">Mon Profil</h3>
+                    <p className="text-sm text-gray-500">Mes informations</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Car className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{vehicles.length} Véhicules</h3>
+                  <p className="text-sm text-gray-500">Ci-dessous</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Vehicles */}
+            <Card>
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Car className="w-6 h-6 text-purple-600" />
+                    <CardTitle>Mes Véhicules</CardTitle>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowVehicleForm(!showVehicleForm)}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ajouter
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {showVehicleForm && (
+                  <VehicleForm
+                    form={vehicleForm}
+                    isSubmitting={isSubmittingVehicle}
+                    error={vehicleError}
+                    versions={versions}
+                    modelOptions={modelOptions}
+                    versionOptions={versionOptions}
+                    onInputChange={handleVehicleInputChange}
+                    onSubmit={handleAddVehicle}
+                    onCancel={() => {
+                      setShowVehicleForm(false);
+                      setVehicleForm(EMPTY_VEHICLE_FORM);
+                    }}
+                  />
+                )}
+                <VehicleList
+                  vehicles={vehicles}
+                  isLoading={isLoadingVehicles}
+                  isEditing={editingVehicleId !== null}
+                  editingVehicleId={editingVehicleId}
+                  onEdit={handleEditVehicle}
+                  onDelete={handleDeleteVehicle}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Complaints */}
+            <Card>
+              <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-orange-600" />
+                  <CardTitle>Réclamations</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <ComplaintForm
+                  form={complaintForm}
+                  isSubmitting={isSubmittingComplaint}
+                  error={complaintError}
+                  onInputChange={handleComplaintInputChange}
+                  onSubmit={handleSubmitComplaint}
+                />
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3">Historique</h3>
+                  <ComplaintList complaints={complaints} isLoading={isLoadingComplaints} />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </section>
 
-        {/* Vehicle Management Section - Only for CLIENT users */}
-        {isClient && (
-          <>
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Ajouter un véhicule</h3>
+          {/* Right Column - Profile */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-4">
+              <CardHeader className="border-b pb-3">
+                <CardTitle>Mes Informations</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium">ID</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-1">{user.id}</p>
+                </div>
 
-              {vehicleError && <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{vehicleError}</p>}
-              {vehicleSuccess && <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{vehicleSuccess}</p>}
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <p className="text-xs text-purple-600 font-medium">Rôle</p>
+                  <Badge variant="outline" className="mt-1">Client</Badge>
+                </div>
 
-              <form onSubmit={handleAddVehicle} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <select
-                  name="plate_type"
-                  value={vehicleForm.plate_type}
-                  onChange={handleVehicleInputChange}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                >
-                  <option value="">Choisir le type d'immatriculation</option>
-                  <option value="TUNIS">Type Tunisie: 123 تونس 456</option>
-                  <option value="NT">Type ن.ت: 12345 ن.ت</option>
-                    </select>
-                {vehicleForm.plate_type === 'TUNIS' ? (
-                  <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
-                    <input
-                      type="text"
-                      name="tunis_left"
-                      placeholder="123"
-                      value={vehicleForm.tunis_left}
-                      onChange={handleVehicleInputChange}
-                      maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                      inputMode="numeric"
-                      className="rounded-lg border border-gray-300 px-3 py-2"
-                      required
-                    />
-                    <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                      {TUNIS_PLATE_LABEL}
-                    </div>
-                    <input
-                      type="text"
-                      name="tunis_right"
-                      placeholder="456"
-                      value={vehicleForm.tunis_right}
-                      onChange={handleVehicleInputChange}
-                      maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                      inputMode="numeric"
-                      className="rounded-lg border border-gray-300 px-3 py-2"
-                      required
-                    />
-                  </div>
-                ) : vehicleForm.plate_type === 'NT' ? (
-                  <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <input
-                      type="text"
-                      name="nt_serial"
-                      placeholder="12345"
-                      value={vehicleForm.nt_serial}
-                      onChange={handleVehicleInputChange}
-                      maxLength={VEHICLE_FIELD_LIMITS.ntSerial}
-                      inputMode="numeric"
-                      className="rounded-lg border border-gray-300 px-3 py-2"
-                      required
-                    />
-                    <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                      {NT_PLATE_LABEL}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500">
-                    Sélectionnez d'abord un type d'immatriculation.
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-600 font-medium">Email</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-1 truncate">{user.email}</p>
+                </div>
+
+                {user.telephone && (
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-xs text-gray-600 font-medium">Téléphone</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">{user.telephone}</p>
                   </div>
                 )}
-                <input
-                  type="text"
-                  name="numero_chassis"
-                  placeholder="Numéro de châssis"
-                  value={vehicleForm.numero_chassis}
-                  onChange={handleVehicleInputChange}
-                  maxLength={VEHICLE_FIELD_LIMITS.numeroChassis}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                />
-                <select
-                  name="marque_id"
-                  value={vehicleForm.marque_id}
-                  onChange={handleVehicleInputChange}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                >
-                  <option value="">Sélectionner une marque</option>
-                  {brandOptions.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.nom}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="modele_id"
-                  value={vehicleForm.modele_id}
-                  onChange={handleVehicleInputChange}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                  disabled={!vehicleForm.marque_id}
-                >
-                  <option value="">Sélectionner un modèle</option>
-                  {vehicleModelOptions.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.nom}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  name="version_id"
-                  value={vehicleForm.version_id}
-                  onChange={handleVehicleInputChange}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                  disabled={!vehicleForm.modele_id}
-                >
-                  <option value="">Sélectionner une version</option>
-                  {vehicleVersionOptions.map((version) => (
-                    <option key={version.id} value={version.id}>
-                      {version.version_nom}
-                      {version.motorisation ? ` - ${version.motorisation}` : ''}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  name="annee"
-                  placeholder="Année"
-                  value={vehicleForm.annee}
-                  onChange={handleVehicleInputChange}
-                  className="rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                />
-                <input
-                  type="text"
-                  name="couleur"
-                  placeholder="Couleur (optionnel)"
-                  value={vehicleForm.couleur}
-                  onChange={handleVehicleInputChange}
-                  maxLength={VEHICLE_FIELD_LIMITS.couleur}
-                  className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmittingVehicle}
-                  className="sm:col-span-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {isSubmittingVehicle ? 'Ajout en cours...' : 'Ajouter le véhicule'}
-                </button>
-              </form>
-            </section>
 
-        <section className="rounded-xl bg-white p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Mes véhicules</h3>
-          {isLoadingVehicles ? (
-            <p className="text-gray-600">Chargement des véhicules...</p>
-          ) : vehicles.length === 0 ? (
-            <p className="text-gray-600">Aucun véhicule trouvé.</p>
-          ) : (
-            <div className="space-y-3">
-              {vehicles.map((vehicle) => (
-                <div key={vehicle.id} className="rounded-lg border border-gray-200 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-gray-900">{vehicle.immatriculation}</p>
-                      <p className="text-sm text-gray-700">Châssis: {vehicle.numero_chassis}</p>
-                      <p className="text-sm text-gray-700">
-                        {vehicle.marque_nom || '-'} / {vehicle.modele_nom || '-'} / {vehicle.version_nom || '-'}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        Année: {vehicle.annee} {vehicle.couleur ? `- Couleur: ${vehicle.couleur}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => startEditVehicle(vehicle)}
-                        className="rounded-md bg-amber-500 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-600"
-                      >
-                        Modifier
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteVehicle(vehicle.id)}
-                        className="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
-                      >
-                        Supprimer
-                      </button>
-                    </div>
-                  </div>
-
-                  {editingVehicleId === vehicle.id && (
-                    <form
-                      onSubmit={(e) => submitEditVehicle(e, vehicle.id)}
-                      className="mt-4 grid grid-cols-1 gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-2"
-                    >
-                      <select
-                        name="plate_type"
-                        value={editForm.plate_type}
-                        onChange={handleEditInputChange}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                      >
-                        <option value="">Choisir le type d'immatriculation</option>
-                        <option value="TUNIS">Type Tunisie: 123 تونس 456</option>
-                        <option value="NT">Type ن.ت: 12345 ن.ت</option>
-                      </select>
-                      {editForm.plate_type === 'TUNIS' ? (
-                        <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
-                          <input
-                            type="text"
-                            name="tunis_left"
-                            placeholder="123"
-                            value={editForm.tunis_left}
-                            onChange={handleEditInputChange}
-                            maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                            inputMode="numeric"
-                            className="rounded-lg border border-gray-300 px-3 py-2"
-                            required
-                          />
-                          <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                            {TUNIS_PLATE_LABEL}
-                          </div>
-                          <input
-                            type="text"
-                            name="tunis_right"
-                            placeholder="456"
-                            value={editForm.tunis_right}
-                            onChange={handleEditInputChange}
-                            maxLength={VEHICLE_FIELD_LIMITS.tunisPart}
-                            inputMode="numeric"
-                            className="rounded-lg border border-gray-300 px-3 py-2"
-                            required
-                          />
-                        </div>
-                      ) : editForm.plate_type === 'NT' ? (
-                        <div className="grid grid-cols-[1fr_auto] gap-2">
-                          <input
-                            type="text"
-                            name="nt_serial"
-                            placeholder="12345"
-                            value={editForm.nt_serial}
-                            onChange={handleEditInputChange}
-                            maxLength={VEHICLE_FIELD_LIMITS.ntSerial}
-                            inputMode="numeric"
-                            className="rounded-lg border border-gray-300 px-3 py-2"
-                            required
-                          />
-                          <div className="flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
-                            {NT_PLATE_LABEL}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500">
-                          Sélectionnez d'abord un type d'immatriculation.
-                        </div>
-                      )}
-                      <input
-                        type="text"
-                        name="numero_chassis"
-                        value={editForm.numero_chassis}
-                        onChange={handleEditInputChange}
-                        maxLength={VEHICLE_FIELD_LIMITS.numeroChassis}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                      />
-                      <select
-                        name="marque_id"
-                        value={editForm.marque_id}
-                        onChange={handleEditInputChange}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                      >
-                        <option value="">Sélectionner une marque</option>
-                        {brandOptions.map((brand) => (
-                          <option key={brand.id} value={brand.id}>
-                            {brand.nom}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        name="modele_id"
-                        value={editForm.modele_id}
-                        onChange={handleEditInputChange}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                        disabled={!editForm.marque_id}
-                      >
-                        <option value="">Sélectionner un modèle</option>
-                        {editModelOptions.map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.nom}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        name="version_id"
-                        value={editForm.version_id}
-                        onChange={handleEditInputChange}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                        disabled={!editForm.modele_id}
-                      >
-                        <option value="">Sélectionner une version</option>
-                        {editVersionOptions.map((version) => (
-                          <option key={version.id} value={version.id}>
-                            {version.version_nom}
-                            {version.motorisation ? ` - ${version.motorisation}` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        name="annee"
-                        value={editForm.annee}
-                        onChange={handleEditInputChange}
-                        className="rounded-lg border border-gray-300 px-3 py-2"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="couleur"
-                        value={editForm.couleur}
-                        onChange={handleEditInputChange}
-                        maxLength={VEHICLE_FIELD_LIMITS.couleur}
-                        className="rounded-lg border border-gray-300 px-3 py-2 sm:col-span-2"
-                        placeholder="Couleur"
-                      />
-                      <div className="sm:col-span-2 flex gap-2">
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-                        >
-                          Enregistrer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelEditVehicle}
-                          className="rounded-lg bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-400"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-            </section>
-          </>
-        )}
-
-        {/* Complaints Section - Only for CLIENT users */}
-        {isClient && (
-          <>
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Soumettre une réclamation</h3>
-
-              {complaintError && <p className="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{complaintError}</p>}
-              {complaintSuccess && <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">{complaintSuccess}</p>}
-
-              <form onSubmit={handleSubmitComplaint} className="space-y-4">
-                <input
-                  type="text"
-                  name="sujet"
-                  placeholder="Sujet de la réclamation"
-                  value={complaintForm.sujet}
-                  onChange={handleComplaintInputChange}
-                  maxLength={255}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                />
-                <textarea
-                  name="description"
-                  placeholder="Décrivez votre réclamation en détail..."
-                  value={complaintForm.description}
-                  onChange={handleComplaintInputChange}
-                  rows={5}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={isSubmittingComplaint}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {isSubmittingComplaint ? 'Envoi en cours...' : 'Soumettre la réclamation'}
-                </button>
-              </form>
-            </section>
-
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Mes réclamations</h3>
-              {isLoadingComplaints ? (
-                <p className="text-gray-600">Chargement des réclamations...</p>
-              ) : complaints.length === 0 ? (
-                <p className="text-gray-600">Aucune réclamation pour le moment.</p>
-              ) : (
-                <div className="space-y-3">
-                  {complaints.map((complaint) => (
-                    <div key={complaint.id} className="rounded-lg border border-gray-200 p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900">{complaint.sujet}</p>
-                            <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border ${getComplaintStatusBadge(complaint.statut)}`}>
-                              {getComplaintStatusLabel(complaint.statut)}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-700">{complaint.description}</p>
-                          <p className="mt-2 text-xs text-gray-500">
-                            Numéro: {complaint.numero} | Créée le: {new Date(complaint.date_creation).toLocaleDateString('fr-FR')}
-                          </p>
-                          {complaint.date_cloture && (
-                            <p className="text-xs text-gray-500">
-                              Clôturée le: {new Date(complaint.date_cloture).toLocaleDateString('fr-FR')}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-
-        {/* Staff Dashboard - For ADMIN, AGENT, DIRECTION */}
-        {isStaff && (
-          <section className="rounded-xl bg-white p-6 shadow-lg">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Centre de Gestion</h3>
-            <p className="text-gray-600">
-              Vous êtes connecté(e) en tant que {getRoleLabel(displayRole)}. Votre tableau de bord personnalisé sera disponible bientôt.
-            </p>
-          </section>
-        )}
+                <Link href="/profile" className="block pt-2 border-t">
+                  <Button variant="default" className="w-full">
+                    Modifier Profil
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );

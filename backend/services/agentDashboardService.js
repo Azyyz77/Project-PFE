@@ -55,11 +55,10 @@ class AgentDashboardService {
         rendez_vous_aujourd_hui: recap.rendez_vous_aujourd_hui || 0,
         interventions_terminees: recap.interventions_terminees || 0,
         reclamations_ouvertes:   reclamations.recordset[0].cnt || 0,
-<<<<<<< HEAD
-        vehicules_a_valider:     0, // Pas de validation dans script.sql
-=======
-        vehicules_a_valider:     vehiclesToValidate.recordset[0].cnt || 0,
-        vehicules_a_valider:     vehiclesToValidate.recordset[0].cnt || 0,`Erreur récupération dashboard: ${error.message}`);
+        vehicules_a_valider:     vehiclesToValidate.recordset[0].cnt || 0
+      };
+    } catch (error) {
+      throw new Error(`Erreur récupération dashboard: ${error.message}`);
     }
   }
 
@@ -84,11 +83,10 @@ class AgentDashboardService {
           r.duree_estimee,
           r.heure_reelle_debut AS heure_debut_reelle,
           r.heure_reelle_fin AS heure_fin_reelle,
-<<<<<<< HEAD
           r.raison_annulation AS motif_annulation,
-=======
-          CAST(NULL AS NVARCHAR(255)) AS motif_annulation,
-          r.raison_annulation AS motif_annulation,       AS client_telephone,
+          u.nom              AS client_nom,
+          u.prenom           AS client_prenom,
+          u.telephone        AS client_telephone,
           u.email            AS client_email,
           v.immatriculation,
           v.numero_chassis   AS vin,
@@ -103,15 +101,15 @@ class AgentDashboardService {
         JOIN Version     ve ON ve.id = v.version_id
         JOIN Modele      mo ON mo.id = ve.modele_id
         JOIN Marque      m  ON m.id  = mo.marque_id
-<<<<<<< HEAD
         WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)
-=======
-        WHERE 1 = 1
->>>>>>> feat/agent-sav
       `;
 
       const request = pool.request()
-        WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)'statut', sql.VarChar(20), filters.statut);
+        .input('agent_id', sql.BigInt, agentId);
+
+      if (filters.statut) {
+        query += ` AND r.statut = @statut`;
+        request.input('statut', sql.VarChar(20), filters.statut);
       }
       if (filters.fromDate) {
         query += ` AND CAST(r.date_heure AS DATE) >= @fromDate`;
@@ -140,15 +138,15 @@ class AgentDashboardService {
                 ir.statut,
                 ir.commentaire AS notes,
                 sti.nom  AS sous_type_nom,
-<<<<<<< HEAD
                 ir.cout_reel AS prix,
-=======
-                CAST(NULL AS DECIMAL(10,2)) AS prix,
->>>>>>> feat/agent-sav
                 ti.nom   AS type_nom,
                 ti.delai_moyen
               FROM InterventionRDV ir
-                ir.cout_reel AS prix,rdv, interventions: interventions.recordset };
+              JOIN SousTypeIntervention sti ON sti.id = ir.sous_type_id
+              JOIN TypeIntervention ti ON ti.id = sti.type_intervention_id
+              WHERE ir.rdv_id = @rdv_id
+            `);
+          return { ...rdv, interventions: interventions.recordset };
         })
       );
 
@@ -590,7 +588,7 @@ class AgentDashboardService {
           rdv.date_heure as date_rendez_vous
         FROM Reclamation r
         JOIN Utilisateur u ON u.id = r.client_id
-        LEFT JOIN RendezVous rdv ON rdv.id = r.id -- FIXME if needed, script.sql doesn't have rendez_vous_id in Reclamation
+        LEFT JOIN RendezVous rdv ON rdv.id = r.id
         WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)
       `;
 
@@ -606,7 +604,6 @@ class AgentDashboardService {
 
       const result = await request.query(query);
 
-      // Pas de table ReponseReclamation dans script.sql
       const complaints = result.recordset.map((rec) => {
         return { ...rec, reponses: [] };
       });
@@ -636,27 +633,21 @@ class AgentDashboardService {
         .input('statut', sql.VarChar(20), statut)
         .input('now', sql.DateTime2, new Date())
         .query(`
-<<<<<<< HEAD
-          UPDATE Reclamation
-          SET statut = @statut,
-              date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
-              date_cloture = CASE WHEN @statut IN ('TRAITEE', 'CLOTUREE') THEN @now ELSE NULL END
-=======
-          UPDATE Reclamation 
-          SET statut = @statut,
-              date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
-              date_cloture = CASE WHEN @statut IN ('RESOLUE', 'FERMEE', 'CLOTUREE') THEN @now ELSE NULL END
->>>>>>> feat/agent-sav
-          WHERE id = @id
           UPDATE Reclamation
           SET statut = @statut,
               date_traitement = CASE WHEN @statut = 'EN_COURS' THEN ISNULL(date_traitement, @now) ELSE date_traitement END,
               date_cloture = CASE WHEN @statut IN ('TRAITEE', 'CLOTUREE', 'RESOLUE', 'FERMEE') THEN @now ELSE NULL END
+          WHERE id = @id
+        `);
 
-<<<<<<< HEAD
+      return { id: complaintId, statut };
+    } catch (error) {
+      throw new Error(`Erreur mise à jour statut réclamation: ${error.message}`);
+    }
+  }
+
   static async submitComplaint(clientId, { sujet, description }) {
     try {
-      // Validate input parameters (clientId can be string or number from JWT)
       if (!clientId) {
         throw new Error('clientId invalide ou manquant');
       }
@@ -664,7 +655,6 @@ class AgentDashboardService {
       const clientIdBigInt = BigInt(clientId);
       const pool = await getConnection();
 
-      // Verify client exists
       const clientCheck = await pool.request()
         .input('client_id', sql.BigInt, clientIdBigInt)
         .query(`SELECT id FROM Utilisateur WHERE id = @client_id`);
@@ -672,7 +662,7 @@ class AgentDashboardService {
       if (clientCheck.recordset.length === 0) {
         throw new Error('Client non trouvé');
       }
-      // Generate SIMPLE numeric numero (YYYYMMDDHHMMSS + random)
+
       const now = new Date();
       const timestamp = now.getFullYear().toString() +
                        String(now.getMonth() + 1).padStart(2, '0') +
@@ -683,7 +673,6 @@ class AgentDashboardService {
       const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
       const numero = `${timestamp}${random}`;
 
-      // Validate inputs
       if (!sujet || sujet.trim().length === 0) {
         throw new Error('Le sujet est requis');
       }
@@ -698,7 +687,6 @@ class AgentDashboardService {
         throw new Error('Le sujet ne doit pas dépasser 200 caractères');
       }
 
-      // Insert complaint
       const result = await pool.request()
         .input('client_id', sql.BigInt, clientIdBigInt)
         .input('numero', sql.NVarChar(30), numero)
@@ -711,7 +699,7 @@ class AgentDashboardService {
           SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS id;
         `);
 
-      const complaintId = result.recordset?.[0]?.id;
+      const complaintId = result.recordsets?.[1]?.[0]?.id;
       if (!complaintId) {
         throw new Error('Impossible de créer la réclamation (pas d\'ID retourné)');
       }
@@ -765,14 +753,14 @@ class AgentDashboardService {
     }
   }
 
-=======
->>>>>>> feat/agent-sav
   // ============================================================
   // NOTIFICATIONS
   // ============================================================
 
   static async getNotifications(agentId) {
     try {
+      const pool = await getConnection();
+      const result = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .query(`
           SELECT TOP 20 id, titre, message, type, entite_type, entite_id, lu, date_envoi as date_creation
@@ -824,7 +812,6 @@ class AgentDashboardService {
       const today = new Date();
       const currentYear = today.getFullYear();
 
-      // Rendez-vous par mois
       const rdvs = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .input('year', sql.Int, currentYear)
@@ -844,7 +831,6 @@ class AgentDashboardService {
         appointmentsByMonth[r.mois - 1] = r.total;
       });
 
-      // Interventions par type (Global, non filtré par mois pour simplifier)
       const intervs = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .query(`
@@ -868,7 +854,6 @@ class AgentDashboardService {
         ];
       }
 
-      // KPIs
       const kpisResult = await pool.request()
         .input('agent_id', sql.BigInt, agentId)
         .query(`
@@ -883,7 +868,7 @@ class AgentDashboardService {
         interventionsByType,
         kpi: {
           satisfaction_rate: kpisResult.recordset[0]?.note_moyenne ? Math.round((kpisResult.recordset[0].note_moyenne / 5) * 100) : 0,
-          average_resolution_time: 45 // TODO
+          average_resolution_time: 45
         }
       };
     } catch (error) {

@@ -69,14 +69,13 @@ const register = async (req, res) => {
     const mot_de_passe = await bcrypt.hash(password, 10);
 
     const insertQuery = `
-      INSERT INTO Utilisateur (type_utilisateur, nom, prenom, telephone, email, mot_de_passe, actif, date_creation, role_id)
+      INSERT INTO Utilisateur (nom, prenom, telephone, email, mot_de_passe, actif, date_creation, role_id)
       OUTPUT INSERTED.id, INSERTED.nom, INSERTED.prenom, INSERTED.email,
-             INSERTED.telephone, INSERTED.type_utilisateur, INSERTED.actif, INSERTED.date_creation
-      VALUES (@type_utilisateur, @nom, @prenom, @telephone, @email, @mot_de_passe, 1, GETDATE(), @role_id)
+             INSERTED.telephone, INSERTED.actif, INSERTED.date_creation
+      VALUES (@nom, @prenom, @telephone, @email, @mot_de_passe, 1, GETDATE(), @role_id)
     `;
 
     const result = await pool.request()
-      .input('type_utilisateur', sql.NVarChar, typeUtilisateur)
       .input('nom', sql.NVarChar, nom)
       .input('prenom', sql.NVarChar, prenom)
       .input('telephone', sql.NVarChar, normalizedPhone)
@@ -95,7 +94,7 @@ const register = async (req, res) => {
         nom: newUser.nom,
         email: newUser.email,
         telephone: newUser.telephone,
-        type_utilisateur: newUser.type_utilisateur,
+        role: typeUtilisateur,
         actif: newUser.actif,
         date_creation: newUser.date_creation
       }
@@ -120,8 +119,8 @@ const login = async (req, res) => {
       .input('email', sql.NVarChar, email)
       .query(`
         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
-               u.type_utilisateur, u.actif, u.date_creation, u.role_id,
-               ISNULL(r.nom, u.type_utilisateur) AS role_nom
+               u.actif, u.date_creation, u.role_id,
+               ISNULL(r.nom, 'CLIENT') AS role_nom
         FROM Utilisateur u
         LEFT JOIN Role r ON r.id = u.role_id
         WHERE u.email = @email
@@ -137,12 +136,7 @@ const login = async (req, res) => {
       return res.status(403).json({ error: 'Compte désactivé. Contactez l\'administrateur.' });
     }
 
-    // Validate that type_utilisateur matches role_id (consistency check)
-    if (user.role_nom && user.type_utilisateur !== user.role_nom) {
-      console.warn(`Role mismatch for user ${user.id}: type_utilisateur=${user.type_utilisateur}, role_nom=${user.role_nom}`);
-      // Use role_nom as the source of truth if mismatch detected
-      user.type_utilisateur = user.role_nom;
-    }
+    // Use role_nom as role (from Role table join)
 
     const isPasswordValid = await bcrypt.compare(password, user.mot_de_passe);
     if (!isPasswordValid) {
@@ -150,7 +144,7 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.type_utilisateur },
+      { id: user.id, email: user.email, role: user.role_nom },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
@@ -164,7 +158,7 @@ const login = async (req, res) => {
         nom: user.nom,
         email: user.email,
         telephone: user.telephone,
-        type_utilisateur: user.type_utilisateur,
+        role: user.role_nom,
         date_creation: user.date_creation
       }
     });
@@ -183,7 +177,7 @@ const getUserById = async (req, res) => {
     const result = await pool.request()
       .input('id', sql.BigInt, id)
       .query(`
-        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.type_utilisateur, u.actif, u.date_creation,
+        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation,
                r.nom AS role_nom
         FROM Utilisateur u
         JOIN Role r ON r.id = u.role_id
@@ -377,11 +371,13 @@ const updateProfile = async (req, res) => {
       .input('telephone', sql.NVarChar, normalizedPhone)
       .query(`
         UPDATE Utilisateur SET prenom = @prenom, nom = @nom, telephone = @telephone WHERE id = @id;
-        SELECT id, prenom, nom, email, telephone, type_utilisateur, actif, date_creation
-        FROM Utilisateur WHERE id = @id
+        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation, r.nom AS role_nom
+        FROM Utilisateur u
+        LEFT JOIN Role r ON r.id = u.role_id
+        WHERE u.id = @id
       `);
 
-    res.json({ message: 'Profil mis à jour avec succès', user: result.recordset[0] });
+    res.json({ message: 'Profil mis à jour avec succès', user: result.recordsets[1][0] });
   } catch (error) {
     console.error('Erreur updateProfile:', error);
     res.status(500).json({ error: 'Erreur serveur', message: error.message });

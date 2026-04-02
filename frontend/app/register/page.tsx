@@ -1,29 +1,32 @@
 'use client';
 
 /**
- * Page d'inscription
+ * Page d'inscription - Refactored with shadcn/ui
  */
 
 import { useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { UserRole } from '@/types/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert } from '@/components/ui/alert';
+import { AuthCard } from '@/components/auth/AuthCard';
+import { AlertCircle, CheckCircle2, UserPlus, Users, Mail, Lock, Phone } from 'lucide-react';
+import {
+  RegisterFormState,
+  EMPTY_REGISTER_FORM,
+  validateRegisterForm,
+} from '@/lib/auth-utils';
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    prenom: '',
-    nom: '',
-    telephone: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    type_utilisateur: 'CLIENT' as UserRole,
-  });
-  
-  const [error, setError] = useState('');
+  const [form, setForm] = useState<RegisterFormState>(EMPTY_REGISTER_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { register, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -37,200 +40,203 @@ export default function RegisterPage() {
     return null;
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setApiError('');
+    setErrors({});
+    setSuccess(false);
 
-    // Validation
-    if (!formData.prenom || !formData.nom || !formData.telephone || !formData.email || !formData.password) {
-      setError('Tous les champs sont obligatoires');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+    const validationErrors = validateRegisterForm(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await register(formData);
+      await register(form);
+      setSuccess(true);
+      setTimeout(() => {
+        router.push('/login?registered=true');
+      }, 1500);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'inscription');
+      setApiError(err.message || 'Erreur lors de l\'inscription');
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-2xl space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Inscription
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Créez votre compte STA Chery Tunisia
-          </p>
-        </div>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
+    <AuthCard
+      title="Inscription"
+      subtitle="Créez votre compte STA Chery Tunisia"
+      bottomLink={{
+        text: "Vous avez déjà un compte ?",
+        href: "/login",
+        linkText: "Se connecter"
+      }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Success Message */}
+        {success && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <p className="text-sm text-green-800">
+              ✓ Inscription réussie ! Redirection vers la connexion...
+            </p>
+          </Alert>
         )}
 
-        <form className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            {/* Prénom */}
-            <div>
-              <label htmlFor="prenom" className="block text-sm font-medium text-gray-700">
-                Prénom
-              </label>
-              <input
-                id="prenom"
-                name="prenom"
-                type="text"
-                required
-                value={formData.prenom}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Ahmed"
-              />
-            </div>
+        {/* API Error */}
+        {apiError && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <p className="text-sm text-red-800">{apiError}</p>
+          </Alert>
+        )}
 
-            {/* Nom */}
-            <div>
-              <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
-                Nom
-              </label>
-              <input
-                id="nom"
-                name="nom"
-                type="text"
-                required
-                value={formData.nom}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="Ben Ali"
-              />
-            </div>
-
-            {/* Téléphone */}
-            <div>
-              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700">
-                Téléphone
-              </label>
-              <input
-                id="telephone"
-                name="telephone"
-                type="tel"
-                required
-                value={formData.telephone}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="+216 12 345 678"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="jean.dupont@exemple.com"
-              />
-            </div>
-
-            {/* Mot de passe */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Mot de passe
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {/* Confirmation mot de passe */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmer le mot de passe
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="mt-1 block w-full appearance-none rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
+        {/* Name Fields */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="prenom" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Prénom
+            </Label>
+            <Input
+              id="prenom"
+              name="prenom"
+              type="text"
+              placeholder="Ahmed"
+              value={form.prenom}
+              onChange={handleInputChange}
               disabled={isSubmitting}
-              className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Inscription en cours...
-                </span>
-              ) : (
-                'S\'inscrire'
-              )}
-            </button>
+              className={errors.prenom ? 'border-red-500' : ''}
+            />
+            {errors.prenom && (
+              <p className="text-xs text-red-600">{errors.prenom}</p>
+            )}
           </div>
 
-          <div className="text-center text-sm">
-            <p className="text-gray-600">
-              Vous avez déjà un compte ?{' '}
-              <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Se connecter
-              </Link>
-            </p>
+          <div className="space-y-2">
+            <Label htmlFor="nom">Nom</Label>
+            <Input
+              id="nom"
+              name="nom"
+              type="text"
+              placeholder="Ben Ali"
+              value={form.nom}
+              onChange={handleInputChange}
+              disabled={isSubmitting}
+              className={errors.nom ? 'border-red-500' : ''}
+            />
+            {errors.nom && (
+              <p className="text-xs text-red-600">{errors.nom}</p>
+            )}
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        {/* Contact Fields */}
+        <div className="space-y-2">
+          <Label htmlFor="telephone" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            Téléphone
+          </Label>
+          <Input
+            id="telephone"
+            name="telephone"
+            type="tel"
+            placeholder="+216 12 345 678"
+            value={form.telephone}
+            onChange={handleInputChange}
+            disabled={isSubmitting}
+            className={errors.telephone ? 'border-red-500' : ''}
+          />
+          {errors.telephone && (
+            <p className="text-xs text-red-600">{errors.telephone}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Email
+          </Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="jean.dupont@exemple.com"
+            value={form.email}
+            onChange={handleInputChange}
+            disabled={isSubmitting}
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          {errors.email && (
+            <p className="text-xs text-red-600">{errors.email}</p>
+          )}
+        </div>
+
+        {/* Password Fields */}
+        <div className="space-y-2">
+          <Label htmlFor="password" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Mot de passe
+          </Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="••••••••"
+            value={form.password}
+            onChange={handleInputChange}
+            disabled={isSubmitting}
+            className={errors.password ? 'border-red-500' : ''}
+          />
+          {errors.password && (
+            <p className="text-xs text-red-600">{errors.password}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            value={form.confirmPassword}
+            onChange={handleInputChange}
+            disabled={isSubmitting}
+            className={errors.confirmPassword ? 'border-red-500' : ''}
+          />
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-600">{errors.confirmPassword}</p>
+          )}
+        </div>
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting || success}
+          size="lg"
+        >
+          <UserPlus className="mr-2 h-4 w-4" />
+          {isSubmitting ? 'Inscription en cours...' : 'S\'inscrire'}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

@@ -67,7 +67,24 @@ export default function DashboardSummary({ data, onRefresh }: Props) {
         <div>
           <h2 className="text-white text-xl font-bold">Vue d'ensemble</h2>
           <p className="text-slate-400 text-sm mt-0.5">
-            Mis à jour à {new Date(data.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            {(() => {
+              const formattedDate = data.timestamp && !isNaN(new Date(data.timestamp).getTime())
+                ? new Intl.DateTimeFormat('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }).format(new Date(data.timestamp))
+                : new Intl.DateTimeFormat('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }).format(new Date());
+              return `Mis à jour à ${formattedDate}`;
+            })()}
           </p>
         </div>
         <button

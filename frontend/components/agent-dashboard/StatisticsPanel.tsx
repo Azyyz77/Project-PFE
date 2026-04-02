@@ -28,85 +28,45 @@ export default function StatisticsPanel({ token }: Props) {
   if (loading) return <div className="p-6 text-slate-400">Chargement des statistiques...</div>;
   if (!stats) return <div className="p-6 text-slate-400">Aucune donnée disponible.</div>;
 
-<<<<<<< HEAD
-  // Calculations removed - using feat/agent-sav version
+  const totalRdv = stats.daily?.reduce((sum, d) => sum + d.nombre, 0) ?? 0;
+  const totalTermines = stats.daily?.reduce((sum, d) => sum + d.termines, 0) ?? 0;
+  const totalAnnules = stats.daily?.reduce((sum, d) => sum + d.annules, 0) ?? 0;
+  const totalInterventions = stats.byType?.reduce((sum, t) => sum + t.nombre, 0) ?? 0;
+
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold text-white mb-6">Statistiques Mensuelles</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> feat/agent-sav
         {/* KPI Rapides */}
         <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
             <p className="text-slate-400 text-sm mb-1">Rdv ce mois</p>
             <p className="text-white text-3xl font-bold">
-<<<<<<< HEAD
-              {totalAppointments}
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Taux satisfaction</p>
-            <p className="text-emerald-400 text-3xl font-bold">
-              {satisfactionRate}%
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Interventions</p>
-            <p className="text-blue-400 text-3xl font-bold">
-              {stats.interventionsByType.reduce((s, t) => s + t.value, 0)}
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Temps moyen</p>
-            <p className="text-amber-400 text-3xl font-bold">
-              {stats.kpi.average_resolution_time} <span className="text-sm">min</span>
-=======
-              {stats.daily.reduce((sum, d) => sum + d.nombre, 0)}
+              {totalRdv}
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
             <p className="text-slate-400 text-sm mb-1">Rdv Terminés</p>
             <p className="text-emerald-400 text-3xl font-bold">
-              {stats.daily.reduce((sum, d) => sum + d.termines, 0)}
+              {totalTermines}
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Taux d'annulation</p>
+            <p className="text-slate-400 text-sm mb-1">Rdv Annulés</p>
             <p className="text-red-400 text-3xl font-bold">
-              {Math.round((stats.daily.reduce((sum, d) => sum + d.annules, 0) / Math.max(1, stats.daily.reduce((sum, d) => sum + d.nombre, 0))) * 100)}%
+              {totalAnnules}
             </p>
           </div>
           <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
             <p className="text-slate-400 text-sm mb-1">Temps moyen/Interv.</p>
-            <p className="text-blue-400 text-3xl font-bold">
+            <p className="text-amber-400 text-3xl font-bold">
               {stats.avgTime} <span className="text-sm">min</span>
->>>>>>> feat/agent-sav
             </p>
           </div>
         </div>
 
-<<<<<<< HEAD
-        {/* Interventions par type */}
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex flex-col">
-          <h3 className="text-white font-semibold mb-4">Interventions les plus fréquentes</h3>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {stats.interventionsByType.map((t, idx) => (
-              <div key={t.label} className="flex justify-between items-center p-3 rounded-xl border border-slate-800 bg-slate-800/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-slate-500 font-mono w-4">#{idx + 1}</span>
-                  <div>
-                    <p className="text-white text-sm font-medium">{t.label}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-blue-400 font-bold">{t.value}</span>
-=======
-        {/* Tableau Réclamations */}
+        {/* Réclamations */}
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
           <h3 className="text-white font-semibold mb-4">Réclamations (Ce mois)</h3>
           <div className="space-y-4">
@@ -143,48 +103,15 @@ export default function StatisticsPanel({ token }: Props) {
                 </div>
                 <div className="text-right">
                   <span className="text-blue-400 font-bold">{t.nombre}</span>
->>>>>>> feat/agent-sav
                   <p className="text-[10px] text-slate-500">réalisées</p>
                 </div>
               </div>
             ))}
-<<<<<<< HEAD
-            {stats.interventionsByType.length === 0 && (
-              <p className="text-slate-500 text-center py-4 text-sm">Aucune interventions ce mois-ci.</p>
-=======
             {stats.byType.length === 0 && (
               <p className="text-slate-500 text-center py-4 text-sm">Aucune donnée ce mois-ci.</p>
->>>>>>> feat/agent-sav
             )}
           </div>
         </div>
-
-<<<<<<< HEAD
-        {/* Graphique rendez-vous par mois */}
-        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-          <h3 className="text-white font-semibold mb-4">Rendez-vous par mois</h3>
-          <div className="flex items-end h-32 gap-2 px-2">
-            {stats.appointmentsByMonth.map((val, idx) => {
-              const maxVal = Math.max(...stats.appointmentsByMonth, 1);
-              const height = (val / maxVal) * 100;
-              const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center justify-end">
-                  <div
-                    className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t opacity-80 hover:opacity-100 transition-opacity"
-                    style={{ height: `${Math.max(height, 5)}%` }}
-                    title={`${monthNames[idx]}: ${val} RDV`}
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">{monthNames[idx]}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-=======
->>>>>>> feat/agent-sav
       </div>
     </div>
   );

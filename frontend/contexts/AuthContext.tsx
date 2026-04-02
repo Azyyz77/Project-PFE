@@ -19,7 +19,7 @@ function normalizeUser(rawUser: any): User {
     nom: rawUser?.nom ?? rawUser?.last_name ?? '',
     email: rawUser?.email ?? '',
     telephone: rawUser?.telephone ?? rawUser?.phone ?? '',
-    type_utilisateur: rawUser?.type_utilisateur ?? rawUser?.role ?? 'CLIENT',
+    role: rawUser?.role ?? rawUser?.role_nom ?? 'CLIENT',
     actif: rawUser?.actif ?? rawUser?.is_active,
     date_creation: rawUser?.date_creation ?? rawUser?.created_at,
   };
@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(normalizedUser);
       
       // Redirection basée sur le rôle
-      if (normalizedUser.type_utilisateur === 'AGENT' || normalizedUser.type_utilisateur === 'ADMIN') {
+      if (normalizedUser.role === 'ADMIN') {
+        router.push('/dashboard/admin');
+      } else if (normalizedUser.role === 'AGENT') {
         router.push('/dashboard/agent');
       } else {
         router.push('/dashboard');

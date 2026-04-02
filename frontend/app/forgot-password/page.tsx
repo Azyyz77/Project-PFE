@@ -1,87 +1,128 @@
 'use client';
 
+/**
+ * Forgot Password Page - Refactored with shadcn/ui
+ */
+
 import { useState, FormEvent } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert } from '@/components/ui/alert';
+import { AuthCard } from '@/components/auth/AuthCard';
+import { AlertCircle, Mail, ArrowLeft } from 'lucide-react';
 import { forgotPassword } from '../../lib/api/auth';
+import {
+  ForgotPasswordFormState,
+  EMPTY_FORGOT_PASSWORD_FORM,
+  validateForgotPasswordForm,
+} from '@/lib/auth-utils';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('');
+  const [form, setForm] = useState<ForgotPasswordFormState>(EMPTY_FORGOT_PASSWORD_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [telephoneHint, setTelephoneHint] = useState('');
   const router = useRouter();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
+    setApiError('');
+    setErrors({});
+
+    const validationErrors = validateForgotPasswordForm(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await forgotPassword(email);
-      if (result.telephone_hint) setTelephoneHint(result.telephone_hint);
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+      await forgotPassword(form.email);
+      router.push(`/verify-otp?email=${encodeURIComponent(form.email)}`);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'envoi');
+      setApiError(err.message || 'Erreur lors de l\'envoi du code');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Mot de passe oublié
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Entrez votre adresse email pour recevoir un code de vérification par WhatsApp.
-          </p>
-        </div>
-
-        {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
+    <AuthCard
+      title="Mot de passe oublié"
+      subtitle="Entrez votre email pour recevoir un code de vérification par WhatsApp"
+      bottomLink={{
+        text: "Vous avez retrouvé votre mot de passe ?",
+        href: "/login",
+        linkText: "Se connecter"
+      }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* API Error */}
+        {apiError && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <p className="text-sm text-red-800">{apiError}</p>
+          </Alert>
         )}
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg"
-        >
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Adresse email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-              placeholder="votre.email@exemple.com"
-            />
-          </div>
-
-          <button
-            type="submit"
+        {/* Email Field */}
+        <div className="space-y-2">
+          <Label htmlFor="email" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Adresse email
+          </Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="votre.email@exemple.com"
+            value={form.email}
+            onChange={handleInputChange}
             disabled={isSubmitting}
-            className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? 'Envoi en cours...' : 'Envoyer le code WhatsApp'}
-          </button>
+            className={errors.email ? 'border-red-500' : ''}
+          />
+          {errors.email && (
+            <p className="text-xs text-red-600">{errors.email}</p>
+          )}
+        </div>
 
-          <div className="text-center text-sm">
-            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Retour à la connexion
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+          size="lg"
+        >
+          {isSubmitting ? 'Envoi en cours...' : 'Envoyer le code WhatsApp'}
+        </Button>
+
+        {/* Back Link */}
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

@@ -183,7 +183,10 @@ const getVehiclesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    if (req.user.id !== parseInt(userId, 10) && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+    const userIdInt = parseInt(userId, 10);
+    const currentUserIdInt = parseInt(req.user.id, 10);
+    
+    if (currentUserIdInt !== userIdInt && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({
         error: 'Accès non autorisé',
         message: 'Vous ne pouvez voir que vos propres véhicules'
@@ -219,7 +222,8 @@ const getVehicleById = async (req, res) => {
 
     const vehicle = result.recordset[0];
 
-    if (vehicle.client_id !== req.user.id && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+    const currentUserIdInt = parseInt(req.user.id, 10);
+    if (vehicle.client_id !== currentUserIdInt && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({ error: 'Accès non autorisé' });
     }
 

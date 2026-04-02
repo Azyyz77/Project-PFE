@@ -22,7 +22,7 @@ export default function AgentDashboardPage() {
 
   useEffect(() => {
     if (!isLoading) {
-      if (!user || (user.type_utilisateur !== 'AGENT' && user.type_utilisateur !== 'ADMIN')) {
+      if (!user || !['AGENT', 'ADMIN'].includes(user.role)) {
         router.replace('/login');
       } else if (token) {
         loadSummary();
