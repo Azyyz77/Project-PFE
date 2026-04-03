@@ -38,6 +38,11 @@ const CLIENT_NAV_ITEMS: NavItem[] = [
     icon: <Car className="w-5 h-5" />,
   },
   {
+    label: 'Catalogue',
+    href: '/client/catalog',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
     label: 'Mes commandes',
     href: '/client/orders',
     icon: <Wrench className="w-5 h-5" />,

@@ -26,10 +26,14 @@ export default function AppointmentsList({ token }: Props) {
   }>({ open: false });
 
   useEffect(() => {
-    loadAppointments();
-  }, [filter]);
+    if (token) {
+      loadAppointments();
+    }
+  }, [filter, token]);
 
   const loadAppointments = async () => {
+    if (!token) return;
+    
     try {
       setLoading(true);
       const data = await fetchAppointments(token, { statut: filter || undefined });
@@ -47,7 +51,7 @@ export default function AppointmentsList({ token }: Props) {
       string,
       { border: string; bg: string; badge: string }
     > = {
-      EN_ATTENTE: {
+      PLANIFIE: {
         border: 'border-l-amber-500',
         bg: 'bg-amber-500/10',
         badge: 'bg-amber-500/20 text-amber-500',
@@ -73,11 +77,11 @@ export default function AppointmentsList({ token }: Props) {
         badge: 'bg-red-500/20 text-red-400',
       },
     };
-    return map[statut] || map.EN_ATTENTE;
+    return map[statut] || map.PLANIFIE;
   };
 
   const handleAction = async () => {
-    if (!confirmDialog.id || !confirmDialog.action) return;
+    if (!confirmDialog.id || !confirmDialog.action || !token) return;
 
     try {
       let actionFn;
@@ -117,7 +121,7 @@ export default function AppointmentsList({ token }: Props) {
 
   const renderActionButton = (rdv: Appointment) => {
     switch (rdv.statut) {
-      case 'EN_ATTENTE':
+      case 'PLANIFIE':
         return (
           <Button
             onClick={() =>
@@ -167,7 +171,7 @@ export default function AppointmentsList({ token }: Props) {
       <Tabs value={filter} onValueChange={setFilter} className="w-full">
         <TabsList className="bg-slate-800 border-slate-700">
           <TabsTrigger value="">Tous</TabsTrigger>
-          <TabsTrigger value="EN_ATTENTE">En attente</TabsTrigger>
+          <TabsTrigger value="PLANIFIE">Planifiés</TabsTrigger>
           <TabsTrigger value="CONFIRME">Confirmés</TabsTrigger>
           <TabsTrigger value="EN_COURS">En cours</TabsTrigger>
           <TabsTrigger value="TERMINE">Terminés</TabsTrigger>

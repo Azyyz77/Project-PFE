@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const appointmentController = require('../controllers/appointmentController');
+const appointmentManagementController = require('../controllers/appointmentManagementController');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 router.use(authMiddleware);
 
@@ -190,3 +192,114 @@ router.get('/:id', appointmentController.getAppointmentDetails);
 router.delete('/:id', appointmentController.cancelAppointment);
 
 module.exports = router;
+
+// ============================================================
+// NOUVELLES ROUTES - Gestion avancée des rendez-vous
+// ============================================================
+
+/**
+ * @swagger
+ * /api/appointments/{id}:
+ *   put:
+ *     summary: Modifier un rendez-vous
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               date_heure:
+ *                 type: string
+ *                 format: date-time
+ *               agence_id:
+ *                 type: integer
+ *               description:
+ *                 type: string
+ *               sous_type_ids:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *     responses:
+ *       200:
+ *         description: Rendez-vous modifié
+ */
+router.put('/:id', appointmentManagementController.updateAppointment);
+
+/**
+ * @swagger
+ * /api/appointments/{id}/start:
+ *   post:
+ *     summary: Démarrer un rendez-vous (Agent uniquement)
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Rendez-vous démarré
+ */
+router.post('/:id/start', authorizeRoles('AGENT', 'ADMIN', 'DIRECTION'), appointmentManagementController.startAppointment);
+
+/**
+ * @swagger
+ * /api/appointments/{id}/complete:
+ *   post:
+ *     summary: Terminer un rendez-vous (Agent uniquement)
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               commentaire:
+ *                 type: string
+ *               cout_reel:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Rendez-vous terminé
+ */
+router.post('/:id/complete', authorizeRoles('AGENT', 'ADMIN', 'DIRECTION'), appointmentManagementController.completeAppointment);
+
+/**
+ * @swagger
+ * /api/appointments/{id}/confirm:
+ *   post:
+ *     summary: Confirmer un rendez-vous (Agent uniquement)
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Rendez-vous confirmé
+ */
+router.post('/:id/confirm', authorizeRoles('AGENT', 'ADMIN', 'DIRECTION'), appointmentManagementController.confirmAppointment);

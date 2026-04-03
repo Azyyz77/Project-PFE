@@ -39,6 +39,8 @@ export default function ClientsPage() {
   }, [token]);
 
   const loadClients = async () => {
+    if (!token) return;
+    
     try {
       setLoading(true);
       // Récupérer tous les rendez-vous pour extraire les clients

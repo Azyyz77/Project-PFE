@@ -53,6 +53,11 @@ const AGENT_NAV_ITEMS: NavItem[] = [
     icon: <Calendar className="w-5 h-5" />,
   },
   {
+    label: 'Catalogue',
+    href: '/dashboard/agent/catalog',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
     label: 'Réclamations',
     href: '/dashboard/agent/complaints',
     icon: <MessageSquare className="w-5 h-5" />,

@@ -49,6 +49,8 @@ export default function RepairOrdersPage() {
   }, [token]);
 
   const loadOrders = async () => {
+    if (!token) return;
+    
     try {
       setLoading(true);
       const appointments = await fetchAppointments(token, {});
@@ -299,7 +301,7 @@ export default function RepairOrdersPage() {
                         <p className="text-slate-400 text-xs">{intervention.sousType}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Badge className={statusColor(intervention.statut)} variant="outline" size="sm">
+                        <Badge className={statusColor(intervention.statut)} variant="outline">
                           {statusLabel(intervention.statut)}
                         </Badge>
                         {intervention.prix && (

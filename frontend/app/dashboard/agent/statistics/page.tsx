@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getFeedbackStats, getDurationStats, getFeedbacks } from '@/lib/api/appointmentFeedback';
 import type { FeedbackStats, DurationStats, Feedback } from '@/lib/api/appointmentFeedback';
-import { Star, Clock, TrendingUp, MessageSquare, BarChart3 } from 'lucide-react';
+import { Star, Clock, MessageSquare, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StatisticsPage() {
@@ -29,6 +29,8 @@ export default function StatisticsPage() {
   }, [token]);
 
   const loadStats = async () => {
+    if (!token) return;
+    
     try {
       setLoading(true);
       const [feedback, duration, feedbacks] = await Promise.all([

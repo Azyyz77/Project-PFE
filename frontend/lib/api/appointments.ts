@@ -141,3 +141,102 @@ export async function cancelAppointment(
     throw new ApiError(500, 'Erreur de connexion au serveur');
   }
 }
+
+// ============================================================
+// NOUVELLES MÉTHODES - Gestion avancée des rendez-vous
+// ============================================================
+
+export interface UpdateAppointmentPayload {
+  date_heure?: string;
+  agence_id?: number;
+  description?: string;
+  sous_type_ids?: number[];
+}
+
+export interface CompleteAppointmentPayload {
+  commentaire?: string;
+  cout_reel?: number;
+}
+
+/**
+ * Modifier un rendez-vous existant
+ */
+export async function updateAppointment(
+  appointmentId: number,
+  payload: UpdateAppointmentPayload,
+  token: string
+) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+      method: 'PUT',
+      headers: buildAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    return await parseJson<{ message: string; appointmentId: number }>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+/**
+ * Confirmer un rendez-vous (Agent uniquement)
+ */
+export async function confirmAppointment(appointmentId: number, token: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/confirm`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+    });
+
+    return await parseJson<{ message: string; appointmentId: number }>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+/**
+ * Démarrer un rendez-vous (Agent uniquement)
+ */
+export async function startAppointment(appointmentId: number, token: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/start`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+    });
+
+    return await parseJson<{ message: string; appointmentId: number; startedAt: string }>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+/**
+ * Terminer un rendez-vous (Agent uniquement)
+ */
+export async function completeAppointment(
+  appointmentId: number,
+  payload: CompleteAppointmentPayload,
+  token: string
+) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/complete`, {
+      method: 'POST',
+      headers: buildAuthHeaders(token),
+      body: JSON.stringify(payload),
+    });
+
+    return await parseJson<{ 
+      message: string; 
+      appointmentId: number; 
+      completedAt: string;
+      dureeReelle: string;
+    }>(response);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}

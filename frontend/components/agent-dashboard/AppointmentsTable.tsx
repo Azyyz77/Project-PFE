@@ -1,13 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchAppointments, confirmAppointment, startIntervention, finishIntervention, cancelAppointment } from '@/lib/api/agentDashboard';
+import { fetchAppointments } from '@/lib/api/agentDashboard';
+import { confirmAppointment, startAppointment, completeAppointment } from '@/lib/api/appointments';
 import { Appointment } from '@/types/agentDashboard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Calendar, Clock, User, Car, Wrench, List } from 'lucide-react';
 import { toast } from 'sonner';
+import AppointmentActions from './AppointmentActions';
 
 interface Props {
   token: string;
@@ -72,35 +76,34 @@ export default function AppointmentsTable({ token }: Props) {
     if (!confirmDialog.id || !confirmDialog.action) return;
 
     try {
-      let actionFn;
       let label = '';
 
       switch (confirmDialog.action) {
         case 'confirm':
-          actionFn = confirmAppointment;
+          await confirmAppointment(confirmDialog.id, token);
           label = 'Rendez-vous confirmé';
           break;
         case 'start':
-          actionFn = startIntervention;
-          label = 'Intervention démarrée';
+          await startAppointment(confirmDialog.id, token);
+          label = 'Rendez-vous démarré';
           break;
         case 'finish':
-          actionFn = finishIntervention;
-          label = 'Intervention terminée';
+          await completeAppointment(confirmDialog.id, {}, token);
+          label = 'Rendez-vous terminé';
           break;
         case 'cancel':
-          actionFn = (t: string, id: number) =>
-            cancelAppointment(t, id, 'Annulé par agent');
+          // Utiliser l'ancienne fonction pour l'annulation
+          const { cancelAppointment: cancelFn } = await import('@/lib/api/agentDashboard');
+          await cancelFn(token, confirmDialog.id, 'Annulé par agent');
           label = 'Rendez-vous annulé';
           break;
       }
 
-      await actionFn(token, confirmDialog.id);
       toast.success(label);
       loadAppointments();
     } catch (e: any) {
       toast.error('Erreur', {
-        description: e.response?.data?.error || 'Erreur inconnue',
+        description: e.message || 'Erreur inconnue',
       });
     } finally {
       setConfirmDialog({ open: false });
