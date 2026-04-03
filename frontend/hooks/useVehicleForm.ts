@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Vehicle, VersionCatalogItem } from '@/types/vehicle';
 import {
   getModelOptions,
@@ -8,7 +9,6 @@ import {
   buildImmatriculation,
   validateVehicleForm,
 } from '@/lib/vehicle-utils';
-import { Toast } from '@/lib/toast';
 
 interface UseVehicleFormProps {
   versions: VersionCatalogItem[];
@@ -65,7 +65,7 @@ export function useVehicleForm({ versions, onSuccess }: UseVehicleFormProps) {
     const validationError = validateVehicleForm(form);
     if (validationError) {
       setError(validationError);
-      Toast.error(validationError);
+      toast.error(validationError);
       return null;
     }
     return buildImmatriculation(form);

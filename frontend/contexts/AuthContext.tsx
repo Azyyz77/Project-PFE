@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(storedToken);
       setUser(parsedUser);
       localStorage.setItem('user', JSON.stringify(parsedUser));
+      
+      // Sync token to cookie for middleware
+      document.cookie = `token=${storedToken}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
     }
     
     setIsLoading(false);
@@ -58,17 +61,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(normalizedUser));
       
+      // CRITICAL: Save token to cookies for middleware
+      document.cookie = `token=${response.token}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
+      
       setToken(response.token);
       setUser(normalizedUser);
       
       // Redirection basée sur le rôle
-      if (normalizedUser.role === 'ADMIN') {
-        router.push('/dashboard/admin');
-      } else if (normalizedUser.role === 'AGENT') {
-        router.push('/dashboard/agent');
-      } else {
-        router.push('/dashboard');
-      }
+      const redirectMap: Record<string, string> = {
+        CLIENT: '/client/dashboard',
+        AGENT: '/dashboard/agent',
+        ADMIN: '/dashboard/admin',
+        DIRECTION: '/dashboard/direction',
+      };
+      
+      const redirectUrl = redirectMap[normalizedUser.role] ?? '/login';
+      router.replace(redirectUrl);
     } catch (error) {
       // Propager l'erreur pour que le composant puisse l'afficher
       throw error;
@@ -83,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await registerUser(data);
       
       // Après l'inscription, rediriger vers la page de connexion
-      router.push('/login?registered=true');
+      router.replace('/login?registered=true');
     } catch (error) {
       // Propager l'erreur pour que le composant puisse l'afficher
       throw error;
@@ -96,9 +104,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     setToken(null);
     setUser(null);
-    router.push('/login');
+    router.replace('/login');
   };
 
   const value: AuthContextType = {

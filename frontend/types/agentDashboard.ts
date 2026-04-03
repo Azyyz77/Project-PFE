@@ -1,6 +1,6 @@
 // types/agentDashboard.ts — Types TypeScript pour le dashboard agent SAV
 
-export type AppointmentStatus = 'EN_ATTENTE' | 'CONFIRME' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
+export type AppointmentStatus = 'PLANIFIE' | 'CONFIRME' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
 export type VehicleStatus     = 'EN_ATTENTE' | 'VALIDE' | 'REFUSE';
 export type ComplaintStatus   = 'OUVERTE' | 'EN_COURS' | 'RESOLUE' | 'FERMEE';
 export type ComplaintPriority = 'BASSE' | 'NORMAL' | 'HAUTE' | 'CRITIQUE';

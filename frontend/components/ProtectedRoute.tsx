@@ -33,7 +33,7 @@ export default function ProtectedRoute({
       if (requiredRole && user) {
         const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
         if (!allowedRoles.includes(user.role)) {
-          router.push('/dashboard');
+          router.push('/unauthorized');
           return;
         }
       }

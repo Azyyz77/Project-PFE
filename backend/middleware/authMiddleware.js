@@ -5,6 +5,8 @@ const authMiddleware = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
+    console.log(`[AuthMiddleware] ${req.method} ${req.path} - Auth header:`, authHeader ? 'Present' : 'Missing');
+
     if (!authHeader) {
       return res.status(401).json({
         error: 'Token non fourni',
@@ -28,6 +30,8 @@ const authMiddleware = (req, res, next) => {
       email: decoded.email,
       role: decoded.role
     };
+
+    console.log(`[AuthMiddleware] User authenticated:`, req.user.id, req.user.role);
 
     next();
   } catch (error) {

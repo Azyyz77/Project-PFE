@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import AppointmentFeedback from '@/components/client/AppointmentFeedback';
 import {
   Calendar,
   ChevronLeft,
@@ -43,6 +44,7 @@ import {
   AlertTriangle,
   Trash2,
   X,
+  Star,
 } from 'lucide-react';
 
 type AppointmentFilter = 'all' | 'scheduled' | 'in_progress' | 'completed';
@@ -386,6 +388,16 @@ function RendezVousContent() {
     setSelectedAppointmentDetail(null);
     setAppointmentInterventions([]);
     setCancelReason('');
+  };
+
+  const refreshAppointments = async () => {
+    if (!token) return;
+    try {
+      const list = await getMyAppointments(token);
+      setAppointments(list);
+    } catch (err: unknown) {
+      console.error('Error refreshing appointments:', err);
+    }
   };
 
   const submitAppointment = async () => {
@@ -1162,6 +1174,15 @@ function RendezVousContent() {
             >
               Fermer
             </Button>
+            {selectedAppointmentDetail && selectedAppointmentDetail.statut === 'TERMINE' && (
+              <AppointmentFeedback
+                appointmentId={selectedAppointmentDetail.id}
+                onSuccess={() => {
+                  refreshAppointments();
+                  closeDetailModal();
+                }}
+              />
+            )}
             {selectedAppointmentDetail && canCancelAppointment(selectedAppointmentDetail) && (
               <Button
                 variant="destructive"

@@ -1,14 +1,34 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { fetchComplaints, answerComplaint, updateComplaintStatus } from '@/lib/api/agentDashboard';
-import { Complaint } from '@/types/agentDashboard';
 
-interface Props { token: string; }
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+
+type ComplaintStatus = 'SOUMISE' | 'EN_COURS' | 'TRAITEE' | 'CLOTUREE';
+
+interface Complaint {
+  id: number;
+  numero: string;
+  sujet: string;
+  description: string;
+  statut: ComplaintStatus;
+  date_creation: string;
+  date_traitement?: string;
+  date_resolution?: string;
+  client_nom: string;
+  client_email?: string;
+  client_tel?: string;
+  agent_nom?: string;
+}
+
+interface Props {
+  token: string;
+}
 
 export default function ComplaintsManagement({ token }: Props) {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState<ComplaintStatus | ''>('');
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
   const [replyText, setReplyText] = useState('');
 
@@ -19,58 +39,76 @@ export default function ComplaintsManagement({ token }: Props) {
   const loadComplaints = async () => {
     try {
       setLoading(true);
-      const data = await fetchComplaints(token, filter || undefined);
-      setComplaints(data);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const url = filter 
+        ? `${API_URL}/api/complaints?statut=${filter}`
+        : `${API_URL}/api/complaints`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors du chargement des réclamations');
+      }
+
+      const data = await response.json();
+      setComplaints(data.complaints || data);
+      
       if (activeComplaint) {
-        setActiveComplaint(data.find((c: Complaint) => c.id === activeComplaint.id) || null);
+        const updated = (data.complaints || data).find((c: Complaint) => c.id === activeComplaint.id);
+        setActiveComplaint(updated || null);
       }
     } catch (error) {
       console.error(error);
+      toast.error('Erreur', { description: 'Impossible de charger les réclamations' });
     } finally {
       setLoading(false);
     }
   };
 
-  const statusBadge = (statut: string) => {
-    const map: Record<string, string> = {
-      OUVERTE:  'bg-red-500/20 text-red-400 border-red-500/50',
-      EN_COURS: 'bg-amber-500/20 text-amber-500 border-amber-500/50',
-      RESOLUE:  'bg-emerald-500/20 text-emerald-400 border-emerald-500/50',
-      FERMEE:   'bg-slate-500/20 text-slate-400 border-slate-500/50'
+  const statusBadge = (statut: ComplaintStatus) => {
+    const map: Record<ComplaintStatus, string> = {
+      SOUMISE:  'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+      EN_COURS: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+      TRAITEE:  'bg-green-500/20 text-green-400 border-green-500/50',
+      CLOTUREE: 'bg-slate-500/20 text-slate-400 border-slate-500/50'
+    };
+    const labels: Record<ComplaintStatus, string> = {
+      SOUMISE: 'Soumise',
+      EN_COURS: 'En cours',
+      TRAITEE: 'Traitée',
+      CLOTUREE: 'Clôturée'
     };
     const c = map[statut] || 'bg-slate-500/20 text-slate-400';
-    return <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${c}`}>{statut}</span>;
+    return <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${c}`}>{labels[statut]}</span>;
   };
 
-  const priorityBadge = (prio: string) => {
-    const map: Record<string, string> = {
-      BASSE:    'text-slate-400',
-      NORMAL:   'text-blue-400',
-      HAUTE:    'text-orange-400',
-      CRITIQUE: 'text-red-500 font-bold'
-    };
-    return <span className={`text-xs uppercase tracking-wider ${map[prio] || 'text-slate-400'}`}>{prio}</span>;
-  };
-
-  const handleReply = async () => {
-    if (!activeComplaint || !replyText.trim()) return;
-    try {
-      await answerComplaint(token, activeComplaint.id, replyText);
-      setReplyText('');
-      loadComplaints();
-    } catch (e) {
-      alert('Erreur envoi réponse');
-    }
-  };
-
-  const handleStatusChange = async (statut: string) => {
+  const handleStatusChange = async (statut: ComplaintStatus) => {
     if (!activeComplaint) return;
     if (!confirm(`Passer au statut ${statut} ?`)) return;
+    
     try {
-      await updateComplaintStatus(token, activeComplaint.id, statut);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/complaints/${activeComplaint.id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ statut }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour du statut');
+      }
+
+      toast.success('Statut mis à jour avec succès');
       loadComplaints();
     } catch (e) {
-      alert('Erreur maj statut');
+      toast.error('Erreur', { description: 'Impossible de mettre à jour le statut' });
     }
   };
 
@@ -79,15 +117,21 @@ export default function ComplaintsManagement({ token }: Props) {
       <div className="flex justify-between items-center mb-6 shrink-0">
         <h2 className="text-xl font-bold text-white">Gestion des Réclamations</h2>
         <div className="flex gap-2">
-          {['', 'OUVERTE', 'EN_COURS', 'RESOLUE', 'FERMEE'].map((s) => (
+          {[
+            { value: '', label: 'Toutes' },
+            { value: 'SOUMISE', label: 'Soumises' },
+            { value: 'EN_COURS', label: 'En cours' },
+            { value: 'TRAITEE', label: 'Traitées' },
+            { value: 'CLOTUREE', label: 'Clôturées' }
+          ].map((s) => (
             <button
-              key={s}
-              onClick={() => { setFilter(s); setActiveComplaint(null); }}
+              key={s.value}
+              onClick={() => { setFilter(s.value as ComplaintStatus | ''); setActiveComplaint(null); }}
               className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                filter === s ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                filter === s.value ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
             >
-              {s || 'Toutes'}
+              {s.label}
             </button>
           ))}
         </div>
@@ -124,9 +168,11 @@ export default function ComplaintsManagement({ token }: Props) {
                   </p>
                   <div className="flex justify-between items-center text-xs">
                     <span className={activeComplaint?.id === c.id ? 'text-blue-200' : 'text-slate-500'}>
-                      {c.client_nom} {c.client_prenom}
+                      {c.client_nom}
                     </span>
-                    {priorityBadge(c.priorite)}
+                    <span className={activeComplaint?.id === c.id ? 'text-blue-200' : 'text-slate-500'}>
+                      {c.numero}
+                    </span>
                   </div>
                 </button>
               ))
@@ -147,82 +193,83 @@ export default function ComplaintsManagement({ token }: Props) {
               <div className="p-6 border-b border-slate-800 flex justify-between items-start shrink-0">
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">{activeComplaint.sujet}</h3>
-                  <div className="flex gap-4 text-sm text-slate-400">
-                    <p>De: <span className="text-white">{activeComplaint.client_nom} {activeComplaint.client_prenom}</span> ({activeComplaint.email})</p>
+                  <div className="flex gap-4 text-sm text-slate-400 flex-wrap">
+                    <p>De: <span className="text-white">{activeComplaint.client_nom}</span></p>
+                    {activeComplaint.client_email && (
+                      <p>Email: <span className="text-white">{activeComplaint.client_email}</span></p>
+                    )}
+                    {activeComplaint.client_tel && (
+                      <p>Tél: <span className="text-white">{activeComplaint.client_tel}</span></p>
+                    )}
                     <p>Le: <span className="text-white">{new Date(activeComplaint.date_creation).toLocaleString('fr-FR')}</span></p>
-                    <p>Priorité: {priorityBadge(activeComplaint.priorite)}</p>
                   </div>
-                  {activeComplaint.date_rendez_vous && (
-                    <p className="text-sm text-blue-400 mt-2">
-                      Concerne le RDV du {new Date(activeComplaint.date_rendez_vous).toLocaleString('fr-FR')}
-                    </p>
-                  )}
+                  <p className="text-sm text-slate-400 mt-2">
+                    Numéro: <span className="text-white">{activeComplaint.numero}</span>
+                  </p>
                 </div>
                 {/* Actions Statut */}
                 <div className="flex flex-col gap-2 shrink-0">
                   {statusBadge(activeComplaint.statut)}
-                  {activeComplaint.statut !== 'RESOLUE' && activeComplaint.statut !== 'FERMEE' && (
-                    <button onClick={() => handleStatusChange('RESOLUE')} className="mt-2 text-xs bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/50">
-                      Marquer Résolue
+                  {activeComplaint.statut === 'SOUMISE' && (
+                    <button 
+                      onClick={() => handleStatusChange('EN_COURS')} 
+                      className="mt-2 text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-blue-500/50"
+                    >
+                      Prendre en charge
                     </button>
                   )}
-                  {activeComplaint.statut === 'RESOLUE' && (
-                    <button onClick={() => handleStatusChange('FERMEE')} className="mt-2 text-xs bg-slate-700 text-slate-300 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition-colors border border-slate-600">
+                  {activeComplaint.statut === 'EN_COURS' && (
+                    <button 
+                      onClick={() => handleStatusChange('TRAITEE')} 
+                      className="mt-2 text-xs bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-green-500/50"
+                    >
+                      Marquer Traitée
+                    </button>
+                  )}
+                  {activeComplaint.statut === 'TRAITEE' && (
+                    <button 
+                      onClick={() => handleStatusChange('CLOTUREE')} 
+                      className="mt-2 text-xs bg-slate-700 text-slate-300 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition-colors border border-slate-600"
+                    >
                       Clôturer
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Chat / Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Message initial du client */}
-                <div className="flex gap-4 max-w-[85%]">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 text-xs shrink-0 mt-1">
-                    C
-                  </div>
-                  <div className="bg-slate-800 rounded-2xl rounded-tl-sm p-4 border border-slate-700 text-slate-300 text-sm whitespace-pre-line">
+              {/* Contenu */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                  <h4 className="text-sm font-semibold text-slate-300 mb-3">Description de la réclamation</h4>
+                  <p className="text-slate-300 text-sm whitespace-pre-line leading-relaxed">
                     {activeComplaint.description}
-                  </div>
-                </div>
-
-                {/* Réponses de l'agent */}
-                {activeComplaint.reponses?.map(r => (
-                  <div key={r.id} className="flex gap-4 max-w-[85%] ml-auto justify-end">
-                    <div className="bg-blue-600 rounded-2xl rounded-tr-sm p-4 text-white text-sm whitespace-pre-line shadow-lg shadow-blue-900/20">
-                      {r.message}
-                      <p className="text-[10px] text-blue-200 mt-2 text-right">
-                        Par {r.agent_nom} {r.agent_prenom} — {new Date(r.date_creation).toLocaleString('fr-FR')}
+                  </p>
+                  
+                  {activeComplaint.date_traitement && (
+                    <div className="mt-4 pt-4 border-t border-slate-700">
+                      <p className="text-xs text-slate-400">
+                        Prise en charge le: <span className="text-white">{new Date(activeComplaint.date_traitement).toLocaleString('fr-FR')}</span>
                       </p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0 mt-1 border border-blue-400">
-                      A
+                  )}
+                  
+                  {activeComplaint.date_resolution && (
+                    <div className="mt-2">
+                      <p className="text-xs text-slate-400">
+                        Résolue le: <span className="text-white">{new Date(activeComplaint.date_resolution).toLocaleString('fr-FR')}</span>
+                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Zone de réponse */}
-              {activeComplaint.statut !== 'FERMEE' && (
-                <div className="p-4 border-t border-slate-800 bg-slate-900 shrink-0">
-                  <div className="flex gap-3">
-                    <textarea
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      placeholder="Votre réponse..."
-                      className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-                      rows={2}
-                    />
-                    <button
-                      onClick={handleReply}
-                      disabled={!replyText.trim()}
-                      className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 rounded-xl font-medium transition-colors"
-                    >
-                      Envoyer
-                    </button>
-                  </div>
+                  )}
+                  
+                  {activeComplaint.agent_nom && (
+                    <div className="mt-2">
+                      <p className="text-xs text-slate-400">
+                        Agent: <span className="text-white">{activeComplaint.agent_nom}</span>
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>

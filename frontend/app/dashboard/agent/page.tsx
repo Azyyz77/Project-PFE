@@ -3,26 +3,19 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchSummary } from '@/lib/api/agentDashboard';
-
-import DashboardLayout from '@/components/agent-dashboard/DashboardLayout';
 import DashboardSummary from '@/components/agent-dashboard/DashboardSummary';
-import AppointmentsList from '@/components/agent-dashboard/AppointmentsList';
-import VehiclesManagement from '@/components/agent-dashboard/VehiclesManagement';
-import ComplaintsManagement from '@/components/agent-dashboard/ComplaintsManagement';
-import StatisticsPanel from '@/components/agent-dashboard/StatisticsPanel';
 
 export default function AgentDashboardPage() {
   const router = useRouter();
   const { user, token, isLoading, logout } = useAuth();
   
-  const [activeTab, setActiveTab] = useState('summary');
   const [summaryData, setSummaryData] = useState<any>(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading) {
-      if (!user || !['AGENT', 'ADMIN'].includes(user.role)) {
+      if (!user || !['AGENT'].includes(user.role)) {
         router.replace('/login');
       } else if (token) {
         loadSummary();
@@ -70,35 +63,16 @@ export default function AgentDashboardPage() {
 
   const renderContent = () => {
     if (!token) return null;
-    switch (activeTab) {
-      case 'summary':
-        return loadingSummary ? (
-          <div className="p-6 text-slate-400 text-center animate-pulse mt-10">Chargement de la vue d'ensemble...</div>
-        ) : summaryData ? (
-          <DashboardSummary data={summaryData} onRefresh={loadSummary} />
-        ) : null;
-      case 'appointments':
-        return <AppointmentsList token={token} />;
-      case 'vehicles':
-        return <VehiclesManagement token={token} />;
-      case 'complaints':
-        return <ComplaintsManagement token={token} />;
-      case 'statistics':
-        return <StatisticsPanel token={token} />;
-      default:
-        return (
-          <div className="p-10 flex flex-col items-center justify-center text-slate-500 h-[60vh]">
-            <span className="text-6xl mb-4">🚧</span>
-            <p className="font-semibold text-lg">Module en construction</p>
-            <p className="text-sm">Cette section sera disponible prochainement.</p>
-          </div>
-        );
-    }
+    return loadingSummary ? (
+      <div className="p-6 text-slate-400 text-center animate-pulse mt-10">Chargement de la vue d'ensemble...</div>
+    ) : summaryData ? (
+      <DashboardSummary data={summaryData} onRefresh={loadSummary} />
+    ) : null;
   };
 
   return (
-    <DashboardLayout activeTab={activeTab} onTabChange={setActiveTab}>
-      {renderContent()}
-    </DashboardLayout>
+      <div className="p-6">
+        {renderContent()}
+      </div>
   );
 }

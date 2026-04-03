@@ -10,7 +10,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/dashboard');
+      router.replace('/unauthorized');
     }
   }, [user, isLoading, router]);
 
@@ -28,8 +28,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto p-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -141,6 +140,5 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
   );
 }

@@ -1,9 +1,13 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { fetchStatistics } from '@/lib/api/agentDashboard';
 import { Statistics } from '@/types/agentDashboard';
+import { toast } from 'sonner';
 
-interface Props { token: string; }
+interface Props {
+  token: string;
+}
 
 export default function StatisticsPanel({ token }: Props) {
   const [stats, setStats] = useState<Statistics | null>(null);
@@ -20,53 +24,80 @@ export default function StatisticsPanel({ token }: Props) {
       setStats(data);
     } catch (error) {
       console.error(error);
+      toast.error('Erreur', { description: 'Impossible de charger les statistiques' });
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="p-6 text-slate-400">Chargement des statistiques...</div>;
-  if (!stats) return <div className="p-6 text-slate-400">Aucune donnée disponible.</div>;
+  if (loading) {
+    return (
+      <div className="p-6 h-[calc(100vh-80px)] flex items-center justify-center">
+        <p className="text-slate-400">Chargement des statistiques...</p>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6 h-[calc(100vh-80px)] flex items-center justify-center">
+        <p className="text-slate-400">Aucune donnée disponible</p>
+      </div>
+    );
+  }
 
   const totalRdv = stats.daily?.reduce((sum, d) => sum + d.nombre, 0) ?? 0;
   const totalTermines = stats.daily?.reduce((sum, d) => sum + d.termines, 0) ?? 0;
   const totalAnnules = stats.daily?.reduce((sum, d) => sum + d.annules, 0) ?? 0;
-  const totalInterventions = stats.byType?.reduce((sum, t) => sum + t.nombre, 0) ?? 0;
+  const tauxReussite = totalRdv > 0 ? Math.round((totalTermines / totalRdv) * 100) : 0;
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold text-white mb-6">Statistiques Mensuelles</h2>
+    <div className="p-6 h-[calc(100vh-80px)] flex flex-col space-y-6 overflow-y-auto">
+      <div className="flex justify-between items-center shrink-0">
+        <h2 className="text-2xl font-bold text-white">Statistiques du Mois</h2>
+        <button
+          onClick={loadStats}
+          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition-colors border border-slate-700"
+        >
+          Actualiser
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* KPI Rapides */}
-        <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Rdv ce mois</p>
-            <p className="text-white text-3xl font-bold">
-              {totalRdv}
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Rdv Terminés</p>
-            <p className="text-emerald-400 text-3xl font-bold">
-              {totalTermines}
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Rdv Annulés</p>
-            <p className="text-red-400 text-3xl font-bold">
-              {totalAnnules}
-            </p>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-            <p className="text-slate-400 text-sm mb-1">Temps moyen/Interv.</p>
-            <p className="text-amber-400 text-3xl font-bold">
-              {stats.avgTime} <span className="text-sm">min</span>
-            </p>
-          </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-br from-blue-600/20 to-slate-900 border border-blue-500/30 p-5 rounded-2xl">
+          <p className="text-slate-400 text-sm mb-2">Rendez-vous Total</p>
+          <p className="text-3xl font-bold text-white">{totalRdv}</p>
+          <p className="text-xs text-slate-400 mt-2">Ce mois</p>
         </div>
 
-        {/* Réclamations */}
+        <div className="bg-gradient-to-br from-emerald-600/20 to-slate-900 border border-emerald-500/30 p-5 rounded-2xl">
+          <p className="text-slate-400 text-sm mb-2">Terminés</p>
+          <p className="text-3xl font-bold text-emerald-400">{totalTermines}</p>
+          <p className="text-xs text-slate-400 mt-2">{tauxReussite}% de réussite</p>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-600/20 to-slate-900 border border-red-500/30 p-5 rounded-2xl">
+          <p className="text-slate-400 text-sm mb-2">Annulés</p>
+          <p className="text-3xl font-bold text-red-400">{totalAnnules}</p>
+          <p className="text-xs text-slate-400 mt-2">
+            {totalRdv > 0 ? Math.round((totalAnnules / totalRdv) * 100) : 0}% du total
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-amber-600/20 to-slate-900 border border-amber-500/30 p-5 rounded-2xl">
+          <p className="text-slate-400 text-sm mb-2">Temps Moyen</p>
+          <p className="text-3xl font-bold text-amber-400">
+            {stats.avgTime}
+            <span className="text-sm ml-1">min</span>
+          </p>
+          <p className="text-xs text-slate-400 mt-2">Par intervention</p>
+        </div>
+      </div>
+
+      {/* Two Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Complaints */}
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
           <h3 className="text-white font-semibold mb-4">Réclamations (Ce mois)</h3>
           <div className="space-y-4">
@@ -113,6 +144,31 @@ export default function StatisticsPanel({ token }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Daily Distribution */}
+      {stats.daily && stats.daily.length > 0 && (
+        <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+          <h3 className="text-white font-semibold mb-4">Distribution Quotidienne</h3>
+          <div className="space-y-3">
+            {stats.daily.slice(0, 15).map((day, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>Jour {day.jour}</span>
+                  <span>{day.nombre} rdv</span>
+                </div>
+                <div className="flex gap-1 items-center">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 rounded h-2"
+                    style={{
+                      width: `${(day.nombre / Math.max(...stats.daily.map((d) => d.nombre), 1)) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

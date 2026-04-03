@@ -78,8 +78,7 @@ function ClientDashboardContent() {
   const dateStr = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="w-full h-full overflow-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* ── Welcome Banner ── */}
         <div className="mb-8 rounded-3xl overflow-hidden shadow-lg">
@@ -122,13 +121,13 @@ function ClientDashboardContent() {
 
         {/* ── Quick Action Cards ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Link href="/client/appointments/new">
+          <Link href="/client/rendez-vous">
             <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl p-8 cursor-pointer border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
               <div className="text-5xl mb-3">📅</div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Prendre un Rendez-vous</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Réservez une intervention</p>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Rendez-vous</h3>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Gérez vos rendez-vous</p>
               <div className="flex items-center text-green-600 dark:text-green-400 group-hover:gap-2 transition-all gap-1">
-                <span className="text-sm font-semibold">Continuer</span>
+                <span className="text-sm font-semibold">Voir</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -312,7 +311,6 @@ function ClientDashboardContent() {
           )}
         </div>
 
-      </div>
     </div>
   );
 }

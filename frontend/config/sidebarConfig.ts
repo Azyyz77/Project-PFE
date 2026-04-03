@@ -36,8 +36,9 @@ export const agentLinks = [
   { label: 'Inspection de véhicule', href: '/dashboard/agent/vehicle-inspection', icon: Car },
   { label: 'Mes clients', href: '/dashboard/agent/clients', icon: Users },
   { label: 'Rendez-vous', href: '/dashboard/agent/appointments', icon: CalendarPlus },
-  { label: 'Interventions', href: '/dashboard/agent/interventions', icon: Wrench },
+  { label: 'Reclamations', href: '/dashboard/agent/complaints', icon: Wrench },
 ];
+
 
 export const adminLinks = [
   { label: 'Tableau de bord', href: '/dashboard/admin', icon: LayoutDashboard },

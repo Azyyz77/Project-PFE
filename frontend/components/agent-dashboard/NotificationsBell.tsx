@@ -1,18 +1,27 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from '@/lib/api/agentDashboard';
-import { AgentNotification } from '@/types/agentDashboard';
+import { Button } from '@/components/ui/button';
+import { Bell } from 'lucide-react';
+
+interface Notification {
+  id: number;
+  titre: string;
+  message: string;
+  lu: boolean;
+  date_creation: string;
+}
 
 export default function NotificationsBell() {
   const { token } = useAuth();
-  const [notifications, setNotifications] = useState<AgentNotification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (token) {
       loadNotifications();
-      // Polling could be added here
     }
   }, [token]);
 
@@ -27,13 +36,13 @@ export default function NotificationsBell() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.lu).length;
+  const unreadCount = notifications.filter((n) => !n.lu).length;
 
   const handleRead = async (id: number) => {
     try {
       if (!token) return;
       await markNotificationRead(token, id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, lu: true } : n));
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, lu: true } : n)));
     } catch (error) {
       console.error(error);
     }
@@ -43,7 +52,7 @@ export default function NotificationsBell() {
     try {
       if (!token) return;
       await markAllNotificationsRead(token);
-      setNotifications(prev => prev.map(n => ({ ...n, lu: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
     } catch (error) {
       console.error(error);
     }
@@ -51,52 +60,63 @@ export default function NotificationsBell() {
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-800"
+        className="relative text-slate-400 hover:text-white"
       >
-        <span className="text-xl">🔔</span>
+        <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center border-2 border-slate-900">
-            {unreadCount}
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white min-w-4">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-800/50">
+        <div className="absolute right-0 mt-2 w-96 rounded-lg border border-slate-800 bg-slate-900 shadow-lg z-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
             <h3 className="text-white font-semibold">Notifications</h3>
             {unreadCount > 0 && (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleReadAll}
-                className="text-xs text-blue-400 hover:text-blue-300"
+                className="text-xs text-blue-400 hover:text-blue-300 h-auto px-2 py-1"
               >
                 Tout marquer lu
-              </button>
+              </Button>
             )}
           </div>
+
           <div className="max-h-[400px] overflow-y-auto">
             {notifications.length === 0 ? (
               <p className="p-4 text-center text-slate-500 text-sm">Aucune notification</p>
             ) : (
-              notifications.map((n) => (
+              notifications.map((n, idx) => (
                 <div
                   key={n.id}
                   onClick={() => !n.lu && handleRead(n.id)}
-                  className={`p-4 border-b border-slate-800/50 hover:bg-slate-800 transition-colors cursor-pointer ${
-                    !n.lu ? 'bg-slate-800/30' : ''
-                  }`}
+                  className={`p-4 transition-colors cursor-pointer border-b border-slate-800/50 ${
+                    !n.lu ? 'bg-slate-800/30 hover:bg-slate-800/50' : 'hover:bg-slate-800/20'
+                  } ${idx === notifications.length - 1 ? 'border-b-0' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-1">
                     <p className={`text-sm font-medium ${!n.lu ? 'text-white' : 'text-slate-300'}`}>
                       {n.titre}
                     </p>
-                    {!n.lu && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
+                    {!n.lu && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />}
                   </div>
                   <p className="text-xs text-slate-400 line-clamp-2">{n.message}</p>
                   <p className="text-[10px] text-slate-500 mt-2">
-                    {new Date(n.date_creation).toLocaleString('fr-FR')}
+                    {new Intl.DateTimeFormat('fr-FR', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }).format(new Date(n.date_creation))}
                   </p>
                 </div>
               ))

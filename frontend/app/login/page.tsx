@@ -4,8 +4,7 @@
  * Page de connexion - Refactored with shadcn/ui
  */
 
-import { Suspense, useState, FormEvent } from 'react';
-import { useEffect } from 'react';
+import { Suspense, useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -35,24 +34,36 @@ function LoginPageContent() {
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
   const reset = searchParams.get('reset');
 
+  // Redirect authenticated users to their dashboard
   useEffect(() => {
-    if (isAuthenticated) {
-      if (user?.role === 'ADMIN') {
-        router.replace('/dashboard/admin');
-      } else if (user?.role === 'AGENT') {
-        router.replace('/dashboard/agent');
-      } else {
-        router.replace('/dashboard');
-      }
+    if (!isLoading && isAuthenticated && user) {
+      const redirectMap: Record<string, string> = {
+        CLIENT: '/client/dashboard',
+        AGENT: '/dashboard/agent',
+        ADMIN: '/dashboard/admin',
+        DIRECTION: '/dashboard/direction',
+      };
+      const redirectUrl = redirectMap[user.role] || '/dashboard';
+      router.replace(redirectUrl);
     }
-  }, [isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router]);
 
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Don't render form if already authenticated (redirect in progress)
   if (isAuthenticated) {
     return null;
   }

@@ -1,0 +1,106 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password'];
+
+// Shared routes accessible by all authenticated users
+const SHARED_ROUTES = ['/unauthorized'];
+
+// Role-based route access
+const ROLE_ROUTES: Record<string, string[]> = {
+  CLIENT: ['/client'],
+  AGENT: ['/dashboard/agent'],
+  ADMIN: ['/dashboard/admin'],
+  DIRECTION: ['/dashboard/direction'],
+};
+
+// Admin and Direction can access their respective routes
+const ADMIN_ROUTES = ['/dashboard/admin', '/dashboard/direction'];
+
+// Simple JWT decoder (without external dependency)
+function decodeJWT(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow public routes
+  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
+
+  // Get token from cookies or headers
+  const token = request.cookies.get('token')?.value || 
+                request.headers.get('authorization')?.replace('Bearer ', '');
+
+  // If no token, redirect to login
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  try {
+    // Decode JWT to get user role
+    const decoded = decodeJWT(token);
+    if (!decoded) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    const userRole = decoded.role;
+
+    // Check if token is expired
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Allow shared routes for all authenticated users
+    if (SHARED_ROUTES.some(route => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // Check role-based access
+    const hasAccess = ROLE_ROUTES[userRole]?.some(route => pathname.startsWith(route));
+
+    // Admin can access admin routes, Direction can access direction routes
+    const isAdminRoute = ADMIN_ROUTES.some(route => pathname.startsWith(route));
+    const isAdminOrDirection = userRole === 'ADMIN' || userRole === 'DIRECTION';
+
+    if (isAdminRoute && !isAdminOrDirection) {
+      // Non-admin/direction trying to access admin routes
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+
+    if (!hasAccess && !isAdminRoute) {
+      // Role doesn't have access to this route
+      return NextResponse.redirect(new URL('/unauthorized', request.url));
+    }
+
+    return NextResponse.next();
+  } catch (error) {
+    // Invalid token
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+}
+
+// Configure which routes to apply middleware to
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (public files)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+  ],
+};
