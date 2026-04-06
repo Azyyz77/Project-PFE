@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
-import { CheryVideoBackground } from '@/components/auth/CheryVideoBackground';
+import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { AlertCircle, CheckCircle2, UserPlus, Users, Mail, Lock, Phone } from 'lucide-react';
 import {
   RegisterFormState,
@@ -38,14 +38,11 @@ export default function RegisterPage() {
 
   if (isAuthenticated) {
     return (
-      <div className="chery-auth-scene chery-auth-scene-register">
-        <CheryVideoBackground />
-        <div className="chery-auth-ambient" />
-        <div className="chery-auth-grid" />
+      <AuthThemeShell sceneClassName="chery-auth-scene chery-auth-scene-register">
         <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-100">
           Redirection vers votre espace...
         </div>
-      </div>
+      </AuthThemeShell>
     );
   }
 
@@ -88,11 +85,7 @@ export default function RegisterPage() {
     }
   };
   return (
-    <div className="chery-auth-scene chery-auth-scene-register">
-      <CheryVideoBackground />
-      <div className="chery-auth-ambient" />
-      <div className="chery-auth-grid" />
-
+    <AuthThemeShell sceneClassName="chery-auth-scene chery-auth-scene-register">
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
         <section className="w-full max-w-xl lg:max-w-lg">
           <div className="chery-auth-panel rounded-[1.8rem] p-7 sm:p-9">
@@ -253,6 +246,6 @@ export default function RegisterPage() {
           </div>
         </section>
       </main>
-    </div>
+    </AuthThemeShell>
   );
 }

@@ -276,6 +276,113 @@ button:focus {
   pointer-events: none;
 }
 
+.auth-theme-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  z-index: 30;
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(8, 12, 22, 0.62);
+  color: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.auth-theme-toggle:hover {
+  background: rgba(22, 30, 52, 0.78);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.auth-mode-light .auth-theme-toggle {
+  border-color: rgba(10, 15, 28, 0.22);
+  background: rgba(255, 255, 255, 0.7);
+  color: rgba(10, 18, 35, 0.82);
+}
+
+.auth-mode-light .auth-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(10, 15, 28, 0.3);
+}
+
+.auth-mode-light .chery-auth-panel {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(246, 249, 255, 0.84));
+  box-shadow:
+    0 30px 80px rgba(16, 24, 44, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.auth-mode-light .chery-auth-panel::after {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.auth-mode-light .chery-auth-panel h1,
+.auth-mode-light .chery-auth-panel h2,
+.auth-mode-light .chery-auth-panel .text-white {
+  color: #0f172a !important;
+}
+
+.auth-mode-light .chery-auth-panel p,
+.auth-mode-light .chery-auth-panel label,
+.auth-mode-light .chery-auth-panel .text-slate-300,
+.auth-mode-light .chery-auth-panel .text-slate-300\/90,
+.auth-mode-light .chery-auth-panel .text-slate-300\/85,
+.auth-mode-light .chery-auth-panel .text-slate-400 {
+  color: #334155 !important;
+}
+
+.auth-mode-light .chery-auth-panel a {
+  color: #1d4ed8 !important;
+}
+
+.auth-mode-light .chery-auth-panel a:hover {
+  color: #1e40af !important;
+}
+
+.auth-mode-light .chery-auth-panel input {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.auth-mode-light .chery-auth-panel .bg-white\/10 {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.auth-mode-light .chery-auth-panel .border-slate-200\/10,
+.auth-mode-light .chery-auth-panel .border-slate-300\/30 {
+  border-color: rgba(15, 23, 42, 0.16) !important;
+}
+
+.auth-mode-light .chery-auth-panel .text-slate-100,
+.auth-mode-light .chery-auth-panel .text-slate-200,
+.auth-mode-light .chery-auth-panel .text-slate-300,
+.auth-mode-light .chery-auth-panel .text-slate-300\/90,
+.auth-mode-light .chery-auth-panel .text-slate-300\/85,
+.auth-mode-light .chery-auth-panel .text-slate-400,
+.auth-mode-light .chery-auth-panel .placeholder\:text-slate-400\/80::placeholder {
+  color: #334155 !important;
+}
+
+.auth-mode-light .chery-auth-panel input::placeholder {
+  color: #64748b !important;
+}
+
+.auth-mode-light .chery-auth-panel button[type='submit'] {
+  border-color: rgba(244, 63, 94, 0.34) !important;
+  background: linear-gradient(90deg, #ffb8bf, #fb4d59) !important;
+  color: #fff !important;
+}
+
 @media (max-width: 1024px) {
   .chery-auth-scene,
   .chery-auth-scene-register {

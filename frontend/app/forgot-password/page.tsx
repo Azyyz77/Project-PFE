@@ -4,7 +4,7 @@ import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { forgotPassword } from '../../lib/api/auth';
-import { CheryVideoBackground } from '@/components/auth/CheryVideoBackground';
+import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -30,11 +30,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="chery-auth-scene">
-      <CheryVideoBackground />
-      <div className="chery-auth-ambient" />
-      <div className="chery-auth-grid" />
-
+    <AuthThemeShell>
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           <div>
@@ -89,6 +85,6 @@ export default function ForgotPasswordPage() {
           </form>
         </div>
       </main>
-    </div>
+    </AuthThemeShell>
   );
 }

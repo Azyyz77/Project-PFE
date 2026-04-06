@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
-import { CheryVideoBackground } from '@/components/auth/CheryVideoBackground';
+import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { AlertCircle, CheckCircle2, Mail, Lock, LogIn } from 'lucide-react';
 import {
   LoginFormState,
@@ -66,14 +66,11 @@ function LoginPageContent() {
   // Don't render form if already authenticated (redirect in progress)
   if (isAuthenticated) {
     return (
-      <div className="chery-auth-scene">
-        <CheryVideoBackground />
-        <div className="chery-auth-ambient" />
-        <div className="chery-auth-grid" />
+      <AuthThemeShell>
         <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-100">
           Redirection vers votre espace...
         </div>
-      </div>
+      </AuthThemeShell>
     );
   }
 
@@ -112,11 +109,7 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="chery-auth-scene">
-      <CheryVideoBackground />
-      <div className="chery-auth-ambient" />
-      <div className="chery-auth-grid" />
-
+    <AuthThemeShell>
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
         <section className="hidden flex-1 pr-10 lg:block">
           <div className="space-y-8">
@@ -239,6 +232,6 @@ function LoginPageContent() {
           </div>
         </section>
       </main>
-    </div>
+    </AuthThemeShell>
   );
 }
