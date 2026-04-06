@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
-import { AuthCard } from '@/components/auth/AuthCard';
+import { CheryVideoBackground } from '@/components/auth/CheryVideoBackground';
 import { AlertCircle, CheckCircle2, UserPlus, Users, Mail, Lock, Phone } from 'lucide-react';
 import {
   RegisterFormState,
@@ -37,7 +37,16 @@ export default function RegisterPage() {
   }, [isAuthenticated, router]);
 
   if (isAuthenticated) {
-    return null;
+    return (
+      <div className="chery-auth-scene chery-auth-scene-register">
+        <CheryVideoBackground />
+        <div className="chery-auth-ambient" />
+        <div className="chery-auth-grid" />
+        <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-100">
+          Redirection vers votre espace...
+        </div>
+      </div>
+    );
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,164 +88,171 @@ export default function RegisterPage() {
     }
   };
   return (
-    <AuthCard
-      title="Inscription"
-      subtitle="Créez votre compte STA Chery Tunisia"
-      bottomLink={{
-        text: "Vous avez déjà un compte ?",
-        href: "/login",
-        linkText: "Se connecter"
-      }}
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Success Message */}
-        {success && (
-          <Alert className="border-green-200 bg-green-50">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <p className="text-sm text-green-800">
-              ✓ Inscription réussie ! Redirection vers la connexion...
+    <div className="chery-auth-scene chery-auth-scene-register">
+      <CheryVideoBackground />
+      <div className="chery-auth-ambient" />
+      <div className="chery-auth-grid" />
+
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
+        <section className="w-full max-w-xl lg:max-w-lg">
+          <div className="chery-auth-panel rounded-[1.8rem] p-7 sm:p-9">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-400">
+              CHERY SERVICE
             </p>
-          </Alert>
-        )}
+            <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-[2.55rem]">
+              Creez votre
+              <br />
+              garage digital
+            </h1>
+            <p className="mt-2 text-sm text-slate-300/90">
+              Rejoignez l'univers du service precision et creez votre profil SAV.
+            </p>
 
-        {/* API Error */}
-        {apiError && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <p className="text-sm text-red-800">{apiError}</p>
-          </Alert>
-        )}
+            <form onSubmit={handleSubmit} className="mt-7 space-y-4.5">
+              {success && (
+                <Alert className="border-emerald-400/40 bg-emerald-500/10 text-emerald-100">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Inscription reussie. Redirection vers la connexion.</p>
+                </Alert>
+              )}
 
-        {/* Name Fields */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="prenom" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Prénom
-            </Label>
-            <Input
-              id="prenom"
-              name="prenom"
-              type="text"
-              placeholder="Ahmed"
-              value={form.prenom}
-              onChange={handleInputChange}
-              disabled={isSubmitting}
-              className={errors.prenom ? 'border-red-500' : ''}
-            />
-            {errors.prenom && (
-              <p className="text-xs text-red-600">{errors.prenom}</p>
-            )}
+              {apiError && (
+                <Alert className="border-rose-400/40 bg-rose-500/10 text-rose-100">
+                  <AlertCircle className="h-4 w-4 text-rose-300" />
+                  <p className="text-sm">{apiError}</p>
+                </Alert>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2.5">
+                  <Label htmlFor="prenom" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                    <Users className="h-3.5 w-3.5" />
+                    Prenom
+                  </Label>
+                  <Input
+                    id="prenom"
+                    name="prenom"
+                    type="text"
+                    placeholder="Ahmed"
+                    value={form.prenom}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.prenom ? 'border-rose-400/70' : ''}`}
+                  />
+                  {errors.prenom && <p className="text-xs text-rose-300">{errors.prenom}</p>}
+                </div>
+
+                <div className="space-y-2.5">
+                  <Label htmlFor="nom" className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                    Nom
+                  </Label>
+                  <Input
+                    id="nom"
+                    name="nom"
+                    type="text"
+                    placeholder="Ben Ali"
+                    value={form.nom}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.nom ? 'border-rose-400/70' : ''}`}
+                  />
+                  {errors.nom && <p className="text-xs text-rose-300">{errors.nom}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor="telephone" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  <Phone className="h-3.5 w-3.5" />
+                  Telephone
+                </Label>
+                <Input
+                  id="telephone"
+                  name="telephone"
+                  type="tel"
+                  placeholder="+216 12 345 678"
+                  value={form.telephone}
+                  onChange={handleInputChange}
+                  disabled={isSubmitting}
+                  className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.telephone ? 'border-rose-400/70' : ''}`}
+                />
+                {errors.telephone && <p className="text-xs text-rose-300">{errors.telephone}</p>}
+              </div>
+
+              <div className="space-y-2.5">
+                <Label htmlFor="email" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                  <Mail className="h-3.5 w-3.5" />
+                  Adresse email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="precision@chery.com"
+                  value={form.email}
+                  onChange={handleInputChange}
+                  disabled={isSubmitting}
+                  className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.email ? 'border-rose-400/70' : ''}`}
+                />
+                {errors.email && <p className="text-xs text-rose-300">{errors.email}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-2.5">
+                  <Label htmlFor="password" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                    <Lock className="h-3.5 w-3.5" />
+                    Mot de passe
+                  </Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.password ? 'border-rose-400/70' : ''}`}
+                  />
+                  {errors.password && <p className="text-xs text-rose-300">{errors.password}</p>}
+                </div>
+
+                <div className="space-y-2.5">
+                  <Label htmlFor="confirmPassword" className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                    Confirmation
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.confirmPassword}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.confirmPassword ? 'border-rose-400/70' : ''}`}
+                  />
+                  {errors.confirmPassword && <p className="text-xs text-rose-300">{errors.confirmPassword}</p>}
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="mt-2 h-12 w-full rounded-xl border border-[#ff6a72]/30 bg-gradient-to-r from-[#ff9a9f] to-[#f23f48] text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_14px_30px_rgba(242,63,72,0.35)] hover:brightness-105"
+                disabled={isSubmitting || success}
+                size="lg"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                {isSubmitting ? 'Inscription en cours...' : "S'inscrire a Chery Service"}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-slate-300/85">
+              Vous avez deja un compte ?{' '}
+              <Link href="/login" className="font-semibold text-white underline underline-offset-4">
+                Se connecter
+              </Link>
+            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="nom">Nom</Label>
-            <Input
-              id="nom"
-              name="nom"
-              type="text"
-              placeholder="Ben Ali"
-              value={form.nom}
-              onChange={handleInputChange}
-              disabled={isSubmitting}
-              className={errors.nom ? 'border-red-500' : ''}
-            />
-            {errors.nom && (
-              <p className="text-xs text-red-600">{errors.nom}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Contact Fields */}
-        <div className="space-y-2">
-          <Label htmlFor="telephone" className="flex items-center gap-2">
-            <Phone className="h-4 w-4" />
-            Téléphone
-          </Label>
-          <Input
-            id="telephone"
-            name="telephone"
-            type="tel"
-            placeholder="+216 12 345 678"
-            value={form.telephone}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.telephone ? 'border-red-500' : ''}
-          />
-          {errors.telephone && (
-            <p className="text-xs text-red-600">{errors.telephone}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            Email
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="jean.dupont@exemple.com"
-            value={form.email}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.email ? 'border-red-500' : ''}
-          />
-          {errors.email && (
-            <p className="text-xs text-red-600">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Password Fields */}
-        <div className="space-y-2">
-          <Label htmlFor="password" className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            Mot de passe
-          </Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.password ? 'border-red-500' : ''}
-          />
-          {errors.password && (
-            <p className="text-xs text-red-600">{errors.password}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={form.confirmPassword}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.confirmPassword ? 'border-red-500' : ''}
-          />
-          {errors.confirmPassword && (
-            <p className="text-xs text-red-600">{errors.confirmPassword}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting || success}
-          size="lg"
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          {isSubmitting ? 'Inscription en cours...' : 'S\'inscrire'}
-        </Button>
-      </form>
-    </AuthCard>
+        </section>
+      </main>
+    </div>
   );
 }
