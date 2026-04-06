@@ -165,3 +165,176 @@ button:focus {
     @apply font-sans;
   }
 }
+
+@keyframes showroom-pan {
+  0% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -1%, 0) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-2%, 0, 0) scale(1);
+  }
+}
+
+@keyframes ambient-pulse {
+  0% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.52;
+  }
+  100% {
+    opacity: 0.28;
+  }
+}
+
+@keyframes grid-shift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(22px);
+  }
+}
+
+.chery-auth-scene {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(120deg, rgba(5, 8, 14, 0.96), rgba(7, 10, 17, 0.9)),
+    radial-gradient(circle at 75% 20%, rgba(66, 99, 160, 0.24), transparent 42%),
+    radial-gradient(circle at 12% 84%, rgba(205, 56, 68, 0.2), transparent 36%);
+}
+
+.chery-auth-scene::before {
+  content: '';
+  position: absolute;
+  inset: -4% -2%;
+  background:
+    linear-gradient(115deg, rgba(5, 8, 14, 0.74) 0%, rgba(5, 8, 14, 0.5) 38%, rgba(3, 7, 16, 0.86) 80%),
+    radial-gradient(circle at 70% 56%, rgba(81, 176, 255, 0.13), transparent 46%);
+  animation: showroom-pan 24s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.chery-auth-scene-register {
+  background:
+    linear-gradient(120deg, rgba(5, 8, 14, 0.95), rgba(8, 13, 21, 0.88)),
+    radial-gradient(circle at 68% 24%, rgba(20, 129, 205, 0.24), transparent 44%),
+    radial-gradient(circle at 11% 76%, rgba(205, 56, 68, 0.2), transparent 36%);
+}
+
+.chery-auth-scene-register::before {
+  background:
+    linear-gradient(115deg, rgba(5, 8, 14, 0.76) 0%, rgba(5, 8, 14, 0.44) 36%, rgba(3, 7, 16, 0.82) 80%),
+    radial-gradient(circle at 58% 54%, rgba(54, 177, 255, 0.16), transparent 52%);
+}
+
+.chery-auth-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 75% 58%, rgba(103, 202, 255, 0.2), transparent 37%),
+    radial-gradient(circle at 18% 76%, rgba(255, 87, 104, 0.2), transparent 31%);
+  animation: ambient-pulse 7s ease-in-out infinite;
+}
+
+.chery-auth-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 62px 62px;
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.44), transparent 78%);
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.44), transparent 78%);
+  animation: grid-shift 16s linear infinite alternate;
+}
+
+.chery-auth-panel {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(7, 11, 19, 0.8), rgba(10, 16, 25, 0.66));
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 30px 80px rgba(2, 4, 9, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.chery-auth-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .chery-auth-scene,
+  .chery-auth-scene-register {
+    background-position: 58% center;
+  }
+}
+
+.chery-auth-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  filter: blur(0.9px) saturate(1.08) brightness(0.72);
+  transform: scale(1.02);
+  animation: showroom-pan 22s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.chery-auth-video-fallback {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(10, 16, 26, 0.85), rgba(12, 18, 28, 0.8)),
+    radial-gradient(circle at 70% 30%, rgba(44, 120, 210, 0.3), transparent 48%),
+    radial-gradient(circle at 20% 75%, rgba(220, 60, 70, 0.25), transparent 42%);
+  pointer-events: none;
+}
+
+.chery-auth-video-mobile {
+  display: none;
+}
+
+.chery-auth-video-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(112deg, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.44)),
+    radial-gradient(circle at 16% 50%, rgba(20, 40, 90, 0.2), transparent 45%),
+    radial-gradient(circle at 84% 55%, rgba(185, 21, 40, 0.14), transparent 40%);
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .chery-auth-video {
+    object-position: 56% 44%;
+    transform: scale(1.01);
+  }
+}
+
+@media (max-width: 768px) {
+  .chery-auth-video {
+    display: none;
+  }
+
+  .chery-auth-video-mobile {
+    display: block;
+    object-position: 54% 48%;
+    transform: scale(1);
+  }
+}

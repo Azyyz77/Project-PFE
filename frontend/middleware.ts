@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password'];
 
+const PUBLIC_ASSET_PREFIXES = ['/videos/', '/images/', '/icons/'];
+const PUBLIC_FILE_REGEX = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|css|js|map|txt|xml)$/i;
+
 // Shared routes accessible by all authenticated users
 const SHARED_ROUTES = ['/unauthorized'];
 
@@ -33,8 +36,16 @@ function decodeJWT(token: string): any {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Always allow static/public assets.
+  if (
+    PUBLIC_ASSET_PREFIXES.some(prefix => pathname.startsWith(prefix)) ||
+    PUBLIC_FILE_REGEX.test(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
   // Allow public routes
-  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+  if (pathname.startsWith('/unauthorized') || PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
@@ -101,6 +112,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public (public files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public|videos|images|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|css|js|map|txt|xml)$).*)',
   ],
 };
