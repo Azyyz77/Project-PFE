@@ -1,65 +1,40 @@
 'use client';
 
-/**
- * Reset Password Page - Refactored with shadcn/ui
- */
-
 import { useState, FormEvent } from 'react';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert } from '@/components/ui/alert';
-import { AuthCard } from '@/components/auth/AuthCard';
-import { AlertCircle, Lock } from 'lucide-react';
 import { resetPassword } from '../../lib/api/auth';
-import {
-  ResetPasswordFormState,
-  EMPTY_RESET_PASSWORD_FORM,
-  validateResetPasswordForm,
-} from '@/lib/auth-utils';
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const router = useRouter();
 
-  const [form, setForm] = useState<ResetPasswordFormState>(EMPTY_RESET_PASSWORD_FORM);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [apiError, setApiError] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setApiError('');
-    setErrors({});
+    setError('');
 
-    const validationErrors = validateResetPasswordForm(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (newPassword.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.');
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      await resetPassword(token, form.password);
+      await resetPassword(token, newPassword);
       router.push('/login?reset=true');
     } catch (err: any) {
-      setApiError(err.message || 'Erreur lors de la réinitialisation');
+      setError(err.message || 'Erreur lors de la réinitialisation');
     } finally {
       setIsSubmitting(false);
     }
@@ -68,92 +43,93 @@ function ResetPasswordContent() {
   if (!token) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="rounded-xl bg-white p-8 shadow-lg text-center space-y-4">
-          <AlertCircle className="h-8 w-8 text-red-600 mx-auto" />
-          <p className="text-red-600 font-semibold">Lien de réinitialisation invalide.</p>
-          <Button onClick={() => router.push('/forgot-password')}>
+        <div className="rounded-xl bg-white p-8 shadow-lg text-center">
+          <p className="text-red-600 font-semibold mb-4">Lien de réinitialisation invalide.</p>
+          <Link href="/forgot-password" className="text-blue-600 hover:underline">
             Recommencer
-          </Button>
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <AuthCard
-      title="Nouveau mot de passe"
-      subtitle="Choisissez un mot de passe sécurisé (minimum 6 caractères)"
-      bottomLink={{
-        text: "Vous vous souvenez de votre mot de passe ?",
-        href: "/login",
-        linkText: "Se connecter"
-      }}
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* API Error */}
-        {apiError && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <p className="text-sm text-red-800">{apiError}</p>
-          </Alert>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Nouveau mot de passe
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Choisissez un mot de passe sécurisé (minimum 8 caractères).
+          </p>
+        </div>
+
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
         )}
 
-        {/* Password Field */}
-        <div className="space-y-2">
-          <Label htmlFor="password" className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            Nouveau mot de passe
-          </Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.password ? 'border-red-500' : ''}
-          />
-          {errors.password && (
-            <p className="text-xs text-red-600">{errors.password}</p>
-          )}
-        </div>
-
-        {/* Confirm Password Field */}
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={form.confirmPassword}
-            onChange={handleInputChange}
-            disabled={isSubmitting}
-            className={errors.confirmPassword ? 'border-red-500' : ''}
-          />
-          {errors.confirmPassword && (
-            <p className="text-xs text-red-600">{errors.confirmPassword}</p>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting}
-          size="lg"
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg"
         >
-          {isSubmitting ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
-        </Button>
-      </form>
-    </AuthCard>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                Nouveau mot de passe
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={8}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                placeholder="••••••••"
+              />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
+          </button>
+
+          <div className="text-center text-sm">
+            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              Retour à la connexion
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense>
       <ResetPasswordContent />
     </Suspense>
   );
