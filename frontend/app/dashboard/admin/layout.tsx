@@ -22,6 +22,7 @@ import {
   ChevronRight,
   MessageSquare,
   Sparkles,
+  User,
 } from 'lucide-react';
 
 interface NavItem {
@@ -175,34 +176,34 @@ function AdminSidebar() {
             </div>
           </div>
         ))}
-      </nav>
 
-      <Separator className="my-6 bg-slate-800" />
+        <div className="pt-2">
+          <Separator className="bg-slate-800" />
 
-      {/* User Info */}
-      {user && (
-        <div className="mb-6 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800 relative z-10">
-          <p className="text-sm text-slate-400">Connecté en tant que</p>
-          <p className="font-semibold text-white truncate">
-            {user.prenom} {user.nom}
-          </p>
-          <p className="text-xs text-slate-500">{user.email}</p>
-          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
-            <Sparkles className="w-3 h-3" />
-            Session admin active
-          </div>
+          {user && (
+            <div className="mt-4 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
+              <p className="text-sm text-slate-400">Compte administrateur</p>
+              <p className="font-semibold text-white truncate">
+                {user.prenom} {user.nom}
+              </p>
+              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+                <Sparkles className="w-3 h-3" />
+                Session admin active
+              </div>
+            </div>
+          )}
+
+          <Button
+            onClick={handleLogout}
+            variant="destructive"
+            className="mt-4 w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500"
+          >
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </Button>
         </div>
-      )}
-
-      {/* Logout Button */}
-      <Button
-        onClick={handleLogout}
-        variant="destructive"
-        className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500"
-      >
-        <LogOut className="w-4 h-4" />
-        Déconnexion
-      </Button>
+      </nav>
     </div>
   );
 }
@@ -288,29 +289,29 @@ function AdminMobileMenu() {
                 </div>
               </div>
             ))}
-          </nav>
 
-          <Separator />
+            <div className="pt-2">
+              <Separator className="bg-slate-800" />
 
-          {user && (
-            <div className="p-4 space-y-4">
-              <div className="px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
-                <p className="text-sm text-slate-400">Connecté en tant que</p>
-                <p className="font-semibold text-slate-100">
-                  {user.prenom} {user.nom}
-                </p>
-              </div>
+              {user && (
+                <div className="mt-4 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
+                  <p className="text-sm text-slate-400">Compte administrateur</p>
+                  <p className="font-semibold text-slate-100">
+                    {user.prenom} {user.nom}
+                  </p>
+                </div>
+              )}
 
               <Button
                 onClick={handleLogout}
                 variant="destructive"
-                className="w-full bg-rose-600 hover:bg-rose-500"
+                className="mt-4 w-full bg-rose-600 hover:bg-rose-500"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Déconnexion
               </Button>
             </div>
-          )}
+          </nav>
         </div>
       </SheetContent>
     </Sheet>
@@ -322,8 +323,12 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading, isLoggingOut } = useAuth();
+  const { user, isLoading, isLoggingOut, logout } = useAuth();
   const pathname = usePathname();
+
+  const handleQuickLogout = () => {
+    logout();
+  };
 
   useEffect(() => {
     if (!isLoading && !isLoggingOut && (!user || user.role !== 'ADMIN')) {
@@ -358,7 +363,26 @@ export default function AdminLayout({
             <h2 className="text-lg font-semibold text-slate-100">Pilotage du système</h2>
             <p className="text-sm text-cyan-300/90 mt-1">{salutation}, {user.prenom}. Ravi de vous revoir.</p>
           </div>
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Link
+              href="/dashboard/admin/settings"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-700 bg-slate-900/70 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
+              aria-label="Compte administrateur"
+              title="Compte administrateur"
+            >
+              <User className="h-4 w-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={handleQuickLogout}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-500/35 bg-rose-500/10 text-rose-200 transition-colors hover:border-rose-400 hover:bg-rose-500/20"
+              aria-label="Déconnexion rapide"
+              title="Déconnexion"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Header */}
