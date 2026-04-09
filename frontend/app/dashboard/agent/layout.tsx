@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import NotificationBell from '@/components/NotificationBell';
 import {
   LayoutDashboard,
   Wrench,
@@ -251,10 +252,18 @@ export default function AgentLayout({
       <AgentSidebar />
 
       <div className="flex-1 flex flex-col">
+        {/* Desktop Header with Notifications */}
+        <div className="hidden lg:flex bg-white border-b p-4 items-center justify-end">
+          <NotificationBell />
+        </div>
+
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-blue-900">STA Chery - Agent</h1>
-          <AgentMobileMenu />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <AgentMobileMenu />
+          </div>
         </div>
 
         {/* Main Content */}

@@ -10,7 +10,7 @@ export default function InterventionsPage() {
   const { user, token, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && (!user || !['AGENT', 'ADMIN'].includes(user.role))) {
+    if (!isLoading && (!user || !['AGENT'].includes(user.role))) {
       router.replace('/login');
     }
   }, [user, isLoading, router]);

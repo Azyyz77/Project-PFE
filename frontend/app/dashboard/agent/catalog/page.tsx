@@ -46,7 +46,7 @@ export default function CatalogPage() {
   const [packageModalOpen, setPackageModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && (!user || !['AGENT', 'ADMIN', 'DIRECTION'].includes(user.role))) {
+    if (!isLoading && (!user || !['AGENT'].includes(user.role))) {
       router.replace('/login');
     }
   }, [user, isLoading, router]);

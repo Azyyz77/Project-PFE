@@ -26,6 +26,9 @@ const complaintRoutes = require('./routes/complaintRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
 const adminOrdersRoutes = require('./routes/adminOrdersRoutes');
 const adminReportsRoutes = require('./routes/adminReportsRoutes');
+const adminCatalogRoutes = require('./routes/adminCatalogRoutes');
+const adminMessagesRoutes = require('./routes/adminMessagesRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
@@ -63,6 +66,9 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/admin/users', adminUserRoutes);
 app.use('/api/admin/orders', adminOrdersRoutes);
 app.use('/api/admin/reports', adminReportsRoutes);
+app.use('/api/admin/catalog', adminCatalogRoutes);
+app.use('/api/admin/messages', adminMessagesRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {

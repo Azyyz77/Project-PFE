@@ -15,7 +15,6 @@ interface Vehicle {
   vin: string;
   couleur: string;
   annee: number;
-  kilometrage: number;
   marque_nom: string;
   modele_nom: string;
   version_nom: string;
@@ -25,7 +24,7 @@ interface Vehicle {
 }
 
 export default function AdminVehiclesPage() {
-  const { user, token, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,29 +37,42 @@ export default function AdminVehiclesPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (token) {
+    if (user && !authLoading) {
       loadVehicles();
     }
-  }, [token]);
+  }, [user, authLoading]);
 
   const loadVehicles = async () => {
-    if (!token) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No token found');
+      return;
+    }
 
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/agent-dashboard/vehicles`, {
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/agent-dashboard/vehicles`;
+      console.log('Fetching vehicles from:', url);
+      
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       });
       
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des véhicules');
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors du chargement des véhicules');
       }
       
       const result = await response.json();
+      console.log('Vehicles data:', result);
       setVehicles(result.data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur chargement véhicules:', error);
       setVehicles([]);
     } finally {
@@ -84,7 +96,7 @@ export default function AdminVehiclesPage() {
     return colors[statut] || 'bg-gray-100 text-gray-800';
   };
 
-  if (authLoading || !user || !token) {
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
@@ -172,7 +184,6 @@ export default function AdminVehiclesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase">Immatriculation</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase">Propriétaire</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase">Année</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase">Kilométrage</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase">Statut</th>
                   </tr>
                 </thead>
@@ -199,9 +210,6 @@ export default function AdminVehiclesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
                         {vehicle.annee}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
-                        {vehicle.kilometrage?.toLocaleString()} km
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge className={getStatusBadge(vehicle.statut_validation)}>

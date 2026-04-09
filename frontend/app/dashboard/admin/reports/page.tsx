@@ -25,7 +25,7 @@ export default function AdminReportsPage() {
   const [topInterventions, setTopInterventions] = useState<TopIntervention[]>([]);
 
   useEffect(() => {
-    if (!authLoading && (!user || !['ADMIN', 'DIRECTION'].includes(user.role))) {
+    if (!authLoading && (!user || user.role !== 'ADMIN')) {
       router.replace('/unauthorized');
     }
   }, [user, authLoading, router]);

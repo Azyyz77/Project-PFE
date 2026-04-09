@@ -14,7 +14,7 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
-    if (!authLoading && (!user || !['ADMIN', 'DIRECTION'].includes(user.role))) {
+    if (!authLoading && (!user || user.role !== 'ADMIN')) {
       router.replace('/unauthorized');
     }
   }, [user, authLoading, router]);

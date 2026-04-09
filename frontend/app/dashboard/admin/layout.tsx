@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import NotificationBell from '@/components/NotificationBell';
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +19,7 @@ import {
   Menu,
   LogOut,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 
 interface NavItem {
@@ -51,6 +53,26 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Toutes les commandes',
     href: '/dashboard/admin/orders',
     icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Types d\'intervention',
+    href: '/dashboard/admin/intervention-types',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Sous-types',
+    href: '/dashboard/admin/sub-types',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Marques et modèles',
+    href: '/dashboard/admin/brands-models',
+    icon: <Car className="w-5 h-5" />,
+  },
+  {
+    label: 'Publier messages',
+    href: '/dashboard/admin/messages',
+    icon: <MessageSquare className="w-5 h-5" />,
   },
   {
     label: 'Rapports',
@@ -241,10 +263,18 @@ export default function AdminLayout({
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col">
+        {/* Desktop Header with Notifications */}
+        <div className="hidden lg:flex bg-white border-b p-4 items-center justify-end">
+          <NotificationBell />
+        </div>
+
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-red-950">STA Chery - Admin</h1>
-          <AdminMobileMenu />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <AdminMobileMenu />
+          </div>
         </div>
 
         {/* Main Content */}

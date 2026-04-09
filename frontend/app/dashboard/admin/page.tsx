@@ -4,14 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Building2, Car, Wrench, FileText, Settings, ChevronRight } from 'lucide-react';
+import { Users, Building2, Car, Wrench, FileText, Settings, ChevronRight, MessageSquare, Package } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && (!user || !['ADMIN', 'DIRECTION'].includes(user.role))) {
+    if (!isLoading && (!user || user.role !== 'ADMIN')) {
       router.replace('/unauthorized');
     }
   }, [user, isLoading, router]);
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || !['ADMIN', 'DIRECTION'].includes(user.role)) {
+  if (!user || user.role !== 'ADMIN') {
     return null;
   }
 
@@ -58,18 +58,46 @@ export default function AdminDashboard() {
       color: 'from-orange-500 to-orange-600',
     },
     {
+      title: 'Types d\'intervention',
+      icon: Wrench,
+      href: '/dashboard/admin/intervention-types',
+      description: 'Gérez les types d\'interventions',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      title: 'Sous-types',
+      icon: Wrench,
+      href: '/dashboard/admin/sub-types',
+      description: 'Gérez les sous-types d\'interventions',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      title: 'Marques et modèles',
+      icon: Car,
+      href: '/dashboard/admin/brands-models',
+      description: 'Gérez les marques et modèles de véhicules',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      title: 'Publier messages',
+      icon: MessageSquare,
+      href: '/dashboard/admin/messages',
+      description: 'Envoyez des messages aux utilisateurs',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
       title: 'Rapports',
       icon: FileText,
       href: '/dashboard/admin/reports',
       description: 'Consultez les rapports et statistiques',
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-purple-500 to-purple-600',
     },
     {
       title: 'Paramètres',
       icon: Settings,
       href: '/dashboard/admin/settings',
       description: 'Configuration du système',
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-purple-500 to-purple-600',
     },
   ];
 

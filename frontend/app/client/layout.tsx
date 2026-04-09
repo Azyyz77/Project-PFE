@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import NotificationBell from '@/components/NotificationBell';
 import {
   LayoutDashboard,
   Car,
@@ -246,10 +247,17 @@ export default function ClientLayout({
       <ClientSidebar />
 
       <div className="flex-1 flex flex-col">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-orange-500">STA Chery</h1>
-          <ClientMobileMenu />
+        {/* Header with Notifications */}
+        <div className="bg-gradient-to-r from-red-900 to-red-950 border-b border-white/10 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden">
+              <ClientMobileMenu />
+            </div>
+            <h1 className="text-xl font-bold text-white">STA Chery</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Main Content */}
