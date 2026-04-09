@@ -1,13 +1,14 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import NotificationBell from '@/components/NotificationBell';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Users,
@@ -20,6 +21,7 @@ import {
   LogOut,
   ChevronRight,
   MessageSquare,
+  Sparkles,
 } from 'lucide-react';
 
 interface NavItem {
@@ -86,6 +88,21 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const ADMIN_NAV_GROUPS = [
+  {
+    label: 'Gestion operationnelle',
+    items: ADMIN_NAV_ITEMS.slice(0, 5),
+  },
+  {
+    label: 'Referentiel services',
+    items: ADMIN_NAV_ITEMS.slice(5, 9),
+  },
+  {
+    label: 'Suivi et parametres',
+    items: ADMIN_NAV_ITEMS.slice(9),
+  },
+];
+
 function AdminSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -96,48 +113,84 @@ function AdminSidebar() {
   };
 
   return (
-    <div className="hidden lg:flex flex-col w-64 bg-red-950 text-white p-6 min-h-screen">
+    <div className="relative hidden lg:flex flex-col w-72 bg-slate-950/95 text-white p-6 min-h-screen border-r border-slate-800 overflow-hidden">
+      <div className="pointer-events-none absolute -top-28 -right-20 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-10 -left-20 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
+
       {/* Logo */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-orange-400">STA Chery</h1>
-        <p className="text-sm text-red-300">Administrateur</p>
+      <div className="mb-8 relative z-10">
+        <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Control Center</p>
+        <h1 className="text-2xl font-bold text-slate-100 mt-2">STA Chery</h1>
+        <p className="text-sm text-slate-400">Administrateur</p>
       </div>
 
-      <Separator className="mb-6 bg-red-900" />
+      <Separator className="mb-6 bg-slate-800" />
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2">
-        {ADMIN_NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+      <nav className="flex-1 space-y-5 relative z-10">
+        {ADMIN_NAV_GROUPS.map((group, groupIndex) => (
+          <div key={group.label}>
+            <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
+            <div className="space-y-2">
+              {group.items.map((item, index) => {
+                const isActive = pathname === item.href;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                isActive
-                  ? 'bg-orange-500 text-white'
-                  : 'text-red-200 hover:bg-red-900'
-              }`}
-            >
-              {item.icon}
-              <span className="font-medium">{item.label}</span>
-              {isActive && <ChevronRight className="ml-auto w-4 h-4" />}
-            </Link>
-          );
-        })}
+                return (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: (groupIndex * 0.06) + (index * 0.03) }}
+                  >
+                    <Link
+                      href={item.href}
+                      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 overflow-hidden ${
+                        isActive
+                          ? 'text-cyan-100 border border-cyan-300/20 shadow-[0_0_0_1px_rgba(34,211,238,0.1)]'
+                          : 'text-slate-300 hover:bg-slate-900/90 hover:translate-x-1'
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.span
+                          layoutId="admin-active-bg-desktop"
+                          className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-indigo-500/20"
+                          transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">{item.icon}</span>
+                      <span className="relative z-10 font-medium">{item.label}</span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="admin-active-indicator-desktop"
+                          className="relative z-10 ml-auto"
+                          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <Separator className="my-6 bg-red-900" />
+      <Separator className="my-6 bg-slate-800" />
 
       {/* User Info */}
       {user && (
-        <div className="mb-6 px-4 py-3 bg-red-900 rounded-lg">
-          <p className="text-sm text-red-300">Connecté en tant que</p>
+        <div className="mb-6 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800 relative z-10">
+          <p className="text-sm text-slate-400">Connecté en tant que</p>
           <p className="font-semibold text-white truncate">
             {user.prenom} {user.nom}
           </p>
-          <p className="text-xs text-red-400">{user.email}</p>
+          <p className="text-xs text-slate-500">{user.email}</p>
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+            <Sparkles className="w-3 h-3" />
+            Session admin active
+          </div>
         </div>
       )}
 
@@ -145,7 +198,7 @@ function AdminSidebar() {
       <Button
         onClick={handleLogout}
         variant="destructive"
-        className="w-full flex items-center justify-center gap-2"
+        className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500"
       >
         <LogOut className="w-4 h-4" />
         Déconnexion
@@ -167,49 +220,83 @@ function AdminMobileMenu() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger>
-        <button className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-100 hover:text-slate-900">
+        <button
+          className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
+          aria-label="Ouvrir le menu administrateur"
+          title="Ouvrir le menu"
+        >
           <Menu className="w-5 h-5" />
         </button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className="w-72 p-0 bg-slate-950 text-slate-100 border-slate-800">
         <div className="flex flex-col h-full">
           <div className="p-6">
-            <h1 className="text-2xl font-bold text-orange-400">STA Chery</h1>
-            <p className="text-sm text-slate-600">Administrateur</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Control Center</p>
+            <h1 className="text-2xl font-bold text-slate-100 mt-2">STA Chery</h1>
+            <p className="text-sm text-slate-400">Administrateur</p>
           </div>
 
           <Separator />
 
-          <nav className="flex-1 space-y-2 p-4">
-            {ADMIN_NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href;
+          <nav className="flex-1 space-y-5 p-4">
+            {ADMIN_NAV_GROUPS.map((group, groupIndex) => (
+              <div key={group.label}>
+                <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
+                <div className="space-y-2">
+                  {group.items.map((item, index) => {
+                    const isActive = pathname === item.href;
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                    isActive
-                      ? 'bg-orange-500 text-white'
-                      : 'text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  {item.icon}
-                  <span className="font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
+                    return (
+                      <motion.div
+                        key={item.href}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.18, delay: (groupIndex * 0.05) + (index * 0.02) }}
+                      >
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          className={`relative flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 overflow-hidden ${
+                            isActive
+                              ? 'text-cyan-200 border border-cyan-300/20'
+                              : 'text-slate-300 hover:bg-slate-900 hover:translate-x-1'
+                          }`}
+                        >
+                          {isActive && (
+                            <motion.span
+                              layoutId="admin-active-bg-mobile"
+                              className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-indigo-500/20"
+                              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+                            />
+                          )}
+                          <span className="relative z-10">{item.icon}</span>
+                          <span className="relative z-10 font-medium">{item.label}</span>
+                          {isActive && (
+                            <motion.div
+                              layoutId="admin-active-indicator-mobile"
+                              className="relative z-10 ml-auto"
+                              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </motion.div>
+                          )}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           <Separator />
 
           {user && (
             <div className="p-4 space-y-4">
-              <div className="px-4 py-3 bg-slate-100 rounded-lg">
-                <p className="text-sm text-slate-600">Connecté en tant que</p>
-                <p className="font-semibold text-slate-900">
+              <div className="px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
+                <p className="text-sm text-slate-400">Connecté en tant que</p>
+                <p className="font-semibold text-slate-100">
                   {user.prenom} {user.nom}
                 </p>
               </div>
@@ -217,7 +304,7 @@ function AdminMobileMenu() {
               <Button
                 onClick={handleLogout}
                 variant="destructive"
-                className="w-full"
+                className="w-full bg-rose-600 hover:bg-rose-500"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Déconnexion
@@ -236,6 +323,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoading, isLoggingOut } = useAuth();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isLoading && !isLoggingOut && (!user || user.role !== 'ADMIN')) {
@@ -255,19 +343,30 @@ export default function AdminLayout({
     return null;
   }
 
+  const hour = new Date().getHours();
+  const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir';
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-950">
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col">
         {/* Desktop Header with Notifications */}
-        <div className="hidden lg:flex bg-white border-b p-4 items-center justify-end">
+        <div className="hidden lg:flex bg-slate-950/95 border-b border-slate-800 px-6 py-4 items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Administration</p>
+            <h2 className="text-lg font-semibold text-slate-100">Pilotage du système</h2>
+            <p className="text-sm text-cyan-300/90 mt-1">{salutation}, {user.prenom}. Ravi de vous revoir.</p>
+          </div>
           <NotificationBell />
         </div>
 
         {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-red-950">STA Chery - Admin</h1>
+        <div className="lg:hidden bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-slate-100">STA Chery - Admin</h1>
+            <p className="text-xs text-cyan-300/90">{salutation}, {user.prenom}</p>
+          </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <AdminMobileMenu />
@@ -275,7 +374,18 @@ export default function AdminLayout({
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.main
+            key={pathname}
+            className="flex-1 overflow-auto"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {children}
+          </motion.main>
+        </AnimatePresence>
       </div>
     </div>
   );
