@@ -439,6 +439,7 @@ class AgentDashboardService {
           v.numero_chassis as vin,
           v.annee,
           v.couleur,
+          v.kilometrage,
           v.statut_validation,
           v.motif_refus,
           v.date_validation,

@@ -33,6 +33,7 @@ function LoginPageContent() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const { login, isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
@@ -41,8 +42,12 @@ function LoginPageContent() {
   const reset = searchParams.get('reset');
 
   // Redirect authenticated users to their dashboard
+  // Note: Redirect is now handled in AuthContext.login() using window.location
+  // This useEffect is kept for users who refresh the page while already logged in
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
+    if (!isLoading && isAuthenticated && user && !isRedirecting) {
+      console.log('Login page: User already authenticated on page load', { role: user.role });
+      setIsRedirecting(true);
       const redirectMap: Record<string, string> = {
         CLIENT: '/client/dashboard',
         AGENT: '/dashboard/agent',
@@ -50,9 +55,14 @@ function LoginPageContent() {
         DIRECTION: '/dashboard/direction',
       };
       const redirectUrl = redirectMap[user.role] || '/dashboard';
-      router.replace(redirectUrl);
+      console.log('Login page: Redirecting to', redirectUrl);
+      
+      // Use setTimeout to avoid blocking the render
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 100);
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, isRedirecting]);
 
   // Show loading spinner while checking auth
   if (isLoading) {
@@ -64,11 +74,15 @@ function LoginPageContent() {
   }
 
   // Don't render form if already authenticated (redirect in progress)
-  if (isAuthenticated) {
+  if (isAuthenticated || isRedirecting) {
+    console.log('Login page: Already authenticated, showing redirect message');
     return (
       <AuthThemeShell>
         <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-100">
-          Redirection vers votre espace...
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <p>Redirection vers votre espace...</p>
+          </div>
         </div>
       </AuthThemeShell>
     );

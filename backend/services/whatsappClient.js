@@ -74,8 +74,11 @@ const initializeWhatsAppClient = () => {
   });
 
   clientInstance.on('message', (msg) => {
-    // Log incoming messages for debugging
-    console.log(`Message reçu de ${msg.from}: ${msg.body}`);
+    // Only log messages from known clients or business contacts
+    // You can add logic here to filter/process business-related messages
+    // For now, we'll just silently ignore incoming messages
+    // Uncomment the line below if you need to debug incoming messages:
+    // console.log(`Message reçu de ${msg.from}: ${msg.body}`);
   });
 
   clientInstance.initialize().catch((error) => {

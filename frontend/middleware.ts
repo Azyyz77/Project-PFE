@@ -36,6 +36,8 @@ function decodeJWT(token: string): any {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  console.log('Middleware: Processing', pathname);
+
   // Always allow static/public assets.
   if (
     PUBLIC_ASSET_PREFIXES.some(prefix => pathname.startsWith(prefix)) ||
@@ -46,6 +48,7 @@ export function middleware(request: NextRequest) {
 
   // Allow public routes
   if (pathname.startsWith('/unauthorized') || PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    console.log('Middleware: Public route, allowing');
     return NextResponse.next();
   }
 
@@ -53,8 +56,14 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value || 
                 request.headers.get('authorization')?.replace('Bearer ', '');
 
-  // If no token, redirect to login
+  console.log('Middleware: Token present?', !!token);
+
+  // If no token, redirect to login (but not if already on login page)
   if (!token) {
+    if (pathname === '/login') {
+      return NextResponse.next();
+    }
+    console.log('Middleware: No token, redirecting to login');
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
@@ -62,13 +71,16 @@ export function middleware(request: NextRequest) {
     // Decode JWT to get user role
     const decoded = decodeJWT(token);
     if (!decoded) {
+      console.log('Middleware: Invalid token, redirecting to login');
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     const userRole = decoded.role;
+    console.log('Middleware: User role', userRole);
 
     // Check if token is expired
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      console.log('Middleware: Token expired, redirecting to login');
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
@@ -86,17 +98,21 @@ export function middleware(request: NextRequest) {
 
     if (isAdminRoute && !isAdminOrDirection) {
       // Non-admin/direction trying to access admin routes
+      console.log('Middleware: Unauthorized for admin route');
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
 
     if (!hasAccess && !isAdminRoute) {
       // Role doesn't have access to this route
+      console.log('Middleware: No access to route');
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
 
+    console.log('Middleware: Access granted');
     return NextResponse.next();
   } catch (error) {
     // Invalid token
+    console.error('Middleware: Error', error);
     return NextResponse.redirect(new URL('/login', request.url));
   }
 }

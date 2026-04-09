@@ -222,12 +222,17 @@ export default function AgentLayout({
   const router = useRouter();
 
   useEffect(() => {
+    console.log('AgentLayout: Checking auth', { isLoading, user: user?.role });
     if (!isLoading && (!user || user.role !== 'AGENT')) {
+      console.log('AgentLayout: Unauthorized, redirecting to /unauthorized');
       router.replace('/unauthorized');
+    } else if (!isLoading && user) {
+      console.log('AgentLayout: User authorized', user.role);
     }
   }, [user, isLoading, router]);
 
   if (isLoading) {
+    console.log('AgentLayout: Loading...');
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -236,9 +241,11 @@ export default function AgentLayout({
   }
 
   if (!user || user.role !== 'AGENT') {
+    console.log('AgentLayout: No user or wrong role, returning null');
     return null;
   }
 
+  console.log('AgentLayout: Rendering layout');
   return (
     <div className="flex min-h-screen bg-slate-50">
       <AgentSidebar />

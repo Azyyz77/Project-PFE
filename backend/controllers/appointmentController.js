@@ -1,6 +1,7 @@
 const { getConnection, sql } = require('../config/database');
 const { sendWhatsAppMessage, getWhatsAppStatus } = require('../services/whatsappClient');
-
+// ADD this line next to your existing requires
+const { triggerAppointmentWorkflow } = require('../services/n8nService');
 const STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
 const ALLOWED_STATUSES = ['PLANIFIE', 'CONFIRME', 'EN_COURS', 'TERMINE', 'ANNULE', 'NO_SHOW'];
 const APPOINTMENT_DATE_TIME_REGEX = /^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;

@@ -33,20 +33,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Charger les données d'authentification depuis localStorage au démarrage
   useEffect(() => {
+    console.log('AuthContext: Initializing...');
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
+    console.log('AuthContext: Stored data', { hasToken: !!storedToken, hasUser: !!storedUser });
+
     if (storedToken && storedUser) {
-      const parsedUser = normalizeUser(JSON.parse(storedUser));
-      setToken(storedToken);
-      setUser(parsedUser);
-      localStorage.setItem('user', JSON.stringify(parsedUser));
-      
-      // Sync token to cookie for middleware
-      document.cookie = `token=${storedToken}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
+      try {
+        const parsedUser = normalizeUser(JSON.parse(storedUser));
+        console.log('AuthContext: Restoring session', { user: parsedUser });
+        setToken(storedToken);
+        setUser(parsedUser);
+        localStorage.setItem('user', JSON.stringify(parsedUser));
+        
+        // Sync token to cookie for middleware
+        document.cookie = `token=${storedToken}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
+      } catch (error) {
+        console.error('AuthContext: Error parsing stored user', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     
     setIsLoading(false);
+    console.log('AuthContext: Initialization complete');
   }, []);
 
   /**
@@ -54,15 +65,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const login = async (data: LoginData) => {
     try {
+      console.log('AuthContext: Login attempt', { email: data.email });
       const response = await loginUser(data);
+      console.log('AuthContext: Login response received', { hasToken: !!response.token, hasUser: !!response.user });
+      
       const normalizedUser = normalizeUser(response.user);
+      console.log('AuthContext: Normalized user', normalizedUser);
       
       // Stocker le token et les données utilisateur
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(normalizedUser));
       
       // CRITICAL: Save token to cookies for middleware
-      document.cookie = `token=${response.token}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
+      const cookieValue = `token=${response.token}; path=/; SameSite=Lax; max-age=${7 * 24 * 60 * 60}`;
+      document.cookie = cookieValue;
+      console.log('AuthContext: Cookie set', { cookieValue: cookieValue.substring(0, 50) + '...' });
+      console.log('AuthContext: All cookies', document.cookie);
       
       setToken(response.token);
       setUser(normalizedUser);
@@ -76,8 +94,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       
       const redirectUrl = redirectMap[normalizedUser.role] ?? '/login';
-      router.replace(redirectUrl);
+      console.log('AuthContext: Redirecting to', redirectUrl);
+      
+      // Use window.location for a hard redirect to ensure it works
+      window.location.href = redirectUrl;
     } catch (error) {
+      console.error('AuthContext: Login error', error);
       // Propager l'erreur pour que le composant puisse l'afficher
       throw error;
     }
