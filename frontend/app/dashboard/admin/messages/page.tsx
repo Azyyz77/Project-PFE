@@ -116,14 +116,14 @@ export default function MessagesPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Link href="/dashboard/admin">
@@ -140,7 +140,7 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 mb-6">
+        <div className="admin-card p-6 border border-white/20 mb-6">
           <form onSubmit={handleSend} className="space-y-6">
             <div>
               <label className="block text-white/70 text-sm mb-2">Titre</label>
@@ -239,7 +239,7 @@ export default function MessagesPage() {
           </form>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+        <div className="admin-card p-6 border border-white/20">
           <h2 className="text-xl font-semibold text-white mb-4">Messages récents</h2>
           {loading ? (
             <div className="flex justify-center py-8">
@@ -270,3 +270,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+

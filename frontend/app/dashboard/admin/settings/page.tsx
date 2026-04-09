@@ -25,7 +25,7 @@ export default function AdminSettingsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Link href="/dashboard/admin">
@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="admin-card p-4 border border-white/20">
               <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -85,7 +85,7 @@ export default function AdminSettingsPage() {
 
           {/* Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <div className="admin-card p-6 border border-white/20">
               {activeTab === 'general' && (
                 <div className="space-y-6">
                   <div>
@@ -350,3 +350,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+

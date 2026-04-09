@@ -217,14 +217,14 @@ export default function AdminUsersPage() {
 
   if (authLoading || !user || !token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -254,7 +254,7 @@ export default function AdminUsersPage() {
         {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <div className="admin-card p-4 border border-white/20">
               <p className="text-white/70 text-sm">Total</p>
               <p className="text-2xl font-bold text-white">{stats.total_users}</p>
             </div>
@@ -282,7 +282,7 @@ export default function AdminUsersPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/20">
+        <div className="admin-card p-4 mb-6 border border-white/20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50" />
@@ -318,7 +318,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden">
+        <div className="admin-card border border-white/20 overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto" />
@@ -633,3 +633,4 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+

@@ -114,14 +114,14 @@ export default function InterventionTypesPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -158,7 +158,7 @@ export default function InterventionTypesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {types.map((type) => (
-              <div key={type.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <div key={type.id} className="admin-card p-6 border border-white/20">
                 <h3 className="text-xl font-semibold text-white mb-2">{type.nom}</h3>
                 <p className="text-white/70 text-sm mb-4">
                   Délai moyen: {type.delai_moyen ? `${type.delai_moyen} min` : 'Non défini'}
@@ -195,7 +195,7 @@ export default function InterventionTypesPage() {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-gradient-to-br from-red-900 to-red-950 rounded-xl p-6 w-full max-w-md border border-white/20">
+            <div className="admin-card rounded-xl p-6 w-full max-w-md border border-slate-700/70">
               <h2 className="text-2xl font-bold text-white mb-4">
                 {editingType ? 'Modifier' : 'Nouveau'} type
               </h2>
@@ -241,3 +241,4 @@ export default function InterventionTypesPage() {
     </div>
   );
 }
+

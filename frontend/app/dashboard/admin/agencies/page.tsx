@@ -55,14 +55,14 @@ export default function AdminAgenciesPage() {
 
   if (authLoading || !user || !token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -84,11 +84,11 @@ export default function AdminAgenciesPage() {
 
         {/* Agencies Grid */}
         {loading ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-12 text-center border border-white/20">
+          <div className="admin-card p-12 text-center border border-white/20">
             <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto" />
           </div>
         ) : agencies.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-12 text-center border border-white/20">
+          <div className="admin-card p-12 text-center border border-white/20">
             <Building2 className="w-16 h-16 text-white/30 mx-auto mb-4" />
             <p className="text-white/70">Aucune agence trouvée</p>
           </div>
@@ -97,7 +97,7 @@ export default function AdminAgenciesPage() {
             {agencies.map((agency) => (
               <div
                 key={agency.id}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all"
+                className="admin-card p-6 border border-white/20 hover:bg-white/15 transition-all"
               >
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
@@ -136,3 +136,4 @@ export default function AdminAgenciesPage() {
     </div>
   );
 }
+

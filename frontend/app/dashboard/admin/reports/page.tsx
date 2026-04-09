@@ -60,14 +60,14 @@ export default function AdminReportsPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center">
+      <div className="min-h-screen admin-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 p-6">
+    <div className="admin-page p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <Link href="/dashboard/admin">
@@ -94,7 +94,7 @@ export default function AdminReportsPage() {
             {globalReport && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="admin-card p-6 border border-white/20">
                     <div className="flex items-center gap-3 mb-2">
                       <Users className="w-5 h-5 text-orange-500" />
                       <h3 className="text-white/70 text-sm">Utilisateurs</h3>
@@ -105,7 +105,7 @@ export default function AdminReportsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="admin-card p-6 border border-white/20">
                     <div className="flex items-center gap-3 mb-2">
                       <Car className="w-5 h-5 text-orange-500" />
                       <h3 className="text-white/70 text-sm">Véhicules</h3>
@@ -116,7 +116,7 @@ export default function AdminReportsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="admin-card p-6 border border-white/20">
                     <div className="flex items-center gap-3 mb-2">
                       <Calendar className="w-5 h-5 text-orange-500" />
                       <h3 className="text-white/70 text-sm">Rendez-vous</h3>
@@ -127,7 +127,7 @@ export default function AdminReportsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <div className="admin-card p-6 border border-white/20">
                     <div className="flex items-center gap-3 mb-2">
                       <DollarSign className="w-5 h-5 text-orange-500" />
                       <h3 className="text-white/70 text-sm">Revenus</h3>
@@ -142,7 +142,7 @@ export default function AdminReportsPage() {
                 </div>
 
                 {/* Top Interventions */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="admin-card p-6 border border-white/20">
                   <div className="flex items-center gap-3 mb-4">
                     <TrendingUp className="w-5 h-5 text-orange-500" />
                     <h2 className="text-xl font-semibold text-white">Top 10 Interventions</h2>
@@ -178,7 +178,7 @@ export default function AdminReportsPage() {
                 </div>
 
                 {/* Agency Report */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="admin-card p-6 border border-white/20">
                   <div className="flex items-center gap-3 mb-4">
                     <Building2 className="w-5 h-5 text-orange-500" />
                     <h2 className="text-xl font-semibold text-white">Performance par Agence</h2>
@@ -220,3 +220,4 @@ export default function AdminReportsPage() {
     </div>
   );
 }
+
