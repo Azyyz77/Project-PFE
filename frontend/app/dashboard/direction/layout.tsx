@@ -61,11 +61,10 @@ const DIRECTION_NAV_ITEMS: NavItem[] = [
 function DirectionSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -130,12 +129,11 @@ function DirectionSidebar() {
 function DirectionMobileMenu() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -209,14 +207,13 @@ export default function DirectionLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, isLoggingOut } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'DIRECTION')) {
-      router.replace('/unauthorized');
+    if (!isLoading && !isLoggingOut && (!user || user.role !== 'DIRECTION')) {
+      window.location.href = '/unauthorized';
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isLoggingOut]);
 
   if (isLoading) {
     return (

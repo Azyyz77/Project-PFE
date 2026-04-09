@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
   // Charger les données d'authentification depuis localStorage au démarrage
@@ -124,18 +125,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Déconnexion
    */
   const logout = () => {
+    console.log('AuthContext: Logging out');
+    setIsLoggingOut(true);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     setToken(null);
     setUser(null);
-    router.replace('/login');
+    
+    // Use window.location for hard redirect to ensure clean logout
+    window.location.href = '/login';
   };
 
   const value: AuthContextType = {
     user,
     token,
     isLoading,
+    isLoggingOut,
     isAuthenticated: !!token && !!user,
     login,
     register,

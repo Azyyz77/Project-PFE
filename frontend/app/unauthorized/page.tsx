@@ -1,81 +1,54 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function UnauthorizedPage() {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
 
-  const redirectMap: Record<string, string> = {
-    CLIENT: '/client/dashboard',
-    AGENT: '/dashboard/agent',
-    ADMIN: '/dashboard/admin',
-    DIRECTION: '/dashboard/direction',
+  useEffect(() => {
+    // Clear any stale auth data
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // If no token, redirect to login immediately
+      router.replace('/login');
+    }
+  }, [router]);
+
+  const handleBackToLogin = () => {
+    // Clear auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    
+    // Redirect to login
+    window.location.href = '/login';
   };
-
-  const handleRedirect = () => {
-    const redirectUrl = user?.role ? redirectMap[user.role] : '/login';
-    router.replace(redirectUrl);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-md w-full mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-red-100 rounded-full p-4">
-              <Shield className="w-12 h-12 text-red-600" />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-red-900 to-red-950 flex items-center justify-center p-6">
+      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center">
+        <div className="mb-6 flex justify-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+            <ShieldAlert className="w-10 h-10 text-red-600" />
           </div>
-
-          {/* Title */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Accès refusé</h1>
-
-          {/* Message */}
-          <p className="text-gray-600 mb-8">
-            Vous n'avez pas les droits pour accéder à cette page. Votre rôle actuel ne vous
-            autorise pas à consulter ce contenu.
-          </p>
-
-          {/* User Info */}
-          {user && (
-            <div className="bg-blue-50 rounded-lg p-4 mb-8 text-left">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>Utilisateur:</strong> {user.prenom} {user.nom}
-              </p>
-              <p className="text-sm text-gray-600">
-                <strong>Rôle:</strong> {user.role}
-              </p>
-            </div>
-          )}
-
-          {/* Action Button */}
-          <Button
-            onClick={handleRedirect}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Retour à mon tableau de bord
-          </Button>
-
-          {/* Help Text */}
-          <p className="text-xs text-gray-500 mt-6">
-            Si vous pensez que c'est une erreur, veuillez contacter l'administrateur.
-          </p>
         </div>
+
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Accès refusé</h1>
+        
+        <p className="text-gray-600 mb-6">
+          Vous n'avez pas les droits pour accéder à cette page.
+          Veuillez vous connecter avec un compte autorisé.
+        </p>
+
+        <Button
+          onClick={handleBackToLogin}
+          className="w-full bg-red-600 hover:bg-red-700 text-white"
+        >
+          Retour à la connexion
+        </Button>
       </div>
     </div>
   );

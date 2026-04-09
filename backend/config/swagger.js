@@ -35,9 +35,10 @@ const options = {
             nom: { type: 'string' },
             telephone: { type: 'string' },
             email: { type: 'string', format: 'email' },
-            type_utilisateur: {
+            role: {
               type: 'string',
-              enum: ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION']
+              enum: ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'],
+              description: 'Role de l\'utilisateur (optionnel, par défaut CLIENT)'
             },
             actif: { type: 'boolean' },
             date_creation: { type: 'string', format: 'date-time' }
@@ -52,10 +53,11 @@ const options = {
             telephone: { type: 'string', example: '+21698765432' },
             email: { type: 'string', format: 'email', example: 'ahmed@example.com' },
             password: { type: 'string', format: 'password', example: 'password123' },
-            type_utilisateur: {
+            role: {
               type: 'string',
               enum: ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'],
-              default: 'CLIENT'
+              default: 'CLIENT',
+              description: 'Role de l\'utilisateur (optionnel, par défaut CLIENT)'
             }
           }
         },

@@ -376,7 +376,7 @@ class AgentDashboardService {
         .query(`
           SELECT id, nom, prenom, email, telephone, code_client, adresse, actif, date_creation
           FROM Utilisateur
-          WHERE id = @client_id AND type_utilisateur = 'CLIENT'
+          WHERE id = @client_id AND role_id = (SELECT id FROM Role WHERE nom = 'CLIENT')
         `);
 
       if (userRes.recordset.length === 0) throw new Error('Client non trouvé');

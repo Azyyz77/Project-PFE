@@ -22,7 +22,7 @@ export interface RegisterData {
   email: string;
   password: string;
   confirmPassword?: string;
-  type_utilisateur?: UserRole;
+  role?: UserRole;
 }
 
 export interface LoginData {
@@ -45,6 +45,7 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isLoggingOut: boolean;
   isAuthenticated: boolean;
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;

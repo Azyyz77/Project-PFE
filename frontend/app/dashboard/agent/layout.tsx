@@ -73,11 +73,10 @@ const AGENT_NAV_ITEMS: NavItem[] = [
 function AgentSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -142,12 +141,11 @@ function AgentSidebar() {
 function AgentMobileMenu() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -219,18 +217,17 @@ export default function AgentLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, isLoggingOut } = useAuth();
 
   useEffect(() => {
-    console.log('AgentLayout: Checking auth', { isLoading, user: user?.role });
-    if (!isLoading && (!user || user.role !== 'AGENT')) {
+    console.log('AgentLayout: Checking auth', { isLoading, isLoggingOut, user: user?.role });
+    if (!isLoading && !isLoggingOut && (!user || user.role !== 'AGENT')) {
       console.log('AgentLayout: Unauthorized, redirecting to /unauthorized');
-      router.replace('/unauthorized');
+      window.location.href = '/unauthorized';
     } else if (!isLoading && user) {
       console.log('AgentLayout: User authorized', user.role);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isLoggingOut]);
 
   if (isLoading) {
     console.log('AgentLayout: Loading...');

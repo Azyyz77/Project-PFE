@@ -15,12 +15,11 @@ const authorizeRoles = (...allowedRoles) => {
       });
     }
 
-    // Get the user's role (could be from JWT or from database)
-    // Priority: JWT role_nom > fallback to type_utilisateur
-    let userRole = req.user.role || '';
+    // Get the user's role from JWT
+    const userRole = req.user.role || '';
     
-    if (!userRole && req.user.type_utilisateur) {
-      userRole = req.user.type_utilisateur;
+    if (!userRole) {
+      return res.status(403).json({ error: 'Rôle utilisateur non défini' });
     }
 
     userRole = userRole ? userRole.toUpperCase() : '';

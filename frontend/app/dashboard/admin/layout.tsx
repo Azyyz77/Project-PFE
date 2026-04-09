@@ -89,11 +89,10 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 function AdminSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -158,12 +157,11 @@ function AdminSidebar() {
 function AdminMobileMenu() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
-    router.replace('/login');
+    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
@@ -237,14 +235,13 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const { user, isLoading, isLoggingOut } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== 'ADMIN')) {
-      router.replace('/unauthorized');
+    if (!isLoading && !isLoggingOut && (!user || user.role !== 'ADMIN')) {
+      window.location.href = '/unauthorized';
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, isLoggingOut]);
 
   if (isLoading) {
     return (

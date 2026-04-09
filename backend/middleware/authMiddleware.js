@@ -68,7 +68,7 @@ const validateUserRole = async (req, res, next) => {
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .query(`
-        SELECT u.id, u.type_utilisateur, u.actif, u.role_id,
+        SELECT u.id, u.actif, u.role_id,
                r.nom AS role_nom
         FROM Utilisateur u
         LEFT JOIN Role r ON r.id = u.role_id
@@ -78,11 +78,11 @@ const validateUserRole = async (req, res, next) => {
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
 
-      // Vérifier la cohérence entre type_utilisateur et le rôle du token
-      if (user.type_utilisateur && user.type_utilisateur !== req.user.role) {
-        console.warn(`Role mismatch for user ${user.id}: token has ${req.user.role}, DB has ${user.type_utilisateur}`);
-        // Mettre à jour le rôle du token avec la version BD la plus à jour
-        req.user.role = user.type_utilisateur;
+      // Use role_nom from the Role table join as the authoritative role
+      if (user.role_nom && user.role_nom !== req.user.role) {
+        console.warn(`Role mismatch for user ${user.id}: token has ${req.user.role}, DB has ${user.role_nom}`);
+        // Update the token role with the DB version
+        req.user.role = user.role_nom;
       }
 
       // Stocker les informations complètes de l'utilisateur dans la requête

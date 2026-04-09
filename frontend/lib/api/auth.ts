@@ -27,7 +27,7 @@ export async function registerUser(data: RegisterData): Promise<RegisterResponse
         telephone: data.telephone,
         email: data.email,
         password: data.password,
-        type_utilisateur: data.type_utilisateur || 'CLIENT',
+        role: data.role || 'CLIENT',
       }),
     });
 
