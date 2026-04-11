@@ -15,14 +15,8 @@ const authorizeRoles = (...allowedRoles) => {
       });
     }
 
-    // Get the user's role from JWT
-    const userRole = req.user.role || '';
-    
-    if (!userRole) {
-      return res.status(403).json({ error: 'Rôle utilisateur non défini' });
-    }
-
-    userRole = userRole ? userRole.toUpperCase() : '';
+    // Get the user's role from JWT and normalize for case-insensitive checks
+    const userRole = (req.user.role || '').toUpperCase();
     const normalizedAllowedRoles = allowedRoles.map(role => role.toUpperCase());
 
     if (!userRole) {
