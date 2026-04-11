@@ -46,6 +46,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public landing page
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   // Allow public routes
   if (pathname.startsWith('/unauthorized') || PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     console.log('Middleware: Public route, allowing');
