@@ -70,17 +70,6 @@ class AgentDashboardService {
     try {
       const pool = await getConnection();
 
-      // Keep compatibility across database versions where this column may not exist yet.
-      const annulationColumnCheck = await pool.request().query(`
-        SELECT 1
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_NAME = 'RendezVous'
-          AND COLUMN_NAME = 'raison_annulation'
-      `);
-      const motifAnnulationSelect = annulationColumnCheck.recordset.length > 0
-        ? 'r.raison_annulation AS motif_annulation,'
-        : 'NULL AS motif_annulation,';
-
       let query = `
         SELECT
           r.id,
@@ -94,7 +83,7 @@ class AgentDashboardService {
           r.duree_estimee,
           r.heure_reelle_debut AS heure_debut_reelle,
           r.heure_reelle_fin AS heure_fin_reelle,
-          ${motifAnnulationSelect}
+          r.raison_annulation AS motif_annulation,
           u.nom              AS client_nom,
           u.prenom           AS client_prenom,
           u.telephone        AS client_telephone,
