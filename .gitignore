@@ -28,6 +28,12 @@ Thumbs.db
 backend/.wwebjs_auth/
 backend/.wwebjs_cache/
 
+# AI Models (too large for git)
+backend/*.gguf
+backend/*.bin
+backend/models/
+backend/ai-deployment/*.gguf
+
 # TypeScript build info
 *.tsbuildinfo
 

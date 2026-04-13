@@ -29,6 +29,7 @@ const adminReportsRoutes = require('./routes/adminReportsRoutes');
 const adminCatalogRoutes = require('./routes/adminCatalogRoutes');
 const adminMessagesRoutes = require('./routes/adminMessagesRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const aiAssistantRoutes = require('./routes/aiAssistantRoutes');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
@@ -69,6 +70,7 @@ app.use('/api/admin/reports', adminReportsRoutes);
 app.use('/api/admin/catalog', adminCatalogRoutes);
 app.use('/api/admin/messages', adminMessagesRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
@@ -138,4 +140,77 @@ app.listen(PORT, async () => {
 
   console.log('🟢 Initialisation de WhatsApp Web...');
   initializeWhatsAppClient();
+  
+  // Note: Le modèle AI local (node-llama-cpp) est désactivé
+  // Utilisez Hugging Face Inference API (ou Space en option)
+  console.log('🤖 AI: Configurez HUGGINGFACE_MODEL_ID + HUGGINGFACE_API_TOKEN dans .env');
 });
+
+// ============================================
+// Configuration du modèle AI Local (node-llama-cpp)
+// DÉSACTIVÉ - Utilisez Hugging Face Space à la place
+// ============================================
+/*
+const {LlamaModel, LlamaContext, LlamaChatSession} = require("node-llama-cpp");
+
+let aiSession = null;
+
+async function initializeAIModel() {
+  try {
+    console.log('📦 Chargement du modèle GGUF...');
+    
+    const model = new LlamaModel({
+      modelPath: path.join(__dirname, "qwen2.5-3b-instruct.Q4_K_M.gguf")
+    });
+
+    const context = new LlamaContext({model});
+    aiSession = new LlamaChatSession({
+      context,
+      systemPrompt: "Tu es l'assistant SAV officiel de Chery Tunisie. Réponds en français ou arabe tunisien de manière professionnelle et utile."
+    });
+
+    console.log('✅ Modèle AI chargé avec succès!\n');
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement du modèle AI:', error.message);
+    console.error('⚠️  Le serveur continue sans AI locale.\n');
+  }
+}
+
+// Route pour le chat AI local
+app.post("/chat", async (req, res) => {
+  try {
+    if (!aiSession) {
+      return res.status(503).json({ 
+        error: 'Service AI non disponible',
+        message: 'Le modèle AI n\'est pas encore chargé'
+      });
+    }
+
+    const userMsg = req.body.message || req.body.question;
+    
+    if (!userMsg) {
+      return res.status(400).json({ 
+        error: 'Message requis',
+        message: 'Veuillez fournir un message ou une question'
+      });
+    }
+
+    console.log('[AI Local] Question:', userMsg);
+    const response = await aiSession.prompt(userMsg);
+    
+    res.json({ 
+      reponse: response,
+      reply: response,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[AI Local] Erreur:', error);
+    res.status(500).json({ 
+      error: 'Erreur AI',
+      message: error.message 
+    });
+  }
+});
+*/
+
+
