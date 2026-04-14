@@ -119,57 +119,83 @@ export default function App() {
       // Load vehicles - extract from nested structure
       try {
         const vehiclesRes = await api.get(`/vehicles/user/${user?.id}`);
-        console.log('Vehicles response:', vehiclesRes.data);
+        console.log('Vehicles loaded successfully');
         const vehiclesData = vehiclesRes.data.vehicles || vehiclesRes.data;
         setVehicles(Array.isArray(vehiclesData) ? vehiclesData : []);
       } catch (vehicleError: any) {
-        console.error('Vehicle error:', vehicleError.response?.status, vehicleError.response?.data);
+        if (vehicleError.code === 'ECONNABORTED') {
+          console.error('Vehicle request timeout');
+        } else {
+          console.error('Vehicle error:', vehicleError.response?.status, vehicleError.message);
+        }
         setVehicles([]);
       }
 
       // Load appointments - extract from nested structure
       try {
         const appointmentsRes = await api.get('/appointments/my');
-        console.log('Appointments response:', appointmentsRes.data);
+        console.log('Appointments loaded successfully');
         const appointmentsData = appointmentsRes.data.appointments || appointmentsRes.data;
         setAppointments(Array.isArray(appointmentsData) ? appointmentsData : []);
       } catch (aptError: any) {
-        console.error('Appointment error:', aptError.response?.status, aptError.response?.data);
+        if (aptError.code === 'ECONNABORTED') {
+          console.error('Appointments request timeout');
+        } else {
+          console.error('Appointment error:', aptError.response?.status, aptError.message);
+        }
         setAppointments([]);
       }
       
       // Load complaints
       try {
         const complaintsRes = await api.get('/complaints/my-complaints');
+        console.log('Complaints loaded successfully');
         const complaintsData = complaintsRes.data;
         setComplaints(Array.isArray(complaintsData) ? complaintsData : []);
       } catch (error: any) {
-        console.error('Complaints error:', error);
+        if (error.code === 'ECONNABORTED') {
+          console.error('Complaints request timeout');
+        } else {
+          console.error('Complaints error:', error.message);
+        }
         setComplaints([]);
       }
       
       // Load orders
       try {
         const ordersRes = await api.get('/client/orders');
+        console.log('Orders loaded successfully');
         const ordersData = ordersRes.data.orders || ordersRes.data;
         setOrders(Array.isArray(ordersData) ? ordersData : []);
       } catch (error: any) {
-        console.error('Orders error:', error);
+        if (error.code === 'ECONNABORTED') {
+          console.error('Orders request timeout');
+        } else {
+          console.error('Orders error:', error.message);
+        }
         setOrders([]);
       }
       
       // Load notifications
       try {
         const notificationsRes = await api.get('/notifications');
+        console.log('Notifications loaded successfully');
         const notificationsData = notificationsRes.data.notifications || notificationsRes.data;
         setNotifications(Array.isArray(notificationsData) ? notificationsData : []);
       } catch (error: any) {
-        console.error('Notifications error:', error);
+        if (error.code === 'ECONNABORTED') {
+          console.error('Notifications request timeout');
+        } else {
+          console.error('Notifications error:', error.message);
+        }
         setNotifications([]);
       }
     } catch (error: any) {
-      console.error('Failed to load user data:', error.response?.data || error.message);
-      Alert.alert('Erreur', 'Impossible de charger les données');
+      console.error('Failed to load user data:', error.message);
+      // Ne pas afficher d'alerte si c'est juste un timeout, l'app fonctionne quand même
+      if (error.code !== 'ECONNABORTED') {
+        Alert.alert('Erreur de connexion', 'Vérifiez que le serveur est démarré et accessible');
+      }
     } finally {
       setLoadingData(false);
     }
@@ -1042,17 +1068,6 @@ export default function App() {
                 </View>
                 <Text style={styles.serviceTitle}>Rendez-vous</Text>
                 <Text style={styles.serviceCount}>{appointments.length}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.serviceCard}
-                onPress={() => setCurrentScreen('complaints')}
-              >
-                <View style={[styles.serviceIconContainer, { backgroundColor: '#FEF3C7' }]}>
-                  <Text style={styles.serviceIcon}>📝</Text>
-                </View>
-                <Text style={styles.serviceTitle}>Réclamations</Text>
-                <Text style={styles.serviceCount}>{complaints.length}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

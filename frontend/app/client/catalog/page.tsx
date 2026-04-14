@@ -207,7 +207,7 @@ function CatalogContent() {
                             <div>
                               <div className="flex items-baseline gap-2">
                                 <p className="text-3xl font-bold text-orange-500">
-                                  {pkg.prix_estimatif.toFixed(3)}
+                                  {pkg.prix.toFixed(3)}
                                 </p>
                                 <span className="text-slate-600 dark:text-slate-400 text-sm">TND</span>
                               </div>
@@ -337,7 +337,7 @@ function CatalogContent() {
                   <p className="text-slate-700 dark:text-slate-300 mb-4">{selectedPackage.package.description}</p>
                   <div className="flex items-baseline gap-2">
                     <p className="text-4xl font-bold text-orange-500">
-                      {selectedPackage.package.prix_estimatif.toFixed(3)}
+                      {selectedPackage.package.prix.toFixed(3)}
                     </p>
                     <span className="text-slate-600 dark:text-slate-400 text-lg">TND</span>
                   </div>

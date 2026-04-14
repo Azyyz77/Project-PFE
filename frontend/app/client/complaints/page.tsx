@@ -182,19 +182,19 @@ export default function ComplaintsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="w-full h-full overflow-auto bg-slate-900">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Mes Réclamations</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">
+            <h1 className="text-4xl font-bold text-slate-100 mb-2">Mes Réclamations</h1>
+            <p className="text-slate-400">
               Gérez vos réclamations et suivez leur traitement
             </p>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors">
+            <DialogTrigger className="inline-flex items-center justify-center rounded-lg bg-cyan-600 hover:bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors">
               <Plus className="w-4 h-4 mr-2" />
               Nouvelle réclamation
             </DialogTrigger>
@@ -258,7 +258,7 @@ export default function ComplaintsPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
                   >
                     {isSubmitting ? (
                       <>
@@ -281,33 +281,27 @@ export default function ComplaintsPage() {
         {/* Complaints List */}
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
           </div>
         ) : complaints.length === 0 ? (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
-                  <MessageSquare className="w-8 h-8 text-slate-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                    Aucune réclamation
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-400 mb-4">
-                    Vous n'avez pas encore créé de réclamation
-                  </p>
-                  <Button
-                    onClick={() => setIsDialogOpen(true)}
-                    variant="outline"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Créer une réclamation
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-20 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700">
+            <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-100 mb-2">
+              Aucune réclamation
+            </h3>
+            <p className="text-slate-400 mb-4">
+              Vous n'avez pas encore créé de réclamation
+            </p>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Créer une réclamation
+            </Button>
+          </div>
         ) : (
           <div className="grid gap-4">
             {complaints.map((complaint) => {
@@ -319,52 +313,50 @@ export default function ComplaintsPage() {
               });
 
               return (
-                <Card key={complaint.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <CardTitle className="text-xl">{complaint.sujet}</CardTitle>
-                          <Badge className={statusInfo.className}>
-                            {statusInfo.icon}
-                            <span className="ml-1">{statusInfo.label}</span>
-                          </Badge>
-                        </div>
-                        <CardDescription>
-                          Créée le {createdDate} • Réclamation #{complaint.id}
-                        </CardDescription>
+                <div key={complaint.id} className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-colors">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold text-slate-100">{complaint.sujet}</h3>
+                        <Badge className={statusInfo.className}>
+                          {statusInfo.icon}
+                          <span className="ml-1">{statusInfo.label}</span>
+                        </Badge>
                       </div>
+                      <p className="text-sm text-slate-400">
+                        Créée le {createdDate} • Réclamation #{complaint.id}
+                      </p>
                     </div>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="space-y-4">
+                  <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                      <h4 className="text-sm font-semibold text-slate-300 mb-2">
                         Description
                       </h4>
-                      <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                      <p className="text-slate-400 whitespace-pre-wrap">
                         {complaint.description}
                       </p>
                     </div>
 
                     {complaint.reponse && (
-                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+                      <div className="bg-cyan-900/20 border border-cyan-800 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-cyan-300 mb-2 flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Réponse de l'équipe
                         </h4>
-                        <p className="text-blue-800 dark:text-blue-300 whitespace-pre-wrap">
+                        <p className="text-cyan-200 whitespace-pre-wrap">
                           {complaint.reponse}
                         </p>
                         {complaint.date_resolution && (
-                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                          <p className="text-xs text-cyan-400 mt-2">
                             Répondu le {new Date(complaint.date_resolution).toLocaleDateString('fr-FR')}
                           </p>
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>

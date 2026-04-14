@@ -222,42 +222,53 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070c14]">
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900 py-12">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 size-80 rounded-full bg-white/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 size-80 rounded-full bg-white/5 blur-3xl" />
-        </div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-[#0c1527] dark:via-[#111e35] dark:to-[#0a1120] py-16">
+        {/* Decorative blobs */}
+        <div className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-white/10 dark:bg-[#1c4a9f]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-10 h-72 w-72 rounded-full bg-white/10 dark:bg-[#f33e49]/12 blur-3xl" />
 
-        <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-center gap-6 text-white">
+        <div className="relative mx-auto max-w-4xl px-6 sm:px-8 lg:px-12">
+          <div className="flex flex-col sm:flex-row items-center gap-8 text-white">
             {/* Avatar */}
-            <div className="flex-shrink-0">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full ring-4 ring-white/30 bg-gradient-to-br from-blue-400 to-indigo-600 text-white text-5xl font-bold shadow-lg">
+            <div className="flex-shrink-0 relative">
+              <div className="flex h-32 w-32 items-center justify-center rounded-2xl ring-4 ring-white/30 bg-gradient-to-br from-[#f33e49] to-[#ff8a92] text-white text-5xl font-bold shadow-2xl shadow-black/20">
                 {initials}
+              </div>
+              <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-green-500 border-4 border-white dark:border-[#0c1527] flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </div>
 
             {/* User Info */}
             <div className="text-center sm:text-left flex-1">
-              <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+              <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight">
                 {user.prenom} {user.nom}
               </h1>
-              <div className="flex flex-wrap gap-2 justify-center sm:justify-start items-center mb-3">
-                <Badge variant={getRoleBadgeVariant(user.role)} className="text-base px-3 py-1">
+              <div className="flex flex-wrap gap-3 justify-center sm:justify-start items-center mb-4">
+                <Badge 
+                  variant={getRoleBadgeVariant(user.role)} 
+                  className="text-sm px-4 py-1.5 font-semibold uppercase tracking-wider"
+                >
                   {getRoleLabel(user.role)}
                 </Badge>
+                <span className="text-white/60 text-sm">•</span>
+                <span className="text-white/80 text-sm font-medium">ID: #{user.id}</span>
               </div>
-              <div className="space-y-1 text-blue-100">
-                <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <Mail className="h-4 w-4" />
-                  <span className="text-sm">{user.email}</span>
+              <div className="space-y-2 text-white/90">
+                <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-medium">{user.email}</span>
                 </div>
                 {user.telephone && (
-                  <div className="flex items-center gap-2 justify-center sm:justify-start">
-                    <Phone className="h-4 w-4" />
-                    <span className="text-sm">{user.telephone}</span>
+                  <div className="flex items-center gap-3 justify-center sm:justify-start">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm">
+                      <Phone className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium">{user.telephone}</span>
                   </div>
                 )}
               </div>
@@ -267,160 +278,22 @@ function ProfileContent() {
       </div>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
-        {/* Edit Profile Card */}
-        <Card className="rounded-2xl border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              <div>
-                <CardTitle className="text-xl">Modifier les informations</CardTitle>
-                <CardDescription>Mettez à jour vos informations personnelles</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {profileError && (
-              <Alert variant="destructive" className="mb-4 border-red-200">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{profileError}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {/* Prénom */}
-                <div className="space-y-2">
-                  <Label htmlFor="prenom" className="text-sm font-medium">
-                    Prénom *
-                  </Label>
-                  <Input
-                    id="prenom"
-                    name="prenom"
-                    type="text"
-                    value={profileForm.prenom}
-                    onChange={handleProfileInputChange}
-                    disabled={isSavingProfile}
-                    className={`rounded-lg ${
-                      profileErrors.prenom ? 'border-red-500 focus-visible:ring-red-500' : ''
-                    }`}
-                    placeholder="Votre prénom"
-                  />
-                  {profileErrors.prenom && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {profileErrors.prenom}
-                    </p>
-                  )}
+      <main className="mx-auto max-w-7xl px-6 py-10 sm:px-8 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Left Column - Change Password Card */}
+          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500" />
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30">
+                  <Lock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
-
-                {/* Nom */}
-                <div className="space-y-2">
-                  <Label htmlFor="nom" className="text-sm font-medium">
-                    Nom *
-                  </Label>
-                  <Input
-                    id="nom"
-                    name="nom"
-                    type="text"
-                    value={profileForm.nom}
-                    onChange={handleProfileInputChange}
-                    disabled={isSavingProfile}
-                    className={`rounded-lg ${
-                      profileErrors.nom ? 'border-red-500 focus-visible:ring-red-500' : ''
-                    }`}
-                    placeholder="Votre nom"
-                  />
-                  {profileErrors.nom && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {profileErrors.nom}
-                    </p>
-                  )}
+                <div>
+                  <CardTitle className="text-xl lg:text-2xl font-bold">Sécurité du compte</CardTitle>
+                  <CardDescription className="text-sm lg:text-base">Modifiez votre mot de passe régulièrement</CardDescription>
                 </div>
               </div>
-
-              {/* Téléphone */}
-              <div className="space-y-2">
-                <Label htmlFor="telephone" className="text-sm font-medium flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Téléphone
-                </Label>
-                <Input
-                  id="telephone"
-                  name="telephone"
-                  type="tel"
-                  value={profileForm.telephone}
-                  onChange={handleProfileInputChange}
-                  disabled={isSavingProfile}
-                  className={`rounded-lg pl-10 ${
-                    profileErrors.telephone
-                      ? 'border-red-500 focus-visible:ring-red-500'
-                      : ''
-                  }`}
-                  placeholder="+216 XX XXX XXX"
-                />
-                {profileErrors.telephone && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {profileErrors.telephone}
-                  </p>
-                )}
-              </div>
-
-              {/* Email (disabled) */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="email"
-                    type="email"
-                    value={user.email}
-                    disabled
-                    className="bg-slate-50 dark:bg-slate-900/30 cursor-not-allowed opacity-60 pl-10 rounded-lg"
-                  />
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Non modifiable
-                </p>
-              </div>
-
-              <Separator className="my-4" />
-
-              <Button
-                type="submit"
-                disabled={isSavingProfile}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg"
-              >
-                {isSavingProfile ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Enregistrer les modifications
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Change Password Card */}
-        <Card className="rounded-2xl border-l-4 border-l-orange-500 shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <div>
-                <CardTitle className="text-xl">Sécurité du compte</CardTitle>
-                <CardDescription>Modifiez votre mot de passe régulièrement</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
+            </CardHeader>
 
           <CardContent>
             {passwordError && (
@@ -565,16 +438,16 @@ function ProfileContent() {
               <Button
                 type="submit"
                 disabled={isSavingPassword}
-                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-lg"
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-xl px-6 py-5 text-sm lg:text-base shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 {isSavingPassword ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
                     Modification...
                   </>
                 ) : (
                   <>
-                    <Lock className="mr-2 h-4 w-4" />
+                    <Lock className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
                     Modifier le mot de passe
                   </>
                 )}
@@ -582,6 +455,152 @@ function ProfileContent() {
             </form>
           </CardContent>
         </Card>
+
+          {/* Right Column - Edit Profile Card */}
+          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                  <User2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl lg:text-2xl font-bold">Modifier les informations</CardTitle>
+                  <CardDescription className="text-sm lg:text-base">Mettez à jour vos informations personnelles</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              {profileError && (
+                <Alert variant="destructive" className="mb-4 border-red-200">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{profileError}</AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Prénom */}
+                  <div className="space-y-2">
+                    <Label htmlFor="prenom" className="text-sm font-medium">
+                      Prénom *
+                    </Label>
+                    <Input
+                      id="prenom"
+                      name="prenom"
+                      type="text"
+                      value={profileForm.prenom}
+                      onChange={handleProfileInputChange}
+                      disabled={isSavingProfile}
+                      className={`rounded-lg ${
+                        profileErrors.prenom ? 'border-red-500 focus-visible:ring-red-500' : ''
+                      }`}
+                      placeholder="Votre prénom"
+                    />
+                    {profileErrors.prenom && (
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        {profileErrors.prenom}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Nom */}
+                  <div className="space-y-2">
+                    <Label htmlFor="nom" className="text-sm font-medium">
+                      Nom *
+                    </Label>
+                    <Input
+                      id="nom"
+                      name="nom"
+                      type="text"
+                      value={profileForm.nom}
+                      onChange={handleProfileInputChange}
+                      disabled={isSavingProfile}
+                      className={`rounded-lg ${
+                        profileErrors.nom ? 'border-red-500 focus-visible:ring-red-500' : ''
+                      }`}
+                      placeholder="Votre nom"
+                    />
+                    {profileErrors.nom && (
+                      <p className="text-xs text-red-600 dark:text-red-400">
+                        {profileErrors.nom}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Téléphone */}
+                <div className="space-y-2">
+                  <Label htmlFor="telephone" className="text-sm font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Téléphone
+                  </Label>
+                  <Input
+                    id="telephone"
+                    name="telephone"
+                    type="tel"
+                    value={profileForm.telephone}
+                    onChange={handleProfileInputChange}
+                    disabled={isSavingProfile}
+                    className={`rounded-lg pl-10 ${
+                      profileErrors.telephone
+                        ? 'border-red-500 focus-visible:ring-red-500'
+                        : ''
+                    }`}
+                    placeholder="+216 XX XXX XXX"
+                  />
+                  {profileErrors.telephone && (
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {profileErrors.telephone}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email (disabled) */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user.email}
+                      disabled
+                      className="bg-slate-50 dark:bg-slate-900/30 cursor-not-allowed opacity-60 pl-10 rounded-lg"
+                    />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Non modifiable
+                  </p>
+                </div>
+
+                <Separator className="my-4" />
+
+                <Button
+                  type="submit"
+                  disabled={isSavingProfile}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl px-6 py-5 text-sm lg:text-base shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  {isSavingProfile ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

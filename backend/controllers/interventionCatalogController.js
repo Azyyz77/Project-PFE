@@ -62,12 +62,13 @@ const getPackages = async (req, res) => {
         p.id,
         p.nom,
         p.description,
-        p.prix_estimatif,
+        p.prix,
+        p.duree_estimee,
         p.actif,
         COUNT(pst.sous_type_id) AS nombre_interventions
       FROM PackageIntervention p
       LEFT JOIN Package_SousType pst ON pst.package_id = p.id
-      GROUP BY p.id, p.nom, p.description, p.prix_estimatif, p.actif
+      GROUP BY p.id, p.nom, p.description, p.prix, p.duree_estimee, p.actif
       ORDER BY p.nom
     `);
 
@@ -92,7 +93,8 @@ const getPackageDetails = async (req, res) => {
           id,
           nom,
           description,
-          prix_estimatif,
+          prix,
+          duree_estimee,
           actif
         FROM PackageIntervention
         WHERE id = @id

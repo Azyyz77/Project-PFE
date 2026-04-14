@@ -309,7 +309,7 @@ export default function CatalogPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-2xl font-bold text-orange-500">
-                              {pkg.prix_estimatif.toFixed(3)} TND
+                              {pkg.prix.toFixed(3)} TND
                             </p>
                             <p className="text-slate-400 text-xs">
                               {pkg.nombre_interventions} intervention(s)
@@ -353,7 +353,7 @@ export default function CatalogPage() {
                 </div>
                 <p className="text-slate-400 mb-3">{selectedPackage.package.description}</p>
                 <p className="text-2xl font-bold text-orange-500">
-                  {selectedPackage.package.prix_estimatif.toFixed(3)} TND
+                  {selectedPackage.package.prix.toFixed(3)} TND
                 </p>
               </div>
 

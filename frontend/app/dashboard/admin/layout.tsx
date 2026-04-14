@@ -73,6 +73,41 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <Car className="w-5 h-5" />,
   },
   {
+    label: 'Couleurs',
+    href: '/dashboard/admin/colors',
+    icon: <Sparkles className="w-5 h-5" />,
+  },
+  {
+    label: 'Packages',
+    href: '/dashboard/admin/packages',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Plages horaires',
+    href: '/dashboard/admin/timeslots',
+    icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    label: 'Problèmes (Diagnostic)',
+    href: '/dashboard/admin/diagnostic',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Documents',
+    href: '/dashboard/admin/documents',
+    icon: <FileText className="w-5 h-5" />,
+  },
+  {
+    label: 'Feedbacks',
+    href: '/dashboard/admin/feedbacks',
+    icon: <MessageSquare className="w-5 h-5" />,
+  },
+  {
+    label: 'Promotions',
+    href: '/dashboard/admin/promotions',
+    icon: <Sparkles className="w-5 h-5" />,
+  },
+  {
     label: 'Publier messages',
     href: '/dashboard/admin/messages',
     icon: <MessageSquare className="w-5 h-5" />,
@@ -96,11 +131,11 @@ const ADMIN_NAV_GROUPS = [
   },
   {
     label: 'Referentiel services',
-    items: ADMIN_NAV_ITEMS.slice(5, 9),
+    items: ADMIN_NAV_ITEMS.slice(5, 15),
   },
   {
     label: 'Suivi et parametres',
-    items: ADMIN_NAV_ITEMS.slice(9),
+    items: ADMIN_NAV_ITEMS.slice(15),
   },
 ];
 
@@ -220,14 +255,12 @@ function AdminMobileMenu() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger>
-        <button
-          className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
-          aria-label="Ouvrir le menu administrateur"
-          title="Ouvrir le menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+      <SheetTrigger
+        className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
+        aria-label="Ouvrir le menu administrateur"
+        title="Ouvrir le menu"
+      >
+        <Menu className="w-5 h-5" />
       </SheetTrigger>
 
       <SheetContent side="left" className="w-72 p-0 bg-slate-950 text-slate-100 border-slate-800">

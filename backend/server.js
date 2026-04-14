@@ -30,9 +30,18 @@ const adminCatalogRoutes = require('./routes/adminCatalogRoutes');
 const adminMessagesRoutes = require('./routes/adminMessagesRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const aiAssistantRoutes = require('./routes/aiAssistantRoutes');
+const packageRoutes = require('./routes/packageRoutes');
+const documentRoutes = require('./routes/documentRoutes');
+const timeSlotRoutes = require('./routes/timeSlotRoutes');
+const promotionRoutes = require('./routes/promotionRoutes');
+const attachmentRoutes = require('./routes/attachmentRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+const diagnosticRoutes = require('./routes/diagnosticRoutes');
+const colorRoutes = require('./routes/colorRoutes');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
+const { startReminderService } = require('./services/reminderService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -71,6 +80,14 @@ app.use('/api/admin/catalog', adminCatalogRoutes);
 app.use('/api/admin/messages', adminMessagesRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes);
+app.use('/api/packages', packageRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/timeslots', timeSlotRoutes);
+app.use('/api/promotions', promotionRoutes);
+app.use('/api/attachments', attachmentRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/diagnostic', diagnosticRoutes);
+app.use('/api/colors', colorRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {
@@ -140,6 +157,9 @@ app.listen(PORT, async () => {
 
   console.log('🟢 Initialisation de WhatsApp Web...');
   initializeWhatsAppClient();
+  
+  console.log('🔔 Démarrage du service de rappels automatiques...');
+  startReminderService();
   
   // Note: Le modèle AI local (node-llama-cpp) est désactivé
   // Utilisez Hugging Face Inference API (ou Space en option)

@@ -30,7 +30,8 @@ export interface Package {
   id: number;
   nom: string;
   description: string;
-  prix_estimatif: number;
+  prix: number;
+  duree_estimee: string;
   actif: boolean;
   nombre_interventions: number;
 }
@@ -40,7 +41,8 @@ export interface PackageDetails {
     id: number;
     nom: string;
     description: string;
-    prix_estimatif: number;
+    prix: number;
+    duree_estimee: string;
     actif: boolean;
   };
   interventions: Array<{

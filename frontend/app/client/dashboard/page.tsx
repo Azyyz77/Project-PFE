@@ -6,11 +6,19 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
-import { fetchClientComplaints } from '@/lib/api/clientDashboard';
 import { Vehicle } from '@/types/vehicle';
-import { Calendar, Plus, AlertCircle, CheckCircle, Clock, MessageSquare, Edit2, Trash2, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  ChevronRight,
+  Car,
+  Mail,
+  Phone,
+  Hash,
+  ArrowRight,
+  Sparkles,
+} from 'lucide-react';
 
 export default function ClientDashboardPage() {
   return (
@@ -20,297 +28,329 @@ export default function ClientDashboardPage() {
   );
 }
 
+/* ─── Stat Chip ─── */
+function StatChip({ value, label, accent }: { value: string | number; label: string; accent?: boolean }) {
+  return (
+    <div className="flex-1 rounded-xl bg-white/10 dark:bg-white/[0.07] backdrop-blur-sm px-4 py-3 text-center border border-white/20 dark:border-white/10">
+      <p className={`text-2xl font-bold ${accent ? 'text-amber-300' : 'text-white'}`}>{value}</p>
+      <p className="text-[0.7rem] text-white/65 dark:text-white/60 mt-0.5 uppercase tracking-widest">{label}</p>
+    </div>
+  );
+}
+
+/* ─── Quick-action card ─── */
+function ActionCard({
+  href, emoji, title, sub, cta,
+  darkFrom, darkTo, darkBorder,
+  lightFrom, lightTo, lightBorder,
+  ctaDark, ctaLight,
+}: {
+  href: string; emoji: string; title: string; sub: string; cta: string;
+  darkFrom: string; darkTo: string; darkBorder: string;
+  lightFrom: string; lightTo: string; lightBorder: string;
+  ctaDark: string; ctaLight: string;
+}) {
+  return (
+    <Link href={href}>
+      <div className={`group relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl p-6
+        bg-gradient-to-br ${darkFrom} ${darkTo} ${darkBorder}
+        dark:bg-gradient-to-br dark:${darkFrom} dark:${darkTo} dark:${darkBorder}
+      `}
+        style={{}}
+      >
+        <div className="text-4xl mb-4">{emoji}</div>
+        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{title}</h3>
+        <p className="text-slate-500 dark:text-white/55 text-xs mb-5">{sub}</p>
+        <div className={`flex items-center gap-1.5 text-xs font-semibold ${ctaLight} dark:${ctaDark}`}>
+          <span>{cta}</span>
+          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ─── Shared card shell ─── */
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-2xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-[#0c1424] ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+/* ─── Main ─── */
 function ClientDashboardContent() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [complaints, setComplaints] = useState<any[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
-  const [isLoadingComplaints, setIsLoadingComplaints] = useState(true);
 
   const isClient = useMemo(() => user?.role === 'CLIENT', [user]);
 
   useEffect(() => {
-    if (user && !isClient) {
-      router.replace('/dashboard/agent');
-    }
+    if (user && !isClient) router.replace('/dashboard/agent');
   }, [user, isClient, router]);
 
   useEffect(() => {
-    const loadVehicles = async () => {
+    const load = async () => {
       if (!user || !token || !isClient) return;
-      try {
-        const data = await getVehiclesByUser(user.id, token);
-        setVehicles(data);
-      } catch (error) {
-        console.error('Failed to load vehicles:', error);
-      } finally {
-        setIsLoadingVehicles(false);
-      }
+      try { setVehicles(await getVehiclesByUser(user.id, token)); }
+      catch { /* silent */ }
+      finally { setIsLoadingVehicles(false); }
     };
-    loadVehicles();
+    load();
   }, [user, token, isClient]);
 
-  useEffect(() => {
-    const loadComplaints = async () => {
-      if (!user || !token || !isClient) return;
-      try {
-        const data = await fetchClientComplaints(token);
-        setComplaints(data);
-      } catch (error) {
-        console.error('Failed to load complaints:', error);
-      } finally {
-        setIsLoadingComplaints(false);
-      }
-    };
-    loadComplaints();
-  }, [user, token, isClient]);
+
 
   if (!isClient || isLoadingVehicles) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+      <div className="flex items-center justify-center h-full min-h-[60vh]">
+        <div className="relative w-10 h-10">
+          <div className="absolute inset-0 rounded-full border-2 border-[#f33e49]/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-[#f33e49] animate-spin" />
+        </div>
       </div>
     );
   }
 
   const today = new Date();
-  const dateStr = today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* ── Welcome Banner ── */}
-        <div className="mb-8 rounded-3xl overflow-hidden shadow-lg">
-          <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 sm:p-12 min-h-64 flex items-center justify-between overflow-hidden">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/4" />
-            
-            <div className="relative z-10 flex-1">
-              <div className="flex items-center gap-6 mb-6">
-                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center text-white text-2xl font-bold shadow-xl">
-                  {user?.prenom?.[0]}{user?.nom?.[0]}
-                </div>
-                <div>
-                  <h1 className="text-white text-3xl sm:text-4xl font-bold">Bienvenue, {user?.prenom}! 👋</h1>
-                  <p className="text-white/80 text-sm mt-1">Gérez vos véhicules et rendez-vous</p>
-                </div>
-              </div>
-              
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-6 text-white">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <div className="text-2xl font-bold">{vehicles.length}</div>
-                  <div className="text-xs opacity-80">Véhicules</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <div className="text-2xl font-bold">{complaints.length}</div>
-                  <div className="text-xs opacity-80">Réclamations</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <div className="text-2xl font-bold text-yellow-300">—</div>
-                  <div className="text-xs opacity-80">RDV À venir</div>
-                </div>
-              </div>
-            </div>
+    <div className="px-5 sm:px-8 lg:px-12 py-8 max-w-7xl mx-auto space-y-8">
 
-            <div className="hidden lg:block text-white/20 text-8xl font-bold">{today.getDate()}</div>
+      {/* ══ Welcome Banner ══ */}
+      <div className="relative overflow-hidden rounded-3xl border border-indigo-100 dark:border-white/[0.08] bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-[#0c1527] dark:via-[#111e35] dark:to-[#0a1120]">
+        {/* decorative blobs */}
+        <div className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-white/10 dark:bg-[#1c4a9f]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-10 h-72 w-72 rounded-full bg-white/10 dark:bg-[#f33e49]/12 blur-3xl" />
+
+        <div className="relative p-7 sm:p-10 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/20 dark:bg-gradient-to-br dark:from-[#f33e49] dark:to-[#ff8a92] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-black/20">
+              {user?.prenom?.[0]}{user?.nom?.[0]}
+            </div>
+            <Sparkles className="absolute -top-2 -right-2 w-4 h-4 text-amber-300" />
+          </div>
+
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white/70 text-xs uppercase tracking-[0.25em] mb-1">Bienvenue de retour</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white truncate">
+              {user?.prenom} {user?.nom} 👋
+            </h1>
+            <p className="text-white/60 text-sm mt-1">
+              {today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+
+          {/* Stats */}
+          <div className="flex w-full sm:w-auto gap-3 shrink-0">
+            <StatChip value={vehicles.length}   label="Véhicules" />
+            <StatChip value="—" label="RDV à venir" accent />
           </div>
         </div>
+      </div>
 
-        {/* ── Quick Action Cards ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      {/* ══ Quick-Action Cards ══ */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-white/40 mb-4">Accès rapide</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Rendez-vous */}
           <Link href="/client/rendez-vous">
-            <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl p-8 cursor-pointer border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
-              <div className="text-5xl mb-3">📅</div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Rendez-vous</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Gérez vos rendez-vous</p>
-              <div className="flex items-center text-green-600 dark:text-green-400 group-hover:gap-2 transition-all gap-1">
-                <span className="text-sm font-semibold">Voir</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <div className="group relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-6
+              bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 hover:border-emerald-400
+              dark:from-[#0c1f14] dark:to-[#112918] dark:border-emerald-900/60 dark:hover:border-emerald-700/50">
+              <div className="text-4xl mb-4">📅</div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Rendez-vous</h3>
+              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">Gérez vos rendez-vous atelier</p>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <span>Voir</span>
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
 
+          {/* Mon Profil */}
           <Link href="/client/profile">
-            <div className="group bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-2xl p-8 cursor-pointer border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
-              <div className="text-5xl mb-3">👤</div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Mon Profil</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Gérez vos informations</p>
-              <div className="flex items-center text-blue-600 dark:text-blue-400 group-hover:gap-2 transition-all gap-1">
-                <span className="text-sm font-semibold">Éditer</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <div className="group relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-6
+              bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400
+              dark:from-[#0c1524] dark:to-[#0f1c36] dark:border-blue-900/60 dark:hover:border-blue-700/50">
+              <div className="text-4xl mb-4">👤</div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Mon Profil</h3>
+              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">Gérez vos informations personnelles</p>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                <span>Éditer</span>
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
 
+          {/* Mes Véhicules */}
           <Link href="/client/vehicles">
-            <div className="group bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl p-8 cursor-pointer border-2 border-purple-200 dark:border-purple-800 hover:border-purple-400 dark:hover:border-purple-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
-              <div className="text-5xl mb-3">🚗</div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Mes Véhicules</h3>
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{vehicles.length} véhicule{vehicles.length !== 1 ? 's' : ''}</p>
-              <div className="flex items-center text-purple-600 dark:text-purple-400 group-hover:gap-2 transition-all gap-1">
-                <span className="text-sm font-semibold">Voir</span>
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <div className="group relative overflow-hidden rounded-2xl border cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg p-6
+              bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 hover:border-violet-400
+              dark:from-[#180c22] dark:to-[#1e1030] dark:border-purple-900/60 dark:hover:border-purple-700/50">
+              <div className="text-4xl mb-4">🚗</div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Mes Véhicules</h3>
+              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">
+                {vehicles.length} véhicule{vehicles.length !== 1 ? 's' : ''} enregistré{vehicles.length !== 1 ? 's' : ''}
+              </p>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
+                <span>Voir</span>
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
         </div>
+      </div>
 
-        {/* ── Main Content Grid ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Vehicles Section - 2 columns */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Mes Véhicules</h2>
+      {/* ══ Main Content ══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* ── Vehicles – 2 cols ── */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Mes Véhicules</h2>
+            <Link
+              href="/client/vehicles/new"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full
+                bg-[#f33e49]/10 hover:bg-[#f33e49]/20 border border-[#f33e49]/25
+                text-[#f33e49] dark:text-[#ff6b74] text-xs font-semibold transition-all duration-200"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Ajouter
+            </Link>
+          </div>
+
+          {isLoadingVehicles ? (
+            <Spinner />
+          ) : vehicles.length === 0 ? (
+            <EmptyState icon={<Car className="w-8 h-8 text-slate-300 dark:text-white/20" />} message="Aucun véhicule enregistré">
               <Link href="/client/vehicles/new">
-                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2">
-                  <Plus className="w-4 h-4" />
-                  Ajouter
-                </Button>
+                <button className="mt-4 px-5 py-2 rounded-full bg-[#f33e49]/10 hover:bg-[#f33e49]/20 border border-[#f33e49]/25 text-[#f33e49] dark:text-[#ff6b74] text-xs font-semibold transition-all">
+                  Ajouter mon premier véhicule
+                </button>
               </Link>
-            </div>
-
-            {isLoadingVehicles ? (
-              <div className="flex justify-center py-12">
-                <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-              </div>
-            ) : vehicles.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-                <div className="text-5xl mb-3">🚗</div>
-                <p className="text-slate-600 dark:text-slate-400 mb-4">Aucun véhicule enregistré</p>
-                <Link href="/client/vehicles/new">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">Ajouter votre premier véhicule</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {vehicles.map((vehicle) => (
-                  <div key={vehicle.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="text-3xl">🚗</div>
-                          <div>
-                            <h3 className="font-bold text-lg text-slate-900 dark:text-white">{vehicle.marque_nom} {vehicle.modele_nom}</h3>
-                            <div className="flex gap-2">
-                              {vehicle.annee && <Badge variant="outline" className="text-xs">{vehicle.annee}</Badge>}
-                              {vehicle.couleur && <Badge variant="outline" className="text-xs">{vehicle.couleur}</Badge>}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">N° Châssis: {vehicle.numero_chassis || '—'}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Modifier">
-                          <Edit2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                        </button>
-                        <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors" title="Supprimer">
-                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Profile Card - 1 column */}
-          <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700 sticky top-4">
-              {/* Avatar */}
-              <div className="flex justify-center mb-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-                  {user?.prenom?.[0]}{user?.nom?.[0]}
-                </div>
-              </div>
-
-              {/* Name & Role */}
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{user?.prenom} {user?.nom}</h3>
-                <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">CLIENT</Badge>
-              </div>
-
-              {/* Info */}
-              <div className="space-y-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-lg">📧</span>
-                  <div>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs">Email</p>
-                    <p className="text-slate-900 dark:text-white font-medium truncate">{user?.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-lg">📞</span>
-                  <div>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs">Téléphone</p>
-                    <p className="text-slate-900 dark:text-white font-medium">{user?.telephone || '—'}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-lg">🆔</span>
-                  <div>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs">ID Client</p>
-                    <p className="text-slate-900 dark:text-white font-medium">#{user?.id}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Button */}
-              <Link href="/client/profile" className="w-full">
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white">
-                  Modifier Profil
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Réclamations Section ── */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Mes Réclamations</h2>
-          
-          {isLoadingComplaints ? (
-            <div className="flex justify-center py-12">
-              <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-            </div>
-          ) : complaints.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-              <MessageSquare className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <p className="text-slate-600 dark:text-slate-400">Aucune réclamation enregistrée</p>
-            </div>
+            </EmptyState>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {complaints.map((complaint) => {
-                const statusConfig: Record<string, { color: string; label: string; icon: string }> = {
-                  OUVERTE: { color: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200', label: 'Ouverte', icon: '🟡' },
-                  EN_COURS: { color: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200', label: 'En cours', icon: '🔵' },
-                  RESOLUE: { color: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200', label: 'Résolue', icon: '🟢' },
-                  FERMEE: { color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200', label: 'Fermée', icon: '🔴' },
-                };
-                const config = statusConfig[complaint.statut] || statusConfig.OUVERTE;
-
-                return (
-                  <div key={complaint.id} className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg transition-all">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-bold text-slate-900 dark:text-white flex-1">{complaint.sujet || 'Sans titre'}</h4>
-                      <span className="text-2xl">{config.icon}</span>
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{complaint.description}</p>
-                    <div className="flex items-center justify-between">
-                      <Badge className={`${config.color} text-xs`}>{config.label}</Badge>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">#{complaint.id}</span>
-                    </div>
+            <div className="space-y-3">
+              {vehicles.map((vehicle) => (
+                <Card key={vehicle.id} className="group p-5 flex items-center gap-4 hover:border-slate-300 dark:hover:border-white/[0.14] hover:shadow-sm dark:hover:bg-[#0f1930] transition-all duration-200">
+                  {/* Icon */}
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-2xl shrink-0">
+                    🚗
                   </div>
-                );
-              })}
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{vehicle.marque_nom} {vehicle.modele_nom}</h3>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {vehicle.annee && (
+                        <span className="text-[0.68rem] px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-500 dark:text-white/50">
+                          {vehicle.annee}
+                        </span>
+                      )}
+                      {vehicle.couleur && (
+                        <span className="text-[0.68rem] px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] text-slate-500 dark:text-white/50">
+                          {vehicle.couleur}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[0.68rem] text-slate-400 dark:text-white/30 mt-1.5">N° Châssis: {vehicle.numero_chassis || '—'}</p>
+                  </div>
+                  {/* Actions */}
+                  <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 transition" title="Modifier">
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-[#f33e49]/10 text-slate-400 dark:text-white/40 hover:text-red-500 dark:hover:text-[#ff6b74] transition" title="Supprimer">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </div>
 
+        {/* ── Profile Card – 1 col ── */}
+        <div className="lg:col-span-1">
+          <Card className="p-6 space-y-5 sticky top-20">
+            {/* Avatar */}
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#f33e49] to-[#ff8a92] flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-[#f33e49]/20">
+                {user?.prenom?.[0]}{user?.nom?.[0]}
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-white text-base">{user?.prenom} {user?.nom}</p>
+                <span className="inline-block mt-1 px-3 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-widest bg-[#f33e49]/10 border border-[#f33e49]/25 text-[#f33e49] dark:text-[#ff6b74]">
+                  CLIENT
+                </span>
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
+
+            {/* Info */}
+            <div className="space-y-3">
+              <InfoRow icon={<Mail className="w-3.5 h-3.5" />} label="Email" value={user?.email} />
+              <InfoRow icon={<Phone className="w-3.5 h-3.5" />} label="Téléphone" value={user?.telephone || '—'} />
+              <InfoRow icon={<Hash className="w-3.5 h-3.5" />} label="ID Client" value={`#${user?.id}`} />
+            </div>
+
+            <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
+
+            <Link href="/client/profile" className="w-full block">
+              <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#f33e49] to-[#ff5a65] hover:from-[#ff4d58] hover:to-[#ff6b74] text-white text-xs font-semibold transition-all duration-200 shadow-lg shadow-[#f33e49]/20">
+                Modifier le profil
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </Link>
+          </Card>
+        </div>
+      </div>
+
+
+    </div>
+  );
+}
+
+/* ── Helpers ── */
+function Spinner() {
+  return (
+    <div className="flex justify-center py-10">
+      <div className="relative w-8 h-8">
+        <div className="absolute inset-0 rounded-full border-2 border-[#f33e49]/15" />
+        <div className="absolute inset-0 rounded-full border-2 border-t-[#f33e49] animate-spin" />
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ icon, message, children }: { icon: React.ReactNode; message: string; children?: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02] py-12 flex flex-col items-center text-center gap-3">
+      <div className="w-14 h-14 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] flex items-center justify-center">
+        {icon}
+      </div>
+      <p className="text-slate-400 dark:text-white/35 text-sm">{message}</p>
+      {children}
+    </div>
+  );
+}
+
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value?: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.07] flex items-center justify-center text-slate-400 dark:text-white/30 shrink-0">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[0.65rem] text-slate-400 dark:text-white/35 uppercase tracking-widest">{label}</p>
+        <p className="text-slate-800 dark:text-white/80 text-xs font-medium truncate">{value}</p>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,0 @@
-torch
-transformers
-peft
-accelerate
-fastapi
-uvicorn
