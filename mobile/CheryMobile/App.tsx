@@ -15,8 +15,9 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import api from './src/config/api';
 import { User } from './src/types';
+import ChatbotScreen from './src/screens/ChatbotScreen';
 
-type Screen = 'login' | 'register' | 'forgotPassword' | 'home' | 'vehicles' | 'appointments' | 'profile' | 'bookAppointment' | 'addVehicle' | 'complaints' | 'orders' | 'notifications' | 'appointmentFeedback';
+type Screen = 'login' | 'register' | 'forgotPassword' | 'home' | 'vehicles' | 'appointments' | 'profile' | 'bookAppointment' | 'addVehicle' | 'complaints' | 'orders' | 'notifications' | 'appointmentFeedback' | 'chatbot';
 
 export default function App() {
   const [email, setEmail] = useState('');
@@ -1099,6 +1100,28 @@ export default function App() {
 
               <TouchableOpacity
                 style={styles.serviceCard}
+                onPress={() => setCurrentScreen('complaints')}
+              >
+                <View style={[styles.serviceIconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <Text style={styles.serviceIcon}>⚠️</Text>
+                </View>
+                <Text style={styles.serviceTitle}>Réclamations</Text>
+                <Text style={styles.serviceCount}>{complaints.length}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.serviceCard}
+                onPress={() => setCurrentScreen('chatbot')}
+              >
+                <View style={[styles.serviceIconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <Text style={styles.serviceIcon}>💬</Text>
+                </View>
+                <Text style={styles.serviceTitle}>Assistant SAV</Text>
+                <Text style={styles.serviceCount}>24/7</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.serviceCard}
                 onPress={() => setCurrentScreen('profile')}
               >
                 <View style={[styles.serviceIconContainer, { backgroundColor: '#E0E7FF' }]}>
@@ -1883,6 +1906,11 @@ export default function App() {
         </ScrollView>
       </View>
     );
+  }
+  
+  // Chatbot Screen
+  if (currentScreen === 'chatbot') {
+    return <ChatbotScreen onBack={() => setCurrentScreen('home')} />;
   }
   
   // Orders Screen

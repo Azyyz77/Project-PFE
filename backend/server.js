@@ -42,7 +42,7 @@ const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 const { startReminderService } = require('./services/reminderService');
-
+const chatbotRoute = require('./routes/chatbot');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -139,6 +139,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use('/api/chatbot', chatbotRoute);
 // Démarrage du serveur
 app.listen(PORT, async () => {
   console.log(`\n🚀 Serveur monolithique démarré sur le port ${PORT}`);
@@ -163,7 +164,6 @@ app.listen(PORT, async () => {
   
   // Note: Le modèle AI local (node-llama-cpp) est désactivé
   // Utilisez Hugging Face Inference API (ou Space en option)
-  console.log('🤖 AI: Configurez HUGGINGFACE_MODEL_ID + HUGGINGFACE_API_TOKEN dans .env');
 });
 
 // ============================================

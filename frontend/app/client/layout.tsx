@@ -22,6 +22,7 @@ import {
   HelpCircle,
   Star,
   AlertCircle,
+  MessageCircle,
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,6 +39,7 @@ const CLIENT_NAV_ITEMS: NavItem[] = [
   { label: 'Mes commandes',   href: '/client/orders',     icon: <ShoppingBag className="w-4 h-4" /> },
   { label: 'Rendez-vous',     href: '/client/rendez-vous',icon: <Calendar className="w-4 h-4" /> },
   { label: 'Mes documents',   href: '/client/documents',  icon: <FileText className="w-4 h-4" /> },
+  { label: 'Assistant SAV',   href: '/client/chatbot',    icon: <MessageCircle className="w-4 h-4" /> },
   { label: 'Assistance',      href: '/client/assistance', icon: <HelpCircle className="w-4 h-4" /> },
   { label: 'Mes Avis',        href: '/client/feedback',   icon: <Star className="w-4 h-4" /> },
   { label: 'Réclamations',    href: '/client/complaints', icon: <AlertCircle className="w-4 h-4" /> },
