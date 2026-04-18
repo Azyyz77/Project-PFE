@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { Vehicle } from '@/types/vehicle';
@@ -82,6 +83,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 /* ─── Main ─── */
 function ClientDashboardContent() {
   const { user, token } = useAuth();
+  const { language, t } = useLanguage();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
@@ -137,26 +139,26 @@ function ClientDashboardContent() {
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <p className="text-white/70 text-xs uppercase tracking-[0.25em] mb-1">Bienvenue de retour</p>
+            <p className="text-white/70 text-xs uppercase tracking-[0.25em] mb-1">{t('dashboard.welcomeBack')}</p>
             <h1 className="text-2xl sm:text-3xl font-bold text-white truncate">
               {user?.prenom} {user?.nom} 👋
             </h1>
             <p className="text-white/60 text-sm mt-1">
-              {today.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {today.toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
 
           {/* Stats */}
           <div className="flex w-full sm:w-auto gap-3 shrink-0">
-            <StatChip value={vehicles.length}   label="Véhicules" />
-            <StatChip value="—" label="RDV à venir" accent />
+            <StatChip value={vehicles.length} label={t('common.vehiclesCount')} />
+            <StatChip value="—" label={t('common.nextAppointments')} accent />
           </div>
         </div>
       </div>
 
       {/* ══ Quick-Action Cards ══ */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-white/40 mb-4">Accès rapide</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400 dark:text-white/40 mb-4">{t('common.quickAccess')}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Rendez-vous */}
           <Link href="/client/rendez-vous">
@@ -164,10 +166,10 @@ function ClientDashboardContent() {
               bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200 hover:border-emerald-400
               dark:from-[#0c1f14] dark:to-[#112918] dark:border-emerald-900/60 dark:hover:border-emerald-700/50">
               <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Rendez-vous</h3>
-              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">Gérez vos rendez-vous atelier</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{t('appointments.title')}</h3>
+              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">{t('dashboard.manageAppointments')}</p>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                <span>Voir</span>
+                <span>{t('dashboard.see')}</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -179,10 +181,10 @@ function ClientDashboardContent() {
               bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400
               dark:from-[#0c1524] dark:to-[#0f1c36] dark:border-blue-900/60 dark:hover:border-blue-700/50">
               <div className="text-4xl mb-4">👤</div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Mon Profil</h3>
-              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">Gérez vos informations personnelles</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{t('nav.clientProfile')}</h3>
+              <p className="text-slate-500 dark:text-white/55 text-xs mb-5">{t('dashboard.managePersonalInfo')}</p>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                <span>Éditer</span>
+                <span>{t('dashboard.edit')}</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -194,12 +196,14 @@ function ClientDashboardContent() {
               bg-gradient-to-br from-violet-50 to-purple-50 border-violet-200 hover:border-violet-400
               dark:from-[#180c22] dark:to-[#1e1030] dark:border-purple-900/60 dark:hover:border-purple-700/50">
               <div className="text-4xl mb-4">🚗</div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Mes Véhicules</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{t('common.myVehicles')}</h3>
               <p className="text-slate-500 dark:text-white/55 text-xs mb-5">
-                {vehicles.length} véhicule{vehicles.length !== 1 ? 's' : ''} enregistré{vehicles.length !== 1 ? 's' : ''}
+                {language === 'ar'
+                  ? `${vehicles.length} ${vehicles.length === 1 ? 'مركبة مسجلة' : 'مركبات مسجلة'}`
+                  : `${vehicles.length} véhicule${vehicles.length !== 1 ? 's' : ''} enregistré${vehicles.length !== 1 ? 's' : ''}`}
               </p>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400">
-                <span>Voir</span>
+                <span>{t('dashboard.see')}</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
@@ -213,7 +217,7 @@ function ClientDashboardContent() {
         {/* ── Vehicles – 2 cols ── */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Mes Véhicules</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('common.myVehicles')}</h2>
             <Link
               href="/client/vehicles/new"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full
@@ -221,17 +225,17 @@ function ClientDashboardContent() {
                 text-[#f33e49] dark:text-[#ff6b74] text-xs font-semibold transition-all duration-200"
             >
               <Plus className="w-3.5 h-3.5" />
-              Ajouter
+              {t('dashboard.add')}
             </Link>
           </div>
 
           {isLoadingVehicles ? (
             <Spinner />
           ) : vehicles.length === 0 ? (
-            <EmptyState icon={<Car className="w-8 h-8 text-slate-300 dark:text-white/20" />} message="Aucun véhicule enregistré">
+            <EmptyState icon={<Car className="w-8 h-8 text-slate-300 dark:text-white/20" />} message={t('common.noVehicle')}>
               <Link href="/client/vehicles/new">
                 <button className="mt-4 px-5 py-2 rounded-full bg-[#f33e49]/10 hover:bg-[#f33e49]/20 border border-[#f33e49]/25 text-[#f33e49] dark:text-[#ff6b74] text-xs font-semibold transition-all">
-                  Ajouter mon premier véhicule
+                  {t('common.addFirstVehicle')}
                 </button>
               </Link>
             </EmptyState>
@@ -258,14 +262,14 @@ function ClientDashboardContent() {
                         </span>
                       )}
                     </div>
-                    <p className="text-[0.68rem] text-slate-400 dark:text-white/30 mt-1.5">N° Châssis: {vehicle.numero_chassis || '—'}</p>
+                    <p className="text-[0.68rem] text-slate-400 dark:text-white/30 mt-1.5">{t('common.chassisNumber')}: {vehicle.numero_chassis || '—'}</p>
                   </div>
                   {/* Actions */}
                   <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 transition" title="Modifier">
+                    <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] text-slate-400 dark:text-white/40 hover:text-slate-700 dark:hover:text-white/70 transition" title={t('common.edit')}>
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    <button className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-[#f33e49]/10 text-slate-400 dark:text-white/40 hover:text-red-500 dark:hover:text-[#ff6b74] transition" title="Supprimer">
+                    <button className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-[#f33e49]/10 text-slate-400 dark:text-white/40 hover:text-red-500 dark:hover:text-[#ff6b74] transition" title={t('common.delete')}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -286,7 +290,7 @@ function ClientDashboardContent() {
               <div>
                 <p className="font-bold text-slate-900 dark:text-white text-base">{user?.prenom} {user?.nom}</p>
                 <span className="inline-block mt-1 px-3 py-0.5 rounded-full text-[0.65rem] font-bold uppercase tracking-widest bg-[#f33e49]/10 border border-[#f33e49]/25 text-[#f33e49] dark:text-[#ff6b74]">
-                  CLIENT
+                  {t('common.client')}
                 </span>
               </div>
             </div>
@@ -295,16 +299,16 @@ function ClientDashboardContent() {
 
             {/* Info */}
             <div className="space-y-3">
-              <InfoRow icon={<Mail className="w-3.5 h-3.5" />} label="Email" value={user?.email} />
-              <InfoRow icon={<Phone className="w-3.5 h-3.5" />} label="Téléphone" value={user?.telephone || '—'} />
-              <InfoRow icon={<Hash className="w-3.5 h-3.5" />} label="ID Client" value={`#${user?.id}`} />
+              <InfoRow icon={<Mail className="w-3.5 h-3.5" />} label={t('common.email')} value={user?.email} />
+              <InfoRow icon={<Phone className="w-3.5 h-3.5" />} label={t('common.phone')} value={user?.telephone || '—'} />
+              <InfoRow icon={<Hash className="w-3.5 h-3.5" />} label={t('common.clientId')} value={`#${user?.id}`} />
             </div>
 
             <div className="h-px bg-slate-100 dark:bg-white/[0.06]" />
 
             <Link href="/client/profile" className="w-full block">
               <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#f33e49] to-[#ff5a65] hover:from-[#ff4d58] hover:to-[#ff6b74] text-white text-xs font-semibold transition-all duration-200 shadow-lg shadow-[#f33e49]/20">
-                Modifier le profil
+                {t('common.editProfile')}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </Link>

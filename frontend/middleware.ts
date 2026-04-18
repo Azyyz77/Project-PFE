@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password'];
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password', '/verify-phone', '/registration-success'];
 
 const PUBLIC_ASSET_PREFIXES = ['/videos/', '/images/', '/icons/'];
 const PUBLIC_FILE_REGEX = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|css|js|map|txt|xml)$/i;
@@ -87,6 +87,18 @@ export function middleware(request: NextRequest) {
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
       console.log('Middleware: Token expired, redirecting to login');
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Check if client needs phone verification (except for verify-phone page)
+    if (userRole === 'CLIENT' && pathname !== '/verify-phone') {
+      // Si telephone_verifie n'est pas défini dans le token (ancien token), 
+      // on considère que le téléphone n'est pas vérifié
+      const isPhoneVerified = decoded.telephone_verifie === true;
+      
+      if (!isPhoneVerified) {
+        console.log('Middleware: Client phone not verified, redirecting to verification');
+        return NextResponse.redirect(new URL('/verify-phone', request.url));
+      }
     }
 
     // Allow shared routes for all authenticated users

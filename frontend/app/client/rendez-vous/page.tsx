@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { PhoneVerificationRequired } from '@/components/PhoneVerificationRequired';
 import { useAuth } from '@/contexts/AuthContext';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import {
@@ -12,6 +13,7 @@ import {
   getMyAppointments,
   cancelAppointment,
   getAppointmentDetails,
+  getAvailablePackages,
 } from '@/lib/api/appointments';
 import { Vehicle } from '@/types/vehicle';
 import { Agency, Appointment, AppointmentIntervention, InterventionType, Slot } from '@/types/appointment';
@@ -57,6 +59,14 @@ type ServiceOption = {
   subTypeName: string;
 };
 
+type PackageOption = {
+  id: number;
+  nom: string;
+  description: string;
+  prix: number;
+  actif: boolean;
+};
+
 const WEEK_DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
 const toLocalISODate = (date: Date) => {
@@ -81,7 +91,9 @@ const isDateInPast = (dateString: string): boolean => {
 export default function RendezVousPage() {
   return (
     <ProtectedRoute>
-      <RendezVousContent />
+      <PhoneVerificationRequired message="Vous devez vérifier votre numéro de téléphone pour pouvoir prendre des rendez-vous.">
+        <RendezVousContent />
+      </PhoneVerificationRequired>
     </ProtectedRoute>
   );
 }
@@ -95,6 +107,8 @@ function RendezVousContent() {
   const [interventions, setInterventions] = useState<InterventionType[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [packages, setPackages] = useState<PackageOption[]>([]);
+  const [selectedPackageIds, setSelectedPackageIds] = useState<number[]>([]);
 
   const [isBootLoading, setIsBootLoading] = useState(true);
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
@@ -198,15 +212,17 @@ function RendezVousContent() {
       setGlobalError('');
 
       try {
-        const [myVehicles, allAgencies, catalog] = await Promise.all([
+        const [myVehicles, allAgencies, catalog, availablePackages] = await Promise.all([
           getVehiclesByUser(user.id, token),
           getAgencies(token),
           getInterventionCatalog(token),
+          getAvailablePackages(token),
         ]);
 
         setVehicles(myVehicles);
         setAgencies(allAgencies);
         setInterventions(catalog);
+        setPackages(availablePackages);
 
         // Load appointments
         const list = await getMyAppointments(token);
@@ -337,6 +353,7 @@ function RendezVousContent() {
     setSelectedHour('');
     setNotes('');
     setSlots([]);
+    setSelectedPackageIds([]);
     setGlobalError('');
   };
 
@@ -417,18 +434,27 @@ function RendezVousContent() {
 
       const dateTime = `${selectedDate}T${selectedHour}:00`;
 
-      await createAppointment(
+      const result = await createAppointment(
         {
           vehicule_id: Number(selectedVehicleId),
           agence_id: Number(selectedAgencyId),
           date_heure: dateTime,
           description: notes || undefined,
           sous_type_ids: [Number(selectedServiceSubtypeId)],
+          package_ids: selectedPackageIds.length > 0 ? selectedPackageIds : undefined,
         },
         token
       );
 
-      toast.success('Rendez-vous réservé avec succès.');
+      // Show success message with price if packages were selected
+      if (result.prix_total && result.prix_total > 0) {
+        toast.success('Rendez-vous réservé avec succès', {
+          description: `Prix estimatif: ${result.prix_total.toFixed(3)} TND`
+        });
+      } else {
+        toast.success('Rendez-vous réservé avec succès.');
+      }
+
       const list = await getMyAppointments(token);
       setAppointments(list);
       closeModal();
@@ -488,6 +514,21 @@ function RendezVousContent() {
     const hoursUntilBooking = (bookingTime.getTime() - now.getTime()) / (1000 * 60 * 60);
     return hoursUntilBooking < 24 && hoursUntilBooking > 0;
   }, [selectedDate, selectedHour]);
+
+  const totalPrice = useMemo(() => {
+    return selectedPackageIds.reduce((sum, packageId) => {
+      const pkg = packages.find(p => p.id === packageId);
+      return sum + (pkg?.prix || 0);
+    }, 0);
+  }, [selectedPackageIds, packages]);
+
+  const togglePackage = (packageId: number) => {
+    setSelectedPackageIds(prev => 
+      prev.includes(packageId) 
+        ? prev.filter(id => id !== packageId)
+        : [...prev, packageId]
+    );
+  };
 
   if (!user) return null;
 
@@ -854,6 +895,83 @@ function RendezVousContent() {
                   ))}
                 </select>
               </div>
+
+              {/* Packages Section */}
+              {packages.length > 0 && (
+                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold">Packages disponibles (Optionnel)</label>
+                    {selectedPackageIds.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {selectedPackageIds.length} sélectionné(s)
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {packages.map((pkg) => {
+                      const isSelected = selectedPackageIds.includes(pkg.id);
+                      return (
+                        <Card
+                          key={pkg.id}
+                          className={`cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' 
+                              : 'hover:border-slate-400 dark:hover:border-slate-500'
+                          }`}
+                          onClick={() => togglePackage(pkg.id)}
+                        >
+                          <CardContent className="p-3">
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-0.5 size-5 rounded border-2 flex items-center justify-center transition-all ${
+                                isSelected 
+                                  ? 'border-orange-500 bg-orange-500' 
+                                  : 'border-slate-300 dark:border-slate-600'
+                              }`}>
+                                {isSelected && (
+                                  <CheckCircle className="size-3 text-white" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className="font-semibold text-sm">{pkg.nom}</p>
+                                  <Badge variant="outline" className="text-xs font-bold">
+                                    {pkg.prix.toFixed(3)} TND
+                                  </Badge>
+                                </div>
+                                {pkg.description && (
+                                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                    {pkg.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Price Summary */}
+                  {selectedPackageIds.length > 0 && (
+                    <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">Prix estimatif total</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                              {selectedPackageIds.length} package(s) sélectionné(s)
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                            {totalPrice.toFixed(3)} TND
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -971,6 +1089,33 @@ function RendezVousContent() {
                     <p className="text-xs text-slate-600 dark:text-slate-400">Service</p>
                     <p className="font-semibold text-sm">{selectedService?.label}</p>
                   </div>
+                  {selectedPackageIds.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">Packages sélectionnés</p>
+                        <div className="space-y-1">
+                          {selectedPackageIds.map(packageId => {
+                            const pkg = packages.find(p => p.id === packageId);
+                            if (!pkg) return null;
+                            return (
+                              <div key={packageId} className="flex items-center justify-between text-sm">
+                                <span>{pkg.nom}</span>
+                                <span className="font-semibold">{pkg.prix.toFixed(3)} TND</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                          <span className="font-semibold text-sm">Prix total estimatif</span>
+                          <span className="font-bold text-lg text-blue-700 dark:text-blue-400">
+                            {totalPrice.toFixed(3)} TND
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <Separator />
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-slate-600 dark:text-slate-400">Date</p>

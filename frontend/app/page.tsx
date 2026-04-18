@@ -2,7 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, CalendarClock, CarFront, ShieldCheck, Wrench, Clock3, MapPin, MonitorSmartphone } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarClock,
+  CarFront,
+  ShieldCheck,
+  Wrench,
+  Clock3,
+  MapPin,
+  MonitorSmartphone,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 
 const heroSlides = [
   {
@@ -64,6 +75,12 @@ const services = [
   },
 ];
 
+const metrics = [
+  { label: "Disponibilite en ligne", value: "24/7", icon: Clock3 },
+  { label: "Points de service", value: "+10", icon: MapPin },
+  { label: "Parcours digitalise", value: "100%", icon: MonitorSmartphone },
+];
+
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -76,39 +93,35 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#070c14] text-white">
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-white/15 bg-gradient-to-r from-[#081124]/96 via-[#09152a]/92 to-[#0a1221]/96 backdrop-blur-lg">
-        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-[size:46px_46px]" />
+
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl">
+        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#f33e49] shadow-[0_0_12px_rgba(243,62,73,0.7)]" />
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_14px_rgba(244,63,94,0.55)]" />
             <div>
-              <p className="text-sm font-semibold tracking-[0.2em] text-white">CHERY SERVICE</p>
-              <p className="text-[0.66rem] uppercase tracking-[0.22em] text-white/65">Plateforme officielle de rendez-vous</p>
+              <p className="text-sm font-bold tracking-[0.18em] text-slate-900">CHERY SERVICE</p>
+              <p className="text-[0.66rem] uppercase tracking-[0.2em] text-slate-500">Plateforme officielle SAV</p>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-8 text-sm font-medium text-white/85 md:flex">
-            <a href="#services" className="transition hover:text-white">
-              Prise de rendez-vous
-            </a>
-            <a href="#modeles" className="transition hover:text-white">
-              Top modeles Chery
-            </a>
-            <a href="#contact" className="transition hover:text-white">
-              Assistance client
-            </a>
+          <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+            <a href="#services" className="transition hover:text-slate-900">Prise de rendez-vous</a>
+            <a href="#modeles" className="transition hover:text-slate-900">Top modeles Chery</a>
+            <a href="#contact" className="transition hover:text-slate-900">Assistance client</a>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/login"
-              className="rounded-full border border-white/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white/10 sm:text-sm"
+              className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 sm:text-sm"
             >
               Connexion
             </Link>
             <Link
               href="/register"
-              className="rounded-full bg-[#f33e49] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#ff5a65] sm:text-sm"
+              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-sm transition hover:bg-slate-800 sm:text-sm"
             >
               Inscription
             </Link>
@@ -116,177 +129,106 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <section className="relative min-h-screen overflow-hidden pt-16">
-        {heroSlides.map((slide, index) => (
-          <img
-            key={slide.nom}
-            src={slide.image}
-            alt={slide.nom}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-              index === activeSlide ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        ))}
+      <section className="relative mx-auto grid w-full max-w-7xl gap-8 px-4 pb-10 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10 lg:px-8 lg:pb-16 lg:pt-14">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-rose-600">
+            <Sparkles className="h-3.5 w-3.5" />
+            Chery Tunisia Service Experience
+          </span>
 
-        <div className="absolute inset-0 bg-[#081423]/55" />
+          <h1 className="mt-5 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            Le SAV automobile
+            <span className="block bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 bg-clip-text text-transparent">
+              pense pour la vitesse
+            </span>
+          </h1>
 
-        <div className="relative z-20 mx-auto flex min-h-[68vh] w-full max-w-[1600px] items-end justify-center px-4 pb-10 text-center sm:px-6 lg:px-10">
-          <div>
-            <p className="text-5xl font-medium leading-tight text-white sm:text-6xl lg:text-7xl">
-              {heroSlides[activeSlide].nom}
-            </p>
-            <p className="mt-3 text-3xl text-white/90 sm:text-4xl">{heroSlides[activeSlide].slogan}</p>
-            <p className="mt-4 text-lg text-white/80 sm:text-2xl">{heroSlides[activeSlide].details}</p>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            Planifiez vos interventions, suivez vos dossiers et echangez avec vos equipes techniques
+            depuis une interface moderne, claire et accessible sur tous vos ecrans.
+          </p>
 
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 bg-white px-6 py-3 text-xl font-medium text-black transition hover:bg-white/90"
-              >
-                Prendre rendez-vous
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
+            >
+              Prendre rendez-vous
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+            >
+              Creer mon compte
+            </Link>
+          </div>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {metrics.map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <div
+                  key={metric.label}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]"
+                >
+                  <Icon className="h-4 w-4 text-rose-500" />
+                  <p className="mt-2 text-2xl font-semibold text-slate-900">{metric.value}</p>
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{metric.label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-3 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+            {heroSlides.map((slide, index) => (
+              <img
+                key={slide.nom}
+                src={slide.image}
+                alt={slide.nom}
+                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
+                  index === activeSlide ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/25 to-transparent" />
+
+            <div className="absolute bottom-0 left-0 right-0 p-5 text-white sm:p-6">
+              <p className="text-xs uppercase tracking-[0.16em] text-white/75">Modele phare</p>
+              <h2 className="mt-1 text-2xl font-semibold sm:text-3xl">{heroSlides[activeSlide].nom}</h2>
+              <p className="mt-1 text-sm text-white/80">{heroSlides[activeSlide].slogan}</p>
+              <p className="mt-2 text-sm text-white/85">{heroSlides[activeSlide].details}</p>
             </div>
+          </div>
 
-            <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="mt-4 flex items-center justify-between gap-4 px-1">
+            <div className="flex items-center gap-2">
               {heroSlides.map((slide, index) => (
                 <button
                   key={slide.nom}
                   onClick={() => setActiveSlide(index)}
-                  className={`h-1.5 w-10 transition ${
-                    index === activeSlide ? "bg-white" : "bg-white/45 hover:bg-white/70"
+                  className={`h-2 rounded-full transition-all ${
+                    index === activeSlide ? "w-8 bg-rose-500" : "w-2 bg-slate-300 hover:bg-slate-400"
                   }`}
                   aria-label={`Afficher ${slide.nom}`}
                 />
               ))}
             </div>
-          </div>
-        </div>
-
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-br from-[#0c1424] via-[#101b31] to-[#0b1323] p-6 sm:p-8 lg:p-10">
-          <div className="pointer-events-none absolute -top-24 -left-20 h-64 w-64 rounded-full bg-[#1c4a9f]/25 blur-3xl" />
-          <div className="pointer-events-none absolute -right-24 -bottom-20 h-72 w-72 rounded-full bg-[#f33e49]/16 blur-3xl" />
-
-          <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Disponibilite service</p>
-              <h2 className="mt-2 text-3xl font-semibold leading-tight sm:text-4xl">Experience rendez-vous premium</h2>
-              <p className="mt-3 text-sm text-white/75 sm:text-base">
-                Reservation simple, reponse rapide et suivi digital complet pour chaque intervention.
-              </p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <div className="group rounded-2xl border border-white/15 bg-[#0a1323]/80 p-4 transition hover:-translate-y-0.5 hover:border-[#ff6b74]/60">
-                  <Clock3 className="h-5 w-5 text-[#ff9098]" />
-                  <p className="mt-2 text-3xl font-bold text-white">24/7</p>
-                  <p className="mt-1 text-sm text-white/75">Rendez-vous en ligne</p>
-                </div>
-                <div className="group rounded-2xl border border-white/15 bg-[#0a1323]/80 p-4 transition hover:-translate-y-0.5 hover:border-[#ff6b74]/60">
-                  <MapPin className="h-5 w-5 text-[#ff9098]" />
-                  <p className="mt-2 text-3xl font-bold text-white">+10</p>
-                  <p className="mt-1 text-sm text-white/75">Points de service</p>
-                </div>
-                <div className="group rounded-2xl border border-white/15 bg-[#0a1323]/80 p-4 transition hover:-translate-y-0.5 hover:border-[#ff6b74]/60">
-                  <MonitorSmartphone className="h-5 w-5 text-[#ff9098]" />
-                  <p className="mt-2 text-3xl font-bold text-white">100%</p>
-                  <p className="mt-1 text-sm text-white/75">Suivi digitalise</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Parcours client</p>
-              <h3 className="mt-2 text-2xl font-semibold sm:text-3xl">Comment prendre rendez-vous ?</h3>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-white/15 bg-[#0a1323]/75 p-4">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#ff8f97]">Etape 01</p>
-                  <p className="mt-1 text-base font-semibold">Creer un compte</p>
-                </div>
-                <div className="rounded-xl border border-white/15 bg-[#0a1323]/75 p-4">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#ff8f97]">Etape 02</p>
-                  <p className="mt-1 text-base font-semibold">Saisir la demande</p>
-                </div>
-                <div className="rounded-xl border border-white/15 bg-[#0a1323]/75 p-4">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#ff8f97]">Etape 03</p>
-                  <p className="mt-1 text-base font-semibold">Validation admin</p>
-                </div>
-                <div className="rounded-xl border border-white/15 bg-[#0a1323]/75 p-4">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#ff8f97]">Etape 04</p>
-                  <p className="mt-1 text-base font-semibold">Notification & suivi</p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center rounded-full bg-[#f33e49] px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#ff5e68]"
-                >
-                  Creer mon compte
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white/10"
-                >
-                  Deja inscrit ? Connexion
-                </Link>
-              </div>
-            </div>
+            <span className="text-xs font-medium text-slate-500">Slide {activeSlide + 1}/3</span>
           </div>
         </div>
       </section>
 
-      <section id="modeles" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="mb-8 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">Selection commerciale</p>
-            <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">Top 3 des modeles les plus vendus</h2>
-            <p className="mt-3 max-w-2xl text-sm text-white/75 sm:text-base">
-              Ces trois vehicules representent les meilleures ventes Chery actuellement. D'autres modeles
-              sont egalement disponibles selon le stock et le reseau.
-            </p>
-          </div>
-          <Link
-            href="/register"
-            className="hidden rounded-full border border-white/30 px-5 py-2 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-white/10 md:inline-flex"
-          >
-            Creer un compte
-          </Link>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-3">
-          {modeles.map((modele) => (
-            <article
-              key={modele.nom}
-              className="group relative overflow-hidden rounded-3xl border border-white/15 bg-[#0b121f]"
-            >
-              <img
-                src={modele.image}
-                alt={modele.nom}
-                className="h-72 w-full object-cover transition duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#060a12] via-[#060a12]/45 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                <span className="mb-3 inline-flex rounded-full border border-white/30 bg-black/35 px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-white/90">
-                  Top ventes
-                </span>
-                <h3 className="text-2xl font-semibold">{modele.nom}</h3>
-                <p className="mt-2 text-sm text-white/80">{modele.description}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="services" className="border-y border-white/10 bg-[#0a101b] py-16 lg:py-20">
+      <section id="services" className="border-y border-slate-200/80 bg-white py-14 lg:py-18">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/60">Services digitaux</p>
-          <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">Tout votre SAV sur une seule plateforme</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Services digitaux</p>
+          <h2 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">
+            Tout votre SAV dans une experience unifiee
+          </h2>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {services.map((service) => {
               const Icon = service.icon;
 
@@ -294,12 +236,12 @@ export default function HomePage() {
                 <Link
                   key={service.titre}
                   href={service.href}
-                  className="group rounded-2xl border border-white/15 bg-black/20 p-6 transition hover:border-[#f33e49]/70 hover:bg-[#111b2c]"
+                  className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-6 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_20px_45px_rgba(15,23,42,0.08)]"
                 >
-                  <Icon className="h-6 w-6 text-[#ff8a92]" />
-                  <h3 className="mt-4 text-xl font-semibold">{service.titre}</h3>
-                  <p className="mt-2 text-sm text-white/75">{service.texte}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#ff9aa1]">
+                  <Icon className="h-6 w-6 text-rose-500" />
+                  <h3 className="mt-4 text-xl font-semibold text-slate-900">{service.titre}</h3>
+                  <p className="mt-2 text-sm text-slate-600">{service.texte}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
                     En savoir plus
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                   </span>
@@ -308,17 +250,17 @@ export default function HomePage() {
             })}
           </div>
 
-          <div className="mt-8 rounded-3xl border border-white/15 bg-gradient-to-r from-[#111b2c] to-[#0f1524] p-6 sm:p-8">
+          <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white sm:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-2xl font-semibold">Besoin d'une intervention rapide ?</h3>
-                <p className="mt-2 text-white/80">
+                <h3 className="text-2xl font-semibold">Besoin d&apos;une intervention rapide ?</h3>
+                <p className="mt-2 text-sm text-slate-300 sm:text-base">
                   Connectez-vous et programmez votre visite atelier en moins de 2 minutes.
                 </p>
               </div>
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#f33e49] px-6 py-3 text-sm font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-[#ff5e68]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
               >
                 <Wrench className="h-4 w-4" />
                 Commencer
@@ -328,32 +270,107 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer id="contact" className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-7 border-t border-white/10 pt-8 md:flex-row md:items-end md:justify-between">
+      <section id="modeles" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <p className="text-lg font-semibold">CHERY TUNISIE - Service Client</p>
-            <p className="mt-2 max-w-md text-sm text-white/70">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Selection commerciale</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Top 3 des modeles les plus vendus</h2>
+            <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
+              Ces modeles representent les meilleures ventes Chery actuellement. D&apos;autres modeles
+              sont egalement disponibles selon le stock et le reseau.
+            </p>
+          </div>
+          <Link
+            href="/register"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
+          >
+            Creer un compte
+          </Link>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          {modeles.map((modele) => (
+            <article
+              key={modele.nom}
+              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,23,42,0.07)]"
+            >
+              <div className="relative overflow-hidden">
+                <img
+                  src={modele.image}
+                  alt={modele.nom}
+                  className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
+                />
+                <span className="absolute left-4 top-4 inline-flex rounded-full bg-slate-950/85 px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-white">
+                  Top ventes
+                </span>
+              </div>
+              <div className="p-5">
+                <h3 className="text-2xl font-semibold text-slate-900">{modele.nom}</h3>
+                <p className="mt-2 text-sm text-slate-600">{modele.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_55px_rgba(15,23,42,0.08)] sm:p-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Parcours client</p>
+          <h3 className="mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">Comment prendre rendez-vous ?</h3>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              "Creer un compte",
+              "Saisir la demande",
+              "Validation admin",
+              "Notification & suivi",
+            ].map((step, index) => (
+              <div
+                key={step}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-rose-600">
+                  Etape {String(index + 1).padStart(2, "0")}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{step}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 sm:grid-cols-3 sm:items-center">
+            <div className="inline-flex items-center gap-2 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Reservation simple
+            </div>
+            <div className="inline-flex items-center gap-2 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Suivi transparent
+            </div>
+            <div className="inline-flex items-center gap-2 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Assistance rapide
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer id="contact" className="border-t border-slate-200 bg-white/80">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+          <div>
+            <p className="text-lg font-semibold text-slate-900">CHERY TUNISIE - Service Client</p>
+            <p className="mt-2 max-w-md text-sm text-slate-600">
               Plateforme de reservation et de suivi des rendez-vous SAV pour nos clients.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link href="/login" className="text-white/75 hover:text-white">
-              Connexion
-            </Link>
-            <Link href="/register" className="text-white/75 hover:text-white">
-              Inscription
-            </Link>
-            <Link href="/forgot-password" className="text-white/75 hover:text-white">
-              Mot de passe oublie
-            </Link>
-            <a href="#" className="text-white/75 hover:text-white">
-              Mentions legales
-            </a>
+          <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-600">
+            <Link href="/login" className="transition hover:text-slate-900">Connexion</Link>
+            <Link href="/register" className="transition hover:text-slate-900">Inscription</Link>
+            <Link href="/forgot-password" className="transition hover:text-slate-900">Mot de passe oublie</Link>
+            <a href="#" className="transition hover:text-slate-900">Mentions legales</a>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-           

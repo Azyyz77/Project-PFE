@@ -21,6 +21,7 @@ function normalizeUser(rawUser: any): User {
     telephone: rawUser?.telephone ?? rawUser?.phone ?? '',
     role: rawUser?.role ?? rawUser?.role_nom ?? 'CLIENT',
     actif: rawUser?.actif ?? rawUser?.is_active,
+    telephone_verifie: rawUser?.telephone_verifie ?? false,
     date_creation: rawUser?.date_creation ?? rawUser?.created_at,
   };
 }
@@ -88,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Redirection basée sur le rôle
       const redirectMap: Record<string, string> = {
-        CLIENT: '/client/dashboard',
+        CLIENT: normalizedUser.telephone_verifie ? '/client/dashboard' : '/verify-phone',
         AGENT: '/dashboard/agent',
         ADMIN: '/dashboard/admin',
         DIRECTION: '/dashboard/direction',
@@ -137,6 +138,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.href = '/login';
   };
 
+  /**
+   * Rafraîchir les informations utilisateur depuis le serveur
+   */
+  const refreshUser = async () => {
+    if (!token || !user) return;
+    
+    try {
+      console.log('AuthContext: Refreshing user data');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/users/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const updatedUser = normalizeUser(result.user);
+        console.log('AuthContext: User data refreshed', updatedUser);
+        
+        // Mettre à jour le localStorage et l'état
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        return updatedUser;
+      }
+    } catch (error) {
+      console.error('AuthContext: Error refreshing user data', error);
+    }
+    
+    return null;
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -146,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -79,6 +79,21 @@ export async function getInterventionCatalog(token: string) {
   }
 }
 
+export async function getAvailablePackages(token: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/appointments/packages`, {
+      method: 'GET',
+      headers: buildAuthHeaders(token),
+    });
+
+    const result = await parseJson<{ count: number; packages: any[] }>(response);
+    return result.packages;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
 export async function getMyAppointments(token: string) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/appointments/my`, {

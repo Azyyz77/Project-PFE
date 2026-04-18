@@ -65,6 +65,7 @@ export interface CreateAppointmentPayload {
   description?: string;
   duree_estimee?: number;
   sous_type_ids?: number[];
+  package_ids?: number[];
 }
 
 export interface CancelAppointmentPayload {
@@ -100,4 +101,12 @@ export interface CreateAppointmentResponse {
   message: string;
   appointment: Appointment;
   interventions: AppointmentIntervention[];
+  packages?: Array<{
+    id: number;
+    nom: string;
+    prix: number;
+    quantite: number;
+    description?: string;
+  }>;
+  prix_total?: number;
 }

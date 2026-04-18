@@ -25,7 +25,7 @@ export default function PromotionsAdminPage() {
     try {
       setLoading(true);
       const response = await promotionsApi.getAllPromotions();
-      setPromotions(response.data || response || []);
+      setPromotions(response || []);
     } catch (error) {
       console.error('Erreur:', error);
       setPromotions([]);

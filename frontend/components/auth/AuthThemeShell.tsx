@@ -12,7 +12,7 @@ interface AuthThemeShellProps {
 }
 
 export function AuthThemeShell({ children, sceneClassName = 'chery-auth-scene' }: AuthThemeShellProps) {
-  const [theme, setTheme] = useState<AuthTheme>('dark');
+  const [theme, setTheme] = useState<AuthTheme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

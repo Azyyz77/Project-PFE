@@ -242,3 +242,58 @@ export async function changePassword(
     throw new ApiError(500, 'Erreur de connexion au serveur');
   }
 }
+
+export async function resendVerificationCode(
+  email: string
+): Promise<{ message: string; telephone_hint?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/users/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(response.status, result.error || 'Erreur lors du renvoi du code');
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
+export async function verifyPhoneNumber(
+  email: string,
+  otp: string
+): Promise<{ message: string; verified: boolean }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/users/verify-phone`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(response.status, result.error || 'Erreur de vérification du téléphone');
+    }
+
+    return result;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}

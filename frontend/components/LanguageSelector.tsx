@@ -7,16 +7,33 @@ export default function LanguageSelector() {
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <div className="relative inline-block">
+    <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-1 py-1 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+      <span className="px-2 text-slate-500 dark:text-white/60" title={t('language.select')}>
+        <Globe className="h-4 w-4" />
+      </span>
+
       <button
-        onClick={() => setLanguage(language === 'fr' ? 'ar' : 'fr')}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        title={t('language.select')}
+        onClick={() => setLanguage('fr')}
+        className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          language === 'fr'
+            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+            : 'text-slate-600 hover:bg-slate-100 dark:text-white/70 dark:hover:bg-white/10'
+        }`}
+        title={t('language.french')}
       >
-        <Globe className="w-5 h-5" />
-        <span className="text-sm font-medium">
-          {language === 'fr' ? 'FR' : 'AR'}
-        </span>
+        {t('language.frShort')}
+      </button>
+
+      <button
+        onClick={() => setLanguage('ar')}
+        className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          language === 'ar'
+            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+            : 'text-slate-600 hover:bg-slate-100 dark:text-white/70 dark:hover:bg-white/10'
+        }`}
+        title={t('language.arabic')}
+      >
+        {t('language.arShort')}
       </button>
     </div>
   );

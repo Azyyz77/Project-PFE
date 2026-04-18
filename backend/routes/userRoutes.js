@@ -64,6 +64,8 @@ router.post('/login', userController.login);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/verify-otp', userController.verifyOtp);
 router.post('/reset-password', userController.resetPassword);
+router.post('/resend-verification', userController.resendVerificationCode);
+router.post('/verify-phone', userController.verifyPhoneNumber);
 router.put('/:id/profile', authMiddleware, userController.updateProfile);
 router.put('/:id/password', authMiddleware, userController.changePassword);
 

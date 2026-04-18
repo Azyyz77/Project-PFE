@@ -12,6 +12,7 @@ export interface User {
   telephone: string;
   role: UserRole;
   actif?: boolean;
+  telephone_verifie?: boolean;
   date_creation?: string;
 }
 
@@ -50,4 +51,5 @@ export interface AuthContextType {
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
 }

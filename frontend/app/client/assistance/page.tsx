@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { diagnosticApi } from '@/lib/api/diagnostic';
 import { Search, Wrench, AlertCircle, CheckCircle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface DiagnosticProblem {
   id: number;
@@ -13,6 +14,7 @@ interface DiagnosticProblem {
 }
 
 export default function ClientAssistancePage() {
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<DiagnosticProblem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function ClientAssistancePage() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      alert('Veuillez entrer une description du problème');
+      alert(t('assistance.enterProblem'));
       return;
     }
 
@@ -39,8 +41,8 @@ export default function ClientAssistancePage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-100 mb-2">Assistance Diagnostic</h1>
-        <p className="text-slate-400">Décrivez votre problème et trouvez des solutions</p>
+        <h1 className="text-3xl font-bold text-slate-100 mb-2">{t('assistance.title')}</h1>
+        <p className="text-slate-400">{t('assistance.subtitle')}</p>
       </div>
 
       {/* Barre de recherche */}
@@ -52,7 +54,7 @@ export default function ClientAssistancePage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Ex: Bruit au démarrage, voyant moteur allumé..."
+              placeholder={t('assistance.searchPlaceholder')}
               className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-600"
             />
           </div>
@@ -62,7 +64,7 @@ export default function ClientAssistancePage() {
             className="px-6 py-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Search className="w-5 h-5" />
-            {loading ? 'Recherche...' : 'Rechercher'}
+            {loading ? t('assistance.searching') : t('common.search')}
           </button>
         </div>
       </div>
@@ -71,7 +73,9 @@ export default function ClientAssistancePage() {
       {results.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-slate-100 mb-4">
-            {results.length} résultat{results.length > 1 ? 's' : ''} trouvé{results.length > 1 ? 's' : ''}
+            {language === 'ar'
+              ? `${results.length} ${results.length === 1 ? 'نتيجة' : 'نتائج'} ${results.length === 1 ? 'موجودة' : 'موجودة'}`
+              : `${results.length} résultat${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}`}
           </h2>
           
           <div className="grid gap-4">
@@ -102,7 +106,7 @@ export default function ClientAssistancePage() {
                     
                     <button className="text-cyan-400 text-sm hover:text-cyan-300 flex items-center gap-1">
                       <Wrench className="w-4 h-4" />
-                      Voir la solution
+                      {t('assistance.viewSolution')}
                     </button>
                   </div>
                 </div>
@@ -132,14 +136,14 @@ export default function ClientAssistancePage() {
             
             {selectedProblem.description && (
               <div className="mb-6">
-                <h3 className="font-semibold text-slate-100 mb-2">Description du problème</h3>
+                <h3 className="font-semibold text-slate-100 mb-2">{t('assistance.problemDescription')}</h3>
                 <p className="text-slate-400">{selectedProblem.description}</p>
               </div>
             )}
             
             {selectedProblem.solution && (
               <div className="mb-6">
-                <h3 className="font-semibold text-slate-100 mb-2">Solution recommandée</h3>
+                <h3 className="font-semibold text-slate-100 mb-2">{t('assistance.recommendedSolution')}</h3>
                 <div className="bg-slate-800 rounded-lg p-4">
                   <p className="text-slate-300 whitespace-pre-line">{selectedProblem.solution}</p>
                 </div>
@@ -148,7 +152,7 @@ export default function ClientAssistancePage() {
             
             <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-4 mb-6">
               <p className="text-blue-200 text-sm">
-                💡 Si le problème persiste, nous vous recommandons de prendre rendez-vous avec un de nos techniciens.
+                {t('assistance.problemPersists')}
               </p>
             </div>
             
@@ -157,13 +161,13 @@ export default function ClientAssistancePage() {
                 onClick={() => setSelectedProblem(null)}
                 className="flex-1 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700"
               >
-                Fermer
+                {t('common.close')}
               </button>
               <button
                 onClick={() => window.location.href = '/client/rendez-vous'}
                 className="flex-1 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700"
               >
-                Prendre rendez-vous
+                {t('orders.bookAppointment')}
               </button>
             </div>
           </div>
@@ -173,15 +177,15 @@ export default function ClientAssistancePage() {
       {/* Suggestions */}
       {results.length === 0 && !loading && (
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-8">
-          <h3 className="font-semibold text-slate-100 mb-4">Problèmes fréquents</h3>
+          <h3 className="font-semibold text-slate-100 mb-4">{t('assistance.commonProblems')}</h3>
           <div className="grid gap-3 md:grid-cols-2">
             {[
-              'Voyant moteur allumé',
-              'Bruit au freinage',
-              'Problème de démarrage',
-              'Climatisation inefficace',
-              'Vibrations au volant',
-              'Consommation excessive',
+              t('assistance.suggestion.engineLight'),
+              t('assistance.suggestion.brakeNoise'),
+              t('assistance.suggestion.startIssue'),
+              t('assistance.suggestion.acIssue'),
+              t('assistance.suggestion.steeringVibration'),
+              t('assistance.suggestion.highConsumption'),
             ].map((suggestion, index) => (
               <button
                 key={index}

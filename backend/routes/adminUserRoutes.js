@@ -3,10 +3,10 @@ const router = express.Router();
 const adminUserController = require('../controllers/adminUserController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/authorizeRoles');
+const { requirePermission } = require('../middleware/permissionMiddleware');
 
-// Toutes les routes nécessitent une authentification ADMIN
+// Toutes les routes nécessitent une authentification
 router.use(authMiddleware);
-router.use(authorizeRoles('ADMIN', 'DIRECTION'));
 
 /**
  * @swagger
@@ -36,7 +36,7 @@ router.use(authorizeRoles('ADMIN', 'DIRECTION'));
  *       200:
  *         description: Liste des utilisateurs
  */
-router.get('/', adminUserController.getAllUsers);
+router.get('/', requirePermission('USERS', 'READ'), adminUserController.getAllUsers);
 
 /**
  * @swagger
@@ -50,7 +50,7 @@ router.get('/', adminUserController.getAllUsers);
  *       200:
  *         description: Statistiques des utilisateurs
  */
-router.get('/stats', adminUserController.getUserStats);
+router.get('/stats', requirePermission('USERS', 'READ'), adminUserController.getUserStats);
 
 /**
  * @swagger
@@ -64,7 +64,7 @@ router.get('/stats', adminUserController.getUserStats);
  *       200:
  *         description: Liste des rôles
  */
-router.get('/roles', adminUserController.getRoles);
+router.get('/roles', requirePermission('USERS', 'READ'), adminUserController.getRoles);
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.get('/roles', adminUserController.getRoles);
  *       201:
  *         description: Utilisateur créé
  */
-router.post('/', adminUserController.createUser);
+router.post('/', requirePermission('USERS', 'CREATE'), adminUserController.createUser);
 
 /**
  * @swagger
@@ -129,7 +129,7 @@ router.post('/', adminUserController.createUser);
  *       200:
  *         description: Utilisateur mis à jour
  */
-router.put('/:id', adminUserController.updateUser);
+router.put('/:id', requirePermission('USERS', 'UPDATE'), adminUserController.updateUser);
 
 /**
  * @swagger
@@ -149,7 +149,7 @@ router.put('/:id', adminUserController.updateUser);
  *       200:
  *         description: Utilisateur désactivé
  */
-router.delete('/:id', adminUserController.deleteUser);
+router.delete('/:id', requirePermission('USERS', 'DELETE'), adminUserController.deleteUser);
 
 /**
  * @swagger
@@ -180,6 +180,6 @@ router.delete('/:id', adminUserController.deleteUser);
  *       200:
  *         description: Mot de passe réinitialisé
  */
-router.post('/:id/reset-password', adminUserController.resetUserPassword);
+router.post('/:id/reset-password', requirePermission('USERS', 'UPDATE'), adminUserController.resetUserPassword);
 
 module.exports = router;

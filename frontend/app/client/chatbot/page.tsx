@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { chatbotApi } from '@/lib/api/chatbot';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
@@ -10,16 +11,28 @@ interface Message {
 }
 
 export default function ChatbotPage() {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
       role: 'bot',
-      text: '👋 Bonjour ! Je suis l\'assistant SAV Chery Tunisie. Comment puis-je vous aider ?'
+      text: t('chatbot.greeting')
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      if (updated[0].id === '0' && updated[0].role === 'bot') {
+        updated[0] = { ...updated[0], text: t('chatbot.greeting') };
+      }
+      return updated;
+    });
+  }, [t]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,13 +78,13 @@ export default function ChatbotPage() {
         text: data.reply
       };
       setMessages(prev => [...prev, botMsg]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
           role: 'bot',
-          text: '⚠️ Service temporairement indisponible. Appelez-nous au +216 XX XXX XXX'
+          text: t('chatbot.fallback')
         }
       ]);
     } finally {
@@ -96,12 +109,12 @@ export default function ChatbotPage() {
               onClick={() => window.history.back()}
               className="text-white/90 hover:text-white transition-colors"
             >
-              ← Retour
+              ← {t('common.back')}
             </button>
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-bold">🚗 Assistant SAV Chery</h1>
-            <p className="text-sm text-white/80 mt-1">Disponible 24h/24</p>
+            <h1 className="text-xl font-bold">🚗 {t('chatbot.title')}</h1>
+            <p className="text-sm text-white/80 mt-1">{t('common.available247')}</p>
           </div>
         </div>
       </div>
@@ -138,7 +151,7 @@ export default function ChatbotPage() {
               <div className="w-2 h-2 bg-[#E30613] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
             </div>
             <span className="text-sm text-gray-600">
-              Assistant en train de répondre...
+              {t('chatbot.typing')}
             </span>
           </div>
         )}
@@ -153,7 +166,7 @@ export default function ChatbotPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Écrivez votre message..."
+            placeholder={t('common.writeMessage')}
             className="flex-1 bg-gray-100 rounded-3xl px-4 py-3 text-[15px] resize-none focus:outline-none focus:ring-2 focus:ring-[#E30613] max-h-32"
             rows={1}
             disabled={loading}
@@ -163,7 +176,7 @@ export default function ChatbotPage() {
             disabled={loading || !input.trim()}
             className="bg-[#E30613] text-white font-semibold px-6 py-3 rounded-3xl hover:bg-[#C00510] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Envoyer
+            {t('common.send')}
           </button>
         </div>
       </div>

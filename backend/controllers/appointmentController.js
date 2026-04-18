@@ -54,7 +54,7 @@ const sendAppointmentWhatsAppNotification = async (userPhone, appointmentDetails
 const createAppointment = async (req, res) => {
   try {
     const clientId = req.user.id;
-    const { vehicule_id, agence_id, date_heure, description, duree_estimee, sous_type_ids } = req.body;
+    const { vehicule_id, agence_id, date_heure, description, duree_estimee, sous_type_ids, package_ids } = req.body;
 
     console.log('createAppointment request:', {
       clientId,
@@ -63,6 +63,8 @@ const createAppointment = async (req, res) => {
       date_heure,
       sous_type_ids,
       sous_type_ids_type: Array.isArray(sous_type_ids) ? 'array' : typeof sous_type_ids,
+      package_ids,
+      package_ids_type: Array.isArray(package_ids) ? 'array' : typeof package_ids,
     });
 
     const vehicleId = normalizePositiveInt(vehicule_id);
@@ -88,6 +90,27 @@ const createAppointment = async (req, res) => {
     const normalizedDateTime = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
 
     const pool = await getConnection();
+
+    // Vérifier que le téléphone est vérifié avant de permettre la prise de rendez-vous
+    const userCheck = await pool.request()
+      .input('client_id', sql.BigInt, clientId)
+      .query(`
+        SELECT telephone_verifie
+        FROM Utilisateur
+        WHERE id = @client_id
+      `);
+
+    if (userCheck.recordset.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    if (!userCheck.recordset[0].telephone_verifie) {
+      return res.status(403).json({
+        error: 'Vérification téléphone requise',
+        message: 'Vous devez vérifier votre numéro de téléphone avant de prendre un rendez-vous. Veuillez vérifier le code envoyé par WhatsApp.',
+        verification_required: true
+      });
+    }
 
     const existingAtSameHour = await pool.request()
       .input('agence_id', sql.BigInt, agencyId)
@@ -158,6 +181,15 @@ const createAppointment = async (req, res) => {
       console.log('No sub-type IDs provided or invalid format');
     }
 
+    // Process packages to extract valid IDs
+    let validatedPackageIds = [];
+    if (Array.isArray(package_ids) && package_ids.length > 0) {
+      validatedPackageIds = [...new Set(package_ids.map((id) => normalizePositiveInt(id)).filter(Boolean))];
+      console.log('Validated package IDs:', validatedPackageIds);
+    } else {
+      console.log('No package IDs provided or invalid format');
+    }
+
     // Now create the appointment ONLY if validation passed
     const created = await pool.request()
       .input('client_id', sql.BigInt, clientId)
@@ -210,13 +242,56 @@ const createAppointment = async (req, res) => {
       }
     }
 
-    if (failedSubTypes.length > 0) {
-      console.error('Invalid sub-type IDs:', failedSubTypes);
-      // Still return the appointment, but note the invalid sub-types
+    // Insert validated packages with error handling
+    const failedPackages = [];
+    let prixTotal = 0;
+    
+    for (const packageId of validatedPackageIds) {
+      try {
+        // Get package details
+        const packageInfo = await pool.request()
+          .input('package_id', sql.BigInt, packageId)
+          .query(`
+            SELECT id, nom, prix, actif
+            FROM PackageIntervention
+            WHERE id = @package_id AND actif = 1
+          `);
+
+        if (packageInfo.recordset.length === 0) {
+          console.warn(`Package ${packageId} not found or inactive`);
+          failedPackages.push(packageId);
+          continue;
+        }
+
+        const pkg = packageInfo.recordset[0];
+        const quantite = 1; // Default quantity
+        const prixUnitaire = pkg.prix;
+
+        // Insert into RDV_Package
+        await pool.request()
+          .input('rdv_id', sql.BigInt, rdvId)
+          .input('package_id', sql.BigInt, packageId)
+          .input('quantite', sql.Int, quantite)
+          .input('prix_unitaire', sql.Decimal(10, 3), prixUnitaire)
+          .query(`
+            INSERT INTO RDV_Package (rdv_id, package_id, quantite, prix_unitaire)
+            VALUES (@rdv_id, @package_id, @quantite, @prix_unitaire)
+          `);
+
+        prixTotal += prixUnitaire * quantite;
+      } catch (error) {
+        console.warn(`Failed to insert package ${packageId}:`, error.message);
+        failedPackages.push(packageId);
+      }
+    }
+
+    if (failedSubTypes.length > 0 || failedPackages.length > 0) {
+      console.error('Invalid IDs:', { failedSubTypes, failedPackages });
       return res.status(400).json({
-        error: 'Certains sous-types sont invalides',
+        error: 'Certains éléments sont invalides',
         invalid_sub_types: failedSubTypes,
-        message: 'Rendez-vous créé mais certains services n\'ont pas pu être ajoutés'
+        invalid_packages: failedPackages,
+        message: 'Rendez-vous créé mais certains services/packages n\'ont pas pu être ajoutés'
       });
     }
 
@@ -252,6 +327,21 @@ const createAppointment = async (req, res) => {
         WHERE ir.rdv_id = @rdv_id
       `);
 
+    // Get packages for this appointment
+    const packages = await pool.request()
+      .input('rdv_id', sql.BigInt, rdvId)
+      .query(`
+        SELECT 
+          rp.package_id as id,
+          p.nom,
+          rp.prix_unitaire as prix,
+          rp.quantite,
+          p.description
+        FROM RDV_Package rp
+        JOIN PackageIntervention p ON p.id = rp.package_id
+        WHERE rp.rdv_id = @rdv_id
+      `);
+
     // Send WhatsApp notification if phone is available
     const userInfo = await pool.request()
       .input('id', sql.BigInt, clientId)
@@ -269,7 +359,9 @@ const createAppointment = async (req, res) => {
     return res.status(201).json({
       message: 'Rendez-vous cree avec succes',
       appointment: details.recordset[0],
-      interventions: interventions.recordset
+      interventions: interventions.recordset,
+      packages: packages.recordset,
+      prix_total: prixTotal
     });
   } catch (error) {
     console.error('Erreur creation rendez-vous:', error);
@@ -512,6 +604,38 @@ const getInterventionCatalog = async (req, res) => {
   }
 };
 
+/**
+ * Get available packages
+ */
+const getAvailablePackages = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    const packages = await pool.request().query(`
+      SELECT 
+        id,
+        nom,
+        description,
+        prix,
+        actif
+      FROM PackageIntervention
+      WHERE actif = 1
+      ORDER BY nom
+    `);
+
+    return res.json({ 
+      count: packages.recordset.length, 
+      packages: packages.recordset 
+    });
+  } catch (error) {
+    console.error('Erreur chargement packages:', error);
+    return res.status(500).json({ 
+      error: 'Erreur lors du chargement des packages', 
+      message: error.message 
+    });
+  }
+};
+
 const updateAppointmentStatus = async (req, res) => {
   try {
     if (!STAFF_ROLES.includes(req.user.role)) {
@@ -727,6 +851,7 @@ module.exports = {
   getAgencies,
   getAvailableSlots,
   getInterventionCatalog,
+  getAvailablePackages,
   updateAppointmentStatus,
   getAppointmentDetails,
   cancelAppointment

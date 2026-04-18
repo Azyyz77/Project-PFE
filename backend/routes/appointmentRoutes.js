@@ -63,6 +63,20 @@ router.get('/interventions', appointmentController.getInterventionCatalog);
 
 /**
  * @swagger
+ * /api/appointments/packages:
+ *   get:
+ *     summary: Liste des packages disponibles
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des packages
+ */
+router.get('/packages', appointmentController.getAvailablePackages);
+
+/**
+ * @swagger
  * /api/appointments/my:
  *   get:
  *     summary: Historique des rendez-vous du client connecté

@@ -15,7 +15,7 @@ export default function DocumentsAdminPage() {
     try {
       setLoading(true);
       const response = await documentsApi.getAllDocuments();
-      setDocuments(response.data || response || []);
+      setDocuments(response || []);
     } catch (error) {
       console.error('Erreur:', error);
       setDocuments([]);
@@ -64,18 +64,18 @@ export default function DocumentsAdminPage() {
               {documents.map(doc => (
                 <tr key={doc.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-100">{doc.titre}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-300">{doc.type_document}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-300">{doc.type_mime || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-300">{doc.categorie || '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-300">
-                    {doc.utilisateur_id ? `User #${doc.utilisateur_id}` : '-'}
+                    {doc.admin_id ? `Admin #${doc.admin_id}` : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-300">
-                    {doc.date_upload ? formatDate(doc.date_upload) : '-'}
+                    {doc.date_creation ? formatDate(doc.date_creation) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {doc.chemin_fichier && (
+                    {doc.url && (
                       <a
-                        href={doc.chemin_fichier}
+                        href={doc.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-cyan-400 hover:text-cyan-300 mr-4"

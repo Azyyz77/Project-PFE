@@ -22,8 +22,7 @@ export default function ColorsAdminPage() {
     try {
       setLoading(true);
       const response = await colorsApi.getAllColors();
-      // L'API retourne { data: [...] } donc on accède à response.data
-      setColors(response.data || response || []);
+      setColors(response || []);
     } catch (error) {
       console.error('Erreur:', error);
       setColors([]);

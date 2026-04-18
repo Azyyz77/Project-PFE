@@ -15,7 +15,7 @@ export default function FeedbacksAdminPage() {
     try {
       setLoading(true);
       const response = await feedbackApi.getAllFeedbacks();
-      setFeedbacks(response.data || response || []);
+      setFeedbacks(response || []);
     } catch (error) {
       console.error('Erreur:', error);
       setFeedbacks([]);
@@ -55,13 +55,13 @@ export default function FeedbacksAdminPage() {
               {feedbacks.map(feedback => (
                 <tr key={feedback.id}>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-100">
-                    RDV #{feedback.rendez_vous_id}
+                    {feedback.client_nom || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-100">
-                    {renderStars(feedback.note)}
+                    {renderStars(feedback.feedback_note)}
                   </td>
                   <td className="px-6 py-4 text-slate-300 max-w-md truncate">
-                    {feedback.commentaire || '-'}
+                    {feedback.feedback_commentaire || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-300">
                     {feedback.date_feedback ? formatDate(feedback.date_feedback) : '-'}

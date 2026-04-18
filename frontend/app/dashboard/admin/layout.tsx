@@ -88,11 +88,6 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <Settings className="w-5 h-5" />,
   },
   {
-    label: 'Problèmes (Diagnostic)',
-    href: '/dashboard/admin/diagnostic',
-    icon: <Wrench className="w-5 h-5" />,
-  },
-  {
     label: 'Documents',
     href: '/dashboard/admin/documents',
     icon: <FileText className="w-5 h-5" />,
@@ -116,6 +111,16 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Rapports',
     href: '/dashboard/admin/reports',
     icon: <FileText className="w-5 h-5" />,
+  },
+  {
+    label: 'Statuts',
+    href: '/dashboard/admin/statuses',
+    icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    label: 'Permissions',
+    href: '/dashboard/admin/permissions',
+    icon: <User className="w-5 h-5" />,
   },
   {
     label: 'Paramètres',

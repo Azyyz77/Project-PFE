@@ -24,7 +24,7 @@ export default function PackagesAdminPage() {
     try {
       setLoading(true);
       const response = await packagesApi.getAllPackages();
-      setPackages(response.data || response || []);
+      setPackages(response || []);
     } catch (error) {
       console.error('Erreur:', error);
       setPackages([]);

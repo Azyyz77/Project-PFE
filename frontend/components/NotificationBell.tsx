@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Notification {
   id: number;
@@ -15,6 +16,7 @@ interface Notification {
 }
 
 export default function NotificationBell() {
+  const { language, t } = useLanguage();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showPanel, setShowPanel] = useState(false);
@@ -36,10 +38,16 @@ export default function NotificationBell() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
+      if (!response.ok) {
+        // Silently fail if endpoint doesn't exist or server is down
+        return;
+      }
+      
       const result = await response.json();
       setUnreadCount(result.unreadCount || 0);
     } catch (error) {
-      console.error('Erreur chargement compteur:', error);
+      // Silently fail - notifications are not critical
+      // console.error('Erreur chargement compteur:', error);
     }
   };
 
@@ -53,10 +61,16 @@ export default function NotificationBell() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
+      if (!response.ok) {
+        setNotifications([]);
+        return;
+      }
+      
       const result = await response.json();
       setNotifications(result.notifications || []);
     } catch (error) {
-      console.error('Erreur chargement notifications:', error);
+      // Silently fail - notifications are not critical
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -93,7 +107,7 @@ export default function NotificationBell() {
       
       setNotifications(notifications.map(n => ({ ...n, lu: true })));
       setUnreadCount(0);
-      toast.success('Toutes les notifications marquées comme lues');
+      toast.success(t('notifications.markedReadSuccess'));
     } catch (error) {
       console.error('Erreur marquage notifications:', error);
     }
@@ -114,23 +128,23 @@ export default function NotificationBell() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'À l\'instant';
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-    return date.toLocaleDateString('fr-FR');
+    if (diffMins < 1) return t('notifications.justNow');
+    if (diffMins < 60) return t('notifications.minutesAgo').replace('{count}', String(diffMins));
+    if (diffHours < 24) return t('notifications.hoursAgo').replace('{count}', String(diffHours));
+    if (diffDays === 1) return t('notifications.yesterday');
+    if (diffDays < 7) return t('notifications.daysAgo').replace('{count}', String(diffDays));
+    return date.toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR');
   };
 
   return (
     <div className="relative">
       <button
         onClick={handleTogglePanel}
-        className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+        className="relative rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-white/75 dark:hover:bg-white/10 dark:hover:text-white"
       >
-        <Bell className="w-6 h-6 text-white" />
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -143,8 +157,8 @@ export default function NotificationBell() {
             onClick={() => setShowPanel(false)}
           />
           <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Notifications</h3>
+            <div className="flex items-center justify-between border-b border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900">{t('notifications.title')}</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <Button
@@ -153,7 +167,7 @@ export default function NotificationBell() {
                     onClick={markAllAsRead}
                     className="text-xs text-orange-600 hover:text-orange-700"
                   >
-                    Tout marquer comme lu
+                    {t('notifications.markAllRead')}
                   </Button>
                 )}
                 <button
@@ -168,11 +182,11 @@ export default function NotificationBell() {
             <div className="flex-1 overflow-y-auto">
               {loading ? (
                 <div className="p-8 text-center text-gray-500">
-                  Chargement...
+                  {t('notifications.loading')}
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  Aucune notification
+                  {t('notifications.empty')}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">

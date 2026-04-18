@@ -7,7 +7,7 @@
 import { Suspense, useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,10 +36,10 @@ function LoginPageContent() {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const { login, isAuthenticated, isLoading, user } = useAuth();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
   const reset = searchParams.get('reset');
+  const phoneVerified = searchParams.get('phone_verified');
 
   // Redirect authenticated users to their dashboard
   // Note: Redirect is now handled in AuthContext.login() using window.location
@@ -67,8 +67,8 @@ function LoginPageContent() {
   // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-rose-500"></div>
       </div>
     );
   }
@@ -78,9 +78,9 @@ function LoginPageContent() {
     console.log('Login page: Already authenticated, showing redirect message');
     return (
       <AuthThemeShell>
-        <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-100">
+        <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-700">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rose-500"></div>
             <p>Redirection vers votre espace...</p>
           </div>
         </div>
@@ -115,8 +115,9 @@ function LoginPageContent() {
 
     try {
       await login(form);
-    } catch (err: any) {
-      setApiError(err.message || 'Erreur lors de la connexion');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la connexion';
+      setApiError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -127,60 +128,66 @@ function LoginPageContent() {
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
         <section className="hidden flex-1 pr-10 lg:block">
           <div className="space-y-8">
-            <p className="inline-flex items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.42em] text-slate-300/80">
-              <span className="h-px w-14 bg-gradient-to-r from-[#f7454f] to-transparent" />
+            <p className="inline-flex items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.42em] text-slate-500">
+              <span className="h-px w-14 bg-gradient-to-r from-rose-500 to-transparent" />
               Chery Service
             </p>
-            <h1 className="max-w-lg text-6xl font-semibold leading-[0.94] text-white">
-              REINVENTEZ
+            <h1 className="max-w-lg text-6xl font-semibold leading-[0.94] text-slate-900">
+              PILOTEZ
               <br />
-              VOTRE CONDUITE
+              VOTRE SAV
             </h1>
-            <p className="max-w-md text-base leading-relaxed text-slate-300">
-              Accedez a l'ecosysteme precision de Chery Tunisie. Planifiez vos interventions,
+            <p className="max-w-md text-base leading-relaxed text-slate-600">
+              Accedez a l&apos;ecosysteme precision de Chery Tunisie. Planifiez vos interventions,
               suivez vos rendez-vous et restez connecte a votre garage digital en temps reel.
             </p>
 
-            <div className="flex items-center gap-6 text-[0.66rem] uppercase tracking-[0.32em] text-slate-400/85">
+            <div className="flex items-center gap-6 text-[0.66rem] uppercase tracking-[0.32em] text-slate-500">
               <span>Modele actuel</span>
-              <span className="text-slate-100">Tiggo 8 Pro Max</span>
+              <span className="text-slate-800">Tiggo 8 Pro Max</span>
             </div>
           </div>
         </section>
 
         <section className="w-full max-w-xl lg:max-w-md">
-          <div className="chery-auth-panel rounded-[1.8rem] p-7 sm:p-9">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-400">
+          <div className="rounded-[1.8rem] border border-slate-200 bg-white p-7 shadow-[0_28px_70px_rgba(15,23,42,0.14)] sm:p-9">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-500">
               CHERY
             </p>
-            <h2 className="mt-4 text-4xl font-semibold text-white">Bon retour</h2>
-            <p className="mt-2 text-sm text-slate-300/90">
+            <h2 className="mt-4 text-4xl font-semibold text-slate-900">Bon retour</h2>
+            <p className="mt-2 text-sm text-slate-600">
               Entrez vos identifiants pour acceder a votre tableau de bord SAV.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               {registered && (
-                <Alert className="border-emerald-400/40 bg-emerald-500/10 text-emerald-100">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   <p className="text-sm">Inscription reussie. Vous pouvez vous connecter.</p>
                 </Alert>
               )}
               {reset && (
-                <Alert className="border-emerald-400/40 bg-emerald-500/10 text-emerald-100">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                   <p className="text-sm">Mot de passe reinitialise avec succes.</p>
+                </Alert>
+              )}
+              {phoneVerified && (
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <p className="text-sm">Téléphone vérifié avec succès ! Vous pouvez maintenant vous connecter.</p>
                 </Alert>
               )}
 
               {apiError && (
-                <Alert className="border-rose-400/40 bg-rose-500/10 text-rose-100">
-                  <AlertCircle className="h-4 w-4 text-rose-300" />
+                <Alert className="border-rose-200 bg-rose-50 text-rose-900">
+                  <AlertCircle className="h-4 w-4 text-rose-600" />
                   <p className="text-sm">{apiError}</p>
                 </Alert>
               )}
 
               <div className="space-y-2.5">
-                <Label htmlFor="email" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                <Label htmlFor="email" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
                   <Mail className="h-3.5 w-3.5" />
                   Adresse email
                 </Label>
@@ -193,13 +200,13 @@ function LoginPageContent() {
                   value={form.email}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
-                  className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.email ? 'border-rose-400/70' : ''}`}
+                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.email ? 'border-rose-300' : 'border-slate-200'}`}
                 />
-                {errors.email && <p className="text-xs text-rose-300">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-rose-600">{errors.email}</p>}
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="password" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-300">
+                <Label htmlFor="password" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
                   <Lock className="h-3.5 w-3.5" />
                   Mot de passe
                 </Label>
@@ -212,15 +219,15 @@ function LoginPageContent() {
                   value={form.password}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
-                  className={`h-12 rounded-xl border-slate-200/10 bg-white/10 px-4 text-sm text-slate-100 placeholder:text-slate-400/80 ${errors.password ? 'border-rose-400/70' : ''}`}
+                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.password ? 'border-rose-300' : 'border-slate-200'}`}
                 />
-                {errors.password && <p className="text-xs text-rose-300">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-rose-600">{errors.password}</p>}
               </div>
 
               <div className="text-right">
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-[#ff6871] transition-colors hover:text-[#ff858d]"
+                  className="text-sm font-medium text-rose-600 transition-colors hover:text-rose-500"
                 >
                   Mot de passe oublie ?
                 </Link>
@@ -228,7 +235,7 @@ function LoginPageContent() {
 
               <Button
                 type="submit"
-                className="h-12 w-full rounded-xl border border-[#ff6a72]/30 bg-gradient-to-r from-[#ff9a9f] to-[#f23f48] text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-white shadow-[0_14px_30px_rgba(242,63,72,0.35)] hover:brightness-105"
+                className="h-12 w-full bg-slate-900 text-[0.8rem] font-semibold uppercase tracking-[0.2em] text-white hover:bg-slate-800"
                 disabled={isSubmitting}
                 size="lg"
               >
@@ -237,10 +244,10 @@ function LoginPageContent() {
               </Button>
             </form>
 
-            <p className="mt-7 text-center text-sm text-slate-300/85">
+            <p className="mt-7 text-center text-sm text-slate-600">
               Nouveau chez Chery Service ?{' '}
-              <Link href="/register" className="font-semibold text-white underline underline-offset-4">
-                S'inscrire
+              <Link href="/register" className="font-semibold text-slate-900 underline underline-offset-4">
+                S&apos;inscrire
               </Link>
             </p>
           </div>

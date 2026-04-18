@@ -149,14 +149,22 @@ const register = async (req, res) => {
 
     const pool = await getConnection();
 
-    // SQL (SELECT): vérifier si un utilisateur existe déjà avec cet email.
-    // Paramètre: @email. Résultat attendu: 0 ligne (email disponible) ou 1+ ligne(s) (email déjà pris).
-    const checkResult = await pool.request()
+    // Vérifier si l'email existe déjà
+    const checkEmailResult = await pool.request()
       .input('email', sql.NVarChar, email)
       .query('SELECT id FROM Utilisateur WHERE email = @email');
 
-    if (checkResult.recordset.length > 0) {
+    if (checkEmailResult.recordset.length > 0) {
       return res.status(409).json({ error: 'Cet email est déjà utilisé' });
+    }
+
+    // Vérifier si le numéro de téléphone existe déjà
+    const checkPhoneResult = await pool.request()
+      .input('telephone', sql.NVarChar, normalizedPhone)
+      .query('SELECT id FROM Utilisateur WHERE telephone = @telephone');
+
+    if (checkPhoneResult.recordset.length > 0) {
+      return res.status(409).json({ error: 'Ce numéro de téléphone est déjà utilisé' });
     }
 
     // SQL (SELECT): récupérer l'identifiant du rôle depuis la table Role.
@@ -192,8 +200,31 @@ const register = async (req, res) => {
 
     const newUser = result.recordset[0];
 
+    // Générer un OTP pour vérifier le téléphone
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    // Stocker l'OTP
+    otpStore.set(`verify_${newUser.id}`, {
+      otp,
+      expiry,
+      userId: newUser.id,
+      telephone: normalizedPhone,
+    });
+
+    // Envoyer le code par WhatsApp
+    try {
+      await sendWhatsAppMessage(
+        normalizedPhone,
+        `STA Chery Tunisia\nBienvenue! Votre code de vérification est: ${otp}\nCe code expire dans 10 minutes.`
+      );
+    } catch (whatsappError) {
+      console.error('Erreur envoi WhatsApp:', whatsappError);
+      // On continue même si WhatsApp échoue
+    }
+
     res.status(201).json({
-      message: 'Utilisateur créé avec succès',
+      message: 'Utilisateur créé avec succès. Un code de vérification a été envoyé par WhatsApp.',
       user: {
         id: newUser.id,
         prenom: newUser.prenom,
@@ -202,8 +233,10 @@ const register = async (req, res) => {
         telephone: newUser.telephone,
         role: typeUtilisateur,
         actif: newUser.actif,
+        telephone_verifie: false,
         date_creation: newUser.date_creation
-      }
+      },
+      verification_required: true
     });
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error);
@@ -254,7 +287,7 @@ const login = async (req, res) => {
       .input('email', sql.NVarChar, email)
       .query(`
         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
-               u.actif, u.date_creation, u.role_id,
+               u.actif, u.date_creation, u.role_id, u.telephone_verifie,
                ISNULL(r.nom, 'CLIENT') AS role_nom
         FROM Utilisateur u
         LEFT JOIN Role r ON r.id = u.role_id
@@ -282,7 +315,12 @@ const login = async (req, res) => {
 
     // Générer un JWT signé pour l'authentification côté client.
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role_nom },
+      { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role_nom,
+        telephone_verifie: user.telephone_verifie || false
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
@@ -298,6 +336,7 @@ const login = async (req, res) => {
         email: user.email,
         telephone: user.telephone,
         role: user.role_nom,
+        telephone_verifie: user.telephone_verifie || false,
         date_creation: user.date_creation
       }
     });
@@ -801,6 +840,123 @@ const changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Renvoyer un code OTP pour vérifier le téléphone
+ */
+const resendVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email requis' });
+    }
+
+    const pool = await getConnection();
+    
+    const result = await pool.request()
+      .input('email', sql.NVarChar, email)
+      .query('SELECT id, telephone, telephone_verifie FROM Utilisateur WHERE email = @email AND actif = 1');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    const user = result.recordset[0];
+
+    if (user.telephone_verifie) {
+      return res.status(400).json({ error: 'Téléphone déjà vérifié' });
+    }
+
+    // Générer un nouvel OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 10 * 60 * 1000;
+
+    otpStore.set(`verify_${user.id}`, {
+      otp,
+      expiry,
+      userId: user.id,
+      telephone: user.telephone,
+    });
+
+    // Envoyer par WhatsApp
+    await sendWhatsAppMessage(
+      user.telephone,
+      `STA Chery Tunisia\nVotre nouveau code de vérification est: ${otp}\nCe code expire dans 10 minutes.`
+    );
+
+    res.json({
+      message: 'Code de vérification renvoyé par WhatsApp',
+      telephone_hint: user.telephone ? `***${user.telephone.slice(-3)}` : undefined,
+    });
+  } catch (error) {
+    console.error('Erreur resendVerificationCode:', error);
+    res.status(500).json({ error: 'Erreur serveur', message: error.message });
+  }
+};
+
+/**
+ * Vérifier le code OTP du téléphone
+ */
+const verifyPhoneNumber = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email et code OTP requis' });
+    }
+
+    const pool = await getConnection();
+    
+    const result = await pool.request()
+      .input('email', sql.NVarChar, email)
+      .query('SELECT id, telephone_verifie FROM Utilisateur WHERE email = @email AND actif = 1');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    const user = result.recordset[0];
+
+    if (user.telephone_verifie) {
+      return res.status(400).json({ error: 'Téléphone déjà vérifié' });
+    }
+
+    // Récupérer l'OTP stocké
+    const stored = otpStore.get(`verify_${user.id}`);
+
+    if (!stored) {
+      return res.status(400).json({ error: 'Aucun code de vérification trouvé. Veuillez demander un nouveau code.' });
+    }
+
+    // Vérifier l'expiration
+    if (Date.now() > stored.expiry) {
+      otpStore.delete(`verify_${user.id}`);
+      return res.status(400).json({ error: 'Code OTP expiré. Veuillez demander un nouveau code.' });
+    }
+
+    // Vérifier le code
+    if (stored.otp !== String(otp)) {
+      return res.status(400).json({ error: 'Code OTP incorrect' });
+    }
+
+    // Marquer le téléphone comme vérifié
+    await pool.request()
+      .input('id', sql.BigInt, user.id)
+      .query('UPDATE Utilisateur SET telephone_verifie = 1 WHERE id = @id');
+
+    // Supprimer l'OTP
+    otpStore.delete(`verify_${user.id}`);
+
+    res.json({ 
+      message: 'Téléphone vérifié avec succès! Vous pouvez maintenant prendre des rendez-vous.',
+      verified: true
+    });
+  } catch (error) {
+    console.error('Erreur verifyPhoneNumber:', error);
+    res.status(500).json({ error: 'Erreur serveur', message: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -810,4 +966,6 @@ module.exports = {
   resetPassword,
   updateProfile,
   changePassword,
+  resendVerificationCode,
+  verifyPhoneNumber,
 };

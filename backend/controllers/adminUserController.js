@@ -160,28 +160,28 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
 
-    // Construire la requête de mise à jour
-    let updateQuery = 'UPDATE Utilisateur SET id = id'; // Dummy update to start
+    // Construire la requête de mise à jour dynamiquement
+    const updates = [];
     const request = pool.request().input('id', sql.BigInt, userId);
 
     if (nom !== undefined) {
-      updateQuery += ', nom = @nom';
+      updates.push('nom = @nom');
       request.input('nom', sql.VarChar, nom);
     }
     if (prenom !== undefined) {
-      updateQuery += ', prenom = @prenom';
+      updates.push('prenom = @prenom');
       request.input('prenom', sql.VarChar, prenom);
     }
     if (email !== undefined) {
-      updateQuery += ', email = @email';
+      updates.push('email = @email');
       request.input('email', sql.VarChar, email);
     }
     if (telephone !== undefined) {
-      updateQuery += ', telephone = @telephone';
+      updates.push('telephone = @telephone');
       request.input('telephone', sql.VarChar, telephone);
     }
     if (actif !== undefined) {
-      updateQuery += ', actif = @actif';
+      updates.push('actif = @actif');
       request.input('actif', sql.Bit, actif);
     }
     if (role_nom !== undefined) {
@@ -191,12 +191,17 @@ const updateUser = async (req, res) => {
         .query('SELECT id FROM Role WHERE nom = @role_nom');
 
       if (roleResult.recordset.length > 0) {
-        updateQuery += ', role_id = @role_id';
+        updates.push('role_id = @role_id');
         request.input('role_id', sql.BigInt, roleResult.recordset[0].id);
       }
     }
 
-    updateQuery += ' WHERE id = @id';
+    // Si aucune mise à jour n'est fournie
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+    }
+
+    const updateQuery = `UPDATE Utilisateur SET ${updates.join(', ')} WHERE id = @id`;
 
     await request.query(updateQuery);
 

@@ -36,7 +36,7 @@ export const feedbackApi = {
   },
 
   // Récupérer tous les feedbacks (admin/agent)
-  getAllFeedbacks: async (token: string, filters?: { agence_id?: number; date_debut?: string; date_fin?: string }): Promise<Feedback[]> => {
+  getAllFeedbacks: async (token?: string, filters?: { agence_id?: number; date_debut?: string; date_fin?: string }): Promise<Feedback[]> => {
     let url = '/feedback';
     const params = new URLSearchParams();
     
@@ -51,7 +51,7 @@ export const feedbackApi = {
   },
 
   // Statistiques des feedbacks
-  getFeedbackStats: async (token: string, agence_id?: number): Promise<FeedbackStats> => {
+  getFeedbackStats: async (token?: string, agence_id?: number): Promise<FeedbackStats> => {
     let url = '/feedback/stats';
     if (agence_id) url += `?agence_id=${agence_id}`;
     
