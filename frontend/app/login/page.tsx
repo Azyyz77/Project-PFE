@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * Page de connexion - Refactored with shadcn/ui
- */
-
 import { Suspense, useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
-import { AlertCircle, CheckCircle2, Mail, Lock, LogIn } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Mail, Lock, LogIn, CalendarDays } from 'lucide-react';
 import {
   LoginFormState,
   EMPTY_LOGIN_FORM,
@@ -41,12 +37,8 @@ function LoginPageContent() {
   const reset = searchParams.get('reset');
   const phoneVerified = searchParams.get('phone_verified');
 
-  // Redirect authenticated users to their dashboard
-  // Note: Redirect is now handled in AuthContext.login() using window.location
-  // This useEffect is kept for users who refresh the page while already logged in
   useEffect(() => {
     if (!isLoading && isAuthenticated && user && !isRedirecting) {
-      console.log('Login page: User already authenticated on page load', { role: user.role });
       setIsRedirecting(true);
       const redirectMap: Record<string, string> = {
         CLIENT: '/client/dashboard',
@@ -55,32 +47,27 @@ function LoginPageContent() {
         DIRECTION: '/dashboard/direction',
       };
       const redirectUrl = redirectMap[user.role] || '/dashboard';
-      console.log('Login page: Redirecting to', redirectUrl);
       
-      // Use setTimeout to avoid blocking the render
       setTimeout(() => {
         window.location.href = redirectUrl;
       }, 100);
     }
   }, [isLoading, isAuthenticated, user, isRedirecting]);
 
-  // Show loading spinner while checking auth
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-rose-500"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  // Don't render form if already authenticated (redirect in progress)
   if (isAuthenticated || isRedirecting) {
-    console.log('Login page: Already authenticated, showing redirect message');
     return (
       <AuthThemeShell>
-        <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-700">
+        <div className="flex min-h-screen items-center justify-center text-muted-foreground">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-rose-500"></div>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
             <p>Redirection vers votre espace...</p>
           </div>
         </div>
@@ -125,129 +112,117 @@ function LoginPageContent() {
 
   return (
     <AuthThemeShell>
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
-        <section className="hidden flex-1 pr-10 lg:block">
-          <div className="space-y-8">
-            <p className="inline-flex items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.42em] text-slate-500">
-              <span className="h-px w-14 bg-gradient-to-r from-rose-500 to-transparent" />
-              Chery Service
-            </p>
-            <h1 className="max-w-lg text-6xl font-semibold leading-[0.94] text-slate-900">
-              PILOTEZ
-              <br />
-              VOTRE SAV
-            </h1>
-            <p className="max-w-md text-base leading-relaxed text-slate-600">
-              Accedez a l&apos;ecosysteme precision de Chery Tunisie. Planifiez vos interventions,
-              suivez vos rendez-vous et restez connecte a votre garage digital en temps reel.
-            </p>
-
-            <div className="flex items-center gap-6 text-[0.66rem] uppercase tracking-[0.32em] text-slate-500">
-              <span>Modele actuel</span>
-              <span className="text-slate-800">Tiggo 8 Pro Max</span>
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
+        <section className="hidden flex-1 lg:flex flex-col justify-center pr-16">
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 text-primary font-medium">
+              <CalendarDays className="h-6 w-6" />
+              <span>Smart Booking</span>
             </div>
+            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+              Gérez vos <br />
+              rendez-vous <br />
+              intelligemment.
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-md leading-relaxed">
+              Planifiez vos interventions, suivez vos rendez-vous et restez connecté à votre espace de service en temps réel avec notre plateforme sécurisée.
+            </p>
           </div>
         </section>
 
-        <section className="w-full max-w-xl lg:max-w-md">
-          <div className="rounded-[1.8rem] border border-slate-200 bg-white p-7 shadow-[0_28px_70px_rgba(15,23,42,0.14)] sm:p-9">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-500">
-              CHERY
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold text-slate-900">Bon retour</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Entrez vos identifiants pour acceder a votre tableau de bord SAV.
+        <section className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+            <h2 className="text-2xl font-bold text-foreground">Connexion</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Entrez vos identifiants pour accéder à votre espace.
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               {registered && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <p className="text-sm">Inscription reussie. Vous pouvez vous connecter.</p>
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <p className="text-sm">Inscription réussie. Vous pouvez vous connecter.</p>
                 </Alert>
               )}
               {reset && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <p className="text-sm">Mot de passe reinitialise avec succes.</p>
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <p className="text-sm">Mot de passe réinitialisé avec succès.</p>
                 </Alert>
               )}
               {phoneVerified && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   <p className="text-sm">Téléphone vérifié avec succès ! Vous pouvez maintenant vous connecter.</p>
                 </Alert>
               )}
 
               {apiError && (
-                <Alert className="border-rose-200 bg-rose-50 text-rose-900">
-                  <AlertCircle className="h-4 w-4 text-rose-600" />
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
                   <p className="text-sm">{apiError}</p>
                 </Alert>
               )}
 
-              <div className="space-y-2.5">
-                <Label htmlFor="email" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  <Mail className="h-3.5 w-3.5" />
-                  Adresse email
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="conducteur@chery-tunisie.com"
-                  value={form.email}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.email ? 'border-rose-300' : 'border-slate-200'}`}
-                />
-                {errors.email && <p className="text-xs text-rose-600">{errors.email}</p>}
+              <div className="space-y-2">
+                <Label htmlFor="email">Adresse email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="exemple@domaine.com"
+                    value={form.email}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`pl-10 h-11 ${errors.email ? 'border-destructive' : ''}`}
+                  />
+                </div>
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
               </div>
 
-              <div className="space-y-2.5">
-                <Label htmlFor="password" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  <Lock className="h-3.5 w-3.5" />
-                  Mot de passe
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.password ? 'border-rose-300' : 'border-slate-200'}`}
-                />
-                {errors.password && <p className="text-xs text-rose-600">{errors.password}</p>}
-              </div>
-
-              <div className="text-right">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm font-medium text-rose-600 transition-colors hover:text-rose-500"
-                >
-                  Mot de passe oublie ?
-                </Link>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium text-primary hover:text-primary/80"
+                  >
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`pl-10 h-11 ${errors.password ? 'border-destructive' : ''}`}
+                  />
+                </div>
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
               </div>
 
               <Button
                 type="submit"
-                className="h-12 w-full bg-slate-900 text-[0.8rem] font-semibold uppercase tracking-[0.2em] text-white hover:bg-slate-800"
+                className="w-full h-11"
                 disabled={isSubmitting}
-                size="lg"
               >
-                <LogIn className="mr-2 h-4 w-4" />
                 {isSubmitting ? 'Connexion en cours...' : 'Se connecter'}
               </Button>
             </form>
 
-            <p className="mt-7 text-center text-sm text-slate-600">
-              Nouveau chez Chery Service ?{' '}
-              <Link href="/register" className="font-semibold text-slate-900 underline underline-offset-4">
-                S&apos;inscrire
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Vous n'avez pas de compte ?{' '}
+              <Link href="/register" className="font-semibold text-primary hover:underline">
+                S'inscrire
               </Link>
             </p>
           </div>

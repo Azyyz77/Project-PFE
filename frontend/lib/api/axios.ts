@@ -22,18 +22,26 @@ const api = {
       ...(config?.headers as HeadersInit),
     };
 
+    console.log('[axios.get] Request:', { url: `${API_BASE_URL}${url}`, hasToken: !!token });
+
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'GET',
       headers,
       ...config,
     });
 
+    console.log('[axios.get] Response:', { status: response.status, ok: response.ok });
+
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erreur réseau' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: 'Erreur réseau', message: `HTTP ${response.status}` }));
+      console.error('[axios.get] Error response:', error);
+      const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+      err.response = { data: error, status: response.status };
+      throw err;
     }
 
     const data = await response.json();
+    console.log('[axios.get] Success:', { dataKeys: Object.keys(data) });
     // Retourner dans le format { data: ... } pour correspondre à axios
     return { data };
   },
@@ -54,8 +62,10 @@ const api = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erreur réseau' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: 'Erreur réseau', message: `HTTP ${response.status}` }));
+      const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+      err.response = { data: error, status: response.status };
+      throw err;
     }
 
     const responseData = await response.json();
@@ -78,8 +88,10 @@ const api = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erreur réseau' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: 'Erreur réseau', message: `HTTP ${response.status}` }));
+      const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+      err.response = { data: error, status: response.status };
+      throw err;
     }
 
     const responseData = await response.json();
@@ -101,8 +113,10 @@ const api = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Erreur réseau' }));
-      throw new Error(error.message || `HTTP error! status: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: 'Erreur réseau', message: `HTTP ${response.status}` }));
+      const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+      err.response = { data: error, status: response.status };
+      throw err;
     }
 
     const data = await response.json();

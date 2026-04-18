@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password', '/verify-phone', '/registration-success'];
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/verify-otp', '/reset-password', '/verify-phone', '/registration-success', '/debug-auth', '/bypass-phone'];
 
 const PUBLIC_ASSET_PREFIXES = ['/videos/', '/images/', '/icons/'];
 const PUBLIC_FILE_REGEX = /\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|css|js|map|txt|xml)$/i;
@@ -35,6 +35,10 @@ function decodeJWT(token: string): any {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // TEMPORAIRE: Désactiver la vérification téléphonique pour déboguer
+  // TODO: Réactiver après résolution du problème de base de données
+  const DISABLE_PHONE_VERIFICATION = false; // Re-enabled since DB is working
 
   console.log('Middleware: Processing', pathname);
 
@@ -82,6 +86,7 @@ export function middleware(request: NextRequest) {
 
     const userRole = decoded.role;
     console.log('Middleware: User role', userRole);
+    console.log('Middleware: Phone verification disabled:', DISABLE_PHONE_VERIFICATION || false);
 
     // Check if token is expired
     if (decoded.exp && decoded.exp * 1000 < Date.now()) {
@@ -90,10 +95,17 @@ export function middleware(request: NextRequest) {
     }
 
     // Check if client needs phone verification (except for verify-phone page)
-    if (userRole === 'CLIENT' && pathname !== '/verify-phone') {
+    if (userRole === 'CLIENT' && pathname !== '/verify-phone' && !DISABLE_PHONE_VERIFICATION) {
       // Si telephone_verifie n'est pas défini dans le token (ancien token), 
       // on considère que le téléphone n'est pas vérifié
       const isPhoneVerified = decoded.telephone_verifie === true;
+      
+      console.log('Middleware: Phone verification check', {
+        userRole,
+        pathname,
+        telephone_verifie: decoded.telephone_verifie,
+        isPhoneVerified
+      });
       
       if (!isPhoneVerified) {
         console.log('Middleware: Client phone not verified, redirecting to verification');

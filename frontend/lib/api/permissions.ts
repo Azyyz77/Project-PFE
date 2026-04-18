@@ -45,9 +45,7 @@ export const permissionsAPI = {
 
   // Vérifier une permission
   check: async (userId: number, module: string, action: string): Promise<{ hasPermission: boolean }> => {
-    const response = await axios.get('/admin/permissions/check', {
-      params: { userId, module, action }
-    });
+    const response = await axios.get(`/admin/permissions/check?userId=${userId}&module=${encodeURIComponent(module)}&action=${encodeURIComponent(action)}`);
     return response.data;
   },
 

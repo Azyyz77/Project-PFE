@@ -56,9 +56,15 @@ export async function getFeedbacks(token: string, filters?: {
   minNote?: number;
   maxNote?: number;
 }): Promise<Feedback[]> {
-  const r = await axios.get(`${API_BASE}/api/feedbacks`, {
-    headers: headers(token),
-    params: filters
+  const queryParams = new URLSearchParams();
+  if (filters?.fromDate) queryParams.append('fromDate', filters.fromDate);
+  if (filters?.toDate) queryParams.append('toDate', filters.toDate);
+  if (filters?.minNote) queryParams.append('minNote', filters.minNote.toString());
+  if (filters?.maxNote) queryParams.append('maxNote', filters.maxNote.toString());
+  
+  const url = `${API_BASE}/api/feedbacks${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const r = await axios.get(url, {
+    headers: headers(token)
   });
   return r.data.feedbacks;
 }
@@ -135,9 +141,13 @@ export async function getCancellationHistory(token: string, filters?: {
   fromDate?: string;
   toDate?: string;
 }): Promise<Cancellation[]> {
-  const r = await axios.get(`${API_BASE}/api/appointments/cancellations/history`, {
-    headers: headers(token),
-    params: filters
+  const queryParams = new URLSearchParams();
+  if (filters?.fromDate) queryParams.append('fromDate', filters.fromDate);
+  if (filters?.toDate) queryParams.append('toDate', filters.toDate);
+  
+  const url = `${API_BASE}/api/appointments/cancellations/history${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const r = await axios.get(url, {
+    headers: headers(token)
   });
   return r.data.cancellations;
 }

@@ -13,7 +13,7 @@ import { AlertCircle, CheckCircle2, Phone, RefreshCw } from 'lucide-react';
 function VerifyPhoneContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, isLoading } = useAuth();
 
   // Utiliser l'email de l'utilisateur connecté ou celui des paramètres de recherche
   const email = user?.email || searchParams.get('email') || '';
@@ -28,6 +28,9 @@ function VerifyPhoneContent() {
 
   // Rediriger si l'utilisateur n'est pas connecté ou si le téléphone est déjà vérifié
   useEffect(() => {
+    // Wait for AuthContext to finish loading before deciding to redirect
+    if (isLoading) return;
+
     if (!user) {
       router.push('/login');
       return;
@@ -43,7 +46,7 @@ function VerifyPhoneContent() {
       };
       router.push(redirectMap[user.role] || '/dashboard');
     }
-  }, [user, router]);
+  }, [user, router, isLoading]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -93,7 +96,8 @@ function VerifyPhoneContent() {
         // Supprimer le token actuel et rediriger vers la connexion
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+        // Clear cookie with all matching attributes to ensure it is removed
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
         
         // Rediriger vers la connexion avec un message de succès
         window.location.href = '/login?phone_verified=true';
@@ -122,8 +126,8 @@ function VerifyPhoneContent() {
     }
   };
 
-  if (!user) {
-    return null; // Redirection en cours
+  if (isLoading || !user) {
+    return null; // Waiting for AuthContext or redirecting
   }
 
   return (

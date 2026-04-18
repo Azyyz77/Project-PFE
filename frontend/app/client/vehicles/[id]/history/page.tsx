@@ -243,11 +243,11 @@ export default function VehicleHistoryPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Dernière intervention</p>
-                <p className="font-medium">{formatDate(history.derniere_intervention)}</p>
+                <p className="font-medium">{history.derniere_intervention ? formatDate(history.derniere_intervention) : 'Aucune'}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Prochain RDV</p>
-                <p className="font-medium">{formatDate(history.prochain_rdv)}</p>
+                <p className="font-medium">{history.prochain_rdv ? formatDate(history.prochain_rdv) : 'Aucun'}</p>
               </div>
             </div>
           </div>

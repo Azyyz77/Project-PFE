@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Sparkles,
   User,
+  Shield,
 } from 'lucide-react';
 
 interface NavItem {
@@ -121,6 +122,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Permissions',
     href: '/dashboard/admin/permissions',
     icon: <User className="w-5 h-5" />,
+  },
+  {
+    label: 'Logs d\'audit',
+    href: '/dashboard/admin/audit',
+    icon: <Shield className="w-5 h-5" />,
   },
   {
     label: 'Paramètres',

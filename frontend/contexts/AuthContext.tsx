@@ -141,8 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Rafraîchir les informations utilisateur depuis le serveur
    */
-  const refreshUser = async () => {
-    if (!token || !user) return;
+  const refreshUser = async (): Promise<User | null> => {
+    if (!token || !user) return null;
     
     try {
       console.log('AuthContext: Refreshing user data');
@@ -163,11 +163,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         return updatedUser;
       }
+      
+      return null;
     } catch (error) {
       console.error('AuthContext: Error refreshing user data', error);
+      return null;
     }
-    
-    return null;
   };
 
   const value: AuthContextType = {

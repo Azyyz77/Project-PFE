@@ -347,6 +347,7 @@ export default function ClientOrdersPage() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
     </PhoneVerificationRequired>
   );
 }

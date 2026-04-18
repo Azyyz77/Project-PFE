@@ -38,7 +38,12 @@ export const vehicleValidationAPI = {
 
   // Obtenir tous les véhicules avec filtres
   getAll: async (filters?: { statut?: string; client_id?: number }): Promise<{ count: number; vehicles: PendingVehicle[] }> => {
-    const response = await axios.get('/agent/vehicles', { params: filters });
+    const queryParams = new URLSearchParams();
+    if (filters?.statut) queryParams.append('statut', filters.statut);
+    if (filters?.client_id) queryParams.append('client_id', filters.client_id.toString());
+    
+    const url = `/agent/vehicles${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const response = await axios.get(url);
     return response.data;
   },
 

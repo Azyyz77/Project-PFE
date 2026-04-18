@@ -533,34 +533,32 @@ function RendezVousContent() {
   if (!user) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header with Gradient Banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-800 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-950 p-6 sm:p-8 text-white shadow-lg">
-          <div className="absolute -right-20 -top-20 size-40 rounded-full bg-white/5 blur-3xl" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl sm:text-4xl font-bold">Rendez-vous</h1>
-                <Badge variant="secondary" className="text-sm">
-                  {appointments.length} total
-                </Badge>
-              </div>
-              <p className="text-sm text-blue-100">Gérez et réservez vos rendez-vous de service.</p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => openModal()}
-                disabled={validatedVehicles.length === 0}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
-              >
-                + Réserver un rendez-vous
-              </Button>
-              <Calendar className="size-8 text-blue-200 hidden sm:block" />
-            </div>
+    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto space-y-10">
+      {/* ─── Header Section ─── */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
+              Rendez-vous
+            </h1>
+            <Badge variant="secondary" className="font-normal mt-1">
+              {appointments.length} total
+            </Badge>
           </div>
+          <p className="text-muted-foreground">Gérez et réservez vos rendez-vous de service.</p>
         </div>
+
+        <Button
+          onClick={() => openModal()}
+          disabled={validatedVehicles.length === 0}
+          size="lg"
+          className="w-full md:w-auto"
+        >
+          + Réserver un rendez-vous
+        </Button>
+      </div>
+
+      <div className="h-px w-full bg-border" />
 
         {validatedVehicles.length === 0 && (
           <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
@@ -783,8 +781,6 @@ function RendezVousContent() {
             </Card>
           </div>
         )}
-      </div>
-
       {/* Booking Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1341,6 +1337,6 @@ function RendezVousContent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </main>
+    </div>
   );
 }

@@ -41,6 +41,10 @@ const promotionRoutes = require('./routes/promotionRoutes');
 const attachmentRoutes = require('./routes/attachmentRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const colorRoutes = require('./routes/colorRoutes');
+const planningRoutes = require('./routes/planningRoutes');
+const agencyRoutes = require('./routes/agencyRoutes');
+const auditRoutes = require('./routes/auditRoutes');
+const { auditMiddleware } = require('./middleware/auditMiddleware');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
@@ -59,6 +63,9 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
 });
+
+// Audit middleware - Enregistre toutes les modifications
+app.use(auditMiddleware);
 
 // Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -94,6 +101,9 @@ app.use('/api/promotions', promotionRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/colors', colorRoutes);
+app.use('/api/agent/planning', planningRoutes);
+app.use('/api/admin/agencies', agencyRoutes);
+app.use('/api/admin/audit', auditRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {

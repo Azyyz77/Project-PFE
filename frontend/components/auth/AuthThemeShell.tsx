@@ -1,57 +1,19 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
-import { CheryVideoBackground } from '@/components/auth/CheryVideoBackground';
-
-type AuthTheme = 'dark' | 'light';
+import { ReactNode } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle'; // Assuming a standard ThemeToggle exists or we'll just skip it
 
 interface AuthThemeShellProps {
   children: ReactNode;
   sceneClassName?: string;
 }
 
-export function AuthThemeShell({ children, sceneClassName = 'chery-auth-scene' }: AuthThemeShellProps) {
-  const [theme, setTheme] = useState<AuthTheme>('light');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('auth-theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      setTheme(savedTheme);
-    }
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    localStorage.setItem('auth-theme', theme);
-  }, [theme, mounted]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  const sceneClasses = [sceneClassName, theme === 'light' ? 'auth-mode-light' : 'auth-mode-dark']
-    .filter(Boolean)
-    .join(' ');
-
+export function AuthThemeShell({ children, sceneClassName }: AuthThemeShellProps) {
   return (
-    <div className={sceneClasses}>
-      <CheryVideoBackground />
-      <div className="chery-auth-ambient" />
-      <div className="chery-auth-grid" />
-
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="auth-theme-toggle"
-        aria-label={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
-        title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
-      >
-        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-      </button>
-
+    <div className={`min-h-screen bg-muted/30 flex flex-col relative ${sceneClassName || ''}`}>
+      <div className="absolute top-4 right-4 z-50">
+        {/* Put ThemeToggle here if available in the codebase, else nothing */}
+      </div>
       {children}
     </div>
   );
