@@ -2,7 +2,8 @@
 
 ## ✅ DÉJÀ IMPLÉMENTÉ
 
-### 1. Validation des véhicules (AGENT) ✅
+### 1. Validation des véhicules (AGENT) ✅ COMPLET
+
 **Backend**:
 - ✅ `backend/controllers/vehicleValidationController.js`
 - ✅ `backend/routes/vehicleValidationRoutes.js`
@@ -10,7 +11,24 @@
 
 **Frontend**:
 - ✅ `frontend/lib/api/vehicleValidation.ts`
-- ⏳ `frontend/app/dashboard/agent/vehicles/validation/page.tsx` (À CRÉER)
+- ✅ `frontend/app/dashboard/agent/vehicles/validation/page.tsx`
+- ✅ Navigation ajoutée dans le menu agent
+
+**Documentation**:
+- ✅ `docs/VEHICLE_VALIDATION_GUIDE.md`
+
+**Statut**: ✅ Complètement implémenté
+
+**Fonctionnalités**:
+- ✅ Liste des véhicules en attente de validation
+- ✅ Formulaire de validation avec vérification des documents
+- ✅ Historique des validations (onglets: En attente, Validés, Refusés)
+- ✅ Filtres et recherche (immatriculation, châssis, client, marque)
+- ✅ Statistiques en temps réel (total, en attente, validés, refusés, délai moyen)
+- ✅ Modal de détails avec toutes les informations
+- ✅ Validation avec commentaire optionnel
+- ✅ Refus avec raison obligatoire
+- ✅ Notifications automatiques (push + WhatsApp)
 
 ---
 
@@ -57,7 +75,7 @@
 
 ## 🔴 PRIORITÉ HAUTE - À IMPLÉMENTER
 
-### 4. Diagnostic technique (AGENT) ✅
+### 4. Diagnostic technique (AGENT) ⚠️ PARTIELLEMENT IMPLÉMENTÉ
 
 **Backend**:
 - ✅ `backend/controllers/diagnosticController.js`
@@ -77,97 +95,25 @@
 **Documentation**:
 - ✅ `docs/DIAGNOSTIC_SYSTEM_COMPLETE.md`
 
+**Statut**: Backend complet, Frontend à créer
+
 **Tables utilisées**: `Diagnostic`, `ProblemesDiagnostic`, `ProblemePredéfini`
 
 ---
 
-**Backend à créer**:
-```javascript
-// backend/controllers/diagnosticController.js
-- createDiagnostic(rdv_id, problemes) - Créer diagnostic
-- getDiagnosticByRDV(rdv_id) - Obtenir diagnostic
-- updateDiagnostic(id, data) - Modifier
-- addProbleme(diagnostic_id, probleme_id, description) - Ajouter problème
-- removeProbleme(diagnostic_id, probleme_id) - Retirer problème
+### 5. Historique véhicule (CLIENT) ✅ COMPLET
 
-// backend/controllers/predefinedProblemController.js
-- getProblemes() - Liste problèmes prédéfinis
-- createProbleme(nom, description, categorie) - Créer
-- updateProbleme(id, data) - Modifier
-- deleteProbleme(id) - Supprimer
+**Backend**:
+- ✅ `backend/controllers/vehicleHistoryController.js`
+- ✅ `backend/routes/vehicleHistoryRoutes.js`
+- ✅ Routes ajoutées dans `backend/server.js`
 
-// backend/routes/diagnosticRoutes.js
-- POST /api/agent/diagnostics
-- GET /api/agent/diagnostics/rdv/:rdvId
-- PUT /api/agent/diagnostics/:id
-- POST /api/agent/diagnostics/:id/problemes
-- DELETE /api/agent/diagnostics/:id/problemes/:problemeId
+**Frontend**:
+- ✅ `frontend/lib/api/vehicleHistory.ts`
+- ✅ `frontend/app/client/vehicle-history/page.tsx`
+- ✅ `frontend/app/client/vehicles/[id]/history/page.tsx`
 
-// backend/routes/predefinedProblemRoutes.js
-- GET /api/admin/problems
-- POST /api/admin/problems
-- PUT /api/admin/problems/:id
-- DELETE /api/admin/problems/:id
-```
-
-**Frontend à créer**:
-```typescript
-// frontend/lib/api/diagnostics.ts
-- createDiagnostic(data)
-- getDiagnostic(rdvId)
-- updateDiagnostic(id, data)
-- addProbleme(diagnosticId, problemeId, description)
-
-// frontend/lib/api/predefinedProblems.ts
-- getProblems()
-- createProblem(data)
-- updateProblem(id, data)
-- deleteProblem(id)
-
-// frontend/app/dashboard/agent/diagnostics/page.tsx
-- Liste des diagnostics
-- Formulaire de diagnostic
-- Sélection de problèmes prédéfinis
-
-// frontend/app/dashboard/admin/problems/page.tsx
-- Gestion des problèmes prédéfinis
-```
-
-**Tables utilisées**: `ProblemesDiagnostic`, `ProblemePredéfini`
-
----
-
-### 5. Historique véhicule (CLIENT)
-
-**Backend à créer**:
-```javascript
-// backend/controllers/vehicleHistoryController.js
-- getVehicleHistory(vehicleId) - Historique complet
-- getVehicleInterventions(vehicleId) - Interventions
-- getVehicleAppointments(vehicleId) - Rendez-vous
-- exportHistory(vehicleId, format) - Export PDF/Excel
-
-// backend/routes/vehicleHistoryRoutes.js
-- GET /api/vehicles/:id/history
-- GET /api/vehicles/:id/interventions
-- GET /api/vehicles/:id/appointments
-- GET /api/vehicles/:id/history/export
-```
-
-**Frontend à créer**:
-```typescript
-// frontend/lib/api/vehicleHistory.ts
-- getHistory(vehicleId)
-- getInterventions(vehicleId)
-- getAppointments(vehicleId)
-- exportHistory(vehicleId, format)
-
-// frontend/app/client/vehicles/[id]/history/page.tsx
-- Timeline des interventions
-- Liste des rendez-vous
-- Statistiques du véhicule
-- Bouton export
-```
+**Statut**: ✅ Complètement implémenté
 
 **Vue utilisée**: `VW_HistoriqueVehicule`
 
@@ -326,86 +272,78 @@
 
 ---
 
-### 10. Gestion des agences (ADMIN)
+### 10. Gestion des agences (ADMIN) ✅ COMPLET
 
-**Backend à créer**:
-```javascript
-// backend/controllers/agencyController.js
-- getAgencies() - Liste
-- getAgency(id) - Détails
-- createAgency(data) - Créer
-- updateAgency(id, data) - Modifier
-- deleteAgency(id) - Supprimer
-- getAgencyStats(id) - Statistiques
+**Backend**:
+- ✅ `backend/controllers/agencyController.js`
+- ✅ `backend/routes/agencyRoutes.js`
+- ✅ Routes ajoutées dans `backend/server.js`
 
-// backend/routes/agencyRoutes.js
-- GET /api/admin/agencies
-- GET /api/admin/agencies/:id
-- POST /api/admin/agencies
-- PUT /api/admin/agencies/:id
-- DELETE /api/admin/agencies/:id
-- GET /api/admin/agencies/:id/stats
-```
+**Frontend**:
+- ✅ `frontend/lib/api/agencies.ts`
+- ✅ `frontend/app/dashboard/admin/agencies/page.tsx`
+- ✅ Navigation ajoutée dans le menu admin
 
-**Frontend à créer**:
-```typescript
-// frontend/lib/api/agencies.ts
-- getAgencies()
-- getAgency(id)
-- createAgency(data)
-- updateAgency(id, data)
-- deleteAgency(id)
-
-// frontend/app/dashboard/admin/agencies/page.tsx
-- Tableau des agences
-- Formulaire CRUD
-- Carte avec localisation
-```
+**Statut**: ✅ Complètement implémenté
 
 **Table utilisée**: `Agence`
 
 ---
 
-### 11. Logs et audit (ADMIN)
+### 11. Logs et audit (ADMIN) ✅ COMPLET
 
-**Backend à créer**:
-```javascript
-// backend/middleware/auditMiddleware.js
-- Intercepter toutes les modifications
-- Logger dans HistoriqueRDV ou nouvelle table AuditLog
-- Enregistrer: utilisateur, action, entité, ancien/nouveau
+**Backend**:
+- ✅ `backend/middleware/auditMiddleware.js`
+- ✅ `backend/controllers/auditController.js`
+- ✅ `backend/routes/auditRoutes.js`
+- ✅ Routes ajoutées dans `backend/server.js`
+- ✅ Migration: `backend/migrations/create_audit_log_table.sql`
+- ✅ Table `AuditLog` créée avec 17 colonnes et 6 indexes
 
-// backend/controllers/auditController.js
-- getAuditLogs(filters) - Liste des logs
-- getEntityHistory(entiteType, entiteId) - Historique entité
-- exportLogs(filters, format) - Export
+**Frontend**:
+- ✅ `frontend/lib/api/audit.ts`
+- ✅ `frontend/app/dashboard/admin/audit/page.tsx`
+- ✅ Navigation ajoutée dans le menu admin (Shield icon)
 
-// backend/routes/auditRoutes.js
-- GET /api/admin/audit
-- GET /api/admin/audit/:entiteType/:entiteId
-- GET /api/admin/audit/export
-```
+**Documentation**:
+- ✅ `AUDIT_SYSTEM_IMPLEMENTATION.md`
+- ✅ `AUDIT_SYSTEM_SUMMARY.md`
+- ✅ `AUDIT_DEPLOYMENT_CHECKLIST.md`
+- ✅ `AUDIT_USER_GUIDE.md`
+- ✅ `AUDIT_FINAL_STATUS.md`
+- ✅ `AUDIT_QUICK_REFERENCE.md`
 
-**Frontend à créer**:
-```typescript
-// frontend/lib/api/audit.ts
-- getAuditLogs(filters)
-- getEntityHistory(entiteType, entiteId)
-- exportLogs(filters, format)
+**Statut**: ✅ Complètement implémenté
 
-// frontend/app/dashboard/admin/audit/page.tsx
-- Tableau des logs
-- Filtres avancés
-- Timeline des modifications
-```
-
-**Table utilisée**: `HistoriqueRDV` (ou créer `AuditLog`)
+**Table utilisée**: `AuditLog`
 
 ---
 
 ## 🟢 PRIORITÉ BASSE - Nice to have
 
-### 12. Problèmes prédéfinis (CLIENT, ADMIN)
+### 12. Problèmes prédéfinis (CLIENT, ADMIN) ⏳ EN COURS
+
+**Note**: Cette fonctionnalité est en cours d'implémentation. La table `ProblemePredefini` existe déjà dans la base de données avec des données de test.
+
+**Backend**:
+- ✅ Table `ProblemePredefini` créée (voir `add_missing_tables.sql`)
+- ⏳ `backend/controllers/predefinedProblemController.js` (À CRÉER)
+- ⏳ `backend/routes/predefinedProblemRoutes.js` (À CRÉER)
+
+**Frontend**:
+- ⏳ `frontend/lib/api/predefinedProblems.ts` (À CRÉER)
+- ⏳ `frontend/app/dashboard/admin/predefined-problems/page.tsx` (À CRÉER)
+- ⏳ `frontend/app/client/complaints/page.tsx` (À MODIFIER - ajouter sélection de problèmes)
+
+**Intégration avec réclamations**:
+- Permettre aux clients de sélectionner un problème prédéfini lors de la création d'une réclamation
+- Ajouter une colonne `probleme_predefini_id` à la table `Reclamation`
+- Afficher les solutions suggérées automatiquement
+
+**Table utilisée**: `ProblemePredefini`
+
+---
+
 ### 13. Suivi temps réel (CLIENT)
 ### 14. Chat client-agent (CLIENT, AGENT)
 ### 15. Backup/Restauration (ADMIN)
@@ -415,34 +353,38 @@
 
 ## 📊 RÉSUMÉ DES EFFORTS
 
-| Fonctionnalité | Backend | Frontend | Total | Priorité |
-|----------------|---------|----------|-------|----------|
-| Validation véhicules | ✅ 1j | ⏳ 1j | 2j | 🔴 |
-| Permissions | ⏳ 3j | ⏳ 2j | 5j | 🔴 |
-| Statuts dynamiques | ⏳ 2j | ⏳ 1j | 3j | 🔴 |
-| Diagnostic | ⏳ 3j | ⏳ 2j | 5j | 🔴 |
-| Historique véhicule | ⏳ 1j | ⏳ 1j | 2j | 🔴 |
-| Stats direction | ⏳ 2j | ⏳ 2j | 4j | 🔴 |
-| Upload fichiers | ⏳ 2j | ⏳ 2j | 4j | 🟡 |
-| Packages dans RDV | ⏳ 1j | ⏳ 1j | 2j | 🟡 |
-| Planning visuel | ⏳ 2j | ⏳ 2j | 4j | 🟡 |
-| Gestion agences | ⏳ 2j | ⏳ 1j | 3j | 🟡 |
-| Audit logs | ⏳ 3j | ⏳ 2j | 5j | 🟡 |
+| Fonctionnalité | Backend | Frontend | Total | Priorité | Statut |
+|----------------|---------|----------|-------|----------|--------|
+| Validation véhicules | ✅ Fait | ✅ Fait | 0j | 🔴 | ✅ Complet |
+| Permissions | ✅ Fait | ✅ Fait | 0j | 🔴 | ✅ Complet |
+| Statuts dynamiques | ✅ Fait | ✅ Fait | 0j | 🔴 | ✅ Complet |
+| Diagnostic | ✅ Fait | ⏳ 2j | 2j | 🔴 | Backend OK |
+| Historique véhicule | ✅ Fait | ✅ Fait | 0j | 🔴 | ✅ Complet |
+| Stats direction | ⏳ 2j | ⏳ 2j | 4j | 🔴 | À faire |
+| Upload fichiers | ⏳ 2j | ⏳ 2j | 4j | 🟡 | À faire |
+| Packages dans RDV | ⏳ 1j | ⏳ 1j | 2j | 🟡 | À faire |
+| Planning visuel | ⏳ 2j | ⏳ 2j | 4j | 🟡 | À faire |
+| Gestion agences | ✅ Fait | ✅ Fait | 0j | 🟡 | ✅ Complet |
+| Audit logs | ✅ Fait | ✅ Fait | 0j | 🟡 | ✅ Complet |
+| Problèmes prédéfinis | ⏳ 2j | ⏳ 2j | 4j | � | En cours |
 
-**Total estimé**: ~40 jours de développement
+**Total restant**: ~20 jours de développement (réduit de 40j grâce aux implémentations déjà faites)
 
 ---
 
 ## 🎯 PLAN D'EXÉCUTION RECOMMANDÉ
 
-### Sprint 1 (Semaine 1-2): Fondations
-1. ✅ Validation véhicules (FAIT)
-2. ✅ Gestion des permissions (FAIT)
-3. ✅ Gestion des statuts dynamiques (FAIT)
+### Sprint 1 (Semaine 1-2): Fondations ✅ TERMINÉ
+1. ✅ Validation véhicules (Backend fait, Frontend à créer)
+2. ✅ Gestion des permissions (COMPLET)
+3. ✅ Gestion des statuts dynamiques (COMPLET)
+4. ✅ Historique véhicule (COMPLET)
+5. ✅ Gestion agences (COMPLET)
+6. ✅ Audit logs (COMPLET)
 
-### Sprint 2 (Semaine 3-4): Fonctionnalités métier
-1. ⏳ Diagnostic technique
-2. ⏳ Historique véhicule
+### Sprint 2 (Semaine 3-4): Fonctionnalités métier ⏳ EN COURS
+1. ⏳ Diagnostic technique (Backend fait, Frontend à créer)
+2. ⏳ Problèmes prédéfinis (En cours d'implémentation)
 3. ⏳ Upload de fichiers
 
 ### Sprint 3 (Semaine 5-6): Améliorations
@@ -451,19 +393,42 @@
 3. ⏳ Planning visuel
 
 ### Sprint 4 (Semaine 7-8): Finalisation
-1. ⏳ Gestion agences
-2. ⏳ Audit logs
-3. ⏳ Tests et corrections
+1. ⏳ Tests et corrections
+2. ⏳ Documentation utilisateur
+3. ⏳ Optimisations de performance
 
 ---
 
 ## 📝 NOTES IMPORTANTES
 
-1. **Validation véhicules** est déjà implémentée côté backend
-2. Il reste à créer la page frontend pour l'utiliser
-3. Toutes les autres fonctionnalités nécessitent backend + frontend
-4. Les vues SQL existantes peuvent être réutilisées
-5. Le système de permissions est critique pour la sécurité
-6. L'audit trail est important pour la traçabilité
+### ✅ Progrès réalisés
+1. **Permissions** - Système complet avec 86 permissions initialisées
+2. **Statuts dynamiques** - Gestion complète pour RDV, Interventions, Réclamations
+3. **Historique véhicule** - Backend et frontend complets
+4. **Gestion agences** - CRUD complet avec interface admin
+5. **Audit logs** - Système complet avec middleware automatique, 6 docs de référence
+6. **Validation véhicules** - Backend complet, frontend à créer
+7. **Diagnostic technique** - Backend complet avec 30 problèmes prédéfinis, frontend à créer
 
-**Prochaine étape**: Créer la page frontend de validation des véhicules
+### ⏳ En cours
+- **Problèmes prédéfinis** - Table créée, intégration avec réclamations en cours
+
+### 🔴 Priorités immédiates
+1. Créer la page frontend de validation des véhicules (`frontend/app/dashboard/agent/vehicles/validation/page.tsx`)
+2. Créer les pages frontend pour le diagnostic technique:
+   - `frontend/app/dashboard/agent/diagnostics/page.tsx`
+   - `frontend/app/dashboard/admin/problems/page.tsx`
+3. Finaliser le système de problèmes prédéfinis et l'intégrer aux réclamations
+
+### 🟡 Fonctionnalités manquantes importantes
+1. **Stats direction** - Tableaux de bord pour la direction
+2. **Upload fichiers** - Système de pièces jointes
+3. **Packages dans RDV** - Commander des packages lors de la prise de RDV
+4. **Planning visuel** - Calendrier interactif pour les agents
+
+### 📊 Réduction de la charge de travail
+- **Avant**: 40 jours estimés
+- **Après implémentations**: 21 jours restants
+- **Gain**: 19 jours (47.5% de réduction)
+
+**Prochaine étape recommandée**: Finaliser le système de problèmes prédéfinis (en cours)

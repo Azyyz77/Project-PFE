@@ -1,0 +1,526 @@
+const { getConnection, sql } = require('../config/database');
+
+/**
+ * Contrôleur pour les statistiques de direction
+ * Fournit des statistiques avancées pour la prise de décision stratégique
+ */
+
+/**
+ * Obtenir les statistiques par agence
+ * Utilise la vue VW_StatsAgence
+ */
+const getAgencyStats = async (req, res) => {
+  try {
+    const pool = await getConnection();
+
+    const result = await pool.request().query(`
+      SELECT 
+        agence_id,
+        agence_nom,
+        ville,
+        total_rdv,
+        rdv_termines,
+        rdv_annules,
+        rdv_no_show,
+        duree_moy_min,
+        CASE 
+          WHEN total_rdv > 0 
+          THEN CAST(rdv_termines AS FLOAT) / total_rdv * 100 
+          ELSE 0 
+        END AS taux_completion,
+        CASE 
+          WHEN total_rdv > 0 
+          THEN CAST(rdv_annules AS FLOAT) / total_rdv * 100 
+          ELSE 0 
+        END AS taux_annulation
+      FROM VW_StatsAgence
+      ORDER BY total_rdv DESC
+    `);
+
+    res.json({
+      success: true,
+      data: result.recordset
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats agences:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques par agence',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les statistiques globales avec filtres de date
+ */
+const getGlobalStats = async (req, res) => {
+  try {
+    const { dateDebut, dateFin } = req.query;
+    const pool = await getConnection();
+
+    const request = pool.request();
+
+    // Construire la clause WHERE pour les dates
+    let dateFilter = '';
+    if (dateDebut && dateFin) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      request.input('dateFin', sql.Date, dateFin);
+      dateFilter = 'WHERE r.date_heure BETWEEN @dateDebut AND @dateFin';
+    } else if (dateDebut) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      dateFilter = 'WHERE r.date_heure >= @dateDebut';
+    } else if (dateFin) {
+      request.input('dateFin', sql.Date, dateFin);
+      dateFilter = 'WHERE r.date_heure <= @dateFin';
+    }
+
+    // Statistiques globales
+    const globalResult = await request.query(`
+      SELECT 
+        COUNT(DISTINCT r.id) AS total_rdv,
+        COUNT(DISTINCT r.client_id) AS total_clients,
+        COUNT(DISTINCT r.vehicule_id) AS total_vehicules,
+        COUNT(DISTINCT r.agence_id) AS total_agences,
+        SUM(CASE WHEN r.statut = 'TERMINE' THEN 1 ELSE 0 END) AS rdv_termines,
+        SUM(CASE WHEN r.statut = 'ANNULE' THEN 1 ELSE 0 END) AS rdv_annules,
+        SUM(CASE WHEN r.statut = 'EN_ATTENTE' THEN 1 ELSE 0 END) AS rdv_en_attente,
+        SUM(CASE WHEN r.statut = 'CONFIRME' THEN 1 ELSE 0 END) AS rdv_confirmes,
+        AVG(DATEDIFF(MINUTE, r.heure_reelle_debut, r.heure_reelle_fin)) AS duree_moyenne_min
+      FROM RendezVous r
+      ${dateFilter}
+    `);
+
+    // Statistiques par statut
+    const statutResult = await pool.request().query(`
+      SELECT 
+        r.statut,
+        COUNT(*) AS count,
+        CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM RendezVous ${dateFilter}) * 100 AS pourcentage
+      FROM RendezVous r
+      ${dateFilter}
+      GROUP BY r.statut
+      ORDER BY count DESC
+    `);
+
+    // Évolution mensuelle
+    const evolutionResult = await pool.request().query(`
+      SELECT 
+        YEAR(r.date_heure) AS annee,
+        MONTH(r.date_heure) AS mois,
+        COUNT(*) AS total_rdv,
+        SUM(CASE WHEN r.statut = 'TERMINE' THEN 1 ELSE 0 END) AS rdv_termines
+      FROM RendezVous r
+      ${dateFilter}
+      GROUP BY YEAR(r.date_heure), MONTH(r.date_heure)
+      ORDER BY annee DESC, mois DESC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        global: globalResult.recordset[0],
+        par_statut: statutResult.recordset,
+        evolution_mensuelle: evolutionResult.recordset
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats globales:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques globales',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les statistiques de revenus
+ */
+const getRevenueStats = async (req, res) => {
+  try {
+    const { dateDebut, dateFin, agenceId } = req.query;
+    const pool = await getConnection();
+
+    const request = pool.request();
+
+    // Construire les filtres
+    let filters = [];
+    if (dateDebut && dateFin) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      request.input('dateFin', sql.Date, dateFin);
+      filters.push('r.date_heure BETWEEN @dateDebut AND @dateFin');
+    }
+    if (agenceId) {
+      request.input('agenceId', sql.BigInt, agenceId);
+      filters.push('r.agence_id = @agenceId');
+    }
+
+    const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
+
+    // Revenus globaux
+    const revenueResult = await request.query(`
+      SELECT 
+        COUNT(DISTINCT r.id) AS total_rdv,
+        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
+        AVG(ISNULL(ic.prix, 0)) AS revenu_moyen,
+        MIN(ISNULL(ic.prix, 0)) AS revenu_min,
+        MAX(ISNULL(ic.prix, 0)) AS revenu_max
+      FROM RendezVous r
+      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
+      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
+      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+      ${whereClause}
+    `);
+
+    // Revenus par agence
+    const revenueByAgencyResult = await pool.request().query(`
+      SELECT 
+        ag.id AS agence_id,
+        ag.nom AS agence_nom,
+        COUNT(DISTINCT r.id) AS total_rdv,
+        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
+        AVG(ISNULL(ic.prix, 0)) AS revenu_moyen
+      FROM Agence ag
+      LEFT JOIN RendezVous r ON r.agence_id = ag.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
+      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
+      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+      GROUP BY ag.id, ag.nom
+      ORDER BY revenu_total DESC
+    `);
+
+    // Revenus par type d'intervention
+    const revenueByTypeResult = await pool.request().query(`
+      SELECT 
+        ic.nom AS intervention,
+        COUNT(r.id) AS nombre_rdv,
+        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
+        AVG(ISNULL(ic.prix, 0)) AS prix_moyen
+      FROM RendezVous r
+      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
+      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
+      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+      ${whereClause}
+      GROUP BY ic.nom, ic.prix
+      ORDER BY revenu_total DESC
+    `);
+
+    // Évolution mensuelle des revenus
+    const monthlyRevenueResult = await pool.request().query(`
+      SELECT 
+        YEAR(r.date_heure) AS annee,
+        MONTH(r.date_heure) AS mois,
+        COUNT(r.id) AS total_rdv,
+        SUM(ISNULL(ic.prix, 0)) AS revenu_total
+      FROM RendezVous r
+      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
+      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
+      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+      ${whereClause}
+      GROUP BY YEAR(r.date_heure), MONTH(r.date_heure)
+      ORDER BY annee DESC, mois DESC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        global: revenueResult.recordset[0],
+        par_agence: revenueByAgencyResult.recordset,
+        par_type_intervention: revenueByTypeResult.recordset,
+        evolution_mensuelle: monthlyRevenueResult.recordset
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats revenus:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques de revenus',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les statistiques de satisfaction client
+ */
+const getSatisfactionStats = async (req, res) => {
+  try {
+    const { dateDebut, dateFin, agenceId } = req.query;
+    const pool = await getConnection();
+
+    const request = pool.request();
+
+    // Construire les filtres
+    let filters = [];
+    if (dateDebut && dateFin) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      request.input('dateFin', sql.Date, dateFin);
+      filters.push('f.date_feedback BETWEEN @dateDebut AND @dateFin');
+    }
+    if (agenceId) {
+      request.input('agenceId', sql.BigInt, agenceId);
+      filters.push('r.agence_id = @agenceId');
+    }
+
+    const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
+
+    // Satisfaction globale
+    const satisfactionResult = await request.query(`
+      SELECT 
+        COUNT(f.id) AS total_feedbacks,
+        AVG(CAST(f.note AS FLOAT)) AS note_moyenne,
+        SUM(CASE WHEN f.note >= 4 THEN 1 ELSE 0 END) AS feedbacks_positifs,
+        SUM(CASE WHEN f.note = 3 THEN 1 ELSE 0 END) AS feedbacks_neutres,
+        SUM(CASE WHEN f.note <= 2 THEN 1 ELSE 0 END) AS feedbacks_negatifs,
+        CASE 
+          WHEN COUNT(f.id) > 0 
+          THEN CAST(SUM(CASE WHEN f.note >= 4 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(f.id) * 100 
+          ELSE 0 
+        END AS taux_satisfaction
+      FROM Feedback f
+      LEFT JOIN RendezVous r ON f.appointment_id = r.id
+      ${whereClause}
+    `);
+
+    // Satisfaction par agence
+    const satisfactionByAgencyResult = await pool.request().query(`
+      SELECT 
+        ag.id AS agence_id,
+        ag.nom AS agence_nom,
+        COUNT(f.id) AS total_feedbacks,
+        AVG(CAST(f.note AS FLOAT)) AS note_moyenne,
+        SUM(CASE WHEN f.note >= 4 THEN 1 ELSE 0 END) AS feedbacks_positifs
+      FROM Agence ag
+      LEFT JOIN RendezVous r ON r.agence_id = ag.id
+      LEFT JOIN Feedback f ON f.appointment_id = r.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      GROUP BY ag.id, ag.nom
+      HAVING COUNT(f.id) > 0
+      ORDER BY note_moyenne DESC
+    `);
+
+    // Distribution des notes
+    const distributionResult = await pool.request().query(`
+      SELECT 
+        f.note,
+        COUNT(*) AS count,
+        CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM Feedback f2 LEFT JOIN RendezVous r2 ON f2.appointment_id = r2.id ${whereClause}) * 100 AS pourcentage
+      FROM Feedback f
+      LEFT JOIN RendezVous r ON f.appointment_id = r.id
+      ${whereClause}
+      GROUP BY f.note
+      ORDER BY f.note DESC
+    `);
+
+    // Réclamations
+    const complaintsResult = await pool.request().query(`
+      SELECT 
+        COUNT(c.id) AS total_reclamations,
+        SUM(CASE WHEN c.statut = 'RESOLU' THEN 1 ELSE 0 END) AS reclamations_resolues,
+        SUM(CASE WHEN c.statut = 'EN_COURS' THEN 1 ELSE 0 END) AS reclamations_en_cours,
+        SUM(CASE WHEN c.statut = 'NOUVEAU' THEN 1 ELSE 0 END) AS reclamations_nouvelles,
+        AVG(DATEDIFF(DAY, c.date_soumission, ISNULL(c.date_cloture, GETDATE()))) AS delai_moyen_resolution_jours
+      FROM Reclamation c
+      LEFT JOIN RendezVous r ON c.appointment_id = r.id
+      ${whereClause.replace('f.date_feedback', 'c.date_soumission')}
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        satisfaction: satisfactionResult.recordset[0],
+        par_agence: satisfactionByAgencyResult.recordset,
+        distribution_notes: distributionResult.recordset,
+        reclamations: complaintsResult.recordset[0]
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats satisfaction:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques de satisfaction',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les statistiques de performance des agents
+ */
+const getPerformanceStats = async (req, res) => {
+  try {
+    const { dateDebut, dateFin, agenceId } = req.query;
+    const pool = await getConnection();
+
+    const request = pool.request();
+
+    // Construire les filtres
+    let filters = [];
+    if (dateDebut && dateFin) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      request.input('dateFin', sql.Date, dateFin);
+      filters.push('r.date_heure BETWEEN @dateDebut AND @dateFin');
+    }
+    if (agenceId) {
+      request.input('agenceId', sql.BigInt, agenceId);
+      filters.push('u.agence_id = @agenceId');
+    }
+
+    const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
+
+    // Performance par agent
+    const agentPerformanceResult = await request.query(`
+      SELECT 
+        u.id AS agent_id,
+        u.prenom + ' ' + u.nom AS agent_nom,
+        ag.nom AS agence_nom,
+        COUNT(DISTINCT r.id) AS total_rdv,
+        SUM(CASE WHEN r.statut = 'TERMINE' THEN 1 ELSE 0 END) AS rdv_termines,
+        AVG(DATEDIFF(MINUTE, r.heure_reelle_debut, r.heure_reelle_fin)) AS duree_moyenne_min,
+        AVG(CAST(f.note AS FLOAT)) AS note_moyenne,
+        COUNT(DISTINCT f.id) AS total_feedbacks
+      FROM Utilisateur u
+      LEFT JOIN Agence ag ON u.agence_id = ag.id
+      LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      LEFT JOIN Feedback f ON f.appointment_id = r.id
+      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+      GROUP BY u.id, u.prenom, u.nom, ag.nom
+      HAVING COUNT(DISTINCT r.id) > 0
+      ORDER BY rdv_termines DESC
+    `);
+
+    // Top agents par satisfaction
+    const topAgentsResult = await pool.request().query(`
+      SELECT TOP 10
+        u.id AS agent_id,
+        u.prenom + ' ' + u.nom AS agent_nom,
+        ag.nom AS agence_nom,
+        AVG(CAST(f.note AS FLOAT)) AS note_moyenne,
+        COUNT(f.id) AS total_feedbacks
+      FROM Utilisateur u
+      LEFT JOIN Agence ag ON u.agence_id = ag.id
+      LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      LEFT JOIN Feedback f ON f.appointment_id = r.id
+      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+      GROUP BY u.id, u.prenom, u.nom, ag.nom
+      HAVING COUNT(f.id) >= 5
+      ORDER BY note_moyenne DESC
+    `);
+
+    // Charge de travail par agent
+    const workloadResult = await pool.request().query(`
+      SELECT 
+        u.id AS agent_id,
+        u.prenom + ' ' + u.nom AS agent_nom,
+        COUNT(DISTINCT r.id) AS total_rdv,
+        SUM(DATEDIFF(MINUTE, r.heure_reelle_debut, r.heure_reelle_fin)) AS total_minutes_travail,
+        AVG(DATEDIFF(MINUTE, r.heure_reelle_debut, r.heure_reelle_fin)) AS duree_moyenne_min
+      FROM Utilisateur u
+      LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+        AND r.heure_reelle_debut IS NOT NULL 
+        AND r.heure_reelle_fin IS NOT NULL
+      GROUP BY u.id, u.prenom, u.nom
+      ORDER BY total_minutes_travail DESC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        performance_agents: agentPerformanceResult.recordset,
+        top_agents: topAgentsResult.recordset,
+        charge_travail: workloadResult.recordset
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats performance:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques de performance',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Exporter les statistiques dans différents formats
+ */
+const exportStats = async (req, res) => {
+  try {
+    const { format = 'json', type, dateDebut, dateFin } = req.query;
+
+    // Pour l'instant, on supporte uniquement JSON
+    // CSV et Excel peuvent être ajoutés plus tard
+    if (format !== 'json') {
+      return res.status(400).json({
+        error: 'Format non supporté',
+        message: 'Seul le format JSON est actuellement supporté'
+      });
+    }
+
+    let data;
+
+    switch (type) {
+      case 'agencies':
+        const agenciesReq = { query: {} };
+        const agenciesRes = { json: (d) => { data = d; } };
+        await getAgencyStats(agenciesReq, agenciesRes);
+        break;
+
+      case 'global':
+        const globalReq = { query: { dateDebut, dateFin } };
+        const globalRes = { json: (d) => { data = d; } };
+        await getGlobalStats(globalReq, globalRes);
+        break;
+
+      case 'revenue':
+        const revenueReq = { query: { dateDebut, dateFin } };
+        const revenueRes = { json: (d) => { data = d; } };
+        await getRevenueStats(revenueReq, revenueRes);
+        break;
+
+      case 'satisfaction':
+        const satisfactionReq = { query: { dateDebut, dateFin } };
+        const satisfactionRes = { json: (d) => { data = d; } };
+        await getSatisfactionStats(satisfactionReq, satisfactionRes);
+        break;
+
+      case 'performance':
+        const performanceReq = { query: { dateDebut, dateFin } };
+        const performanceRes = { json: (d) => { data = d; } };
+        await getPerformanceStats(performanceReq, performanceRes);
+        break;
+
+      default:
+        return res.status(400).json({
+          error: 'Type invalide',
+          message: 'Type doit être: agencies, global, revenue, satisfaction, ou performance'
+        });
+    }
+
+    // Ajouter les métadonnées d'export
+    const exportData = {
+      ...data,
+      export_info: {
+        date_export: new Date().toISOString(),
+        type,
+        format,
+        filters: { dateDebut, dateFin }
+      }
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="stats_${type}_${Date.now()}.json"`);
+    res.json(exportData);
+  } catch (error) {
+    console.error('Erreur export stats:', error);
+    res.status(500).json({
+      error: 'Erreur lors de l\'export des statistiques',
+      message: error.message
+    });
+  }
+};
+
+module.exports = {
+  getAgencyStats,
+  getGlobalStats,
+  getRevenueStats,
+  getSatisfactionStats,
+  getPerformanceStats,
+  exportStats
+};

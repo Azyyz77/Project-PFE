@@ -20,6 +20,8 @@ import {
   Menu,
   LogOut,
   ChevronRight,
+  CheckSquare,
+  ClipboardList,
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,6 +40,16 @@ const AGENT_NAV_ITEMS: NavItem[] = [
     label: 'Toutes les commandes',
     href: '/dashboard/agent/repair-orders',
     icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Validation véhicules',
+    href: '/dashboard/agent/vehicles/validation',
+    icon: <CheckSquare className="w-5 h-5" />,
+  },
+  {
+    label: 'Diagnostics',
+    href: '/dashboard/agent/diagnostics',
+    icon: <ClipboardList className="w-5 h-5" />,
   },
   {
     label: 'Inspection de véhicule',

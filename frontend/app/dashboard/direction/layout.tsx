@@ -143,10 +143,8 @@ function DirectionMobileMenu() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger>
-        <button className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-900 transition hover:bg-slate-100 lg:hidden">
-          <Menu className="w-5 h-5" />
-        </button>
+      <SheetTrigger className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-slate-900 transition hover:bg-slate-100 lg:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700">
+        <Menu className="w-5 h-5" />
       </SheetTrigger>
 
       <SheetContent side="left" className="w-72 p-0">

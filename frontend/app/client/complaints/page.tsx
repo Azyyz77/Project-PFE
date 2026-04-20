@@ -21,6 +21,7 @@ import {
   Send
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ComplaintAttachments } from '@/components/examples/FileUploadExample';
 
 type ComplaintStatus = 'SOUMISE' | 'EN_COURS' | 'TRAITEE' | 'CLOTUREE';
 
@@ -355,6 +356,11 @@ export default function ComplaintsPage() {
                         )}
                       </div>
                     )}
+
+                    {/* File Attachments Section */}
+                    <div className="border-t border-slate-700 pt-4">
+                      <ComplaintAttachments complaintId={complaint.id} />
+                    </div>
                   </div>
                 </div>
               );

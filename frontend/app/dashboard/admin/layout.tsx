@@ -24,6 +24,7 @@ import {
   Sparkles,
   User,
   Shield,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface NavItem {
@@ -82,6 +83,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Packages',
     href: '/dashboard/admin/packages',
     icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Problèmes prédéfinis',
+    href: '/dashboard/admin/problems',
+    icon: <AlertTriangle className="w-5 h-5" />,
   },
   {
     label: 'Plages horaires',

@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import AppointmentFeedback from '@/components/client/AppointmentFeedback';
+import AppointmentAttachments from '@/components/client/AppointmentAttachments';
 import {
   Calendar,
   ChevronLeft,
@@ -1284,6 +1285,14 @@ function RendezVousContent() {
                   <p className="text-sm">{selectedAppointmentDetail.description}</p>
                 </div>
               )}
+
+              {/* File Attachments Section */}
+              <div className="border-t pt-4">
+                <AppointmentAttachments 
+                  appointmentId={selectedAppointmentDetail.id}
+                  isReadOnly={selectedAppointmentDetail.statut === 'TERMINE' || selectedAppointmentDetail.statut === 'ANNULE'}
+                />
+              </div>
 
               {/* Cancel Section */}
               {canCancelAppointment(selectedAppointmentDetail) && (

@@ -1,73 +1,83 @@
-/**
- * Script pour tester la requête des problèmes prédéfinis
- */
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+const { getConnection, closeConnection } = require('../config/database');
 
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const { getConnection } = require('../config/database');
-
-async function testQuery() {
+async function testDiagnosticQuery() {
   try {
-    console.log('🔄 Connexion à la base de données...');
     const pool = await getConnection();
-    console.log('✅ Connecté\n');
-
-    // Test 1: Vérifier le nom exact de la table
-    console.log('📋 Test 1: Vérifier les tables disponibles...');
+    
+    console.log('🧪 Test de la requête diagnostics...\n');
+    
+    // Test de la requête corrigée
+    console.log('1. Test de la requête avec date_heure...');
+    const result = await pool.request().query(`
+      SELECT TOP 1
+        d.id,
+        d.rdv_id,
+        d.agent_id,
+        d.observations_generales,
+        d.recommandations,
+        d.date_creation,
+        d.date_modification,
+        a.nom + ' ' + a.prenom AS agent_nom,
+        r.date_heure,
+        r.statut AS rdv_statut,
+        c.nom + ' ' + c.prenom AS client_nom,
+        v.immatriculation,
+        m.nom AS marque,
+        mo.nom AS modele
+      FROM Diagnostic d
+      JOIN Utilisateur a ON a.id = d.agent_id
+      JOIN RendezVous r ON r.id = d.rdv_id
+      JOIN Utilisateur c ON c.id = r.client_id
+      LEFT JOIN Vehicule v ON v.id = r.vehicule_id
+      LEFT JOIN Version ve ON ve.id = v.version_id
+      LEFT JOIN Modele mo ON mo.id = ve.modele_id
+      LEFT JOIN Marque m ON m.id = mo.marque_id
+    `);
+    
+    if (result.recordset.length > 0) {
+      console.log('   ✅ Requête réussie!');
+      console.log('   📊 Colonnes récupérées:', Object.keys(result.recordset[0]));
+      console.log('   📅 date_heure:', result.recordset[0].date_heure);
+    } else {
+      console.log('   ⚠️  Aucun diagnostic trouvé (normal si pas de données)');
+    }
+    
+    console.log('\n2. Vérification des tables...');
+    
+    // Vérifier les tables
     const tables = await pool.request().query(`
-      SELECT TABLE_NAME, TABLE_SCHEMA
+      SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
-      WHERE TABLE_NAME LIKE '%Probleme%'
+      WHERE TABLE_NAME IN ('Diagnostic', 'RendezVous', 'Utilisateur', 'Vehicule')
       ORDER BY TABLE_NAME
     `);
     
-    console.log('Tables trouvées:');
-    tables.recordset.forEach(t => {
-      console.log(`   - [${t.TABLE_SCHEMA}].[${t.TABLE_NAME}]`);
-    });
-
-    // Test 2: Essayer différentes variantes du nom
-    const variants = [
-      'ProblemePredéfini',
-      'ProblemePrédefini',
-      'ProblemePredéfini',
-      'ProblemePredefini',
-      '[ProblemePredéfini]',
-      '[dbo].[ProblemePredéfini]'
-    ];
-
-    console.log('\n📋 Test 2: Essayer différentes variantes...');
-    for (const variant of variants) {
-      try {
-        const result = await pool.request().query(`SELECT COUNT(*) as count FROM ${variant}`);
-        console.log(`   ✅ ${variant}: ${result.recordset[0].count} enregistrements`);
-      } catch (err) {
-        console.log(`   ❌ ${variant}: ${err.message.split('\n')[0]}`);
-      }
-    }
-
-    // Test 3: Lire quelques enregistrements
-    console.log('\n📋 Test 3: Lire les premiers problèmes...');
-    try {
-      const problems = await pool.request().query(`
-        SELECT TOP 5 id, nom, categorie 
-        FROM [dbo].[ProblemePredéfini]
-        ORDER BY id
-      `);
-      
-      console.log('Premiers problèmes:');
-      problems.recordset.forEach(p => {
-        console.log(`   ${p.id}. ${p.nom} (${p.categorie})`);
-      });
-    } catch (err) {
-      console.error('   ❌ Erreur:', err.message);
-    }
-
-    process.exit(0);
+    console.log('   📋 Tables disponibles:', tables.recordset.map(t => t.TABLE_NAME));
+    
+    // Compter les enregistrements
+    const counts = await pool.request().query(`
+      SELECT 
+        (SELECT COUNT(*) FROM Diagnostic) as diagnostics,
+        (SELECT COUNT(*) FROM RendezVous) as rendez_vous,
+        (SELECT COUNT(*) FROM Utilisateur) as utilisateurs
+    `);
+    
+    console.log('   📊 Nombre d\'enregistrements:');
+    console.log('     - Diagnostics:', counts.recordset[0].diagnostics);
+    console.log('     - Rendez-vous:', counts.recordset[0].rendez_vous);
+    console.log('     - Utilisateurs:', counts.recordset[0].utilisateurs);
+    
+    console.log('\n✅ Test terminé avec succès!');
+    
   } catch (error) {
-    console.error('\n❌ Erreur:', error);
-    process.exit(1);
+    console.error('❌ Erreur lors du test:', error.message);
+    if (error.message.includes('date_rdv')) {
+      console.error('⚠️  Il reste des références à date_rdv dans le code!');
+    }
+  } finally {
+    await closeConnection();
   }
 }
 
-testQuery();
+testDiagnosticQuery();

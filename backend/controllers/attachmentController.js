@@ -1,141 +1,240 @@
-const sql = require('mssql');
-const poolPromise = require('../config/database');
-const multer = require('multer');
+const { getConnection } = require('../config/database');
 const path = require('path');
 const fs = require('fs');
+const { calculateSizeInMB, uploadsDir } = require('../middleware/uploadMiddleware');
 
-// Configuration de multer pour l'upload de fichiers
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads/attachments');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
-  fileFilter: function (req, file, cb) {
-    const allowedTypes = /jpeg|jpg|png|pdf|doc|docx|xls|xlsx/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Type de fichier non autorisé'));
-    }
-  }
-}).single('file');
-
-// Upload d'une pièce jointe
-exports.uploadAttachment = async (req, res) => {
-  upload(req, res, async function (err) {
-    if (err) {
-      return res.status(400).json({ message: err.message });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'Aucun fichier fourni' });
-    }
-
+class AttachmentController {
+  // Upload de fichier(s)
+  async uploadFile(req, res) {
     try {
-      const { entite_type, entite_id } = req.body;
+      const { entiteType, entiteId } = req.body;
+      const files = req.files;
 
-      if (!entite_type || !entite_id) {
-        return res.status(400).json({ message: 'Type et ID d\'entité requis' });
+      if (!files || files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aucun fichier fourni'
+        });
       }
 
-      const fileUrl = `/uploads/attachments/${req.file.filename}`;
-      const fileSizeMB = req.file.size / (1024 * 1024);
+      const pool = await getConnection();
+      const uploadedFiles = [];
 
-      const pool = await poolPromise;
+      // Traiter chaque fichier
+      for (const file of files) {
+        const sizeInMB = calculateSizeInMB(file.size);
+        
+        // Insérer dans la base de données
+        const result = await pool.request()
+          .input('entite_type', entiteType)
+          .input('entite_id', parseInt(entiteId))
+          .input('url', file.filename) // Stocker seulement le nom du fichier
+          .input('type_mime', file.mimetype)
+          .input('taille_mo', sizeInMB)
+          .query(`
+            INSERT INTO PieceJointe (entite_type, entite_id, url, type_mime, taille_mo, date_upload)
+            OUTPUT INSERTED.*
+            VALUES (@entite_type, @entite_id, @url, @type_mime, @taille_mo, GETDATE())
+          `);
+
+        uploadedFiles.push({
+          id: result.recordset[0].id,
+          originalName: file.originalname,
+          filename: file.filename,
+          mimetype: file.mimetype,
+          size: file.size,
+          sizeInMB: sizeInMB,
+          uploadDate: result.recordset[0].date_upload
+        });
+      }
+
+      res.json({
+        success: true,
+        message: `${uploadedFiles.length} fichier(s) uploadé(s) avec succès`,
+        files: uploadedFiles
+      });
+
+    } catch (error) {
+      console.error('Erreur upload:', error);
+      
+      // Nettoyer les fichiers en cas d'erreur
+      if (req.files) {
+        req.files.forEach(file => {
+          const filePath = path.join(uploadsDir, file.filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'upload des fichiers'
+      });
+    }
+  }
+
+  // Récupérer les pièces jointes d'une entité
+  async getAttachments(req, res) {
+    try {
+      const { entiteType, entiteId } = req.params;
+
+      const pool = await getConnection();
       const result = await pool.request()
-        .input('entite_type', sql.NVarChar(20), entite_type)
-        .input('entite_id', sql.BigInt, entite_id)
-        .input('url', sql.NVarChar(500), fileUrl)
-        .input('type_mime', sql.NVarChar(100), req.file.mimetype)
-        .input('taille_mo', sql.Decimal(8, 2), fileSizeMB.toFixed(2))
+        .input('entite_type', entiteType)
+        .input('entite_id', parseInt(entiteId))
         .query(`
-          INSERT INTO PieceJointe (entite_type, entite_id, url, type_mime, taille_mo, date_upload)
-          VALUES (@entite_type, @entite_id, @url, @type_mime, @taille_mo, GETDATE());
-          SELECT SCOPE_IDENTITY() AS id;
+          SELECT 
+            id,
+            entite_type,
+            entite_id,
+            url,
+            type_mime,
+            taille_mo,
+            date_upload
+          FROM PieceJointe 
+          WHERE entite_type = @entite_type AND entite_id = @entite_id
+          ORDER BY date_upload DESC
         `);
 
-      res.status(201).json({
-        message: 'Fichier uploadé avec succès',
-        id: result.recordset[0].id,
-        url: fileUrl,
-        filename: req.file.filename
+      const attachments = result.recordset.map(attachment => ({
+        ...attachment,
+        isImage: attachment.type_mime?.startsWith('image/') || false,
+        downloadUrl: `/api/attachments/${attachment.id}/download`
+      }));
+
+      res.json({
+        success: true,
+        attachments
       });
+
     } catch (error) {
-      console.error('Erreur lors de l\'upload:', error);
-      res.status(500).json({ message: 'Erreur serveur' });
+      console.error('Erreur récupération pièces jointes:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération des pièces jointes'
+      });
     }
-  });
-};
+  }
 
-// Récupérer les pièces jointes d'une entité
-exports.getAttachments = async (req, res) => {
-  try {
-    const { entite_type, entite_id } = req.params;
+  // Supprimer une pièce jointe
+  async deleteAttachment(req, res) {
+    try {
+      const { id } = req.params;
 
-    const pool = await poolPromise;
-    const result = await pool.request()
-      .input('entite_type', sql.NVarChar(20), entite_type)
-      .input('entite_id', sql.BigInt, entite_id)
-      .query(`
-        SELECT * FROM PieceJointe
-        WHERE entite_type = @entite_type AND entite_id = @entite_id
-        ORDER BY date_upload DESC
+      const pool = await getConnection();
+      
+      // Récupérer les infos du fichier avant suppression
+      const fileResult = await pool.request()
+        .input('id', parseInt(id))
+        .query('SELECT url FROM PieceJointe WHERE id = @id');
+
+      if (fileResult.recordset.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Pièce jointe non trouvée'
+        });
+      }
+
+      const filename = fileResult.recordset[0].url;
+      
+      // Supprimer de la base de données
+      await pool.request()
+        .input('id', parseInt(id))
+        .query('DELETE FROM PieceJointe WHERE id = @id');
+
+      // Supprimer le fichier physique
+      const filePath = path.join(uploadsDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res.json({
+        success: true,
+        message: 'Pièce jointe supprimée avec succès'
+      });
+
+    } catch (error) {
+      console.error('Erreur suppression pièce jointe:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la suppression de la pièce jointe'
+      });
+    }
+  }
+
+  // Télécharger une pièce jointe
+  async downloadAttachment(req, res) {
+    try {
+      const { id } = req.params;
+
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('id', parseInt(id))
+        .query('SELECT url, type_mime FROM PieceJointe WHERE id = @id');
+
+      if (result.recordset.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Pièce jointe non trouvée'
+        });
+      }
+
+      const { url: filename, type_mime } = result.recordset[0];
+      const filePath = path.join(uploadsDir, filename);
+
+      // Vérifier que le fichier existe
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          success: false,
+          message: 'Fichier physique non trouvé'
+        });
+      }
+
+      // Définir les headers appropriés
+      res.setHeader('Content-Type', type_mime || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      // Envoyer le fichier
+      res.sendFile(filePath);
+
+    } catch (error) {
+      console.error('Erreur téléchargement pièce jointe:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors du téléchargement de la pièce jointe'
+      });
+    }
+  }
+
+  // Obtenir les statistiques des pièces jointes
+  async getAttachmentStats(req, res) {
+    try {
+      const pool = await getConnection();
+      const result = await pool.request().query(`
+        SELECT 
+          entite_type,
+          COUNT(*) as total_files,
+          SUM(taille_mo) as total_size_mb,
+          AVG(taille_mo) as avg_size_mb
+        FROM PieceJointe 
+        GROUP BY entite_type
+        ORDER BY total_files DESC
       `);
-    
-    res.json(result.recordset);
-  } catch (error) {
-    console.error('Erreur lors de la récupération des pièces jointes:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-};
 
-// Supprimer une pièce jointe
-exports.deleteAttachment = async (req, res) => {
-  try {
-    const { id } = req.params;
+      res.json({
+        success: true,
+        stats: result.recordset
+      });
 
-    const pool = await poolPromise;
-    
-    // Récupérer l'URL du fichier
-    const fileResult = await pool.request()
-      .input('id', sql.BigInt, id)
-      .query('SELECT url FROM PieceJointe WHERE id = @id');
-
-    if (fileResult.recordset.length === 0) {
-      return res.status(404).json({ message: 'Pièce jointe non trouvée' });
+    } catch (error) {
+      console.error('Erreur statistiques pièces jointes:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la récupération des statistiques'
+      });
     }
-
-    const fileUrl = fileResult.recordset[0].url;
-    const filePath = path.join(__dirname, '..', fileUrl);
-
-    // Supprimer le fichier physique
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    // Supprimer l'enregistrement de la base de données
-    await pool.request()
-      .input('id', sql.BigInt, id)
-      .query('DELETE FROM PieceJointe WHERE id = @id');
-
-    res.json({ message: 'Pièce jointe supprimée avec succès' });
-  } catch (error) {
-    console.error('Erreur lors de la suppression de la pièce jointe:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
   }
-};
+}
+
+module.exports = new AttachmentController();
