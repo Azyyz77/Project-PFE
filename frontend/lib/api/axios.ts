@@ -16,11 +16,15 @@ const getAuthToken = (): string | null => {
 const api = {
   get: async (url: string, config?: RequestInit) => {
     const token = getAuthToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(config?.headers as HeadersInit),
     };
+
+    // Merge with config headers if provided
+    if (config?.headers) {
+      Object.assign(headers, config.headers);
+    }
 
     console.log('[axios.get] Request:', { url: `${API_BASE_URL}${url}`, hasToken: !!token });
 
@@ -48,16 +52,28 @@ const api = {
 
   post: async (url: string, data?: any, config?: RequestInit) => {
     const token = getAuthToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+    
+    // Check if data is FormData (for file uploads)
+    const isFormData = data instanceof FormData;
+    
+    const headers: Record<string, string> = {
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(config?.headers as HeadersInit),
     };
+    
+    // Only set Content-Type for non-FormData requests
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    // Merge with config headers if provided
+    if (config?.headers) {
+      Object.assign(headers, config.headers);
+    }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(data),
+      body: isFormData ? data : JSON.stringify(data),
       ...config,
     });
 
@@ -74,11 +90,15 @@ const api = {
 
   put: async (url: string, data?: any, config?: RequestInit) => {
     const token = getAuthToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(config?.headers as HeadersInit),
     };
+
+    // Merge with config headers if provided
+    if (config?.headers) {
+      Object.assign(headers, config.headers);
+    }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'PUT',
@@ -100,11 +120,15 @@ const api = {
 
   delete: async (url: string, config?: RequestInit) => {
     const token = getAuthToken();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...(config?.headers as HeadersInit),
     };
+
+    // Merge with config headers if provided
+    if (config?.headers) {
+      Object.assign(headers, config.headers);
+    }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
       method: 'DELETE',

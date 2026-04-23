@@ -47,6 +47,8 @@ const auditRoutes = require('./routes/auditRoutes');
 const diagnosticRoutes = require('./routes/diagnosticRoutes');
 const predefinedProblemRoutes = require('./routes/predefinedProblemRoutes');
 const directionStatsRoutes = require('./routes/directionStatsRoutes');
+const moderationRoutes = require('./routes/moderationRoutes');
+const debugRoutes = require('./routes/debugRoutes');
 const { auditMiddleware } = require('./middleware/auditMiddleware');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
@@ -110,6 +112,8 @@ app.use('/api/admin/audit', auditRoutes);
 app.use('/api/agent/diagnostics', diagnosticRoutes);
 app.use('/api/admin/problems', predefinedProblemRoutes);
 app.use('/api/direction/stats', directionStatsRoutes);
+app.use('/api/moderation', moderationRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {

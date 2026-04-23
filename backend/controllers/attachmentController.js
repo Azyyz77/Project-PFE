@@ -91,7 +91,11 @@ class AttachmentController {
             url,
             type_mime,
             taille_mo,
-            date_upload
+            date_upload,
+            statut_moderation,
+            modere_par,
+            date_moderation,
+            commentaire_moderation
           FROM PieceJointe 
           WHERE entite_type = @entite_type AND entite_id = @entite_id
           ORDER BY date_upload DESC
@@ -167,6 +171,23 @@ class AttachmentController {
   async downloadAttachment(req, res) {
     try {
       const { id } = req.params;
+      
+      // Handle token from query parameter for direct download links
+      let token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token && req.query.token) {
+        token = req.query.token;
+        // Verify the token manually since middleware might not have processed it
+        const jwt = require('jsonwebtoken');
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          req.user = decoded;
+        } catch (error) {
+          return res.status(401).json({
+            success: false,
+            message: 'Token invalide'
+          });
+        }
+      }
 
       const pool = await getConnection();
       const result = await pool.request()
@@ -181,16 +202,19 @@ class AttachmentController {
       }
 
       const { url: filename, type_mime } = result.recordset[0];
-      const filePath = path.join(uploadsDir, filename);
+      const filePath = path.resolve(uploadsDir, filename);
 
       // Vérifier que le fichier existe
       if (!fs.existsSync(filePath)) {
+        console.error('File not found:', filePath);
         return res.status(404).json({
           success: false,
           message: 'Fichier physique non trouvé'
         });
       }
 
+      console.log('Sending file:', filePath);
+      
       // Définir les headers appropriés
       res.setHeader('Content-Type', type_mime || 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

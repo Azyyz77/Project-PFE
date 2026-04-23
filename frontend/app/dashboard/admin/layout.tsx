@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import NotificationBell from '@/components/NotificationBell';
+import ModerationNotification from '@/components/ModerationNotification';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -100,6 +101,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <FileText className="w-5 h-5" />,
   },
   {
+    label: 'Modération fichiers',
+    href: '/dashboard/admin/moderation',
+    icon: <Shield className="w-5 h-5" />,
+  },
+  {
     label: 'Feedbacks',
     href: '/dashboard/admin/feedbacks',
     icon: <MessageSquare className="w-5 h-5" />,
@@ -148,11 +154,11 @@ const ADMIN_NAV_GROUPS = [
   },
   {
     label: 'Referentiel services',
-    items: ADMIN_NAV_ITEMS.slice(5, 15),
+    items: ADMIN_NAV_ITEMS.slice(5, 16),
   },
   {
     label: 'Suivi et parametres',
-    items: ADMIN_NAV_ITEMS.slice(15),
+    items: ADMIN_NAV_ITEMS.slice(16),
   },
 ];
 
@@ -414,6 +420,7 @@ export default function AdminLayout({
             <p className="text-sm text-cyan-300/90 mt-1">{salutation}, {user.prenom}. Ravi de vous revoir.</p>
           </div>
           <div className="flex items-center gap-2">
+            <ModerationNotification />
             <NotificationBell />
             <Link
               href="/dashboard/admin/settings"
@@ -442,6 +449,7 @@ export default function AdminLayout({
             <p className="text-xs text-cyan-300/90">{salutation}, {user.prenom}</p>
           </div>
           <div className="flex items-center gap-2">
+            <ModerationNotification />
             <NotificationBell />
             <AdminMobileMenu />
           </div>

@@ -131,12 +131,21 @@ export default function FileUpload({
     setIsUploading(true);
 
     try {
+      console.log('🔄 Starting upload...', {
+        entiteType,
+        entiteId,
+        fileCount: files.length,
+        hasToken: !!localStorage.getItem('token')
+      });
+
       // Mettre à jour le progrès
       const updateProgress = (progress: number) => {
         setFiles(prev => prev.map(f => ({ ...f, progress })));
       };
 
       const result = await uploadFile(files, entiteType, entiteId, updateProgress);
+      
+      console.log('✅ Upload successful:', result);
       
       if (result.success) {
         onUploadSuccess?.(result.files);
@@ -145,8 +154,8 @@ export default function FileUpload({
         onUploadError?.(result.message || 'Erreur lors de l\'upload');
       }
     } catch (error: any) {
-      console.error('Erreur upload:', error);
-      onUploadError?.(error.response?.data?.message || 'Erreur lors de l\'upload');
+      console.error('❌ Upload error:', error);
+      onUploadError?.(error.message || 'Erreur lors de l\'upload');
     } finally {
       setIsUploading(false);
     }

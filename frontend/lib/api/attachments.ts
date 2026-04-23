@@ -10,6 +10,10 @@ export interface Attachment {
   date_upload: string;
   isImage: boolean;
   downloadUrl: string;
+  statut_moderation: 'EN_ATTENTE' | 'APPROUVE' | 'REJETE';
+  modere_par?: number;
+  date_moderation?: string;
+  commentaire_moderation?: string;
 }
 
 export interface UploadResponse {
@@ -56,19 +60,28 @@ export const uploadFile = async (
   formData.append('entiteType', entiteType);
   formData.append('entiteId', entiteId.toString());
 
-  const response = await axios.post('/api/attachments/upload', formData, {
+  // Use fetch directly for file upload to handle FormData properly
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+  const response = await fetch(`${API_BASE_URL}/attachments/upload`, {
+    method: 'POST',
     headers: {
-      'Content-Type': 'multipart/form-data',
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
-    onUploadProgress: (progressEvent) => {
-      if (onProgress && progressEvent.total) {
-        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        onProgress(progress);
-      }
-    },
+    body: formData,
   });
 
-  return response.data;
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ 
+      error: 'Erreur réseau', 
+      message: `HTTP ${response.status}` 
+    }));
+    throw new Error(error.message || error.error || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data;
 };
 
 // Récupérer les pièces jointes d'une entité
@@ -76,24 +89,26 @@ export const getAttachments = async (
   entiteType: string, 
   entiteId: number
 ): Promise<AttachmentsResponse> => {
-  const response = await axios.get(`/api/attachments/${entiteType}/${entiteId}`);
+  const response = await axios.get(`/attachments/${entiteType}/${entiteId}`);
   return response.data;
 };
 
 // Supprimer une pièce jointe
 export const deleteAttachment = async (id: number): Promise<{ success: boolean; message: string }> => {
-  const response = await axios.delete(`/api/attachments/${id}`);
+  const response = await axios.delete(`/attachments/${id}`);
   return response.data;
 };
 
 // Télécharger une pièce jointe
 export const downloadAttachment = (id: number): string => {
-  return `${process.env.NEXT_PUBLIC_API_URL}/api/attachments/${id}/download`;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+  return `${baseURL}/attachments/${id}/download${token ? `?token=${token}` : ''}`;
 };
 
 // Obtenir les statistiques des pièces jointes (admin)
 export const getAttachmentStats = async (): Promise<{ success: boolean; stats: AttachmentStats[] }> => {
-  const response = await axios.get('/api/attachments/stats/overview');
+  const response = await axios.get('/attachments/stats/overview');
   return response.data;
 };
 
