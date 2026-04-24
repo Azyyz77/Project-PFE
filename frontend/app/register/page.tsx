@@ -38,8 +38,8 @@ export default function RegisterPage() {
 
   if (isAuthenticated) {
     return (
-      <AuthThemeShell sceneClassName="chery-auth-scene chery-auth-scene-register">
-        <div className="relative z-10 flex min-h-screen items-center justify-center text-slate-700">
+      <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
+        <div className="relative z-10 flex min-h-screen items-center justify-center text-white">
           Redirection vers votre espace...
         </div>
       </AuthThemeShell>
@@ -86,10 +86,10 @@ export default function RegisterPage() {
     }
   };
   return (
-    <AuthThemeShell sceneClassName="chery-auth-scene chery-auth-scene-register">
+    <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
         <section className="w-full max-w-xl lg:max-w-lg">
-          <div className="rounded-[1.8rem] border border-slate-200 bg-white p-7 shadow-[0_28px_70px_rgba(15,23,42,0.14)] sm:p-9">
+          <div className="rounded-[1.8rem] border border-white/20 bg-white/95 backdrop-blur-md p-7 shadow-2xl sm:p-9">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-500">
               CHERY SERVICE
             </p>

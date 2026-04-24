@@ -1,20 +1,42 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ThemeToggle } from '@/components/ThemeToggle'; // Assuming a standard ThemeToggle exists or we'll just skip it
+import { VideoBackground } from './VideoBackground';
 
 interface AuthThemeShellProps {
   children: ReactNode;
   sceneClassName?: string;
+  /**
+   * Enable video background
+   */
+  videoBackground?: boolean;
+  /**
+   * Video overlay opacity (0-1)
+   */
+  videoOverlayOpacity?: number;
 }
 
-export function AuthThemeShell({ children, sceneClassName }: AuthThemeShellProps) {
+export function AuthThemeShell({
+  children,
+  sceneClassName,
+  videoBackground = false,
+  videoOverlayOpacity = 0.5,
+}: AuthThemeShellProps) {
   return (
-    <div className={`min-h-screen bg-muted/30 flex flex-col relative ${sceneClassName || ''}`}>
-      <div className="absolute top-4 right-4 z-50">
-        {/* Put ThemeToggle here if available in the codebase, else nothing */}
+    <div className={`min-h-screen flex flex-col relative ${sceneClassName || ''} ${videoBackground ? 'bg-black' : 'bg-muted/30'}`}>
+      {/* Video Background */}
+      {videoBackground && (
+        <VideoBackground
+          enabled={true}
+          overlayOpacity={videoOverlayOpacity}
+          overlayColor="bg-black"
+        />
+      )}
+
+      {/* Content with proper z-index */}
+      <div className="relative z-10">
+        {children}
       </div>
-      {children}
     </div>
   );
 }

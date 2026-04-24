@@ -64,10 +64,10 @@ function LoginPageContent() {
 
   if (isAuthenticated || isRedirecting) {
     return (
-      <AuthThemeShell>
-        <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+      <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
+        <div className="flex min-h-screen items-center justify-center text-white">
           <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
             <p>Redirection vers votre espace...</p>
           </div>
         </div>
@@ -111,27 +111,23 @@ function LoginPageContent() {
   };
 
   return (
-    <AuthThemeShell>
+    <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
         <section className="hidden flex-1 lg:flex flex-col justify-center pr-16">
           <div className="space-y-6">
-            <div className="flex items-center gap-2 text-primary font-medium">
-              <CalendarDays className="h-6 w-6" />
-              <span>Smart Booking</span>
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
+
+            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
               Gérez vos <br />
-              rendez-vous <br />
-              intelligemment.
+              rendez-vous .<br />
             </h1>
-            <p className="text-lg text-muted-foreground max-w-md leading-relaxed">
+            <p className="text-lg text-white/90 max-w-md leading-relaxed drop-shadow-md">
               Planifiez vos interventions, suivez vos rendez-vous et restez connecté à votre espace de service en temps réel avec notre plateforme sécurisée.
             </p>
           </div>
         </section>
 
         <section className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="rounded-2xl border bg-card p-8 shadow-sm sm:p-10">
+          <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md p-8 shadow-2xl sm:p-10">
             <h2 className="text-2xl font-bold text-foreground">Connexion</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Entrez vos identifiants pour accéder à votre espace.
