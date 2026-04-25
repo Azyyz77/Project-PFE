@@ -167,30 +167,31 @@ app.use((err, req, res, next) => {
 
 app.use('/api/chatbot', chatbotRoute);
 // Démarrage du serveur
-app.listen(PORT, async () => {
-  console.log(`\n🚀 Serveur monolithique démarré sur le port ${PORT}`);
-  console.log(`📍 http://localhost:${PORT}`);
-  console.log(`📚 Documentation: http://localhost:${PORT}/api-docs`);
+if (require.main === module) {
+  app.listen(PORT, async () => {
+    console.log(`\n🚀 Serveur monolithique démarré sur le port ${PORT}`);
+    console.log(`📍 http://localhost:${PORT}`);
+    console.log(`📚 Documentation: http://localhost:${PORT}/api-docs`);
 
-  try {
-    console.log('\n🔌 Connexion à la base de données...');
-    await getConnection();
-    await ensureVehicleValidationSchema();
-    console.log('✅ Base de données connectée avec succès!\n');
-  } catch (error) {
-    console.error('❌ Erreur de connexion à la base de données:', error.message);
-    console.error('⚠️  Le serveur démarre mais la BDD n\'est pas accessible.\n');
-  }
+    try {
+      console.log('\n🔌 Connexion à la base de données...');
+      await getConnection();
+      await ensureVehicleValidationSchema();
+      console.log('✅ Base de données connectée avec succès!\n');
+    } catch (error) {
+      console.error('❌ Erreur de connexion à la base de données:', error.message);
+      console.error('⚠️  Le serveur démarre mais la BDD n\'est pas accessible.\n');
+    }
 
-  console.log('🟢 Initialisation de WhatsApp Web...');
-  initializeWhatsAppClient();
-  
-  console.log('🔔 Démarrage du service de rappels automatiques...');
-  startReminderService();
-  
-  // Note: Le modèle AI local (node-llama-cpp) est désactivé
-  // Utilisez Hugging Face Inference API (ou Space en option)
-});
+    console.log('🟢 Initialisation de WhatsApp Web...');
+    initializeWhatsAppClient();
+    
+    console.log('🔔 Démarrage du service de rappels automatiques...');
+    startReminderService();
+  });
+}
+
+module.exports = app;
 
 // ============================================
 // Configuration du modèle AI Local (node-llama-cpp)
