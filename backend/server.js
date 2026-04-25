@@ -57,9 +57,45 @@ const { startReminderService } = require('./services/reminderService');
 const chatbotRoute = require('./routes/chatbot');
 const app = express();
 const PORT = process.env.PORT || 3000;
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
-// Middleware
-app.use(cors());
+// Security Middlewares (Section 8 QA Report)
+// 1. Helmet for HTTP header security (XSS protection, etc.)
+app.use(helmet());
+
+// 2. CORS configuration (Restricting origins to frontend domain)
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
+// 3. Global Rate Limiting to prevent brute-force and DDoS
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+app.use('/api', apiLimiter);
+
+// 4. Stricter Rate Limiting for auth routes (brute-force credential stuffing)
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 20, // start blocking after 20 requests
+  message: 'Too many login attempts from this IP, please try again after an hour'
+});
+app.use('/api/users/login', authLimiter);
+app.use('/api/users/register', authLimiter);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -71,6 +107,10 @@ app.use((req, res, next) => {
 
 // Audit middleware - Enregistre toutes les modifications
 app.use(auditMiddleware);
+
+// PUBLIC ROUTES (No authentication required)
+// These must be registered BEFORE any auth middleware
+app.use('/api/chatbot', chatbotRoute);
 
 // Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -165,7 +205,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.use('/api/chatbot', chatbotRoute);
 // Démarrage du serveur
 if (require.main === module) {
   app.listen(PORT, async () => {

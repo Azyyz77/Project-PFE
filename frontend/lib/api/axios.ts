@@ -70,22 +70,56 @@ const api = {
       Object.assign(headers, config.headers);
     }
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'POST',
-      headers,
-      body: isFormData ? data : JSON.stringify(data),
-      ...config,
+    console.log('[axios.post] Request:', { 
+      url: `${API_BASE_URL}${url}`, 
+      hasToken: !!token,
+      isFormData 
     });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Erreur réseau', message: `HTTP ${response.status}` }));
-      const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
-      err.response = { data: error, status: response.status };
-      throw err;
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
+        method: 'POST',
+        headers,
+        body: isFormData ? data : JSON.stringify(data),
+        ...config,
+      });
 
-    const responseData = await response.json();
-    return { data: responseData };
+      console.log('[axios.post] Response:', { status: response.status, ok: response.ok });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ 
+          error: 'Erreur réseau', 
+          message: `HTTP ${response.status}` 
+        }));
+        console.error('[axios.post] Error response:', error);
+        const err: any = new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+        err.response = { data: error, status: response.status };
+        throw err;
+      }
+
+      const responseData = await response.json();
+      console.log('[axios.post] Success:', { dataKeys: Object.keys(responseData) });
+      return { data: responseData };
+    } catch (error) {
+      console.error('[axios.post] Fetch failed:', error);
+      
+      // Better error message for network failures
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        const err: any = new Error(
+          'Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur http://localhost:3000'
+        );
+        err.response = { 
+          data: { 
+            error: 'Network Error',
+            message: 'Backend server is not running or not accessible'
+          }, 
+          status: 0 
+        };
+        throw err;
+      }
+      
+      throw error;
+    }
   },
 
   put: async (url: string, data?: any, config?: RequestInit) => {

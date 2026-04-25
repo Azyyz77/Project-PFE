@@ -1,21 +1,33 @@
 const axios = require('axios');
 
 /**
- * Service pour interagir avec le modèle AI Chery Assistant sur Hugging Face
+ * Service pour interagir avec le modèle AI Chery Assistant via Groq
  */
 class AIAssistantService {
   constructor() {
-    // Configuration Hugging Face
+    // Configuration Groq
+    this.groqApiKey = (process.env.GROQ_API_KEY || process.env.ai || '').trim();
+    this.groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile'; // Fast and capable model
+    this.groqApiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+    
+    // Fallback to Hugging Face if Groq not configured
     this.huggingFaceModelId = this.normalizeModelId(process.env.HUGGINGFACE_MODEL_ID || '');
     this.huggingFaceApiUrl = (process.env.HUGGINGFACE_API_URL || '').trim();
     this.huggingFaceToken = (process.env.HUGGINGFACE_API_TOKEN || '').trim();
     this.huggingFaceUseRouter = (process.env.HUGGINGFACE_USE_ROUTER || 'true').toLowerCase() === 'true';
-    this.maxNewTokens = Number(process.env.HUGGINGFACE_MAX_NEW_TOKENS || 256);
-    this.temperature = Number(process.env.HUGGINGFACE_TEMPERATURE || 0.7);
-    this.topP = Number(process.env.HUGGINGFACE_TOP_P || 0.9);
-    this.timeout = Number(process.env.HUGGINGFACE_TIMEOUT_MS || 30000);
+    
+    // Model parameters
+    this.maxTokens = Number(process.env.AI_MAX_TOKENS || 1024);
+    this.temperature = Number(process.env.AI_TEMPERATURE || 0.7);
+    this.topP = Number(process.env.AI_TOP_P || 0.9);
+    this.timeout = Number(process.env.AI_TIMEOUT_MS || 30000);
     
     this.inferenceApiUrl = this.buildInferenceApiUrl();
+    
+    console.log('[AI Assistant] Initialized with:', {
+      provider: this.groqApiKey ? 'Groq' : 'Hugging Face',
+      model: this.groqApiKey ? this.groqModel : this.huggingFaceModelId
+    });
   }
 
   normalizeModelId(modelIdOrUrl) {
@@ -82,41 +94,129 @@ class AIAssistantService {
   }
 
   buildPrompt(userQuestion, context = {}) {
-    const systemPrompt = "Tu es l'assistant SAV officiel de Chery Tunisie. Réponds en français ou arabe tunisien, de façon claire et professionnelle.";
+    const systemPrompt = `Tu es l'assistant SAV officiel de Chery Tunisie. 
+
+Ton rôle:
+- Répondre aux questions sur les véhicules Chery (Tiggo 8 Pro, Tiggo 7, Tiggo 4, Arrizo 6, etc.)
+- Aider avec les rendez-vous de maintenance et réparation
+- Fournir des informations sur les services après-vente
+- Répondre en français ou en arabe tunisien selon la langue du client
+- Être professionnel, courtois et précis
+
+Informations importantes:
+- Les rendez-vous peuvent être pris via la plateforme en ligne
+- Le service client est disponible pour toute urgence
+- Les garanties Chery couvrent généralement 5 ans ou 150,000 km
+- Les révisions sont recommandées tous les 10,000 km ou 6 mois`;
 
     const contextLines = [];
-    if (context.userType) contextLines.push(`Role utilisateur: ${context.userType}`);
+    if (context.userType) contextLines.push(`Rôle utilisateur: ${context.userType}`);
     if (context.userName) contextLines.push(`Nom utilisateur: ${context.userName}`);
-    if (context.vehicleModel) contextLines.push(`Modele vehicule: ${context.vehicleModel}`);
+    if (context.vehicleModel) contextLines.push(`Modèle véhicule: ${context.vehicleModel}`);
 
     const contextBlock = contextLines.length
-      ? `Contexte:\n${contextLines.join('\n')}\n\n`
+      ? `\n\nContexte:\n${contextLines.join('\n')}`
       : '';
 
-    return `${systemPrompt}\n\n${contextBlock}Question client: ${userQuestion}\nReponse:`;
+    return {
+      system: systemPrompt + contextBlock,
+      user: userQuestion
+    };
   }
 
   /**
-   * Obtenir une réponse de l'assistant AI via Hugging Face Inference API
+   * Obtenir une réponse de l'assistant AI via Groq ou Hugging Face
    * @param {string} userQuestion - Question de l'utilisateur
    * @param {object} context - Contexte additionnel (optionnel)
    * @returns {Promise<string>} - Réponse de l'AI
    */
   async getResponse(userQuestion, context = {}) {
     try {
-      console.log('[AI Assistant] Envoi de la question:', userQuestion);
+      console.log('[AI Assistant] Envoi de la question:', userQuestion.substring(0, 100));
 
-      // Si un Space est configuré, l'utiliser en priorité
+      // Priorité 1: Groq (rapide et fiable)
+      if (this.groqApiKey) {
+        return await this.getResponseFromGroq(userQuestion, context);
+      }
+
+      // Priorité 2: Hugging Face Space (si configuré)
       if (this.huggingFaceApiUrl) {
         return await this.getResponseFromSpace(userQuestion, context);
       }
 
-      // Sinon, utiliser l'API Inference
+      // Priorité 3: Hugging Face Inference API
       return await this.getResponseFromInference(userQuestion, context);
 
     } catch (error) {
       console.error('[AI Assistant] Erreur:', error.message);
       throw new Error('Erreur lors de la communication avec l\'assistant AI');
+    }
+  }
+
+  /**
+   * Obtenir une réponse via Groq API (rapide et fiable)
+   */
+  async getResponseFromGroq(userQuestion, context = {}) {
+    try {
+      if (!this.groqApiKey) {
+        throw new Error('Clé API Groq non configurée');
+      }
+
+      const prompt = this.buildPrompt(userQuestion, context);
+
+      const response = await axios.post(
+        this.groqApiUrl,
+        {
+          model: this.groqModel,
+          messages: [
+            {
+              role: 'system',
+              content: prompt.system
+            },
+            {
+              role: 'user',
+              content: prompt.user
+            }
+          ],
+          temperature: this.temperature,
+          max_tokens: this.maxTokens,
+          top_p: this.topP,
+          stream: false
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.groqApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: this.timeout
+        }
+      );
+
+      const aiResponse = response.data?.choices?.[0]?.message?.content;
+      
+      if (!aiResponse) {
+        throw new Error('Format de réponse Groq invalide');
+      }
+
+      console.log('[AI Assistant] Réponse reçue de Groq');
+      return aiResponse.trim();
+
+    } catch (error) {
+      console.error('[AI Assistant] Erreur Groq:', error.message);
+      
+      if (error.response?.status === 401) {
+        throw new Error('Clé API Groq invalide');
+      }
+      
+      if (error.response?.status === 429) {
+        throw new Error('Limite de requêtes Groq atteinte. Réessayez dans un moment.');
+      }
+
+      if (error.response?.status === 503) {
+        throw new Error('Service Groq temporairement indisponible. Réessayez dans quelques secondes.');
+      }
+      
+      throw error;
     }
   }
 
@@ -137,15 +237,16 @@ class AIAssistantService {
         throw new Error('URL Inference Hugging Face non configurée');
       }
 
-      // Préparer le prompt
+      // Préparer le prompt (format ancien pour compatibilité)
       const prompt = this.buildPrompt(userQuestion, context);
+      const fullPrompt = `${prompt.system}\n\nQuestion: ${prompt.user}\nRéponse:`;
 
       const response = await axios.post(
         this.inferenceApiUrl,
         {
-          inputs: prompt,
+          inputs: fullPrompt,
           parameters: {
-            max_new_tokens: this.maxNewTokens,
+            max_new_tokens: this.maxTokens,
             temperature: this.temperature,
             top_p: this.topP,
             do_sample: true,
