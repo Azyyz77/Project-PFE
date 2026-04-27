@@ -531,6 +531,19 @@ function RendezVousContent() {
     );
   };
 
+  const selectSlot = useCallback((slot: Slot) => {
+    if (slot.is_full) {
+      const message = `Le créneau ${slot.label} est complet (${slot.reserved}/${slot.capacity}).`;
+      setGlobalError(message);
+      setSelectedHour('');
+      toast.warning('Créneau indisponible', { description: message });
+      return;
+    }
+
+    setGlobalError('');
+    setSelectedHour(slot.label);
+  }, []);
+
   if (!user) return null;
 
   return (
@@ -1004,9 +1017,14 @@ function RendezVousContent() {
                     {slots.map((slot) => (
                       <Button
                         key={slot.hour}
+                        type="button"
                         variant={selectedHour === slot.label ? 'default' : 'outline'}
-                        disabled={slot.is_full}
-                        onClick={() => setSelectedHour(slot.label)}
+                        onClick={() => selectSlot(slot)}
+                        title={
+                          slot.is_full
+                            ? `Créneau complet: ${slot.reserved}/${slot.capacity} réservations`
+                            : `${slot.available} place(s) restante(s) sur ${slot.capacity}`
+                        }
                         className={
                           selectedHour === slot.label
                             ? 'bg-orange-500 hover:bg-orange-600 text-white'
