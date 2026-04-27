@@ -112,26 +112,6 @@ const createAppointment = async (req, res) => {
       });
     }
 
-    const existingAtSameHour = await pool.request()
-      .input('agence_id', sql.BigInt, agencyId)
-      .input('date_ref', sql.VarChar(10), dateRef)
-      .input('hour_ref', sql.Int, hourRef)
-      .query(`
-        SELECT TOP 1 id
-        FROM RendezVous
-        WHERE agence_id = @agence_id
-          AND CAST(date_heure AS DATE) = CONVERT(date, @date_ref, 23)
-          AND DATEPART(HOUR, date_heure) = @hour_ref
-          AND statut NOT IN ('ANNULE', 'NO_SHOW')
-        ORDER BY id DESC
-      `);
-
-    if (existingAtSameHour.recordset.length > 0) {
-      return res.status(409).json({
-        error: 'Ce creneau n\'est pas disponible. Choisissez une autre heure.'
-      });
-    }
-
     const isoWeekday = getIsoWeekdayFromDateRef(dateRef);
     if (!isoWeekday) {
       return res.status(400).json({ error: 'Date invalide' });
@@ -141,7 +121,10 @@ const createAppointment = async (req, res) => {
       .input('agence_id', sql.BigInt, agencyId)
       .input('jour_semaine', sql.TinyInt, isoWeekday)
       .query(`
-        SELECT TOP 1 heure_ouverture, heure_fermeture
+        SELECT TOP 1
+          DATEPART(HOUR, heure_ouverture) AS open_hour,
+          DATEPART(HOUR, heure_fermeture) AS close_hour,
+          capacite
         FROM PlageHoraire
         WHERE agence_id = @agence_id
           AND jour_semaine = @jour_semaine
@@ -149,6 +132,40 @@ const createAppointment = async (req, res) => {
 
     if (openingRange.recordset.length === 0) {
       return res.status(400).json({ error: 'Aucune plage horaire disponible pour ce creneau.' });
+    }
+
+    const openingConfig = openingRange.recordset[0];
+    const openHour = Number(openingConfig.open_hour);
+    const closeHour = Number(openingConfig.close_hour);
+    const configuredCapacity = Number(openingConfig.capacite);
+    const capacity = configuredCapacity > 0 ? configuredCapacity : 1;
+
+    if (Number.isNaN(openHour) || Number.isNaN(closeHour) || openHour >= closeHour) {
+      return res.status(500).json({ error: 'Configuration de plage horaire invalide' });
+    }
+
+    if (hourRef < openHour || hourRef >= closeHour) {
+      return res.status(400).json({ error: 'Ce creneau est hors plage horaire de l\'agence.' });
+    }
+
+    const occupancyAtSameHour = await pool.request()
+      .input('agence_id', sql.BigInt, agencyId)
+      .input('date_ref', sql.VarChar(10), dateRef)
+      .input('hour_ref', sql.Int, hourRef)
+      .query(`
+        SELECT COUNT(*) AS total
+        FROM RendezVous
+        WHERE agence_id = @agence_id
+          AND CAST(date_heure AS DATE) = CONVERT(date, @date_ref, 23)
+          AND DATEPART(HOUR, date_heure) = @hour_ref
+          AND statut NOT IN ('ANNULE', 'NO_SHOW')
+      `);
+
+    const used = Number(occupancyAtSameHour.recordset?.[0]?.total || 0);
+    if (used >= capacity) {
+      return res.status(409).json({
+        error: `Ce creneau est complet (${used}/${capacity}). Choisissez une autre heure.`
+      });
     }
 
     const vehicleCheck = await pool.request()
