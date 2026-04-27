@@ -1018,7 +1018,7 @@ function RendezVousContent() {
                       <Button
                         key={slot.hour}
                         type="button"
-                        variant={selectedHour === slot.label ? 'default' : 'outline'}
+                        variant="outline"
                         onClick={() => selectSlot(slot)}
                         title={
                           slot.is_full
@@ -1027,19 +1027,34 @@ function RendezVousContent() {
                         }
                         className={
                           selectedHour === slot.label
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                            ? 'h-auto min-h-14 bg-orange-500 hover:bg-orange-600 text-white flex flex-col items-start gap-0.5 px-2 py-2'
                             : slot.is_full
-                            ? 'opacity-40 cursor-not-allowed'
-                            : 'hover:bg-orange-50 dark:hover:bg-orange-950/20'
+                            ? 'h-auto min-h-14 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300 flex flex-col items-start gap-0.5 px-2 py-2'
+                            : 'h-auto min-h-14 hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-start gap-0.5 px-2 py-2'
                         }
                         size="sm"
                       >
-                        <span className="text-xs">{slot.label}</span>
+                        <span className="text-xs font-semibold">{slot.label}</span>
+                        <span
+                          className={`text-[10px] leading-tight ${
+                            selectedHour === slot.label
+                              ? 'text-orange-100'
+                              : slot.is_full
+                              ? 'text-red-700 dark:text-red-300'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {slot.is_full
+                            ? `Complet (${slot.reserved}/${slot.capacity})`
+                            : `${slot.available} dispo / ${slot.capacity}`}
+                        </span>
                       </Button>
                     ))}
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {slots.some((s) => !s.is_full) ? 'Sélectionnez une heure disponible' : 'Aucun créneau disponible'}
+                    {slots.some((s) => !s.is_full)
+                      ? 'Sélectionnez une heure disponible. Les créneaux rouges sont complets.'
+                      : 'Aucun créneau disponible'}
                   </p>
                 </div>
               ) : (
