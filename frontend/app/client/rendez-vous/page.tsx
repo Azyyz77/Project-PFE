@@ -531,6 +531,19 @@ function RendezVousContent() {
     );
   };
 
+  const selectSlot = useCallback((slot: Slot) => {
+    if (slot.is_full) {
+      const message = `Le créneau ${slot.label} est complet (${slot.reserved}/${slot.capacity}).`;
+      setGlobalError(message);
+      setSelectedHour('');
+      toast.warning('Créneau indisponible', { description: message });
+      return;
+    }
+
+    setGlobalError('');
+    setSelectedHour(slot.label);
+  }, []);
+
   if (!user) return null;
 
   return (
@@ -1000,24 +1013,37 @@ function RendezVousContent() {
               ) : slots.length > 0 ? (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">Créneau horaire *</label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-3">
                     {slots.map((slot) => (
-                      <Button
-                        key={slot.hour}
-                        variant={selectedHour === slot.label ? 'default' : 'outline'}
-                        disabled={slot.is_full}
-                        onClick={() => setSelectedHour(slot.label)}
-                        className={
-                          selectedHour === slot.label
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                            : slot.is_full
-                            ? 'opacity-40 cursor-not-allowed'
-                            : 'hover:bg-orange-50 dark:hover:bg-orange-950/20'
-                        }
-                        size="sm"
-                      >
-                        <span className="text-xs">{slot.label}</span>
-                      </Button>
+                      <div key={slot.hour} className="flex flex-col">
+                        <Button
+                          type="button"
+                          variant={selectedHour === slot.label ? 'default' : 'outline'}
+                          onClick={() => selectSlot(slot)}
+                          disabled={slot.is_full}
+                          title={
+                            slot.is_full
+                              ? `Créneau complet: ${slot.reserved}/${slot.capacity} réservations`
+                              : `${slot.available} place(s) restante(s) sur ${slot.capacity}`
+                          }
+                          className={
+                            selectedHour === slot.label
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                              : slot.is_full
+                              ? 'opacity-40 cursor-not-allowed'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                          }
+                          size="sm"
+                        >
+                          <span className="text-xs font-semibold">{slot.label}</span>
+                        </Button>
+                        <span className="text-[10px] text-center mt-1 text-slate-600 dark:text-slate-400">
+                          {slot.is_full 
+                            ? 'Complet' 
+                            : `${slot.available}/${slot.capacity} disponible`
+                          }
+                        </span>
+                      </div>
                     ))}
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
