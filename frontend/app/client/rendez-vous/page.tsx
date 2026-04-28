@@ -1013,48 +1013,41 @@ function RendezVousContent() {
               ) : slots.length > 0 ? (
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">Créneau horaire *</label>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-3">
                     {slots.map((slot) => (
-                      <Button
-                        key={slot.hour}
-                        type="button"
-                        variant="outline"
-                        onClick={() => selectSlot(slot)}
-                        title={
-                          slot.is_full
-                            ? `Créneau complet: ${slot.reserved}/${slot.capacity} réservations`
-                            : `${slot.available} place(s) restante(s) sur ${slot.capacity}`
-                        }
-                        className={
-                          selectedHour === slot.label
-                            ? 'h-auto min-h-14 bg-orange-500 hover:bg-orange-600 text-white flex flex-col items-start gap-0.5 px-2 py-2'
-                            : slot.is_full
-                            ? 'h-auto min-h-14 border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300 flex flex-col items-start gap-0.5 px-2 py-2'
-                            : 'h-auto min-h-14 hover:bg-orange-50 dark:hover:bg-orange-950/20 flex flex-col items-start gap-0.5 px-2 py-2'
-                        }
-                        size="sm"
-                      >
-                        <span className="text-xs font-semibold">{slot.label}</span>
-                        <span
-                          className={`text-[10px] leading-tight ${
+                      <div key={slot.hour} className="flex flex-col">
+                        <Button
+                          type="button"
+                          variant={selectedHour === slot.label ? 'default' : 'outline'}
+                          onClick={() => selectSlot(slot)}
+                          disabled={slot.is_full}
+                          title={
+                            slot.is_full
+                              ? `Créneau complet: ${slot.reserved}/${slot.capacity} réservations`
+                              : `${slot.available} place(s) restante(s) sur ${slot.capacity}`
+                          }
+                          className={
                             selectedHour === slot.label
-                              ? 'text-orange-100'
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
                               : slot.is_full
-                              ? 'text-red-700 dark:text-red-300'
-                              : 'text-slate-500 dark:text-slate-400'
-                          }`}
+                              ? 'opacity-40 cursor-not-allowed'
+                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                          }
+                          size="sm"
                         >
-                          {slot.is_full
-                            ? `Complet (${slot.reserved}/${slot.capacity})`
-                            : `${slot.available} dispo / ${slot.capacity}`}
+                          <span className="text-xs font-semibold">{slot.label}</span>
+                        </Button>
+                        <span className="text-[10px] text-center mt-1 text-slate-600 dark:text-slate-400">
+                          {slot.is_full 
+                            ? 'Complet' 
+                            : `${slot.available}/${slot.capacity} disponible`
+                          }
                         </span>
-                      </Button>
+                      </div>
                     ))}
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {slots.some((s) => !s.is_full)
-                      ? 'Sélectionnez une heure disponible. Les créneaux rouges sont complets.'
-                      : 'Aucun créneau disponible'}
+                    {slots.some((s) => !s.is_full) ? 'Sélectionnez une heure disponible' : 'Aucun créneau disponible'}
                   </p>
                 </div>
               ) : (
