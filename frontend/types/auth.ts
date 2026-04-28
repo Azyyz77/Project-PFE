@@ -11,6 +11,7 @@ export interface User {
   email: string;
   telephone: string;
   role: UserRole;
+  agence_id?: number; // ID de l'agence pour les agents
   actif?: boolean;
   telephone_verifie?: boolean;
   date_creation?: string;

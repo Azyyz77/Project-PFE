@@ -57,6 +57,11 @@ const AGENT_NAV_ITEMS: NavItem[] = [
     icon: <Search className="w-5 h-5" />,
   },
   {
+    label: 'Gestion des Ouvriers',
+    href: '/dashboard/agent/workers',
+    icon: <Users className="w-5 h-5" />,
+  },
+  {
     label: 'Mes clients',
     href: '/dashboard/agent/clients',
     icon: <Users className="w-5 h-5" />,

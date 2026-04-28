@@ -287,7 +287,7 @@ const login = async (req, res) => {
       .input('email', sql.NVarChar, email)
       .query(`
         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
-               u.actif, u.date_creation, u.role_id, u.telephone_verifie,
+               u.actif, u.date_creation, u.role_id, u.telephone_verifie, u.agence_id,
                ISNULL(r.nom, 'CLIENT') AS role_nom
         FROM Utilisateur u
         LEFT JOIN Role r ON r.id = u.role_id
@@ -336,6 +336,7 @@ const login = async (req, res) => {
         email: user.email,
         telephone: user.telephone,
         role: user.role_nom,
+        agence_id: user.agence_id,
         telephone_verifie: user.telephone_verifie || false,
         date_creation: user.date_creation
       }
@@ -385,6 +386,7 @@ const getUserById = async (req, res) => {
       .input('id', sql.BigInt, id)
       .query(`
         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation,
+               u.agence_id, u.telephone_verifie,
                r.nom AS role_nom
         FROM Utilisateur u
         JOIN Role r ON r.id = u.role_id
