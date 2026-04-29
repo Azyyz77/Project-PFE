@@ -50,6 +50,8 @@ const directionStatsRoutes = require('./routes/directionStatsRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
 const debugRoutes = require('./routes/debugRoutes');
 const workerRoutes = require('./routes/workerRoutes');
+const vehiclePromotionRoutes = require('./routes/vehiclePromotionRoutes');
+const welcomeMessageRoutes = require('./routes/welcomeMessageRoutes');
 const { auditMiddleware } = require('./middleware/auditMiddleware');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
@@ -125,7 +127,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/vehicles', vehicleHistoryRoutes);
 app.use('/api/agent/vehicles', vehicleValidationRoutes);
 app.use('/api/appointments', appointmentRoutes);
-app.use('/api', appointmentFeedbackRoutes);
+app.use('/api/appointments', appointmentFeedbackRoutes); // Changed from '/api' to '/api/appointments'
 app.use('/api/catalog', interventionCatalogRoutes);
 app.use('/api/client/orders', clientOrdersRoutes);
 app.use('/api/agent-dashboard', agentDashboardRoutes);
@@ -156,6 +158,8 @@ app.use('/api/direction/stats', directionStatsRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/workers', workerRoutes);
+app.use('/api/vehicle-promotions', vehiclePromotionRoutes);
+app.use('/api/welcome-messages', welcomeMessageRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {

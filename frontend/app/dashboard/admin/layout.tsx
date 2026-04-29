@@ -46,6 +46,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <Users className="w-5 h-5" />,
   },
   {
+    label: 'Gérer les ouvriers',
+    href: '/dashboard/admin/workers',
+    icon: <Wrench className="w-5 h-5" />,
+  },
+  {
     label: 'Gérer les agences',
     href: '/dashboard/admin/agencies',
     icon: <Building2 className="w-5 h-5" />,
@@ -116,6 +121,16 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <Sparkles className="w-5 h-5" />,
   },
   {
+    label: 'Promotions Véhicules',
+    href: '/dashboard/admin/vehicle-promotions',
+    icon: <Sparkles className="w-5 h-5" />,
+  },
+  {
+    label: 'Messages d\'Accueil',
+    href: '/dashboard/admin/welcome-messages',
+    icon: <MessageSquare className="w-5 h-5" />,
+  },
+  {
     label: 'Publier messages',
     href: '/dashboard/admin/messages',
     icon: <MessageSquare className="w-5 h-5" />,
@@ -150,15 +165,15 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 const ADMIN_NAV_GROUPS = [
   {
     label: 'Gestion operationnelle',
-    items: ADMIN_NAV_ITEMS.slice(0, 5),
+    items: ADMIN_NAV_ITEMS.slice(0, 6),
   },
   {
     label: 'Referentiel services',
-    items: ADMIN_NAV_ITEMS.slice(5, 16),
+    items: ADMIN_NAV_ITEMS.slice(6, 17),
   },
   {
     label: 'Suivi et parametres',
-    items: ADMIN_NAV_ITEMS.slice(16),
+    items: ADMIN_NAV_ITEMS.slice(17),
   },
 ];
 

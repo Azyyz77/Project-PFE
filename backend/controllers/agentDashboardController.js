@@ -20,11 +20,28 @@ class AgentDashboardController {
   // ── Rendez-vous ────────────────────────────────────────────
   static async getAppointments(req, res) {
     try {
+      const agentId = req.user.id;
+      const agentAgenceId = req.user.agence_id;
+      
+      // ✅ SÉCURITÉ: Vérifier que l'agent a une agence
+      if (!agentAgenceId) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
       const { statut, fromDate, toDate, agenceId } = req.query;
-      const data = await AgentDashboardService.getAppointmentsList(req.user.id, {
-        statut, fromDate, toDate,
-        agenceId: agenceId ? parseInt(agenceId) : null
-      });
+      const data = await AgentDashboardService.getAppointmentsList(
+        agentId,
+        agentAgenceId,  // ✅ AJOUTÉ: Passer l'agence de l'agent
+        {
+          statut,
+          fromDate,
+          toDate,
+          agenceId: agenceId ? parseInt(agenceId) : null
+        }
+      );
       res.json({ success: true, count: data.length, data });
     } catch (err) {
       res.status(500).json({ error: err.message });

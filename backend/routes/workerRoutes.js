@@ -40,12 +40,34 @@ router.get(
 /**
  * @route   POST /api/workers
  * @desc    Créer un nouvel ouvrier
- * @access  Agent, Admin
+ * @access  Admin uniquement
  */
 router.post(
   '/',
-  hasRole('AGENT', 'ADMIN'),
+  hasRole('ADMIN'),  // ✅ Seulement ADMIN
   workerController.createWorker
+);
+
+/**
+ * @route   PUT /api/workers/:ouvrierId
+ * @desc    Mettre à jour un ouvrier
+ * @access  Admin uniquement
+ */
+router.put(
+  '/:ouvrierId',
+  hasRole('ADMIN'),
+  workerController.updateWorker
+);
+
+/**
+ * @route   DELETE /api/workers/:ouvrierId
+ * @desc    Supprimer (désactiver) un ouvrier
+ * @access  Admin uniquement
+ */
+router.delete(
+  '/:ouvrierId',
+  hasRole('ADMIN'),
+  workerController.deleteWorker
 );
 
 /**
@@ -57,6 +79,17 @@ router.get(
   '/agency/:agenceId/available',
   hasRole('AGENT', 'ADMIN'),
   workerController.getAvailableWorkers
+);
+
+/**
+ * @route   GET /api/workers/agency/:agenceId/unassigned-appointments
+ * @desc    Obtenir les rendez-vous non affectés d'une agence
+ * @access  Agent, Admin
+ */
+router.get(
+  '/agency/:agenceId/unassigned-appointments',
+  hasRole('AGENT', 'ADMIN'),
+  workerController.getUnassignedAppointments
 );
 
 /**

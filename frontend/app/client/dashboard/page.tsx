@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import WelcomeMessagesBanner from '@/components/client/WelcomeMessagesBanner';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { getMyAppointments } from '@/lib/api/appointments';
 import { Vehicle } from '@/types/vehicle';
@@ -97,6 +98,9 @@ function ClientDashboardContent() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Welcome Messages Banner */}
+      <WelcomeMessagesBanner afficherDashboard={true} />
+
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f3a] via-[#0f2a4d] to-[#0b1f3a] p-8 text-white shadow-sm">
         <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">

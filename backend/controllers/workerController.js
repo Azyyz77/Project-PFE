@@ -12,6 +12,24 @@ exports.getWorkersByAgency = async (req, res) => {
     const { agenceId } = req.params;
     const { actif, specialite } = req.query;
 
+    // ✅ SÉCURITÉ: Vérifier que l'agent accède uniquement à SON agence
+    if (req.user.role === 'AGENT') {
+      if (!req.user.agence_id) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
+      // Convertir les deux valeurs en nombres pour éviter les problèmes de type
+      if (Number(req.user.agence_id) !== Number(agenceId)) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Vous ne pouvez accéder qu\'aux données de votre agence'
+        });
+      }
+    }
+
     const pool = await getConnection();
     let query = `
       SELECT 
@@ -105,7 +123,7 @@ exports.getAllWorkers = async (req, res) => {
 };
 
 /**
- * Créer un nouvel ouvrier
+ * Créer un nouvel ouvrier (ADMIN uniquement)
  */
 exports.createWorker = async (req, res) => {
   try {
@@ -159,6 +177,150 @@ exports.createWorker = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la création de l\'ouvrier:', error);
+    res.status(500).json({
+      error: 'Erreur serveur',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Mettre à jour un ouvrier (ADMIN uniquement)
+ */
+exports.updateWorker = async (req, res) => {
+  try {
+    const { ouvrierId } = req.params;
+    const {
+      nom,
+      prenom,
+      telephone,
+      email,
+      specialite,
+      niveau_competence,
+      agence_id,
+      date_embauche,
+      notes,
+      actif
+    } = req.body;
+
+    const pool = await getConnection();
+
+    // Vérifier que l'ouvrier existe
+    const checkResult = await pool.request()
+      .input('id', sql.BigInt, ouvrierId)
+      .query('SELECT id FROM Ouvrier WHERE id = @id');
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({
+        error: 'Ouvrier introuvable'
+      });
+    }
+
+    // Construire la requête de mise à jour dynamiquement
+    let updateFields = [];
+    const request = pool.request().input('id', sql.BigInt, ouvrierId);
+
+    if (nom !== undefined) {
+      updateFields.push('nom = @nom');
+      request.input('nom', sql.NVarChar, nom);
+    }
+    if (prenom !== undefined) {
+      updateFields.push('prenom = @prenom');
+      request.input('prenom', sql.NVarChar, prenom);
+    }
+    if (telephone !== undefined) {
+      updateFields.push('telephone = @telephone');
+      request.input('telephone', sql.NVarChar, telephone);
+    }
+    if (email !== undefined) {
+      updateFields.push('email = @email');
+      request.input('email', sql.NVarChar, email);
+    }
+    if (specialite !== undefined) {
+      updateFields.push('specialite = @specialite');
+      request.input('specialite', sql.NVarChar, specialite);
+    }
+    if (niveau_competence !== undefined) {
+      updateFields.push('niveau_competence = @niveau_competence');
+      request.input('niveau_competence', sql.NVarChar, niveau_competence);
+    }
+    if (agence_id !== undefined) {
+      updateFields.push('agence_id = @agence_id');
+      request.input('agence_id', sql.BigInt, agence_id);
+    }
+    if (date_embauche !== undefined) {
+      updateFields.push('date_embauche = @date_embauche');
+      request.input('date_embauche', sql.Date, date_embauche);
+    }
+    if (notes !== undefined) {
+      updateFields.push('notes = @notes');
+      request.input('notes', sql.NVarChar, notes);
+    }
+    if (actif !== undefined) {
+      updateFields.push('actif = @actif');
+      request.input('actif', sql.Bit, actif ? 1 : 0);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        error: 'Aucune donnée à mettre à jour'
+      });
+    }
+
+    const result = await request.query(`
+      UPDATE Ouvrier 
+      SET ${updateFields.join(', ')}
+      OUTPUT INSERTED.*
+      WHERE id = @id
+    `);
+
+    res.json({
+      success: true,
+      message: 'Ouvrier mis à jour avec succès',
+      worker: result.recordset[0]
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'ouvrier:', error);
+    res.status(500).json({
+      error: 'Erreur serveur',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Supprimer (désactiver) un ouvrier (ADMIN uniquement)
+ */
+exports.deleteWorker = async (req, res) => {
+  try {
+    const { ouvrierId } = req.params;
+
+    const pool = await getConnection();
+
+    // Vérifier que l'ouvrier existe
+    const checkResult = await pool.request()
+      .input('id', sql.BigInt, ouvrierId)
+      .query('SELECT id, nom, prenom FROM Ouvrier WHERE id = @id');
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({
+        error: 'Ouvrier introuvable'
+      });
+    }
+
+    const worker = checkResult.recordset[0];
+
+    // Désactiver l'ouvrier au lieu de le supprimer (soft delete)
+    await pool.request()
+      .input('id', sql.BigInt, ouvrierId)
+      .query('UPDATE Ouvrier SET actif = 0 WHERE id = @id');
+
+    res.json({
+      success: true,
+      message: `Ouvrier ${worker.nom} ${worker.prenom} désactivé avec succès`
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'ouvrier:', error);
     res.status(500).json({
       error: 'Erreur serveur',
       message: error.message
@@ -303,12 +465,30 @@ exports.getWorkerAssignments = async (req, res) => {
 };
 
 /**
- * Obtenir toutes les affectations d'une agence
+ * Obtenir les affectations d'une agence
  */
 exports.getAgencyAssignments = async (req, res) => {
   try {
     const { agenceId } = req.params;
     const { statut, ouvrier_id } = req.query;
+
+    // ✅ SÉCURITÉ: Vérifier que l'agent accède uniquement à SON agence
+    if (req.user.role === 'AGENT') {
+      if (!req.user.agence_id) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
+      // Convertir les deux valeurs en nombres pour éviter les problèmes de type
+      if (Number(req.user.agence_id) !== Number(agenceId)) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Vous ne pouvez accéder qu\'aux données de votre agence'
+        });
+      }
+    }
 
     const pool = await getConnection();
     let query = `
@@ -466,6 +646,24 @@ exports.getWorkerStatistics = async (req, res) => {
   try {
     const { agenceId } = req.params;
 
+    // ✅ SÉCURITÉ: Vérifier que l'agent accède uniquement à SON agence
+    if (req.user.role === 'AGENT') {
+      if (!req.user.agence_id) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
+      // Convertir les deux valeurs en nombres pour éviter les problèmes de type
+      if (Number(req.user.agence_id) !== Number(agenceId)) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Vous ne pouvez accéder qu\'aux données de votre agence'
+        });
+      }
+    }
+
     const pool = await getConnection();
     const result = await pool.request()
       .input('agenceId', sql.BigInt, agenceId)
@@ -508,6 +706,24 @@ exports.getAvailableWorkers = async (req, res) => {
     const { agenceId } = req.params;
     const { date, heure } = req.query;
 
+    // ✅ SÉCURITÉ: Vérifier que l'agent accède uniquement à SON agence
+    if (req.user.role === 'AGENT') {
+      if (!req.user.agence_id) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
+      // Convertir les deux valeurs en nombres pour éviter les problèmes de type
+      if (Number(req.user.agence_id) !== Number(agenceId)) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Vous ne pouvez accéder qu\'aux données de votre agence'
+        });
+      }
+    }
+
     if (!date || !heure) {
       return res.status(400).json({
         error: 'Date et heure requises'
@@ -547,6 +763,87 @@ exports.getAvailableWorkers = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la récupération des ouvriers disponibles:', error);
+    res.status(500).json({
+      error: 'Erreur serveur',
+      message: error.message
+    });
+  }
+};
+
+/**
+ * Obtenir les rendez-vous non affectés ou disponibles pour affectation
+ */
+exports.getUnassignedAppointments = async (req, res) => {
+  try {
+    const { agenceId } = req.params;
+    const { statut } = req.query;
+
+    // ✅ SÉCURITÉ: Vérifier que l'agent accède uniquement à SON agence
+    if (req.user.role === 'AGENT') {
+      if (!req.user.agence_id) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Aucune agence associée à votre compte'
+        });
+      }
+      
+      // Convertir les deux valeurs en nombres pour éviter les problèmes de type
+      if (Number(req.user.agence_id) !== Number(agenceId)) {
+        return res.status(403).json({
+          error: 'Accès refusé',
+          message: 'Vous ne pouvez accéder qu\'aux données de votre agence'
+        });
+      }
+    }
+
+    const pool = await getConnection();
+    
+    let query = `
+      SELECT 
+        r.id,
+        r.date_heure,
+        r.statut,
+        r.description,
+        u.nom AS client_nom,
+        u.prenom AS client_prenom,
+        v.immatriculation AS vehicule_immatriculation,
+        mar.nom AS vehicule_marque,
+        mod.nom AS vehicule_modele
+      FROM RendezVous r
+      INNER JOIN Utilisateur u ON r.client_id = u.id
+      INNER JOIN Vehicule v ON r.vehicule_id = v.id
+      LEFT JOIN Version ver ON v.version_id = ver.id
+      LEFT JOIN Modele mod ON ver.modele_id = mod.id
+      LEFT JOIN Marque mar ON mod.marque_id = mar.id
+      WHERE r.agence_id = @agenceId
+      AND r.statut IN ('CONFIRME', 'EN_ATTENTE')
+      AND NOT EXISTS (
+        SELECT 1 FROM AffectationOuvrier a 
+        WHERE a.rendez_vous_id = r.id 
+        AND a.statut NOT IN ('ANNULE')
+      )
+      AND r.date_heure >= GETDATE()
+      ORDER BY r.date_heure ASC
+    `;
+
+    const request = pool.request().input('agenceId', sql.BigInt, agenceId);
+
+    if (statut) {
+      query = query.replace(
+        "AND r.statut IN ('CONFIRME', 'EN_ATTENTE')",
+        "AND r.statut = @statut"
+      );
+      request.input('statut', sql.NVarChar, statut);
+    }
+
+    const result = await request.query(query);
+
+    res.json({
+      success: true,
+      appointments: result.recordset
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des RDV non affectés:', error);
     res.status(500).json({
       error: 'Erreur serveur',
       message: error.message

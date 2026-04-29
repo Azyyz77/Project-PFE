@@ -244,3 +244,12 @@ export const deactivateWorker = async (workerId: number): Promise<void> => {
 export const activateWorker = async (workerId: number): Promise<void> => {
   await api.put(`/workers/${workerId}`, { actif: true });
 };
+
+/**
+ * Obtenir les rendez-vous non affectés d'une agence
+ */
+export const getUnassignedAppointments = async (agenceId: number): Promise<any[]> => {
+  const response = await api.get(`/workers/agency/${agenceId}/unassigned-appointments`);
+  return response.data.appointments ?? [];
+};
+

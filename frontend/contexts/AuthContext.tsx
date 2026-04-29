@@ -23,6 +23,8 @@ function normalizeUser(rawUser: any): User {
     actif: rawUser?.actif ?? rawUser?.is_active,
     telephone_verifie: rawUser?.telephone_verifie ?? false,
     date_creation: rawUser?.date_creation ?? rawUser?.created_at,
+    // Preserve agence_id so agents can access their agency data
+    agence_id: rawUser?.agence_id ?? rawUser?.agenceId ?? null,
   };
 }
 
