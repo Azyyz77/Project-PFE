@@ -7,24 +7,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
+import { getMyAppointments } from '@/lib/api/appointments';
 import { Vehicle } from '@/types/vehicle';
+import { Appointment } from '@/types/appointment';
 import {
   Plus,
-  Edit2,
-  Trash2,
   ChevronRight,
   Car,
-  Mail,
-  Phone,
-  Hash,
+  Calendar,
+  MessageSquare,
+  Wrench,
+  FileText,
+  AlertCircle,
+  Clock,
+  MapPin,
   ArrowRight,
-  CalendarDays,
-  User as UserIcon,
-  Settings,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ClientDashboardPage() {
   return (
@@ -34,23 +36,13 @@ export default function ClientDashboardPage() {
   );
 }
 
-function StatCard({ value, label, className = '' }: { value: string | number; label: string; className?: string }) {
-  return (
-    <Card className={`overflow-hidden shadow-sm ${className}`}>
-      <CardContent className="p-6">
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">{label}</p>
-        <p className="text-3xl font-bold tracking-tight text-foreground">{value}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
 function ClientDashboardContent() {
   const { user, token } = useAuth();
   const { language, t } = useLanguage();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const isClient = useMemo(() => user?.role === 'CLIENT', [user]);
 
@@ -61,14 +53,23 @@ function ClientDashboardContent() {
   useEffect(() => {
     const load = async () => {
       if (!user || !token || !isClient) return;
-      try { setVehicles(await getVehiclesByUser(user.id, token)); }
-      catch { /* silent */ }
-      finally { setIsLoadingVehicles(false); }
+      try {
+        const [vehiclesData, appointmentsData] = await Promise.all([
+          getVehiclesByUser(user.id, token),
+          getMyAppointments(token),
+        ]);
+        setVehicles(vehiclesData);
+        setAppointments(appointmentsData);
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     load();
   }, [user, token, isClient]);
 
-  if (!isClient || isLoadingVehicles) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
@@ -76,212 +77,294 @@ function ClientDashboardContent() {
     );
   }
 
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString(language === 'ar' ? 'ar-TN' : 'fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  // Calculate stats
+  const thisMonthAppointments = appointments.filter((apt) => {
+    const aptDate = new Date(apt.date_heure);
+    const now = new Date();
+    return aptDate.getMonth() === now.getMonth() && aptDate.getFullYear() === now.getFullYear();
   });
 
+  const pendingComplaints = 2; // TODO: Get from API
+  const totalInterventions = 8; // TODO: Get from API
+
+  // Get recent appointments (last 3)
+  const recentAppointments = appointments
+    .sort((a, b) => new Date(b.date_heure).getTime() - new Date(a.date_heure).getTime())
+    .slice(0, 3);
+
+  // Check for maintenance reminders
+  const needsMaintenanceVehicle = vehicles.find((v) => v.kilometrage && v.kilometrage > 30000);
+
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto space-y-10">
-      
-      {/* ─── Header Section ─── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-1">
-            {t('dashboard.welcomeBack')}
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-            {user?.prenom} {user?.nom}
+    <div className="space-y-6 p-6">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f3a] via-[#0f2a4d] to-[#0b1f3a] p-8 text-white shadow-sm">
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">
+          <Car className="h-32 w-32" />
+        </div>
+
+        <div className="relative z-10">
+          <p className="text-sm text-blue-100">Bonjour,</p>
+          <h1 className="mb-2 text-2xl font-semibold md:text-3xl">
+            {user?.prenom} {user?.nom} 👋
           </h1>
-          <p className="text-muted-foreground mt-2">{formattedDate}</p>
-        </div>
-        
-        <div className="flex gap-4 w-full md:w-auto">
-          <StatCard value={vehicles.length} label={t('common.vehiclesCount')} className="flex-1 md:w-40" />
-          <StatCard value="—" label={t('common.nextAppointments')} className="flex-1 md:w-40 bg-primary/5" />
-        </div>
-      </div>
+          <p className="mb-6 text-sm text-blue-100">
+            Bienvenue sur votre espace client STA Chery Tunisia.
+          </p>
 
-      <div className="h-px w-full bg-border" />
-
-      {/* ─── Quick Actions ─── */}
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight mb-4">{t('common.quickAccess')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <Link href="/client/rendez-vous" className="block group">
-            <Card className="h-full transition-all duration-200 hover:shadow-md hover:border-primary/30">
-              <CardContent className="p-6">
-                <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
-                  <CalendarDays className="size-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-base font-semibold text-foreground mb-1">{t('appointments.title')}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t('dashboard.manageAppointments')}</p>
-                <div className="flex items-center text-sm font-medium text-primary group-hover:text-primary/80">
-                  {t('dashboard.see')} <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/client/profile" className="block group">
-            <Card className="h-full transition-all duration-200 hover:shadow-md hover:border-primary/30">
-              <CardContent className="p-6">
-                <div className="size-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
-                  <UserIcon className="size-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <h3 className="text-base font-semibold text-foreground mb-1">{t('nav.clientProfile')}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t('dashboard.managePersonalInfo')}</p>
-                <div className="flex items-center text-sm font-medium text-primary group-hover:text-primary/80">
-                  {t('dashboard.edit')} <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/client/vehicles" className="block group">
-            <Card className="h-full transition-all duration-200 hover:shadow-md hover:border-primary/30">
-              <CardContent className="p-6">
-                <div className="size-10 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-4">
-                  <Car className="size-5 text-violet-600 dark:text-violet-400" />
-                </div>
-                <h3 className="text-base font-semibold text-foreground mb-1">{t('common.myVehicles')}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {language === 'ar'
-                    ? `${vehicles.length} ${vehicles.length === 1 ? 'مركبة مسجلة' : 'مركبات مسجلة'}`
-                    : `${vehicles.length} véhicule${vehicles.length !== 1 ? 's' : ''} enregistré${vehicles.length !== 1 ? 's' : ''}`}
-                </p>
-                <div className="flex items-center text-sm font-medium text-primary group-hover:text-primary/80">
-                  {t('dashboard.see')} <ChevronRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
-                </div>
-              </CardContent>
-            </Card>
+          <Link href="/client/rendez-vous">
+            <Button className="rounded-full bg-red-600 px-5 text-white hover:bg-red-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Prendre un rendez-vous
+            </Button>
           </Link>
         </div>
       </div>
 
-      {/* ─── Main Content Grid ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Vehicles Section */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight">{t('common.myVehicles')}</h2>
-              <p className="text-sm text-muted-foreground">Gérez votre flotte et historique d'entretien</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Véhicules</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900">{vehicles.length}</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
+                <Car className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
-            <Link href="/client/vehicles/new" className={buttonVariants({ variant: "default", size: "sm" })}>
-              <Plus className="w-4 h-4 mr-2" />
-              {t('dashboard.add')}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500">RDV ce mois</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900">{thisMonthAppointments.length}</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
+                <Calendar className="h-6 w-6 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Réclamations</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900">{pendingComplaints}</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50">
+                <MessageSquare className="h-6 w-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Interventions</p>
+                <p className="mt-2 text-3xl font-semibold text-slate-900">{totalInterventions}</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50">
+                <Wrench className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions rapides */}
+      <div>
+        <h2 className="mb-3 text-lg font-semibold text-slate-900">Actions rapides</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            href="/client/rendez-vous"
+            className="flex items-center gap-3 rounded-xl bg-[#0b1f3a] px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#0a1a30]"
+          >
+            <Calendar className="h-5 w-5" />
+            Nouveau RDV
+          </Link>
+
+          <Link
+            href="/client/vehicles"
+            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+          >
+            <Car className="h-5 w-5" />
+            Mes véhicules
+          </Link>
+
+          <Link
+            href="/client/rendez-vous"
+            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+          >
+            <FileText className="h-5 w-5" />
+            Mes RDV
+          </Link>
+
+          <Link
+            href="/client/complaints"
+            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+          >
+            <MessageSquare className="h-5 w-5" />
+            Réclamation
+          </Link>
+        </div>
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Mes véhicules */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Mes véhicules</h2>
+            <Link href="/client/vehicles" className="text-sm font-medium text-slate-500 hover:text-slate-700">
+              Voir tout
+              <ChevronRight className="ml-1 inline-block h-4 w-4" />
             </Link>
           </div>
 
-          {vehicles.length === 0 ? (
-            <Card className="border-dashed shadow-none">
-              <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                  <Car className="size-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{t('common.noVehicle')}</h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                  Ajoutez votre premier véhicule pour commencer à prendre des rendez-vous d'entretien.
-                </p>
-                <Link href="/client/vehicles/new" className={buttonVariants({ variant: "default" })}>
-                  {t('common.addFirstVehicle')}
-                </Link>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {vehicles.map((vehicle) => (
-                <Card key={vehicle.id} className="group transition-all hover:shadow-md">
-                  <CardContent className="p-0">
-                    <div className="flex items-center justify-between p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="size-12 rounded-lg bg-muted flex items-center justify-center">
-                          <Car className="size-6 text-foreground" />
-                        </div>
-                        <div>
-                          <h3 className="text-base font-semibold">{vehicle.marque_nom} {vehicle.modele_nom}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            {vehicle.annee && <Badge variant="secondary" className="font-normal">{vehicle.annee}</Badge>}
-                            {vehicle.couleur && <Badge variant="outline" className="font-normal">{vehicle.couleur}</Badge>}
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1.5">
-                            <Hash className="size-3.5" />
-                            {vehicle.numero_chassis || '—'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                          <Edit2 className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
+          <div className="space-y-3">
+            {vehicles.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                  <Car className="mb-4 h-12 w-12 text-slate-400" />
+                  <p className="mb-4 text-sm text-slate-600">Aucun véhicule enregistré</p>
+                  <Link href="/client/vehicles/new">
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un véhicule
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              vehicles.map((vehicle) => {
+                const statusConfig =
+                  vehicle.statut_validation === 'VALIDE'
+                    ? { label: 'Validé', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' }
+                    : vehicle.statut_validation === 'EN_ATTENTE'
+                    ? { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' }
+                    : { label: vehicle.statut_validation, badge: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
+
+                return (
+                  <div key={vehicle.id} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+                      <Car className="h-5 w-5 text-slate-500" />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-900">
+                        {vehicle.marque_nom} {vehicle.modele_nom}
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        {vehicle.immatriculation} · {vehicle.kilometrage?.toLocaleString()} km
+                      </p>
+                    </div>
+                    <Badge className={`gap-2 rounded-full border px-3 py-1 text-xs ${statusConfig.badge}`}>
+                      <span className={`h-2 w-2 rounded-full ${statusConfig.dot}`} />
+                      {statusConfig.label}
+                    </Badge>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Profile Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-8">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base">Informations du profil</CardTitle>
-              <CardDescription>Vos coordonnées de contact</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xl font-semibold">
-                  {user?.prenom?.[0]}{user?.nom?.[0]}
-                </div>
-                <div>
-                  <p className="font-semibold">{user?.prenom} {user?.nom}</p>
-                  <Badge variant="secondary" className="mt-1 font-normal text-xs">{t('common.client')}</Badge>
-                </div>
-              </div>
+        {/* Rendez-vous récents */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Rendez-vous récents</h2>
+            <Link href="/client/rendez-vous" className="text-sm font-medium text-slate-500 hover:text-slate-700">
+              Voir tout
+              <ChevronRight className="ml-1 inline-block h-4 w-4" />
+            </Link>
+          </div>
 
-              <div className="space-y-4 pt-4 border-t">
-                <div className="flex items-start gap-3">
-                  <Mail className="size-4 text-muted-foreground mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{t('common.email')}</p>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <Phone className="size-4 text-muted-foreground mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{t('common.phone')}</p>
-                    <p className="text-sm text-muted-foreground">{user?.telephone || '—'}</p>
-                  </div>
-                </div>
+          <div className="space-y-3">
+            {recentAppointments.length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                  <Calendar className="mb-4 h-12 w-12 text-slate-400" />
+                  <p className="mb-4 text-sm text-slate-600">Aucun rendez-vous</p>
+                  <Link href="/client/rendez-vous">
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Prendre un RDV
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              recentAppointments.map((appointment) => {
+                const date = new Date(appointment.date_heure);
+                const dateStr = date.toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                });
+                const timeStr = date.toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
 
-                <div className="flex items-start gap-3">
-                  <Hash className="size-4 text-muted-foreground mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{t('common.clientId')}</p>
-                    <p className="text-sm text-muted-foreground">#{user?.id}</p>
-                  </div>
-                </div>
-              </div>
+                const statusConfig =
+                  appointment.statut === 'CONFIRME'
+                    ? { label: 'Confirmé', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' }
+                    : appointment.statut === 'EN_COURS'
+                    ? { label: 'En cours', badge: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' }
+                    : appointment.statut === 'TERMINE'
+                    ? { label: 'Terminé', badge: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-400' }
+                    : { label: 'Planifié', badge: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500' };
 
-              <Link href="/client/profile" className={buttonVariants({ variant: "outline", className: "w-full mt-2" })}>
-                <Settings className="size-4 mr-2" />
-                {t('common.editProfile')}
-              </Link>
-            </CardContent>
-          </Card>
+                return (
+                  <div key={appointment.id} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-900">
+                        {appointment.interventions?.[0]
+                          ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
+                          : 'Rendez-vous'}
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        {dateStr} · {timeStr} · {appointment.agence_nom || 'Agence'}
+                      </p>
+                    </div>
+                    <Badge className={`gap-2 rounded-full border px-3 py-1 text-xs ${statusConfig.badge}`}>
+                      <span className={`h-2 w-2 rounded-full ${statusConfig.dot}`} />
+                      {statusConfig.label}
+                    </Badge>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Maintenance Alert */}
+      {needsMaintenanceVehicle && (
+        <Alert className="rounded-2xl border border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            <strong>Rappel d'entretien</strong>
+            <br />
+            Votre {needsMaintenanceVehicle.marque_nom} {needsMaintenanceVehicle.modele_nom} approche des{' '}
+            {needsMaintenanceVehicle.kilometrage?.toLocaleString()} km. Planifiez votre prochaine révision dès maintenant.
+            <Link href="/client/rendez-vous" className="ml-2 font-semibold underline">
+              Prendre un RDV →
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

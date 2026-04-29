@@ -197,3 +197,59 @@ button:focus {
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Client sidebar scrollbar */
+.client-sidebar-scroll::-webkit-scrollbar {
+  width: 12px;
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  border: 3px solid rgba(11, 31, 58, 0.95);
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.client-sidebar-scroll {
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.12);
+}
+
+.client-sidebar {
+  scroll-behavior: smooth;
+  transition: background-color 200ms ease;
+}
+
+@keyframes clientPageFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.client-page-transition {
+  animation: clientPageFade 240ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-page-transition {
+    animation: none;
+  }
+  .client-sidebar {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
