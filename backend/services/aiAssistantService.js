@@ -94,25 +94,28 @@ class AIAssistantService {
   }
 
   buildPrompt(userQuestion, context = {}) {
-    const systemPrompt = `Tu es l'assistant SAV officiel de Chery Tunisie. 
+    const ragBlock = context.ragContext
+      ? `\n\nDONNÉES RÉELLES DU SYSTÈME (utilise UNIQUEMENT ces informations exactes, ne complète pas avec des suppositions):\n${context.ragContext}`
+      : '';
 
-Ton rôle:
-- Répondre aux questions sur les véhicules Chery (Tiggo 8 Pro, Tiggo 7, Tiggo 4, Arrizo 6, etc.)
-- Aider avec les rendez-vous de maintenance et réparation
-- Fournir des informations sur les services après-vente
-- Répondre en français ou en arabe tunisien selon la langue du client
-- Être professionnel, courtois et précis
+    const systemPrompt = `Tu es l'assistant SAV officiel de STA Chery Tunisie.
 
-Informations importantes:
-- Les rendez-vous peuvent être pris via la plateforme en ligne
-- Le service client est disponible pour toute urgence
-- Les garanties Chery couvrent généralement 5 ans ou 150,000 km
-- Les révisions sont recommandées tous les 10,000 km ou 6 mois`;
+RÈGLES STRICTES:
+- Utilise UNIQUEMENT les données fournies ci-dessous, mot pour mot
+- Ne complète JAMAIS avec des descriptions inventées
+- Si une info n'est pas dans les données, dis "Je n'ai pas cette information"
+- Répondre en français ou arabe tunisien selon la langue du client
+- Sois concis et précis
+
+Informations générales:
+- Garantie Chery: 5 ans ou 150,000 km
+- Révisions: tous les 10,000 km ou 6 mois
+- Rendez-vous disponibles via la plateforme en ligne${ragBlock}`;
 
     const contextLines = [];
-    if (context.userType) contextLines.push(`Rôle utilisateur: ${context.userType}`);
-    if (context.userName) contextLines.push(`Nom utilisateur: ${context.userName}`);
-    if (context.vehicleModel) contextLines.push(`Modèle véhicule: ${context.vehicleModel}`);
+    if (context.userType) contextLines.push(`Rôle: ${context.userType}`);
+    if (context.userName) contextLines.push(`Nom: ${context.userName}`);
+    if (context.vehicleModel) contextLines.push(`Véhicule: ${context.vehicleModel}`);
 
     const contextBlock = contextLines.length
       ? `\n\nContexte:\n${contextLines.join('\n')}`
@@ -133,6 +136,27 @@ Informations importantes:
   async getResponse(userQuestion, context = {}) {
     try {
       console.log('[AI Assistant] Envoi de la question:', userQuestion.substring(0, 100));
+
+      // Chercher contexte RAG depuis pgvector (optionnel)
+      let ragContext = '';
+      try {
+        // Vérifier si RAG est configuré
+        if (process.env.PG_URL && process.env.OLLAMA_URL) {
+          const { searchContext } = require('./ragService');
+          const found = await searchContext(userQuestion);
+          if (found) {
+            ragContext = `\n\nInformations disponibles dans notre système:\n${found}`;
+            console.log('[AI Assistant] Contexte RAG trouvé ✅');
+          }
+        } else {
+          console.log('[AI Assistant] RAG non configuré (PG_URL ou OLLAMA_URL manquant)');
+        }
+      } catch (e) {
+        console.log('[AI Assistant] RAG non disponible:', e.message);
+      }
+
+      // Ajouter le contexte RAG au contexte existant
+      context.ragContext = ragContext;
 
       // Priorité 1: Groq (rapide et fiable)
       if (this.groqApiKey) {

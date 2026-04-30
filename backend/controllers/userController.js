@@ -319,6 +319,7 @@ const login = async (req, res) => {
         id: user.id, 
         email: user.email, 
         role: user.role_nom,
+        agence_id: user.agence_id,  // ✅ IMPORTANT: Inclure agence_id pour l'isolation multi-agences
         telephone_verifie: user.telephone_verifie || false
       },
       process.env.JWT_SECRET,

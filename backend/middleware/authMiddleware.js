@@ -28,10 +28,11 @@ const authMiddleware = (req, res, next) => {
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      role: decoded.role
+      role: decoded.role,
+      agence_id: decoded.agence_id  // ✅ IMPORTANT: Extraire agence_id pour l'isolation multi-agences
     };
 
-    console.log(`[AuthMiddleware] User authenticated:`, req.user.id, req.user.role);
+    console.log(`[AuthMiddleware] User authenticated:`, req.user.id, req.user.role, `agence_id: ${req.user.agence_id || 'N/A'}`);
 
     next();
   } catch (error) {

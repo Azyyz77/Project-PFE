@@ -1,418 +1,491 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, UserPlus, Calendar, Clock, AlertTriangle, Building2 } from 'lucide-react';
 import {
-  Worker,
-  Assignment,
-  getWorkersByAgency,
-  getAgencyAssignments,
-  getAllWorkers,
-  getAllAssignments,
+  Users, Calendar, Clock, CheckCircle, AlertTriangle,
+  Wrench, Car, ChevronRight, Zap, RefreshCw,
+  UserCheck, ArrowRight, Phone
+} from 'lucide-react';
+import {
+  Worker, Assignment,
+  getWorkersByAgency, getAgencyAssignments,
+  assignWorkerToAppointment, updateAssignmentStatus,
+  getUnassignedAppointments,
 } from '@/lib/api/workers';
 
-export default function WorkersManagementPage() {
-  const { user } = useAuth();
-  const [workers, setWorkers] = useState<Worker[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'workers' | 'assignments'>('workers');
-  const [selectedAgency, setSelectedAgency] = useState<number | null>(null);
+// ─── Types ───────────────────────────────────────────────────────────────────
+interface UnassignedAppointment {
+  id: number;
+  date_heure: string;
+  statut: string;
+  type_intervention?: string;
+  client_nom: string;
+  client_prenom: string;
+  vehicule_immatriculation: string;
+  vehicule_marque?: string;
+  vehicule_modele?: string;
+}
 
-  const isAdmin = user?.role === 'ADMIN';
+const PRIORITY_OPTIONS = ['NORMALE', 'HAUTE', 'URGENTE', 'BASSE'] as const;
+type Priority = (typeof PRIORITY_OPTIONS)[number];
 
+const PRIORITY_STYLE: Record<Priority, string> = {
+  URGENTE: 'bg-red-100 text-red-700 border-red-200',
+  HAUTE:   'bg-orange-100 text-orange-700 border-orange-200',
+  NORMALE: 'bg-blue-100 text-blue-700 border-blue-200',
+  BASSE:   'bg-gray-100 text-gray-600 border-gray-200',
+};
+
+const STATUS_STYLE: Record<string, string> = {
+  EN_ATTENTE: 'bg-yellow-100 text-yellow-800',
+  EN_COURS:   'bg-blue-100 text-blue-800',
+  TERMINE:    'bg-green-100 text-green-800',
+  ANNULE:     'bg-red-100 text-red-800',
+  CONFIRME:   'bg-indigo-100 text-indigo-800',
+  PLANIFIE:   'bg-purple-100 text-purple-800',
+};
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function WorkersPage() {
+  const { user, refreshUser } = useAuth();
+
+  // agenceId in state so it can be resolved from server when localStorage is stale
+  const [agenceId, setAgenceId] = useState<number | null>(user?.agence_id ?? null);
+
+  const [workers, setWorkers]           = useState<Worker[]>([]);
+  const [appointments, setAppointments] = useState<UnassignedAppointment[]>([]);
+  const [assignments, setAssignments]   = useState<Assignment[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState<string | null>(null);
+
+  // Assignment panel state
+  const [selectedAppt, setSelectedAppt] = useState<UnassignedAppointment | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+  const [priority, setPriority]   = useState<Priority>('NORMALE');
+  const [duration, setDuration]   = useState(60);
+  const [notes, setNotes]         = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'board' | 'assignments'>('board');
+
+  // ── Resolve agenceId: handles stale localStorage session ─────────────────────
   useEffect(() => {
-    if (user) {
-      if (isAdmin || user.agence_id) {
-        loadData();
+    if (agenceId) return; // already have it
+    // Fetch fresh user profile from server (JWT contains agence_id even if localStorage doesn't)
+    refreshUser().then(fresh => {
+      if (fresh?.agence_id) {
+        setAgenceId(fresh.agence_id);
       } else {
-        setError('Aucune agence associée à votre compte');
+        setError('Aucune agence associée à votre compte. Contactez un administrateur.');
         setLoading(false);
       }
-    }
-  }, [user, selectedAgency]);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadData = async () => {
+  // ── Load data (triggered when agenceId becomes available) ────────────────────
+  const loadAll = useCallback(async (id?: number) => {
+    const resolvedId = id ?? agenceId;
+    if (!resolvedId) return;
+    setLoading(true); setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      await Promise.all([loadWorkers(), loadAssignments()]);
-    } catch (err) {
-      console.error('Erreur chargement données:', err);
-      setError('Erreur lors du chargement des données');
+      const [w, a, asgn] = await Promise.all([
+        getWorkersByAgency(resolvedId),
+        getUnassignedAppointments(resolvedId),
+        getAgencyAssignments(resolvedId),
+      ]);
+      setWorkers(w);
+      setAppointments((a as any) || []);
+      setAssignments(asgn);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Erreur de chargement';
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  };
+  }, [agenceId]);
 
-  const loadWorkers = async () => {
+  // Trigger loadAll whenever agenceId resolves
+  useEffect(() => { if (agenceId) loadAll(agenceId); }, [agenceId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Submit assignment ────────────────────────────────────────────────────────
+  const handleAssign = async () => {
+    if (!selectedAppt || !selectedWorker) return;
+    setSubmitting(true);
     try {
-      if (isAdmin) {
-        // Admin: charger tous les ouvriers ou filtrer par agence
-        const filters = selectedAgency ? { agence_id: selectedAgency } : undefined;
-        const data = await getAllWorkers(filters);
-        setWorkers(data);
-      } else if (user?.agence_id) {
-        // Agent: charger uniquement les ouvriers de son agence
-        const data = await getWorkersByAgency(user.agence_id);
-        setWorkers(data);
-      }
-    } catch (error) {
-      console.error('Erreur chargement ouvriers:', error);
-      throw error;
+      await assignWorkerToAppointment({
+        rendez_vous_id: selectedAppt.id,
+        ouvrier_id: selectedWorker.id,
+        priorite: priority,
+        temps_estime_minutes: duration,
+        notes_agent: notes || undefined,
+      });
+      setSuccessMsg(`${selectedWorker.prenom} ${selectedWorker.nom} affecté avec succès !`);
+      setSelectedAppt(null); setSelectedWorker(null);
+      setPriority('NORMALE'); setDuration(60); setNotes('');
+      await loadAll();
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || 'Erreur lors de l\'affectation');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const loadAssignments = async () => {
+  // ── Update assignment status ─────────────────────────────────────────────────
+  const handleStatusChange = async (assignmentId: number, statut: string) => {
     try {
-      if (isAdmin) {
-        // Admin: charger toutes les affectations ou filtrer par agence
-        const filters = selectedAgency ? { agence_id: selectedAgency } : undefined;
-        const data = await getAllAssignments(filters);
-        setAssignments(data);
-      } else if (user?.agence_id) {
-        // Agent: charger uniquement les affectations de son agence
-        const data = await getAgencyAssignments(user.agence_id);
-        setAssignments(data);
-      }
-    } catch (error) {
-      console.error('Erreur chargement affectations:', error);
-      // Ne pas throw pour ne pas bloquer le chargement des ouvriers
-    }
+      await updateAssignmentStatus(assignmentId, { statut: statut as 'EN_ATTENTE' | 'EN_COURS' | 'TERMINE' | 'ANNULE' });
+      await loadAll();
+    } catch { /* silent */ }
   };
 
-  const getStatusColor = (statut: string) => {
-    switch (statut) {
-      case 'EN_ATTENTE':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'EN_COURS':
-        return 'bg-blue-100 text-blue-800';
-      case 'TERMINE':
-        return 'bg-green-100 text-green-800';
-      case 'ANNULE':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
-  const getPriorityColor = (priorite: string) => {
-    switch (priorite) {
-      case 'URGENTE':
-        return 'bg-red-100 text-red-800';
-      case 'HAUTE':
-        return 'bg-orange-100 text-orange-800';
-      case 'NORMALE':
-        return 'bg-blue-100 text-blue-800';
-      case 'BASSE':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const activeWorkers  = workers.filter(w => w.actif);
+  const busyCount      = (w: Worker) => w.affectations_en_cours ?? 0;
 
-  // Obtenir la liste unique des agences (pour le filtre admin)
-  const agencies = Array.from(
-    new Set(workers.map((w) => JSON.stringify({ id: w.agence_id, nom: w.agence_nom })))
-  ).map((str) => JSON.parse(str));
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E30613] mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
+  // ── Loading / error states ───────────────────────────────────────────────────
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-3">
+        <div className="w-12 h-12 border-4 border-[#E30613] border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-gray-500 text-sm">Chargement en cours…</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-red-600 text-lg font-semibold mb-2">Erreur</p>
-          <p className="text-gray-600">{error}</p>
-          <button
-            onClick={loadData}
-            className="mt-4 px-4 py-2 bg-[#E30613] text-white rounded-lg hover:bg-[#C00510]"
-          >
-            Réessayer
-          </button>
-        </div>
+  if (error && !workers.length) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="text-center space-y-4 max-w-sm">
+        <AlertTriangle className="w-14 h-14 text-red-400 mx-auto" />
+        <p className="text-red-600 font-semibold text-lg">{error}</p>
+        <button onClick={() => loadAll()} className="px-5 py-2 bg-[#E30613] text-white rounded-lg hover:bg-[#C00510] flex items-center gap-2 mx-auto">
+          <RefreshCw className="w-4 h-4" /> Réessayer
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
+  // ────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-          <Users className="h-8 w-8 text-[#E30613]" />
-          Gestion des Ouvriers
-          {isAdmin && <span className="text-sm font-normal text-gray-500">(Administrateur)</span>}
-        </h1>
-        <p className="text-gray-600 mt-2">
-          {isAdmin
-            ? 'Gérez tous les ouvriers et leurs affectations'
-            : 'Gérez les ouvriers et leurs affectations'}
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-gray-200 px-6 py-5">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#E30613] flex items-center justify-center shadow">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Distribution des Ouvriers</h1>
+              <p className="text-sm text-gray-500">Affectez vos techniciens aux rendez-vous en attente</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* KPI badges */}
+            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+              {activeWorkers.length} techniciens actifs
+            </span>
+            <span className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium">
+              {appointments.length} RDV à affecter
+            </span>
+            <button onClick={() => loadAll()} className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="max-w-7xl mx-auto mt-4 flex gap-1 border-b border-transparent">
+          {(['board', 'assignments'] as const).map(t => (
+            <button key={t} onClick={() => setActiveTab(t)}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors
+                ${activeTab === t ? 'bg-[#E30613] text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+              {t === 'board' ? '🗂️ Tableau d\'affectation' : `📋 Affectations en cours (${assignments.length})`}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Filtre par agence (Admin uniquement) */}
-      {isAdmin && agencies.length > 0 && (
-        <div className="mb-6 bg-white rounded-lg shadow-md p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Building2 className="inline h-4 w-4 mr-2" />
-            Filtrer par agence
-          </label>
-          <select
-            value={selectedAgency || ''}
-            onChange={(e) => setSelectedAgency(e.target.value ? Number(e.target.value) : null)}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613] focus:border-transparent"
-          >
-            <option value="">Toutes les agences</option>
-            {agencies.map((agency) => (
-              <option key={agency.id} value={agency.id}>
-                {agency.nom}
-              </option>
-            ))}
-          </select>
+      {/* ── Success toast ── */}
+      {successMsg && (
+        <div className="mx-6 mt-4 max-w-7xl mx-auto">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <p className="text-green-800 font-medium">{successMsg}</p>
+          </div>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('workers')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'workers'
-                ? 'border-[#E30613] text-[#E30613]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Users className="inline h-5 w-5 mr-2" />
-            Ouvriers ({workers.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('assignments')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'assignments'
-                ? 'border-[#E30613] text-[#E30613]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <Calendar className="inline h-5 w-5 mr-2" />
-            Affectations ({assignments.length})
-          </button>
-        </nav>
-      </div>
+      {/* ── BOARD TAB ── */}
+      {activeTab === 'board' && (
+        <div className="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
-      {/* Content */}
-      {activeTab === 'workers' ? (
-        <div>
-          {/* Actions */}
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-[#E30613] text-white rounded-lg hover:bg-[#C00510] flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                Ajouter un ouvrier
-              </button>
-            </div>
-            <div className="text-sm text-gray-600">
-              {workers.filter((w) => w.actif).length} ouvrier(s) actif(s)
-            </div>
-          </div>
+          {/* LEFT: Unassigned appointments */}
+          <section>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Rendez-vous sans technicien
+            </h2>
 
-          {/* Workers Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {workers.map((worker) => (
-              <div
-                key={worker.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {worker.prenom} {worker.nom}
-                    </h3>
-                    <p className="text-sm text-gray-600">{worker.specialite || 'Non spécifié'}</p>
-                    {isAdmin && worker.agence_nom && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        <Building2 className="inline h-3 w-3 mr-1" />
-                        {worker.agence_nom}
-                      </p>
-                    )}
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      worker.actif
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {worker.actif ? 'Actif' : 'Inactif'}
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <span className="font-medium">Niveau:</span>
-                    <span>{worker.niveau_competence || 'Non défini'}</span>
-                  </div>
-                  {worker.telephone && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span className="font-medium">Tél:</span>
-                      <span>{worker.telephone}</span>
-                    </div>
-                  )}
-                  {worker.email && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <span className="font-medium">Email:</span>
-                      <span className="truncate">{worker.email}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Clock className="h-4 w-4" />
-                    <span>{worker.affectations_en_cours || 0} affectation(s) en cours</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-200 flex gap-2">
-                  <button className="flex-1 px-3 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 text-sm font-medium">
-                    Voir détails
-                  </button>
-                  <button className="flex-1 px-3 py-2 bg-[#E30613] text-white rounded hover:bg-[#C00510] text-sm font-medium">
-                    Affecter
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {workers.length === 0 && (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">Aucun ouvrier enregistré</p>
-              <p className="text-sm text-gray-500 mb-4">
-                {isAdmin
-                  ? 'Aucun ouvrier dans le système'
-                  : 'Commencez par ajouter des ouvriers à votre agence'}
-              </p>
-              <button className="px-4 py-2 bg-[#E30613] text-white rounded-lg hover:bg-[#C00510]">
-                Ajouter le premier ouvrier
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div>
-          {/* Assignments List */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {assignments.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {isAdmin && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Agence
-                        </th>
-                      )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ouvrier
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client / Véhicule
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Priorité
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Statut
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {assignments.map((assignment) => (
-                      <tr key={assignment.affectation_id} className="hover:bg-gray-50">
-                        {isAdmin && (
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{assignment.agence_nom}</div>
-                          </td>
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {assignment.ouvrier_prenom} {assignment.ouvrier_nom}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {assignment.ouvrier_specialite}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {assignment.client_prenom} {assignment.client_nom}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {assignment.marque} {assignment.modele} - {assignment.immatriculation}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
-                              assignment.priorite
-                            )}`}
-                          >
-                            {assignment.priorite}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                              assignment.statut
-                            )}`}
-                          >
-                            {assignment.statut}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(assignment.date_affectation).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-[#E30613] hover:text-[#C00510]">
-                            Détails
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {appointments.length === 0 ? (
+              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
+                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <p className="font-semibold text-gray-700">Tous les rendez-vous sont affectés</p>
+                <p className="text-sm text-gray-400 mt-1">Aucune action requise pour le moment.</p>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">Aucune affectation</p>
-                <p className="text-sm text-gray-500">
-                  Les affectations apparaîtront ici une fois créées
-                </p>
+              <div className="space-y-3">
+                {appointments.map(appt => {
+                  const isSelected = selectedAppt?.id === appt.id;
+                  return (
+                    <div key={appt.id} onClick={() => { setSelectedAppt(isSelected ? null : appt); setSelectedWorker(null); }}
+                      className={`w-full text-left rounded-2xl border-2 p-4 transition-all shadow-sm cursor-pointer
+                        ${isSelected
+                          ? 'border-[#E30613] bg-red-50 shadow-md'
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'}`}>
+                      <div className="flex items-start gap-4">
+                        {/* Date block */}
+                        <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[56px]
+                          ${isSelected ? 'bg-[#E30613] text-white' : 'bg-gray-100 text-gray-700'}`}>
+                          <span className="text-lg font-bold leading-none">
+                            {new Date(appt.date_heure).getDate()}
+                          </span>
+                          <span className="text-[10px] uppercase">
+                            {new Date(appt.date_heure).toLocaleDateString('fr-FR', { month: 'short' })}
+                          </span>
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-gray-900 truncate">
+                              {appt.client_prenom} {appt.client_nom}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[appt.statut] ?? 'bg-gray-100 text-gray-600'}`}>
+                              {appt.statut}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                            <span className="flex items-center gap-1"><Car className="w-3.5 h-3.5" />
+                              {appt.vehicule_marque} {appt.vehicule_modele} · {appt.vehicule_immatriculation}
+                            </span>
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />
+                              {new Date(appt.date_heure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {appt.type_intervention && (
+                              <span className="flex items-center gap-1"><Wrench className="w-3.5 h-3.5" /> {appt.type_intervention}</span>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className={`w-5 h-5 flex-shrink-0 transition-transform ${isSelected ? 'text-[#E30613] rotate-90' : 'text-gray-300'}`} />
+                      </div>
+
+                      {/* Worker selector (shown when appointment is selected) */}
+                      {isSelected && (
+                        <div className="mt-4 pt-4 border-t border-red-200">
+                          <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <UserCheck className="w-4 h-4 text-[#E30613]" /> Choisir un technicien :
+                          </p>
+                          {activeWorkers.length === 0 ? (
+                            <p className="text-sm text-gray-400 italic">Aucun technicien actif disponible.</p>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {activeWorkers.map(w => {
+                                const busy = busyCount(w);
+                                const isSel = selectedWorker?.id === w.id;
+                                return (
+                                  <button key={w.id} type="button"
+                                    onClick={e => { e.stopPropagation(); setSelectedWorker(isSel ? null : w); }}
+                                    className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all
+                                      ${isSel ? 'border-[#E30613] bg-white shadow' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                                    {/* Avatar */}
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0
+                                      ${isSel ? 'bg-[#E30613] text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                      {w.prenom[0]}{w.nom[0]}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-gray-900 text-sm truncate">{w.prenom} {w.nom}</p>
+                                      <p className="text-xs text-gray-400 truncate">{w.specialite || 'Généraliste'}</p>
+                                    </div>
+                                    <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0
+                                      ${busy === 0 ? 'bg-green-100 text-green-700' : busy < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                                      {busy} en cours
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Options row */}
+                          {selectedWorker && (
+                            <div className="mt-4 space-y-3">
+                              {/* Priority */}
+                              <div className="flex flex-wrap gap-2">
+                                <span className="text-xs text-gray-500 self-center">Priorité :</span>
+                                {PRIORITY_OPTIONS.map(p => (
+                                  <button key={p} type="button" onClick={e => { e.stopPropagation(); setPriority(p); }}
+                                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all
+                                      ${priority === p ? PRIORITY_STYLE[p] : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                                    {p}
+                                  </button>
+                                ))}
+                              </div>
+                              {/* Duration + Notes */}
+                              <div className="flex gap-3">
+                                <div>
+                                  <label className="text-xs text-gray-500">Durée (min)</label>
+                                  <input type="number" min={15} step={15} value={duration}
+                                    onClick={e => e.stopPropagation()}
+                                    onChange={e => setDuration(Number(e.target.value))}
+                                    className="mt-1 block w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:outline-none" />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-gray-500">Notes (optionnel)</label>
+                                  <input type="text" value={notes} placeholder="Instructions…"
+                                    onClick={e => e.stopPropagation()}
+                                    onChange={e => setNotes(e.target.value)}
+                                    className="mt-1 block w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:outline-none" />
+                                </div>
+                              </div>
+                              {/* Confirm button */}
+                              <button type="button" disabled={submitting} onClick={e => { e.stopPropagation(); handleAssign(); }}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#E30613] hover:bg-[#C00510] text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-60">
+                                {submitting ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Affectation…</> :
+                                  <><ArrowRight className="w-4 h-4" /> Confirmer l'affectation</>}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </div>
+          </section>
+
+          {/* RIGHT: Workers panel */}
+          <aside>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Users className="w-4 h-4" /> Équipe ({activeWorkers.length})
+            </h2>
+            <div className="space-y-3">
+              {activeWorkers.map(w => {
+                const busy = busyCount(w);
+                const loadColor = busy === 0 ? 'bg-green-500' : busy < 3 ? 'bg-yellow-400' : 'bg-red-500';
+                return (
+                  <div key={w.id} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                        {w.prenom[0]}{w.nom[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{w.prenom} {w.nom}</p>
+                        <p className="text-xs text-gray-400">{w.specialite || 'Généraliste'} · {w.niveau_competence || 'Intermédiaire'}</p>
+                      </div>
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${loadColor}`} title={`${busy} en cours`} />
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500 flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-yellow-500" /> {busy} affectation{busy > 1 ? 's' : ''} en cours
+                      </span>
+                      {w.telephone && (
+                        <span className="text-gray-400 flex items-center gap-1 text-xs">
+                          <Phone className="w-3 h-3" /> {w.telephone}
+                        </span>
+                      )}
+                    </div>
+                    {/* Load bar */}
+                    <div className="mt-2 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${loadColor}`}
+                        style={{ width: `${Math.min(busy * 20, 100)}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+              {activeWorkers.length === 0 && (
+                <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center">
+                  <Users className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Aucun technicien actif</p>
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ── ASSIGNMENTS TAB ── */}
+      {activeTab === 'assignments' && (
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {assignments.length === 0 ? (
+            <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-14 text-center">
+              <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="font-semibold text-gray-600">Aucune affectation pour le moment</p>
+              <p className="text-sm text-gray-400 mt-1">Les affectations créées apparaîtront ici.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {['Technicien', 'Client / Véhicule', 'Date RDV', 'Priorité', 'Statut', 'Actions'].map(h => (
+                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {assignments.map(a => (
+                    <tr key={a.affectation_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold">
+                            {(a.ouvrier_prenom?.[0] ?? '?')}{(a.ouvrier_nom?.[0] ?? '')}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900 text-sm">{a.ouvrier_prenom} {a.ouvrier_nom}</p>
+                            <p className="text-xs text-gray-400">{a.ouvrier_specialite}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-sm font-medium text-gray-900">{a.client_prenom} {a.client_nom}</p>
+                        <p className="text-xs text-gray-400">{a.marque} {a.modele} · {a.immatriculation}</p>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
+                        {fmtDate(a.date_affectation)}
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${PRIORITY_STYLE[a.priorite as Priority] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                          {a.priorite}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[a.statut] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {a.statut}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <select
+                          defaultValue={a.statut}
+                          onChange={e => handleStatusChange(a.affectation_id, e.target.value)}
+                          className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:ring-1 focus:ring-[#E30613] focus:outline-none">
+                          <option value="EN_ATTENTE">En attente</option>
+                          <option value="EN_COURS">En cours</option>
+                          <option value="TERMINE">Terminé</option>
+                          <option value="ANNULE">Annulé</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

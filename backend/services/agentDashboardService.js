@@ -66,7 +66,7 @@ class AgentDashboardService {
   // GESTION DES RENDEZ-VOUS
   // ============================================================
 
-  static async getAppointmentsList(agentId, filters = {}) {
+  static async getAppointmentsList(agentId, agentAgenceId, filters = {}) {
     try {
       const pool = await getConnection();
 
@@ -101,11 +101,13 @@ class AgentDashboardService {
         JOIN Version     ve ON ve.id = v.version_id
         JOIN Modele      mo ON mo.id = ve.modele_id
         JOIN Marque      m  ON m.id  = mo.marque_id
-        WHERE (r.agent_id = @agent_id OR r.agent_id IS NULL)
+        WHERE r.agence_id = @agent_agence_id
+          AND (r.agent_id = @agent_id OR r.agent_id IS NULL)
       `;
 
       const request = pool.request()
-        .input('agent_id', sql.BigInt, agentId);
+        .input('agent_id', sql.BigInt, agentId)
+        .input('agent_agence_id', sql.BigInt, agentAgenceId);
 
       if (filters.statut) {
         query += ` AND r.statut = @statut`;
