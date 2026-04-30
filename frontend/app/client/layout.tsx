@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import NotificationBell from '@/components/NotificationBell';
-import { ThemeToggle } from '@/components/ThemeToggle';
-import LanguageSelector from '@/components/LanguageSelector';
 import { PhoneVerificationBanner } from '@/components/PhoneVerificationBanner';
+import NotificationBell from '@/components/NotificationBell';
+import LanguageSelector from '@/components/LanguageSelector';
 import { Badge } from '@/components/ui/badge';
+import { fetchClientComplaints } from '@/lib/api/clientDashboard';
+import { getMyAppointments } from '@/lib/api/appointments';
 import {
   LayoutDashboard,
   Car,
@@ -19,103 +20,163 @@ import {
   Menu,
   LogOut,
   ShoppingBag,
-  Tag,
-  HelpCircle,
   Star,
   AlertCircle,
   MessageCircle,
   Clock,
   Settings,
-  Wrench,
+  LifeBuoy,
+  Tag,
+  Receipt,
+  LayoutGrid,
 } from 'lucide-react';
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.ReactNode;
+  badge?: number;
+  badgeKey?: 'appointments' | 'complaints';
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { label: 'Tableau de bord', href: '/client/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: 'Mes véhicules', href: '/client/vehicles', icon: <Car className="h-4 w-4" /> },
-  { label: 'Historique véhicules', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
-  { label: 'Catalogue', href: '/client/catalog', icon: <Wrench className="h-4 w-4" /> },
-  { label: 'Promotions', href: '/client/promotions', icon: <Tag className="h-4 w-4" /> },
-  { label: 'Mes commandes', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
-  { label: 'Rendez-vous', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" /> },
-  { label: 'Mes documents', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
-  { label: 'Assistant SAV', href: '/client/chatbot', icon: <MessageCircle className="h-4 w-4" /> },
-  { label: 'Assistance', href: '/client/assistance', icon: <HelpCircle className="h-4 w-4" /> },
-  { label: 'Mes Avis', href: '/client/feedback', icon: <Star className="h-4 w-4" /> },
-  { label: 'Réclamations', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" /> },
-  { label: 'Mon profil', href: '/client/profile', icon: <User className="h-4 w-4" /> },
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: 'PRINCIPAL',
+    items: [
+      { label: 'Tableau de bord', href: '/client/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+      { label: 'Mes Véhicules', href: '/client/vehicles', icon: <Car className="h-4 w-4" /> },
+      { label: 'Prendre RDV', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: 'SUIVI',
+    items: [
+      { label: 'Mes Rendez-vous', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
+      { label: 'Historique', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
+      { label: 'Commandes', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
+      { label: 'Catalogue', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
+      { label: 'Promotions', href: '/client/promotions', icon: <Tag className="h-4 w-4" /> },
+      { label: 'Factures', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
+    ],
+  },
+  {
+    title: 'AUTRES',
+    items: [
+      { label: 'Documents', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
+      { label: 'Réclamations', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
+      { label: 'Assistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },
+      { label: 'Assistant SAV', href: '/client/chatbot', icon: <MessageCircle className="h-4 w-4" /> },
+      { label: 'Mes Avis', href: '/client/feedback', icon: <Star className="h-4 w-4" /> },
+      { label: 'Mon profil', href: '/client/profile', icon: <User className="h-4 w-4" /> },
+    ],
+  },
 ];
 
-function SidebarLink({ item, isActive }: { item: NavItem; isActive: boolean }) {
+function SidebarLink({ item, isActive, badgeCount }: { item: NavItem; isActive: boolean; badgeCount?: number }) {
+  const shouldShowBadge = typeof badgeCount === 'number' && badgeCount > 0;
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 ${
+      className={`group relative flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-sm transition-all duration-300 ${
         isActive
-          ? 'bg-[#1b335a] text-white font-medium'
-          : 'text-slate-200 hover:bg-[#132744] hover:text-white'
+          ? 'bg-[#1b355d] text-white font-medium shadow-[0_10px_20px_rgba(12,28,52,0.35)]'
+          : 'text-slate-300 hover:bg-[#17325a] hover:text-white'
       }`}
     >
-      <span className={isActive ? 'text-white' : 'text-slate-300'}>
+      <span
+        className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-red-500 transition-all duration-300 ${
+          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+        }`}
+      />
+      <span className={isActive ? 'text-white' : 'text-slate-400'}>
         {item.icon}
       </span>
-      <span>{item.label}</span>
+      <span className="flex-1 whitespace-nowrap">{item.label}</span>
+      {shouldShowBadge && (
+        <Badge className="h-5 min-w-[20px] rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+          {badgeCount}
+        </Badge>
+      )}
     </Link>
   );
 }
 
-function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
+function SidebarContent({
+  onLinkClick,
+  badgeCounts,
+}: {
+  onLinkClick?: () => void;
+  badgeCounts?: { appointments: number; complaints: number };
+}) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   return (
-    <div className="client-sidebar flex h-full min-h-0 flex-col bg-[#0b1f3a] border-r border-[#0b1f3a]">
+    <div className="client-sidebar flex h-full flex-col bg-[#0f2543]">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-6 border-b border-[#0f2747]">
+      <div className="flex items-center gap-3 px-5 py-6 border-b border-[#1a3559]">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600">
           <Car className="h-5 w-5 text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-white">STA CHERY</p>
-          <p className="text-[10px] uppercase tracking-wider text-slate-300">ESPACE CLIENT</p>
+          <p className="text-sm font-bold text-white">STA Chery</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400">ESPACE CLIENT</p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="client-sidebar-scroll flex-1 min-h-0 space-y-1 overflow-y-scroll px-3 py-4">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          return (
-            <div key={item.href} onClick={onLinkClick}>
-              <SidebarLink item={item} isActive={isActive} />
+      {/* User Info */}
+      {user && (
+        <div className="px-4 py-4 border-b border-[#1a3559]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+              {user.prenom?.[0]}{user.nom?.[0]}
             </div>
-          );
-        })}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{user.prenom} {user.nom}</p>
+              <p className="text-xs text-slate-400">Client</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Sections */}
+      <nav className="client-sidebar-scroll flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.title}>
+            <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              {section.title}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                const badgeCount = item.badgeKey ? badgeCounts?.[item.badgeKey] : item.badge;
+                return (
+                  <div key={item.href} onClick={onLinkClick}>
+                    <SidebarLink item={item} isActive={isActive} badgeCount={badgeCount} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* User Profile */}
+      {/* Footer Actions */}
       {user && (
-        <div className="border-t border-[#0f2747] p-4">
-          <div className="space-y-1">
-            <Link href="/client/profile">
-              <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-[#132744]">
-                <Settings className="h-4 w-4" />
-                <span>Paramètres</span>
-              </button>
-            </Link>
-            <button
-              onClick={logout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-200 transition-colors hover:bg-[#132744]"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Déconnexion</span>
-            </button>
-          </div>
+        <div className="border-t border-[#1a3559] p-3">
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-[#17325a] hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Déconnexion</span>
+          </button>
         </div>
       )}
     </div>
@@ -123,15 +184,60 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 }
 
 function ClientSidebar() {
+  const { user, token } = useAuth();
+  const [badgeCounts, setBadgeCounts] = useState({ appointments: 0, complaints: 0 });
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      if (!user || !token || user.role !== 'CLIENT') return;
+      try {
+        const [appointmentsData, complaintsData] = await Promise.all([
+          getMyAppointments(token),
+          fetchClientComplaints(token),
+        ]);
+        setBadgeCounts({
+          appointments: appointmentsData.length,
+          complaints: complaintsData.length,
+        });
+      } catch (error) {
+        console.error('Error loading client sidebar counts:', error);
+      }
+    };
+
+    loadCounts();
+  }, [user, token]);
+
   return (
-    <aside className="hidden h-screen w-[240px] shrink-0 overflow-hidden bg-[#0b1f3a] lg:flex lg:flex-col">
-      <SidebarContent />
+    <aside className="hidden h-screen w-[240px] shrink-0 overflow-hidden bg-[#0f2543] lg:flex lg:flex-col">
+      <SidebarContent badgeCounts={badgeCounts} />
     </aside>
   );
 }
 
 function ClientMobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, token } = useAuth();
+  const [badgeCounts, setBadgeCounts] = useState({ appointments: 0, complaints: 0 });
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      if (!user || !token || user.role !== 'CLIENT') return;
+      try {
+        const [appointmentsData, complaintsData] = await Promise.all([
+          getMyAppointments(token),
+          fetchClientComplaints(token),
+        ]);
+        setBadgeCounts({
+          appointments: appointmentsData.length,
+          complaints: complaintsData.length,
+        });
+      } catch (error) {
+        console.error('Error loading client mobile sidebar counts:', error);
+      }
+    };
+
+    loadCounts();
+  }, [user, token]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -139,8 +245,8 @@ function ClientMobileMenu() {
         <Menu className="h-5 w-5" />
       </SheetTrigger>
 
-      <SheetContent side="left" className="h-full w-[240px] border-0 bg-[#0b1f3a] p-0">
-        <SidebarContent onLinkClick={() => setIsOpen(false)} />
+      <SheetContent side="left" className="h-full w-[240px] border-0 bg-[#0f2543] p-0">
+        <SidebarContent onLinkClick={() => setIsOpen(false)} badgeCounts={badgeCounts} />
       </SheetContent>
     </Sheet>
   );
@@ -149,12 +255,19 @@ function ClientMobileMenu() {
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isLoggingOut } = useAuth();
   const pathname = usePathname();
+  const [isPageReady, setIsPageReady] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isLoggingOut && (!user || user.role !== 'CLIENT')) {
       window.location.href = '/unauthorized';
     }
   }, [user, isLoading, isLoggingOut]);
+
+  useEffect(() => {
+    setIsPageReady(false);
+    const id = requestAnimationFrame(() => setIsPageReady(true));
+    return () => cancelAnimationFrame(id);
+  }, [pathname]);
 
   if (isLoading) {
     return (
@@ -173,39 +286,46 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (!user || user.role !== 'CLIENT') return null;
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-[#f5f7fa]">
       <ClientSidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col min-h-0">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3.5 shadow-sm">
           <div className="flex items-center gap-4">
             <ClientMobileMenu />
-            <h1 className="text-lg font-semibold text-slate-900">Espace Client</h1>
+            <div className="leading-tight">
+              <h1 className="text-base font-semibold text-slate-700">Tableau de bord</h1>
+              <p className="text-xs text-slate-500">Client</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <LanguageSelector />
             <NotificationBell />
 
-            <LanguageSelector />
-            <ThemeToggle />
+            <div className="h-6 w-px bg-slate-200" />
+
+            {/* Settings Icon */}
+            <button type="button" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+              <Settings className="h-5 w-5" />
+            </button>
 
             {/* User Avatar */}
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-white">
+            <Link href="/client/profile">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white cursor-pointer hover:bg-blue-700 transition-colors">
                 {user?.prenom?.[0]}{user?.nom?.[0]}
               </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium text-slate-900">{user?.prenom} {user?.nom}</p>
-                <p className="text-xs text-slate-500">Client</p>
-              </div>
-            </div>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1">
-          <div key={pathname} className="client-page-transition">
-            <PhoneVerificationBanner />
+        <main className="flex-1 overflow-y-auto">
+          <PhoneVerificationBanner />
+          <div
+            key={pathname}
+            className={`client-page-transition client-page-stagger ${isPageReady ? 'client-page-enter' : 'opacity-0'}`}
+          >
             {children}
           </div>
         </main>

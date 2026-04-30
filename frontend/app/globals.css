@@ -240,16 +240,181 @@ button:focus {
   }
 }
 
+@keyframes clientReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notificationPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .client-page-transition {
-  animation: clientPageFade 240ms ease-out;
+  animation: clientPageFade 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-page-enter {
+  animation: clientReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim) {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: clientReveal 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(1) {
+  animation-delay: 60ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(4) {
+  animation-delay: 240ms;
+}
+
+.client-reveal {
+  animation: clientReveal 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-reveal-delay-1 {
+  animation-delay: 100ms;
+}
+
+.client-reveal-delay-2 {
+  animation-delay: 200ms;
+}
+
+.client-reveal-delay-3 {
+  animation-delay: 300ms;
+}
+
+.client-reveal-delay-4 {
+  animation-delay: 400ms;
+}
+
+.client-card-hover {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.notification-panel-animate {
+  transform-origin: top right;
+  animation: notificationPanelIn 240ms ease-out both;
+  will-change: transform, opacity;
+}
+
+.notification-item-animate {
+  animation: clientReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-slide-left {
+  animation: slideInFromLeft 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-slide-right {
+  animation: slideInFromRight 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-scale-in {
+  animation: scaleIn 350ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Smooth transitions for all interactive elements */
+button, a, input, textarea, select {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Page transition wrapper */
+.page-wrapper {
+  animation: clientPageFade 350ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .client-page-transition {
+  .client-page-transition,
+  .client-reveal,
+  .client-slide-left,
+  .client-slide-right,
+  .client-scale-in,
+  .page-wrapper,
+  .client-page-stagger > * > *:not(.client-page-no-anim),
+  .client-page-enter,
+  .notification-panel-animate,
+  .notification-item-animate {
     animation: none;
+  }
+  .client-card-hover {
+    transition: none;
+  }
+  .client-card-hover:hover {
+    transform: none;
   }
   .client-sidebar {
     scroll-behavior: auto;
+    transition: none;
+  }
+  button, a, input, textarea, select {
     transition: none;
   }
 }

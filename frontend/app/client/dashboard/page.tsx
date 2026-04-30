@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { getMyAppointments } from '@/lib/api/appointments';
+import { fetchClientComplaints } from '@/lib/api/clientDashboard';
 import { Vehicle } from '@/types/vehicle';
 import { Appointment } from '@/types/appointment';
 import {
@@ -16,17 +16,14 @@ import {
   Car,
   Calendar,
   MessageSquare,
-  Wrench,
-  FileText,
-  AlertCircle,
   Clock,
   MapPin,
+  CheckCircle2,
   ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ClientDashboardPage() {
   return (
@@ -38,10 +35,10 @@ export default function ClientDashboardPage() {
 
 function ClientDashboardContent() {
   const { user, token } = useAuth();
-  const { language, t } = useLanguage();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [complaintsCount, setComplaintsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const isClient = useMemo(() => user?.role === 'CLIENT', [user]);
@@ -54,12 +51,14 @@ function ClientDashboardContent() {
     const load = async () => {
       if (!user || !token || !isClient) return;
       try {
-        const [vehiclesData, appointmentsData] = await Promise.all([
+        const [vehiclesData, appointmentsData, complaintsData] = await Promise.all([
           getVehiclesByUser(user.id, token),
           getMyAppointments(token),
+          fetchClientComplaints(token),
         ]);
         setVehicles(vehiclesData);
         setAppointments(appointmentsData);
+        setComplaintsCount(complaintsData.length);
       } catch (error) {
         console.error('Error loading dashboard:', error);
       } finally {
@@ -78,293 +77,333 @@ function ClientDashboardContent() {
   }
 
   // Calculate stats
-  const thisMonthAppointments = appointments.filter((apt) => {
+  const upcomingAppointments = appointments.filter((apt) => !['TERMINE', 'ANNULE'].includes(apt.statut));
+
+  const pendingComplaints = complaintsCount;
+  const completedAppointments = appointments.filter((apt) => apt.statut === 'TERMINE').length;
+  const now = new Date();
+  const completedThisMonth = appointments.filter((apt) => {
+    if (apt.statut !== 'TERMINE') return false;
     const aptDate = new Date(apt.date_heure);
-    const now = new Date();
-    return aptDate.getMonth() === now.getMonth() && aptDate.getFullYear() === now.getFullYear();
-  });
+    return aptDate.getFullYear() === now.getFullYear() && aptDate.getMonth() === now.getMonth();
+  }).length;
 
-  const pendingComplaints = 2; // TODO: Get from API
-  const totalInterventions = 8; // TODO: Get from API
-
-  // Get recent appointments (last 3)
+  // Get recent appointments (last 2)
   const recentAppointments = appointments
-    .sort((a, b) => new Date(b.date_heure).getTime() - new Date(a.date_heure).getTime())
-    .slice(0, 3);
-
-  // Check for maintenance reminders
-  const needsMaintenanceVehicle = vehicles.find((v) => v.kilometrage && v.kilometrage > 30000);
+    .filter((apt) => !['TERMINE', 'ANNULE'].includes(apt.statut))
+    .sort((a, b) => new Date(a.date_heure).getTime() - new Date(b.date_heure).getTime())
+    .slice(0, 2);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="client-page-enter space-y-6 p-6">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0b1f3a] via-[#0f2a4d] to-[#0b1f3a] p-8 text-white shadow-sm">
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10">
-          <Car className="h-32 w-32" />
+      <div className="client-reveal relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)]">
+        <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 opacity-10">
+          <Car className="h-40 w-40" />
         </div>
 
         <div className="relative z-10">
-          <p className="text-sm text-blue-100">Bonjour,</p>
-          <h1 className="mb-2 text-2xl font-semibold md:text-3xl">
-            {user?.prenom} {user?.nom} 👋
+          <p className="mb-1 text-sm text-blue-200">Bonjour,</p>
+          <h1 className="mb-2 text-3xl font-bold">
+            {user?.prenom} {user?.nom}
           </h1>
           <p className="mb-6 text-sm text-blue-100">
-            Bienvenue sur votre espace client STA Chery Tunisia.
+            Bienvenue sur votre espace client STA Chery Tunisia
           </p>
 
-          <Link href="/client/rendez-vous">
-            <Button className="rounded-full bg-red-600 px-5 text-white hover:bg-red-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Prendre un rendez-vous
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/client/rendez-vous">
+              <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg">
+                <Plus className="mr-2 h-4 w-4" />
+                Prendre un RDV
+              </Button>
+            </Link>
+
+            <Link href="/client/vehicles">
+              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm">
+                <Car className="mr-2 h-4 w-4" />
+                Mes véhicules
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+      <div className="client-reveal client-reveal-delay-1 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Véhicules</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{vehicles.length}</p>
+                <p className="text-sm text-slate-600">RDV à venir</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{upcomingAppointments.length}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50">
-                <Car className="h-6 w-6 text-blue-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100">
+                <Calendar className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">RDV ce mois</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{thisMonthAppointments.length}</p>
+                <p className="text-sm text-slate-600">Véhicules</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{vehicles.length}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
-                <Calendar className="h-6 w-6 text-emerald-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100">
+                <Car className="h-6 w-6 text-emerald-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Réclamations</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{pendingComplaints}</p>
+                <p className="text-sm text-slate-600">Réclamations</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{pendingComplaints}</p>
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
                 <MessageSquare className="h-6 w-6 text-amber-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border border-slate-100 shadow-sm">
+        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Interventions</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-900">{totalInterventions}</p>
+                <p className="text-sm text-slate-600">RDV complétés</p>
+                <p className="mt-2 text-3xl font-bold text-slate-900">{completedAppointments}</p>
+                {completedThisMonth > 0 && (
+                  <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
+                    <span className="font-medium">+{completedThisMonth} ce mois</span>
+                  </div>
+                )}
               </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50">
-                <Wrench className="h-6 w-6 text-purple-600" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100">
+                <CheckCircle2 className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Actions rapides */}
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-slate-900">Actions rapides</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link
-            href="/client/rendez-vous"
-            className="flex items-center gap-3 rounded-xl bg-[#0b1f3a] px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#0a1a30]"
-          >
-            <Calendar className="h-5 w-5" />
-            Nouveau RDV
-          </Link>
+      <div className="client-reveal client-reveal-delay-2 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Mes Rendez-vous Section */}
+        <div className="lg:col-span-2">
+          <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-slate-900">Mes Rendez-vous</h2>
+                <Link href="/client/rendez-vous">
+                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                    Voir tout
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
 
-          <Link
-            href="/client/vehicles"
-            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-          >
-            <Car className="h-5 w-5" />
-            Mes véhicules
-          </Link>
+              <div className="space-y-3">
+                {recentAppointments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
+                    <Calendar className="mb-4 h-12 w-12 text-slate-400" />
+                    <p className="mb-4 text-sm text-slate-600">Aucun rendez-vous à venir</p>
+                    <Link href="/client/rendez-vous">
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Prendre un RDV
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  recentAppointments.map((appointment, index) => {
+                    const date = new Date(appointment.date_heure);
+                    const dayNumber = date.getDate();
+                    const monthLabel = date.toLocaleDateString('fr-FR', { month: 'short' });
+                    const timeLabel = date.toLocaleTimeString('fr-FR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
 
-          <Link
-            href="/client/rendez-vous"
-            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-          >
-            <FileText className="h-5 w-5" />
-            Mes RDV
-          </Link>
+                    const statusColors = {
+                      CONFIRME: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                      PLANIFIE: 'bg-blue-100 text-blue-700 border-blue-200',
+                      EN_COURS: 'bg-amber-100 text-amber-700 border-amber-200',
+                    };
 
-          <Link
-            href="/client/complaints"
-            className="flex items-center gap-3 rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
-          >
-            <MessageSquare className="h-5 w-5" />
-            Réclamation
-          </Link>
+                    const statusLabels = {
+                      CONFIRME: 'Confirmé',
+                      PLANIFIE: 'Planifié',
+                      EN_COURS: 'En cours',
+                    };
+
+                    return (
+                      <div
+                        key={appointment.id}
+                        className={`flex items-center gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm ${
+                          index === recentAppointments.length - 1 ? '' : ''
+                        }`}
+                      >
+                        <div className="flex flex-col items-center justify-center rounded-xl bg-blue-50 px-4 py-3 min-w-[70px]">
+                          <span className="text-2xl font-bold text-blue-900">{String(dayNumber).padStart(2, '0')}</span>
+                          <span className="text-xs uppercase text-blue-600">{monthLabel}</span>
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h3 className="font-semibold text-slate-900">
+                                {appointment.interventions?.[0]
+                                  ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
+                                  : 'Rendez-vous de service'}
+                              </h3>
+                              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                                <span className="flex items-center gap-1">
+                                  <Car className="h-3 w-3" />
+                                  {appointment.immatriculation || 'Véhicule'}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {appointment.agence_nom || 'Agence'}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {timeLabel}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge className={`${statusColors[appointment.statut as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'} border`}>
+                              {statusLabels[appointment.statut as keyof typeof statusLabels] || appointment.statut}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Actions rapides */}
+        <div>
+          <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
+            <CardContent className="p-6">
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Actions rapides</h2>
+              <div className="space-y-3">
+                <Link href="/client/rendez-vous" className="block">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">Prendre un RDV</p>
+                        <p className="text-xs text-slate-500">Réserver un nouveau rendez-vous</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                  </div>
+                </Link>
+
+                <Link href="/client/complaints" className="block">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                        <MessageSquare className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">Soumettre réclamation</p>
+                        <p className="text-xs text-slate-500">Signaler un problème</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Mes véhicules */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Mes véhicules</h2>
-            <Link href="/client/vehicles" className="text-sm font-medium text-slate-500 hover:text-slate-700">
-              Voir tout
-              <ChevronRight className="ml-1 inline-block h-4 w-4" />
-            </Link>
-          </div>
+      <div className="client-reveal client-reveal-delay-3">
+        <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Mes véhicules</h2>
+              <Link href="/client/vehicles">
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  Voir tout
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
 
-          <div className="space-y-3">
             {vehicles.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                  <Car className="mb-4 h-12 w-12 text-slate-400" />
-                  <p className="mb-4 text-sm text-slate-600">Aucun véhicule enregistré</p>
-                  <Link href="/client/vehicles/new">
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un véhicule
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
+                <Car className="mb-4 h-12 w-12 text-slate-400" />
+                <p className="mb-4 text-sm text-slate-600">Aucun véhicule enregistré</p>
+                <Link href="/client/vehicles">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter un véhicule
+                  </Button>
+                </Link>
+              </div>
             ) : (
-              vehicles.map((vehicle) => {
-                const statusConfig =
-                  vehicle.statut_validation === 'VALIDE'
-                    ? { label: 'Validé', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' }
-                    : vehicle.statut_validation === 'EN_ATTENTE'
-                    ? { label: 'En attente', badge: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' }
-                    : { label: vehicle.statut_validation, badge: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
+              <div className="space-y-3">
+                {vehicles.map((vehicle) => {
+                  const statusStyles: Record<string, string> = {
+                    VALIDE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                    EN_ATTENTE: 'bg-amber-100 text-amber-700 border-amber-200',
+                    REFUSE: 'bg-rose-100 text-rose-700 border-rose-200',
+                  };
 
-                return (
-                  <div key={vehicle.id} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-                      <Car className="h-5 w-5 text-slate-500" />
+                  const statusLabels: Record<string, string> = {
+                    VALIDE: 'Validé',
+                    EN_ATTENTE: 'En attente',
+                    REFUSE: 'Refusé',
+                  };
+
+                  const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
+                    .filter(Boolean)
+                    .join(' ');
+
+                  return (
+                    <div key={vehicle.id} className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                          <Car className="h-6 w-6 text-slate-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {vehicleName || vehicle.immatriculation || 'Véhicule'}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {vehicle.immatriculation || 'Immatriculation inconnue'}
+                            {vehicle.annee ? ` · ${vehicle.annee}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge className={`${statusStyles[vehicle.statut_validation || ''] || 'bg-slate-100 text-slate-700 border-slate-200'} border`}>
+                        {statusLabels[vehicle.statut_validation || ''] || 'Non défini'}
+                      </Badge>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">
-                        {vehicle.marque_nom} {vehicle.modele_nom}
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        {vehicle.immatriculation} · {vehicle.kilometrage?.toLocaleString()} km
-                      </p>
-                    </div>
-                    <Badge className={`gap-2 rounded-full border px-3 py-1 text-xs ${statusConfig.badge}`}>
-                      <span className={`h-2 w-2 rounded-full ${statusConfig.dot}`} />
-                      {statusConfig.label}
-                    </Badge>
-                  </div>
-                );
-              })
+                  );
+                })}
+              </div>
             )}
-          </div>
-        </div>
-
-        {/* Rendez-vous récents */}
-        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Rendez-vous récents</h2>
-            <Link href="/client/rendez-vous" className="text-sm font-medium text-slate-500 hover:text-slate-700">
-              Voir tout
-              <ChevronRight className="ml-1 inline-block h-4 w-4" />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {recentAppointments.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
-                  <Calendar className="mb-4 h-12 w-12 text-slate-400" />
-                  <p className="mb-4 text-sm text-slate-600">Aucun rendez-vous</p>
-                  <Link href="/client/rendez-vous">
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Prendre un RDV
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ) : (
-              recentAppointments.map((appointment) => {
-                const date = new Date(appointment.date_heure);
-                const dateStr = date.toLocaleDateString('fr-FR', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                });
-                const timeStr = date.toLocaleTimeString('fr-FR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
-
-                const statusConfig =
-                  appointment.statut === 'CONFIRME'
-                    ? { label: 'Confirmé', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', dot: 'bg-emerald-500' }
-                    : appointment.statut === 'EN_COURS'
-                    ? { label: 'En cours', badge: 'bg-amber-50 text-amber-700 border-amber-100', dot: 'bg-amber-500' }
-                    : appointment.statut === 'TERMINE'
-                    ? { label: 'Terminé', badge: 'bg-slate-50 text-slate-700 border-slate-200', dot: 'bg-slate-400' }
-                    : { label: 'Planifié', badge: 'bg-blue-50 text-blue-700 border-blue-100', dot: 'bg-blue-500' };
-
-                return (
-                  <div key={appointment.id} className="flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                      <Clock className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">
-                        {appointment.interventions?.[0]
-                          ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
-                          : 'Rendez-vous'}
-                      </h3>
-                      <p className="text-sm text-slate-500">
-                        {dateStr} · {timeStr} · {appointment.agence_nom || 'Agence'}
-                      </p>
-                    </div>
-                    <Badge className={`gap-2 rounded-full border px-3 py-1 text-xs ${statusConfig.badge}`}>
-                      <span className={`h-2 w-2 rounded-full ${statusConfig.dot}`} />
-                      {statusConfig.label}
-                    </Badge>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Maintenance Alert */}
-      {needsMaintenanceVehicle && (
-        <Alert className="rounded-2xl border border-orange-200 bg-orange-50">
-          <AlertCircle className="h-4 w-4 text-orange-600" />
-          <AlertDescription className="text-orange-800">
-            <strong>Rappel d'entretien</strong>
-            <br />
-            Votre {needsMaintenanceVehicle.marque_nom} {needsMaintenanceVehicle.modele_nom} approche des{' '}
-            {needsMaintenanceVehicle.kilometrage?.toLocaleString()} km. Planifiez votre prochaine révision dès maintenant.
-            <Link href="/client/rendez-vous" className="ml-2 font-semibold underline">
-              Prendre un RDV →
-            </Link>
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 }

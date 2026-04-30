@@ -156,7 +156,7 @@ export default function NotificationBell() {
             className="fixed inset-0 z-40" 
             onClick={() => setShowPanel(false)}
           />
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
+          <div className="notification-panel-animate absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
             <div className="flex items-center justify-between border-b border-gray-200 p-4">
               <h3 className="font-semibold text-gray-900">{t('notifications.title')}</h3>
               <div className="flex items-center gap-2">
@@ -190,12 +190,13 @@ export default function NotificationBell() {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {notifications.map((notif) => (
+                  {notifications.map((notif, index) => (
                     <div
                       key={notif.id}
-                      className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                      className={`notification-item-animate p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
                         !notif.lu ? 'bg-orange-50' : ''
                       }`}
+                      style={{ animationDelay: `${index * 60}ms` }}
                       onClick={() => !notif.lu && markAsRead(notif.id)}
                     >
                       <div className="flex items-start justify-between mb-1">

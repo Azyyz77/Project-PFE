@@ -2,16 +2,21 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Car } from 'lucide-react';
+import { Plus, Edit2, Trash2, Car, CheckCircle2, Clock3, AlertTriangle } from 'lucide-react';
 
 export default function ClientVehiclesPage() {
   const { user, token } = useAuth();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const vehiclesCountLabel = useMemo(() => {
+    const count = vehicles.length;
+    return `${count} véhicule${count > 1 ? 's' : ''} enregistré${count > 1 ? 's' : ''}`;
+  }, [vehicles.length]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -29,13 +34,16 @@ export default function ClientVehiclesPage() {
   }, [user, token]);
 
   return (
-    <div className="w-full h-full overflow-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Mes Véhicules</h1>
+    <div className="min-h-full bg-[#f5f7fa]">
+      <div className="mx-auto w-full max-w-7xl px-6 py-6">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Mes véhicules</h1>
+            <p className="mt-1 text-sm text-slate-500">{vehiclesCountLabel}</p>
+          </div>
           <Link href="/client/vehicles/new">
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white gap-2">
-              <Plus className="w-4 h-4" />
+            <Button className="rounded-full bg-[#1b355d] px-5 text-white hover:bg-[#17305a]">
+              <Plus className="mr-2 h-4 w-4" />
               Ajouter un véhicule
             </Button>
           </Link>
@@ -43,39 +51,118 @@ export default function ClientVehiclesPage() {
 
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="w-8 h-8 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-          </div>
-        ) : vehicles.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-            <Car className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-400 mb-6">Aucun véhicule enregistré</p>
-            <Link href="/client/vehicles/new">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">Ajouter votre premier véhicule</Button>
-            </Link>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vehicles.map((vehicle) => (
-              <div key={vehicle.id} className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg transition-all">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-4xl">🚗</div>
-                  <div className="flex gap-2">
-                    <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                      <Edit2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                    </button>
-                    <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors">
-                      <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    </button>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {vehicles.map((vehicle) => {
+              const statusStyles: Record<string, string> = {
+                VALIDE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                EN_ATTENTE: 'bg-amber-50 text-amber-700 border-amber-200',
+                REFUSE: 'bg-rose-50 text-rose-700 border-rose-200',
+              };
+
+              const statusTextStyles: Record<string, string> = {
+                VALIDE: 'text-emerald-700',
+                EN_ATTENTE: 'text-amber-700',
+                REFUSE: 'text-rose-700',
+              };
+
+              const statusLabels: Record<string, string> = {
+                VALIDE: 'Validé',
+                EN_ATTENTE: 'En attente',
+                REFUSE: 'Refusé',
+              };
+
+              const status = vehicle.statut_validation || 'EN_ATTENTE';
+              const statusLabel = statusLabels[status] || 'En attente';
+              const statusIcon = status === 'VALIDE'
+                ? <CheckCircle2 className="h-3.5 w-3.5" />
+                : status === 'REFUSE'
+                  ? <AlertTriangle className="h-3.5 w-3.5" />
+                  : <Clock3 className="h-3.5 w-3.5" />;
+
+              const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
+                .filter(Boolean)
+                .join(' ');
+
+              const detailsLine = [vehicle.motorisation, vehicle.transmission, vehicle.annee]
+                .filter(Boolean)
+                .join(' · ');
+
+              const mileage = vehicle.kilometrage ?? vehicle.kilometrage_actuel ?? vehicle.kilometrage_km;
+
+              return (
+                <div
+                  key={vehicle.id}
+                  className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm transition hover:shadow-md"
+                >
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+                      <Car className="h-6 w-6 text-slate-500" />
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-500"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {vehicleName || 'Véhicule'}
+                    </h3>
+                    <p className="text-sm text-slate-500">{detailsLine || 'Détails indisponibles'}</p>
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span>Immatriculation</span>
+                      <span className="font-medium text-slate-700">{vehicle.immatriculation || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span>Couleur</span>
+                      <span className="font-medium text-slate-700">{vehicle.couleur || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-500">
+                      <span>Kilométrage</span>
+                      <span className="font-medium text-slate-700">
+                        {mileage ? `${Number(mileage).toLocaleString('fr-FR')} km` : '—'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex items-center justify-between">
+                    <Badge className={`border px-3 py-1 text-xs ${statusStyles[status] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                      <span className="mr-1 inline-block h-2 w-2 rounded-full bg-current" />
+                      {statusLabel}
+                    </Badge>
+                    <div className={`flex items-center gap-2 text-xs ${statusTextStyles[status] || 'text-slate-400'}`}>
+                      {statusIcon}
+                      <span>{statusLabel}</span>
+                    </div>
                   </div>
                 </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{vehicle.marque_nom} {vehicle.modele_nom}</h3>
-                <div className="flex gap-2 mb-4">
-                  {vehicle.annee && <Badge variant="outline" className="text-xs">{vehicle.annee}</Badge>}
-                  {vehicle.couleur && <Badge variant="outline" className="text-xs">{vehicle.couleur}</Badge>}
+              );
+            })}
+
+            <Link href="/client/vehicles/new" className="flex">
+              <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-12 text-slate-400 transition hover:border-slate-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                  <Plus className="h-5 w-5" />
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">N° Châssis: {vehicle.numero_chassis || '—'}</p>
+                <span className="text-sm">Ajouter un véhicule</span>
               </div>
-            ))}
+            </Link>
           </div>
         )}
       </div>
