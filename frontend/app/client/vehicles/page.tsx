@@ -1,17 +1,21 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { getVehiclesByUser } from '@/lib/api/vehicles';
+import { getVehiclesByUser, deleteVehicle } from '@/lib/api/vehicles';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Car, CheckCircle2, Clock3, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function ClientVehiclesPage() {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const vehiclesCountLabel = useMemo(() => {
     const count = vehicles.length;
@@ -32,6 +36,26 @@ export default function ClientVehiclesPage() {
     };
     loadData();
   }, [user, token]);
+
+  const handleDelete = async (vehicleId: number) => {
+    if (!token) return;
+    
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
+      return;
+    }
+
+    setDeletingId(vehicleId);
+    try {
+      await deleteVehicle(vehicleId, token);
+      setVehicles(prev => prev.filter(v => v.id !== vehicleId));
+      toast.success('Véhicule supprimé avec succès');
+    } catch (error: any) {
+      console.error('Failed to delete vehicle:', error);
+      toast.error('Erreur', { description: error.message || 'Impossible de supprimer le véhicule' });
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="min-h-full bg-[#f5f7fa]">
@@ -102,15 +126,21 @@ export default function ClientVehiclesPage() {
                       <Car className="h-6 w-6 text-slate-500" />
                     </div>
                     <div className="flex items-center gap-2 text-slate-400">
+                      <Link href={`/client/vehicles/${vehicle.id}/edit`}>
+                        <button
+                          type="button"
+                          className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-500"
+                          title="Modifier"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                      </Link>
                       <button
                         type="button"
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-500"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                        onClick={() => handleDelete(vehicle.id)}
+                        disabled={deletingId === vehicle.id}
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
+                        title="Supprimer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

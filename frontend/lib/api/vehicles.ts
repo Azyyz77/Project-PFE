@@ -44,6 +44,30 @@ export async function getVehiclesByUser(userId: number, token: string): Promise<
   }
 }
 
+export async function getVehicleById(id: number, token: string): Promise<Vehicle> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
+      method: 'GET',
+      headers: buildAuthHeaders(token),
+    });
+
+    const result: { vehicle?: Vehicle; error?: string; message?: string } = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(response.status, result.error || result.message || 'Erreur lors du chargement du véhicule');
+    }
+
+    if (!result.vehicle) {
+      throw new ApiError(500, 'Réponse invalide du serveur');
+    }
+
+    return result.vehicle;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, 'Erreur de connexion au serveur');
+  }
+}
+
 export async function createVehicle(data: CreateVehicleData, token: string): Promise<Vehicle> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
