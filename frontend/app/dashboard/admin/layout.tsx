@@ -26,6 +26,7 @@ import {
   User,
   Shield,
   AlertTriangle,
+  Info,
 } from 'lucide-react';
 
 interface NavItem {
@@ -129,6 +130,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Messages d\'Accueil',
     href: '/dashboard/admin/welcome-messages',
     icon: <MessageSquare className="w-5 h-5" />,
+  },
+  {
+    label: 'Informations',
+    href: '/dashboard/admin/information',
+    icon: <Info className="w-5 h-5" />,
   },
   {
     label: 'Publier messages',

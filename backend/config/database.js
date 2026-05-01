@@ -42,8 +42,7 @@ let poolPromise;
 const getConnection = async () => {
   try {
     if (!poolPromise) {
-      poolPromise = sql.connect(dbConfig);
-      await poolPromise;
+      poolPromise = await sql.connect(dbConfig);
       console.log('✅ Connecté à SQL Server (Database: ' + dbConfig.database + ')');
     }
     return poolPromise;

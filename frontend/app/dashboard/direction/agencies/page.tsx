@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Building2,
-  TrendingUp,
-  TrendingDown,
   Calendar,
   CheckCircle,
   XCircle,
@@ -16,6 +14,36 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
+
+// Couleurs pour les graphiques
+const COLORS = {
+  primary: '#e11d48',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  info: '#06b6d4',
+  purple: '#8b5cf6',
+};
+
+const CHART_COLORS = ['#e11d48', '#10b981', '#f59e0b', '#06b6d4', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6'];
 
 export default function AgenciesStatsPage() {
   const { token } = useAuth();
@@ -151,6 +179,165 @@ export default function AgenciesStatsPage() {
             <p className="text-xs text-slate-500 mt-1">
               {totals.rdv_no_show} no-show
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Volume par Agence */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Volume de RDV par Agence</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={sortedAgencies.slice(0, 8).map((agency) => ({
+                  nom: agency.agence_nom.length > 12 ? agency.agence_nom.substring(0, 12) + '...' : agency.agence_nom,
+                  total: agency.total_rdv,
+                  termines: agency.rdv_termines,
+                  annules: agency.rdv_annules,
+                }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="nom" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="total" fill={COLORS.primary} name="Total RDV" />
+                <Bar dataKey="termines" fill={COLORS.success} name="Terminés" />
+                <Bar dataKey="annules" fill={COLORS.danger} name="Annulés" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Taux de Complétion */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Taux de Complétion par Agence</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={[...agencies]
+                  .sort((a, b) => b.taux_completion - a.taux_completion)
+                  .slice(0, 8)
+                  .map((agency) => ({
+                    nom: agency.agence_nom.length > 12 ? agency.agence_nom.substring(0, 12) + '...' : agency.agence_nom,
+                    taux: agency.taux_completion,
+                  }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="nom" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                />
+                <YAxis domain={[0, 100]} />
+                <Tooltip formatter={(value: any) => `${Number(value).toFixed(1)}%`} />
+                <Legend />
+                <Bar dataKey="taux" fill={COLORS.success} name="Taux de Complétion (%)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Durée Moyenne */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Durée Moyenne des RDV</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <LineChart
+                data={sortedAgencies
+                  .filter(a => a.duree_moy_min && a.duree_moy_min > 0)
+                  .slice(0, 10)
+                  .map((agency) => ({
+                    nom: agency.agence_nom.length > 12 ? agency.agence_nom.substring(0, 12) + '...' : agency.agence_nom,
+                    duree: Math.round(agency.duree_moy_min || 0),
+                  }))}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="nom" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={100}
+                />
+                <YAxis />
+                <Tooltip formatter={(value: any) => `${value} min`} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="duree" 
+                  stroke={COLORS.info} 
+                  strokeWidth={2}
+                  name="Durée Moyenne (min)"
+                  dot={{ fill: COLORS.info, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Radar Chart - Performance Globale */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance Globale (Top 6)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <RadarChart
+                data={[...agencies]
+                  .sort((a, b) => b.total_rdv - a.total_rdv)
+                  .slice(0, 6)
+                  .map((agency) => ({
+                    agence: agency.agence_nom.length > 10 ? agency.agence_nom.substring(0, 10) + '...' : agency.agence_nom,
+                    volume: (agency.total_rdv / Math.max(...agencies.map(a => a.total_rdv))) * 100,
+                    completion: agency.taux_completion,
+                    efficacite: agency.duree_moy_min ? Math.max(0, 100 - (agency.duree_moy_min / 120) * 100) : 50,
+                  }))}
+              >
+                <PolarGrid />
+                <PolarAngleAxis dataKey="agence" />
+                <PolarRadiusAxis angle={90} domain={[0, 100]} />
+                <Radar 
+                  name="Volume (relatif)" 
+                  dataKey="volume" 
+                  stroke={COLORS.primary} 
+                  fill={COLORS.primary} 
+                  fillOpacity={0.3} 
+                />
+                <Radar 
+                  name="Taux Complétion (%)" 
+                  dataKey="completion" 
+                  stroke={COLORS.success} 
+                  fill={COLORS.success} 
+                  fillOpacity={0.3} 
+                />
+                <Radar 
+                  name="Efficacité" 
+                  dataKey="efficacite" 
+                  stroke={COLORS.info} 
+                  fill={COLORS.info} 
+                  fillOpacity={0.3} 
+                />
+                <Legend />
+                <Tooltip />
+              </RadarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>

@@ -29,6 +29,7 @@ import {
   Tag,
   Receipt,
   LayoutGrid,
+  Info,
 } from 'lucide-react';
 
 interface NavItem {
@@ -60,13 +61,14 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Historique', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
       { label: 'Commandes', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
       { label: 'Catalogue', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
-      { label: 'Promotions', href: '/client/promotions', icon: <Tag className="h-4 w-4" /> },
+      { label: 'Promotions Véhicules', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
       { label: 'Factures', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
     ],
   },
   {
     title: 'AUTRES',
     items: [
+      { label: 'Informations', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
       { label: 'Documents', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
       { label: 'Réclamations', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
       { label: 'Assistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },

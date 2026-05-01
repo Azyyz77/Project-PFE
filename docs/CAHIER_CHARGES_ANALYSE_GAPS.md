@@ -58,25 +58,32 @@
 
 ## ❌ Fonctionnalités MANQUANTES ou INCOMPLÈTES
 
-### 1. 🔴 PRIORITÉ HAUTE - Accueil et Promotions
+### 1. ✅ COMPLÉTÉ - Accueil et Promotions
 
-#### Manquant:
-- ❌ **Affichage des promotions sur véhicules en vente**
-  - Interface client pour voir les promotions
-  - Système de gestion des promotions véhicules (pas seulement interventions)
+#### Implémenté (Avril 2026):
+- ✅ **Affichage des promotions sur véhicules en vente**
+  - Interface client pour voir les promotions (/client/promotions-vehicules)
+  - Système de gestion des promotions véhicules (admin)
   - Images et détails des véhicules en promotion
+  - API publique (pas d'authentification requise)
   
-- ❌ **Messages et notifications sur l'accueil**
+- ✅ **Messages et notifications sur l'accueil**
   - Bannière de messages administrateur sur page d'accueil
   - Système de diffusion d'informations à tous les clients
   - Gestion des messages par l'admin
+  - Marquage des messages comme lus
 
-**Action requise:**
+**Fichiers créés:**
 ```
-- Créer page promotions véhicules (/client/promotions-vehicules)
-- Créer système de gestion promotions véhicules (admin)
-- Ajouter bannière messages sur dashboard client
-- Créer interface admin pour messages d'accueil
+- backend/migrations/create_vehicle_promotions_and_messages.sql
+- backend/controllers/vehiclePromotionController.js
+- backend/controllers/welcomeMessageController.js
+- backend/routes/vehiclePromotionRoutes.js
+- backend/routes/welcomeMessageRoutes.js
+- frontend/app/client/promotions-vehicules/page.tsx
+- frontend/components/client/WelcomeMessagesBanner.tsx
+- frontend/app/dashboard/admin/vehicle-promotions/page.tsx
+- frontend/app/dashboard/admin/welcome-messages/page.tsx
 ```
 
 ---
@@ -244,8 +251,8 @@
 ## 📊 Résumé des Priorités
 
 ### 🔴 PRIORITÉ HAUTE (À faire avant soutenance)
-1. **Promotions véhicules** - 2-3 jours
-2. **Messages d'accueil admin** - 1 jour
+1. ~~**Promotions véhicules**~~ - ✅ COMPLÉTÉ
+2. ~~**Messages d'accueil admin**~~ - ✅ COMPLÉTÉ
 3. **Rubrique informations/documents** - 2 jours
 4. **Gestion créneaux par agence** - 2-3 jours
 

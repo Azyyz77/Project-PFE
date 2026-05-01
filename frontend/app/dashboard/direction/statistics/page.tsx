@@ -34,6 +34,36 @@ import {
   Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from 'recharts';
+
+// Couleurs pour les graphiques
+const COLORS = {
+  primary: '#3b82f6',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  info: '#06b6d4',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+};
+
+const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
 export default function StatisticsPage() {
   const { token } = useAuth();
@@ -227,52 +257,118 @@ export default function StatisticsPage() {
               </div>
 
               {/* Status Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Répartition par Statut</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {globalStats.par_statut.map((stat) => (
-                      <div key={stat.statut} className="text-center p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                          {stat.statut}
-                        </p>
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                          {stat.count}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {stat.pourcentage.toFixed(1)}%
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Répartition par Statut</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={globalStats.par_statut.map((stat) => ({
+                            name: stat.statut,
+                            value: stat.count,
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {globalStats.par_statut.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Statistiques par Statut</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {globalStats.par_statut.map((stat, index) => (
+                        <div key={stat.statut} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-4 h-4 rounded-full" 
+                              style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
+                            />
+                            <span className="font-medium text-slate-900 dark:text-white">
+                              {stat.statut}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                              {stat.count}
+                            </span>
+                            <Badge variant="outline">
+                              {stat.pourcentage.toFixed(1)}%
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {/* Monthly Evolution */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Évolution Mensuelle</CardTitle>
+                  <CardTitle>Évolution Mensuelle des Rendez-vous</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {globalStats.evolution_mensuelle.slice(0, 6).map((month) => (
-                      <div key={`${month.annee}-${month.mois}`} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium text-slate-900 dark:text-white">
-                          {new Date(month.annee, month.mois - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            {month.total_rdv} RDV
-                          </span>
-                          <Badge variant="default">
-                            {month.rdv_termines} terminés
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart
+                      data={globalStats.evolution_mensuelle.slice().reverse().map((month) => ({
+                        mois: new Date(month.annee, month.mois - 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+                        total: month.total_rdv,
+                        termines: month.rdv_termines,
+                        annules: 0,
+                      }))}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorTermines" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={COLORS.success} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={COLORS.success} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mois" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Area 
+                        type="monotone" 
+                        dataKey="total" 
+                        stroke={COLORS.primary} 
+                        fillOpacity={1} 
+                        fill="url(#colorTotal)" 
+                        name="Total RDV"
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="termines" 
+                        stroke={COLORS.success} 
+                        fillOpacity={1} 
+                        fill="url(#colorTermines)" 
+                        name="Terminés"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </>
@@ -346,23 +442,36 @@ export default function StatisticsPage() {
                   <CardTitle>Revenus par Agence</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {revenueStats.par_agence.slice(0, 10).map((agency) => (
-                      <div key={agency.agence_id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium text-slate-900 dark:text-white">
-                          {agency.agence_nom}
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            {agency.total_rdv} RDV
-                          </span>
-                          <span className="font-bold text-green-600 dark:text-green-400">
-                            {agency.revenu_total?.toLocaleString('fr-TN', { style: 'currency', currency: 'TND' }) || '0 TND'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={revenueStats.par_agence.slice(0, 10).map((agency) => ({
+                        nom: agency.agence_nom.length > 15 ? agency.agence_nom.substring(0, 15) + '...' : agency.agence_nom,
+                        revenu: agency.revenu_total || 0,
+                        rdv: agency.total_rdv,
+                      }))}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="nom" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={100}
+                      />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: any) => {
+                          if (typeof value === 'number') {
+                            return [value.toLocaleString('fr-TN') + ' TND', 'Revenu'];
+                          }
+                          return [value, 'RDV'];
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenu" fill={COLORS.success} name="Revenu (TND)" />
+                      <Bar dataKey="rdv" fill={COLORS.info} name="Nombre de RDV" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -372,23 +481,33 @@ export default function StatisticsPage() {
                   <CardTitle>Revenus par Type d'Intervention</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {revenueStats.par_type_intervention.slice(0, 10).map((type, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium text-slate-900 dark:text-white">
-                          {type.intervention || 'Non spécifié'}
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            {type.nombre_rdv} RDV
-                          </span>
-                          <span className="font-bold text-green-600 dark:text-green-400">
-                            {type.revenu_total?.toLocaleString('fr-TN', { style: 'currency', currency: 'TND' }) || '0 TND'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart
+                      data={revenueStats.par_type_intervention.slice(0, 10).map((type) => ({
+                        nom: (type.intervention || 'Non spécifié').length > 20 
+                          ? (type.intervention || 'Non spécifié').substring(0, 20) + '...' 
+                          : (type.intervention || 'Non spécifié'),
+                        revenu: type.revenu_total || 0,
+                        nombre: type.nombre_rdv,
+                      }))}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="nom" type="category" width={90} />
+                      <Tooltip 
+                        formatter={(value: any) => {
+                          if (typeof value === 'number') {
+                            return [value.toLocaleString('fr-TN') + ' TND', 'Revenu'];
+                          }
+                          return [value, 'Nombre'];
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenu" fill={COLORS.primary} name="Revenu (TND)" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </>
@@ -499,26 +618,35 @@ export default function StatisticsPage() {
                   <CardTitle>Satisfaction par Agence</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    {satisfactionStats.par_agence.map((agency) => (
-                      <div key={agency.agence_id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium text-slate-900 dark:text-white">
-                          {agency.agence_nom}
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <span className="text-slate-600 dark:text-slate-400">
-                            {agency.total_feedbacks} avis
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            <span className="font-bold text-yellow-600 dark:text-yellow-400">
-                              {agency.note_moyenne?.toFixed(2) || '0'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={satisfactionStats.par_agence.map((agency) => ({
+                        nom: agency.agence_nom.length > 15 ? agency.agence_nom.substring(0, 15) + '...' : agency.agence_nom,
+                        note: agency.note_moyenne || 0,
+                        feedbacks: agency.total_feedbacks,
+                      }))}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="nom" 
+                        angle={-45} 
+                        textAnchor="end" 
+                        height={100}
+                      />
+                      <YAxis domain={[0, 5]} />
+                      <Tooltip 
+                        formatter={(value: any) => {
+                          if (typeof value === 'number' && value < 10) {
+                            return [Number(value).toFixed(2) + ' / 5', 'Note Moyenne'];
+                          }
+                          return [value, 'Feedbacks'];
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="note" fill={COLORS.warning} name="Note Moyenne" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </>
