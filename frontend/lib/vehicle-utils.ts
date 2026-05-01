@@ -6,6 +6,9 @@ const NT_PLATE_LABEL = 'ن.ت';
 export const VEHICLE_FIELD_LIMITS = {
   immatriculation: 20,
   tunisPart: 3,
+  tunisLeftMax: 260,
+  tunisRightMin: 3,
+  tunisRightMax: 4,
   ntSerial: 5,
   numeroChassis: 17,
   couleur: 50,
@@ -45,12 +48,24 @@ export function validateVehicleForm(form: VehicleFormState): string | null {
   }
 
   if (form.plate_type === 'TUNIS') {
-    if (!form.tunis_left.trim() || !form.tunis_right.trim()) {
+    const tunisLeft = form.tunis_left.trim();
+    const tunisRight = form.tunis_right.trim();
+
+    if (!tunisLeft || !tunisRight) {
       return 'Veuillez compléter les deux parties de la plaque tunisienne.';
     }
 
-    if (!/^\d{1,3}$/.test(form.tunis_left.trim()) || !/^\d{1,3}$/.test(form.tunis_right.trim())) {
-      return 'Le type Tunisie exige deux blocs numériques de 1 à 3 chiffres.';
+    if (!/^\d{1,3}$/.test(tunisLeft)) {
+      return 'Le premier bloc doit contenir 1 à 3 chiffres.';
+    }
+
+    const tunisLeftValue = Number(tunisLeft);
+    if (Number.isNaN(tunisLeftValue) || tunisLeftValue < 1 || tunisLeftValue > VEHICLE_FIELD_LIMITS.tunisLeftMax) {
+      return `Le premier bloc doit être entre 1 et ${VEHICLE_FIELD_LIMITS.tunisLeftMax}.`;
+    }
+
+    if (!/^\d{3,4}$/.test(tunisRight)) {
+      return 'Le second bloc doit contenir 3 ou 4 chiffres.';
     }
   }
 
@@ -104,7 +119,7 @@ export function buildImmatriculation(form: VehicleFormState): string {
 }
 
 export function parseImmatriculation(immatriculation: string): VehicleFormState {
-  const tunisMatch = immatriculation.match(/^(\d{1,3})\s*تونس\s*(\d{1,3})$/u);
+  const tunisMatch = immatriculation.match(/^(\d{1,3})\s*تونس\s*(\d{3,4})$/u);
   if (tunisMatch) {
     return {
       ...EMPTY_VEHICLE_FORM,
