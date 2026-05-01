@@ -6,6 +6,8 @@ export interface Vehicle {
   numero_chassis: string;
   couleur: string | null;
   annee: number;
+  image_vehicule?: string | null;
+  image_carte_grise?: string | null;
   date_ajout: string;
   statut_validation?: 'EN_ATTENTE' | 'VALIDE' | 'REFUSE';
   motif_refus?: string | null;
@@ -24,6 +26,8 @@ export interface CreateVehicleData {
   version_id: number;
   couleur?: string;
   annee: number;
+  image_vehicule?: string;
+  image_carte_grise?: string;
 }
 
 export interface UpdateVehicleData {
@@ -32,6 +36,8 @@ export interface UpdateVehicleData {
   version_id: number;
   couleur?: string;
   annee: number;
+  image_vehicule?: string;
+  image_carte_grise?: string;
 }
 
 export interface VersionCatalogItem {

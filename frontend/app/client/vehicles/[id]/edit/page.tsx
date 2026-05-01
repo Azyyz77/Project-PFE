@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,15 +11,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Car, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getVersionCatalog } from '@/lib/api/vehicles';
+import { getVersionCatalog, getVehicleById, updateVehicle } from '@/lib/api/vehicles';
 import { getAllColors, type Color } from '@/lib/api/colors';
 import type { VersionCatalogItem } from '@/types/vehicle';
 
 type PlateType = 'TUNIS' | 'NT';
 
-export default function NewVehiclePage() {
+export default function EditVehiclePage() {
   const { user, token } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const vehicleId = params.id as string;
 
   // Version catalog
   const [versionCatalog, setVersionCatalog] = useState<VersionCatalogItem[]>([]);
@@ -62,12 +64,63 @@ export default function NewVehiclePage() {
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isLoadingVehicle, setIsLoadingVehicle] = useState(true);
 
-  // Load version catalog on mount
+  // Load version catalog and colors on mount
   useEffect(() => {
     loadVersionCatalog();
     loadColors();
   }, [token]);
+
+  // Load vehicle data
+  useEffect(() => {
+    const loadVehicle = async () => {
+      if (!token || !vehicleId) return;
+      
+      setIsLoadingVehicle(true);
+      try {
+        const vehicle = await getVehicleById(parseInt(vehicleId), token);
+        
+        // Pre-fill form
+        setForm({
+          numero_chassis: vehicle.numero_chassis,
+          marque: vehicle.marque_nom || '',
+          modele: vehicle.modele_nom || '',
+          version_id: vehicle.version_id.toString(),
+          annee: vehicle.annee.toString(),
+          couleur: vehicle.couleur || '',
+        });
+        
+        // Pre-fill immatriculation
+        const immat = vehicle.immatriculation;
+        if (immat.includes('تونس')) {
+          setPlateType('TUNIS');
+          const parts = immat.split('تونس').map(p => p.trim());
+          setTunisPlate({ part1: parts[0] || '', part2: parts[1] || '' });
+        } else if (immat.includes('ن.ت')) {
+          setPlateType('NT');
+          setNtPlate(immat.replace('ن.ت', '').trim());
+        }
+        
+        // Pre-fill images
+        if (vehicle.image_vehicule) {
+          setPreviewVehicule(vehicle.image_vehicule);
+        }
+        if (vehicle.image_carte_grise) {
+          setPreviewCarteGrise(vehicle.image_carte_grise);
+        }
+        
+      } catch (error: any) {
+        console.error('Error loading vehicle:', error);
+        toast.error('Erreur', { description: 'Impossible de charger le véhicule' });
+        router.push('/client/vehicles');
+      } finally {
+        setIsLoadingVehicle(false);
+      }
+    };
+    
+    loadVehicle();
+  }, [token, vehicleId, router]);
 
   // Extract unique marques when catalog loads
   useEffect(() => {
@@ -250,7 +303,8 @@ export default function NewVehiclePage() {
       newErrors.couleur = 'La couleur est obligatoire';
     }
 
-    if (!imageCarteGrise) {
+    // La carte grise n'est obligatoire que si elle n'existe pas déjà
+    if (!imageCarteGrise && !previewCarteGrise) {
       newErrors.image_carte_grise = 'La photo de la carte grise est obligatoire';
     }
 
@@ -282,14 +336,9 @@ export default function NewVehiclePage() {
       const image_vehicule_base64 = previewVehicule || undefined;
       const image_carte_grise_base64 = previewCarteGrise || undefined;
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/vehicles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      await updateVehicle(
+        parseInt(vehicleId),
+        {
           immatriculation,
           numero_chassis: form.numero_chassis.trim(),
           version_id: parseInt(form.version_id),
@@ -297,25 +346,20 @@ export default function NewVehiclePage() {
           annee: parseInt(form.annee),
           image_vehicule: image_vehicule_base64,
           image_carte_grise: image_carte_grise_base64,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'ajout du véhicule');
-      }
+        },
+        token
+      );
 
       setSuccess(true);
-      toast.success('Véhicule ajouté avec succès!', {
-        description: 'Votre véhicule est en attente de validation par un agent SAV.',
+      toast.success('Véhicule modifié avec succès!', {
+        description: 'Les modifications ont été enregistrées.',
       });
 
       setTimeout(() => {
         router.push('/client/vehicles');
       }, 2000);
     } catch (err: any) {
-      const msg = err.message || 'Erreur lors de l\'ajout du véhicule';
+      const msg = err.message || 'Erreur lors de la modification du véhicule';
       setApiError(msg);
       toast.error('Erreur', { description: msg });
     } finally {
@@ -332,9 +376,9 @@ export default function NewVehiclePage() {
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Véhicule ajouté!</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Véhicule modifié!</h2>
               <p className="text-slate-600 dark:text-slate-400">
-                Votre véhicule a été enregistré avec succès. Il sera validé par un agent SAV sous peu.
+                Les modifications ont été enregistrées avec succès.
               </p>
               <Button onClick={() => router.push('/client/vehicles')} className="w-full">
                 Voir mes véhicules
@@ -342,6 +386,17 @@ export default function NewVehiclePage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (isLoadingVehicle || isLoadingCatalog || isLoadingColors) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto text-blue-600" />
+          <p className="mt-4 text-slate-600">Chargement...</p>
+        </div>
       </div>
     );
   }
@@ -357,8 +412,8 @@ export default function NewVehiclePage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Ajouter un véhicule</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">Enregistrez votre véhicule pour le suivi</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Modifier un véhicule</h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-1">Modifiez les informations de votre véhicule</p>
           </div>
         </div>
 
@@ -712,11 +767,10 @@ export default function NewVehiclePage() {
                 </div>
               </div>
 
-              {/* Info Alert */}
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900">
                 <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-blue-800 dark:text-blue-200">
-                  Votre véhicule sera vérifié et validé par un agent SAV avant de pouvoir prendre rendez-vous.
+                  Après modification, votre véhicule sera à nouveau vérifié par un agent SAV.
                 </AlertDescription>
               </Alert>
 
@@ -735,12 +789,12 @@ export default function NewVehiclePage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Ajout en cours...
+                      Enregistrement...
                     </>
                   ) : (
                     <>
                       <Car className="mr-2 h-4 w-4" />
-                      Ajouter le véhicule
+                      Enregistrer les modifications
                     </>
                   )}
                 </Button>

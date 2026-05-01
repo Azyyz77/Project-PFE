@@ -18,6 +18,8 @@ const VEHICLE_WITH_RELATIONS_SELECT = `
     vh.numero_chassis,
     vh.couleur,
     vh.annee,
+    vh.image_vehicule,
+    vh.image_carte_grise,
     vh.date_ajout,
     vh.statut_validation,
     vh.motif_refus,
@@ -39,7 +41,7 @@ const VEHICLE_WITH_RELATIONS_SELECT = `
   JOIN Utilisateur u ON u.id = vh.client_id
 `;
 
-const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, couleur, annee }) => {
+const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, couleur, annee, image_vehicule, image_carte_grise }) => {
   if (!immatriculation || !numero_chassis || !version_id || !annee) {
     return {
       status: 400,
@@ -54,6 +56,8 @@ const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, c
   const normalizedNumeroChassis = String(numero_chassis).trim();
   const normalizedCouleur = couleur ? String(couleur).trim() : null;
   const normalizedAnnee = Number(annee);
+  const normalizedImageVehicule = image_vehicule ? String(image_vehicule).trim() : null;
+  const normalizedImageCarteGrise = image_carte_grise ? String(image_carte_grise).trim() : null;
 
   if (normalizedImmatriculation.length > VEHICLE_FIELD_LIMITS.immatriculation) {
     return {
@@ -113,6 +117,8 @@ const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, c
       couleur: normalizedCouleur,
       version_id: Number(version_id),
       annee: normalizedAnnee,
+      image_vehicule: normalizedImageVehicule,
+      image_carte_grise: normalizedImageCarteGrise,
     }
   };
 };
@@ -125,7 +131,7 @@ const addVehicle = async (req, res) => {
       return res.status(validation.status).json(validation.payload);
     }
 
-    const { immatriculation, numero_chassis, version_id, couleur, annee } = validation.payload;
+    const { immatriculation, numero_chassis, version_id, couleur, annee, image_vehicule, image_carte_grise } = validation.payload;
     const client_id = req.user.id;
 
     const pool = await getConnection();
@@ -147,11 +153,11 @@ const addVehicle = async (req, res) => {
     }
 
     const insertQuery = `
-          INSERT INTO Vehicule (client_id, version_id, immatriculation, numero_chassis, couleur, annee, date_ajout, statut_validation)
+          INSERT INTO Vehicule (client_id, version_id, immatriculation, numero_chassis, couleur, annee, image_vehicule, image_carte_grise, date_ajout, statut_validation)
       OUTPUT INSERTED.id, INSERTED.client_id, INSERTED.version_id, INSERTED.immatriculation,
-            INSERTED.numero_chassis, INSERTED.couleur, INSERTED.annee, INSERTED.date_ajout,
+            INSERTED.numero_chassis, INSERTED.couleur, INSERTED.annee, INSERTED.image_vehicule, INSERTED.image_carte_grise, INSERTED.date_ajout,
             INSERTED.statut_validation, INSERTED.motif_refus, INSERTED.date_validation, INSERTED.agent_validateur_id
-          VALUES (@client_id, @version_id, @immatriculation, @numero_chassis, @couleur, @annee, GETDATE(), 'EN_ATTENTE')
+          VALUES (@client_id, @version_id, @immatriculation, @numero_chassis, @couleur, @annee, @image_vehicule, @image_carte_grise, GETDATE(), 'EN_ATTENTE')
     `;
 
     const result = await pool.request()
@@ -161,6 +167,8 @@ const addVehicle = async (req, res) => {
       .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
       .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
       .input('annee', sql.SmallInt, annee)
+      .input('image_vehicule', sql.NVarChar(500), image_vehicule || null)
+      .input('image_carte_grise', sql.NVarChar(500), image_carte_grise || null)
       .query(insertQuery);
 
     res.status(201).json({
@@ -222,8 +230,19 @@ const getVehicleById = async (req, res) => {
 
     const vehicle = result.recordset[0];
 
+    // Debug logs
+    console.log('[getVehicleById] vehicle.client_id:', vehicle.client_id, 'type:', typeof vehicle.client_id);
+    console.log('[getVehicleById] req.user.id:', req.user.id, 'type:', typeof req.user.id);
+    console.log('[getVehicleById] req.user.role:', req.user.role);
+
     const currentUserIdInt = parseInt(req.user.id, 10);
-    if (vehicle.client_id !== currentUserIdInt && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
+    const vehicleClientIdInt = parseInt(vehicle.client_id, 10);
+    
+    console.log('[getVehicleById] currentUserIdInt:', currentUserIdInt);
+    console.log('[getVehicleById] vehicleClientIdInt:', vehicleClientIdInt);
+    console.log('[getVehicleById] Match:', currentUserIdInt === vehicleClientIdInt);
+    
+    if (vehicleClientIdInt !== currentUserIdInt && !ALLOWED_STAFF_ROLES.includes(req.user.role)) {
       return res.status(403).json({ error: 'Accès non autorisé' });
     }
 
@@ -243,7 +262,7 @@ const updateVehicle = async (req, res) => {
       return res.status(validation.status).json(validation.payload);
     }
 
-    const { immatriculation, numero_chassis, version_id, couleur, annee } = validation.payload;
+    const { immatriculation, numero_chassis, version_id, couleur, annee, image_vehicule, image_carte_grise } = validation.payload;
 
     const pool = await getConnection();
 
@@ -295,6 +314,8 @@ const updateVehicle = async (req, res) => {
       .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
       .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
       .input('annee', sql.SmallInt, annee)
+      .input('image_vehicule', sql.NVarChar(500), image_vehicule || null)
+      .input('image_carte_grise', sql.NVarChar(500), image_carte_grise || null)
       .query(`
         UPDATE Vehicule
         SET
@@ -303,6 +324,8 @@ const updateVehicle = async (req, res) => {
           numero_chassis = @numero_chassis,
           couleur = @couleur,
           annee = @annee,
+          image_vehicule = @image_vehicule,
+          image_carte_grise = @image_carte_grise,
           statut_validation = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN 'EN_ATTENTE' ELSE statut_validation END,
           motif_refus = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN NULL ELSE motif_refus END,
           date_validation = CASE WHEN ${isClientOwner ? "1=1" : "1=0"} THEN NULL ELSE date_validation END,
