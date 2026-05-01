@@ -42,6 +42,9 @@ export default function NewVehiclePage() {
   
   // NT format: 12345 ن.ت
   const [ntPlate, setNtPlate] = useState('');
+  
+  // Field-specific error for first part
+  const [part1Error, setPart1Error] = useState('');
 
   const [form, setForm] = useState({
     numero_chassis: '',
@@ -222,6 +225,19 @@ export default function NewVehiclePage() {
     const immatriculation = buildImmatriculation();
     if (!immatriculation) {
       newErrors.immatriculation = 'L\'immatriculation est obligatoire';
+    } else if (plateType === 'TUNIS') {
+      const { part1, part2 } = tunisPlate;
+      const num1 = parseInt(part1) || 0;
+      
+      if (!part1 || num1 < 1 || num1 > 260) {
+        newErrors.immatriculation = 'Le premier chiffre doit être entre 1 et 260';
+      } else if (!part2 || part2.length < 3 || part2.length > 4) {
+        newErrors.immatriculation = 'Le deuxième chiffre doit contenir 3 ou 4 chiffres';
+      }
+    } else if (plateType === 'NT') {
+      if (!ntPlate || ntPlate.length < 4 || ntPlate.length > 5) {
+        newErrors.immatriculation = 'Le numéro NT doit contenir 4 ou 5 chiffres';
+      }
     }
 
     if (!form.numero_chassis.trim()) {
@@ -399,7 +415,7 @@ export default function NewVehiclePage() {
                     }`}
                   >
                     <div className="font-semibold">Format Tunis</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">123 تونس 456</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">123 تونس 4567</div>
                   </button>
                   <button
                     type="button"
@@ -421,43 +437,69 @@ export default function NewVehiclePage() {
                 <Label htmlFor="immatriculation">Immatriculation *</Label>
                 {plateType === 'TUNIS' ? (
                   <div className="flex items-center gap-2">
-                    <Input
-                      id="tunis_part1"
-                      value={tunisPlate.part1}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-                        setTunisPlate(prev => ({ ...prev, part1: value }));
-                        if (errors.immatriculation) {
-                          setErrors(prev => {
-                            const newErrors = { ...prev };
-                            delete newErrors.immatriculation;
-                            return newErrors;
-                          });
-                        }
-                      }}
-                      placeholder="123"
-                      disabled={isSubmitting}
-                      className={`flex-1 text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
-                    />
+                    <div className="flex-1">
+                      <Input
+                        id="tunis_part1"
+                        value={tunisPlate.part1}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          const numValue = parseInt(value) || 0;
+                          
+                          // Check if exceeds limit
+                          if (numValue > 260) {
+                            setPart1Error('Le numéro maximum actuel en Tunisie est 260');
+                            return;
+                          }
+                          
+                          // Clear error if valid
+                          setPart1Error('');
+                          
+                          // Validate: must be between 1 and 260
+                          if (value === '' || (numValue >= 1 && numValue <= 260)) {
+                            setTunisPlate(prev => ({ ...prev, part1: value.slice(0, 3) }));
+                            if (errors.immatriculation) {
+                              setErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors.immatriculation;
+                                return newErrors;
+                              });
+                            }
+                          }
+                        }}
+                        placeholder="123"
+                        disabled={isSubmitting}
+                        maxLength={3}
+                        className={`text-center ${errors.immatriculation || part1Error ? 'border-red-500' : ''}`}
+                      />
+                      {part1Error && (
+                        <p className="text-[11px] text-red-600 mt-1 text-center">{part1Error}</p>
+                      )}
+                    </div>
                     <span className="text-lg font-semibold">تونس</span>
-                    <Input
-                      id="tunis_part2"
-                      value={tunisPlate.part2}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-                        setTunisPlate(prev => ({ ...prev, part2: value }));
-                        if (errors.immatriculation) {
-                          setErrors(prev => {
-                            const newErrors = { ...prev };
-                            delete newErrors.immatriculation;
-                            return newErrors;
-                          });
-                        }
-                      }}
-                      placeholder="456"
-                      disabled={isSubmitting}
-                      className={`flex-1 text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
-                    />
+                    <div className="flex-1">
+                      <Input
+                        id="tunis_part2"
+                        value={tunisPlate.part2}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          // Allow 3 to 4 digits
+                          if (value.length <= 4) {
+                            setTunisPlate(prev => ({ ...prev, part2: value }));
+                            if (errors.immatriculation) {
+                              setErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors.immatriculation;
+                                return newErrors;
+                              });
+                            }
+                          }
+                        }}
+                        placeholder="4567"
+                        disabled={isSubmitting}
+                        maxLength={4}
+                        className={`text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -477,6 +519,7 @@ export default function NewVehiclePage() {
                       }}
                       placeholder="12345"
                       disabled={isSubmitting}
+                      maxLength={5}
                       className={`flex-1 ${errors.immatriculation ? 'border-red-500' : ''}`}
                     />
                     <span className="text-lg font-semibold">ن.ت</span>

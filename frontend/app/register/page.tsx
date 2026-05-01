@@ -89,147 +89,195 @@ export default function RegisterPage() {
     <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
         <section className="w-full max-w-xl lg:max-w-lg">
-          <div className="rounded-[1.8rem] border border-white/20 bg-white/95 backdrop-blur-md p-7 shadow-2xl sm:p-9">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-slate-500">
+          <div className="rounded-[1.8rem] border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-7 shadow-2xl shadow-red-500/20 sm:p-9">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-red-400">
               CHERY SERVICE
             </p>
-            <h1 className="mt-4 text-4xl font-semibold leading-tight text-slate-900 sm:text-[2.55rem]">
+            <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-[2.55rem]">
               Creez votre
               <br />
               garage digital
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-zinc-400">
               Rejoignez l&apos;univers du service precision et creez votre profil SAV.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-4.5">
               {success && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <p className="text-sm">Inscription reussie. Redirection vers la connexion.</p>
                 </Alert>
               )}
 
               {apiError && (
-                <Alert className="border-rose-200 bg-rose-50 text-rose-900">
-                  <AlertCircle className="h-4 w-4 text-rose-600" />
+                <Alert className="border-red-500/50 bg-red-950/50 text-red-300">
+                  <AlertCircle className="h-4 w-4 text-red-400" />
                   <p className="text-sm">{apiError}</p>
                 </Alert>
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2.5">
-                  <Label htmlFor="prenom" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                    <Users className="h-3.5 w-3.5" />
-                    Prenom
-                  </Label>
-                  <Input
-                    id="prenom"
-                    name="prenom"
-                    type="text"
-                    placeholder="Ahmed"
-                    value={form.prenom}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.prenom ? 'border-rose-300' : 'border-slate-200'}`}
-                  />
-                  {errors.prenom && <p className="text-xs text-rose-600">{errors.prenom}</p>}
+                  <div className="relative">
+                    <Users className="absolute left-3 top-3.5 h-3.5 w-3.5 text-zinc-500 transition-colors peer-focus:text-red-400 z-10" />
+                    <Input
+                      id="prenom"
+                      name="prenom"
+                      type="text"
+                      placeholder=" "
+                      value={form.prenom}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.prenom ? 'border-red-500' : ''}`}
+                    />
+                    <Label 
+                      htmlFor="prenom" 
+                      className="absolute left-10 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                      peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                      peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                      peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Prenom
+                    </Label>
+                  </div>
+                  {errors.prenom && <p className="text-xs text-red-400">{errors.prenom}</p>}
                 </div>
 
                 <div className="space-y-2.5">
-                  <Label htmlFor="nom" className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                    Nom
-                  </Label>
-                  <Input
-                    id="nom"
-                    name="nom"
-                    type="text"
-                    placeholder="Ben Ali"
-                    value={form.nom}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.nom ? 'border-rose-300' : 'border-slate-200'}`}
-                  />
-                  {errors.nom && <p className="text-xs text-rose-600">{errors.nom}</p>}
+                  <div className="relative">
+                    <Input
+                      id="nom"
+                      name="nom"
+                      type="text"
+                      placeholder=" "
+                      value={form.nom}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className={`peer h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.nom ? 'border-red-500' : ''}`}
+                    />
+                    <Label 
+                      htmlFor="nom" 
+                      className="absolute left-3 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                      peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                      peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                      peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Nom
+                    </Label>
+                  </div>
+                  {errors.nom && <p className="text-xs text-red-400">{errors.nom}</p>}
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="telephone" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  <Phone className="h-3.5 w-3.5" />
-                  Telephone
-                </Label>
-                <Input
-                  id="telephone"
-                  name="telephone"
-                  type="tel"
-                  placeholder="+216 12 345 678"
-                  value={form.telephone}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.telephone ? 'border-rose-300' : 'border-slate-200'}`}
-                />
-                {errors.telephone && <p className="text-xs text-rose-600">{errors.telephone}</p>}
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3.5 h-3.5 w-3.5 text-zinc-500 transition-colors peer-focus:text-red-400 z-10" />
+                  <Input
+                    id="telephone"
+                    name="telephone"
+                    type="tel"
+                    placeholder=" "
+                    value={form.telephone}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.telephone ? 'border-red-500' : ''}`}
+                  />
+                  <Label 
+                    htmlFor="telephone" 
+                    className="absolute left-10 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                    peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                    peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                  >
+                    Telephone
+                  </Label>
+                </div>
+                {errors.telephone && <p className="text-xs text-red-400">{errors.telephone}</p>}
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="email" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                  <Mail className="h-3.5 w-3.5" />
-                  Adresse email
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="precision@chery.com"
-                  value={form.email}
-                  onChange={handleInputChange}
-                  disabled={isSubmitting}
-                  className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.email ? 'border-rose-300' : 'border-slate-200'}`}
-                />
-                {errors.email && <p className="text-xs text-rose-600">{errors.email}</p>}
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3.5 h-3.5 w-3.5 text-zinc-500 transition-colors peer-focus:text-red-400 z-10" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder=" "
+                    value={form.email}
+                    onChange={handleInputChange}
+                    disabled={isSubmitting}
+                    className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.email ? 'border-red-500' : ''}`}
+                  />
+                  <Label 
+                    htmlFor="email" 
+                    className="absolute left-10 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                    peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                    peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                  >
+                    Adresse email
+                  </Label>
+                </div>
+                {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2.5">
-                  <Label htmlFor="password" className="flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                    <Lock className="h-3.5 w-3.5" />
-                    Mot de passe
-                  </Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.password ? 'border-rose-300' : 'border-slate-200'}`}
-                  />
-                  {errors.password && <p className="text-xs text-rose-600">{errors.password}</p>}
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 h-3.5 w-3.5 text-zinc-500 transition-colors peer-focus:text-red-400 z-10" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder=" "
+                      value={form.password}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.password ? 'border-red-500' : ''}`}
+                    />
+                    <Label 
+                      htmlFor="password" 
+                      className="absolute left-10 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                      peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                      peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                      peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Mot de passe
+                    </Label>
+                  </div>
+                  {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-2.5">
-                  <Label htmlFor="confirmPassword" className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-600">
-                    Confirmation
-                  </Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={form.confirmPassword}
-                    onChange={handleInputChange}
-                    disabled={isSubmitting}
-                    className={`h-12 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 ${errors.confirmPassword ? 'border-rose-300' : 'border-slate-200'}`}
-                  />
-                  {errors.confirmPassword && <p className="text-xs text-rose-600">{errors.confirmPassword}</p>}
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder=" "
+                      value={form.confirmPassword}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className={`peer h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                    />
+                    <Label 
+                      htmlFor="confirmPassword" 
+                      className="absolute left-3 top-3.5 text-zinc-400 text-xs uppercase tracking-wider transition-all duration-200 pointer-events-none
+                      peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-xs peer-placeholder-shown:text-zinc-400
+                      peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                      peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                    >
+                      Confirmation
+                    </Label>
+                  </div>
+                  {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
                 </div>
               </div>
 
               <Button
                 type="submit"
-                className="mt-2 h-12 w-full bg-slate-900 text-[0.8rem] font-semibold uppercase tracking-[0.2em] text-white hover:bg-slate-800"
+                className="mt-2 h-12 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 text-[0.8rem] uppercase tracking-[0.2em]"
                 disabled={isSubmitting || success}
                 size="lg"
               >
@@ -238,9 +286,9 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-slate-600">
+            <p className="mt-6 text-center text-sm text-zinc-400">
               Vous avez deja un compte ?{' '}
-              <Link href="/login" className="font-semibold text-slate-900 underline underline-offset-4">
+              <Link href="/login" className="font-semibold text-red-400 hover:text-red-300 transition-colors underline underline-offset-4">
                 Se connecter
               </Link>
             </p>

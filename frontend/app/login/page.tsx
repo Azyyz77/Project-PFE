@@ -125,111 +125,179 @@ function LoginPageContent() {
   return (
     <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
-        <section className="hidden flex-1 lg:flex flex-col justify-center pr-16">
+        <section className="hidden flex-1 lg:flex flex-col justify-center pr-12">
           <div className="space-y-6">
+            <div>
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
+                Bienvenue sur votre <br />
+                <span className="text-red-500">plateforme SAV</span>
+              </h1>
+              <p className="mt-4 text-base text-white/90 max-w-lg leading-relaxed drop-shadow-md">
+                Gérez vos rendez-vous, suivez vos interventions et bénéficiez d'une expérience premium.
+              </p>
+            </div>
 
-            <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-              Gérez vos <br />
-              rendez-vous .<br />
-            </h1>
-            <p className="text-lg text-white/90 max-w-md leading-relaxed drop-shadow-md">
-              Planifiez vos interventions, suivez vos rendez-vous et restez connecté à votre espace de service en temps réel avec notre plateforme sécurisée.
-            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">Prise de rendez-vous en ligne 24h/7j</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">Suivi en temps réel de votre véhicule</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">Historique complet des interventions</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">Diagnostics et rapports détaillés</p>
+              </div>
+            </div>
+
+            <div className="flex gap-6 pt-2">
+              <div>
+                <div className="text-3xl font-bold text-white">12K+</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">Clients</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-white">48K+</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">RDV Traités</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-white">98%</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">Satisfaction</div>
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="rounded-2xl border border-white/20 bg-white/95 backdrop-blur-md p-8 shadow-2xl sm:p-10">
-            <h2 className="text-2xl font-bold text-foreground">Connexion</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-8 shadow-2xl shadow-red-500/20 sm:p-10">
+            <h2 className="text-2xl font-bold text-white">Connexion</h2>
+            <p className="mt-2 text-sm text-zinc-400">
               Entrez vos identifiants pour accéder à votre espace.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               {registered && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <p className="text-sm">Inscription réussie. Vous pouvez vous connecter.</p>
                 </Alert>
               )}
               {reset && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <p className="text-sm">Mot de passe réinitialisé avec succès.</p>
                 </Alert>
               )}
               {phoneVerified && (
-                <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <p className="text-sm">Téléphone vérifié avec succès ! Vous pouvez maintenant vous connecter.</p>
                 </Alert>
               )}
 
               {apiError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                <Alert className="border-red-500/50 bg-red-950/50 text-red-300">
+                  <AlertCircle className="h-4 w-4 text-red-400" />
                   <p className="text-sm">{apiError}</p>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Adresse email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500 transition-colors peer-focus:text-red-400" />
                   <Input
                     id="email"
                     name="email"
                     type="email"
                     autoComplete="email"
-                    placeholder="exemple@domaine.com"
+                    placeholder=" "
                     value={form.email}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className={`pl-10 h-11 ${errors.email ? 'border-destructive' : ''}`}
+                    className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.email ? 'border-red-500' : ''}`}
                   />
+                  <Label 
+                    htmlFor="email" 
+                    className="absolute left-10 top-3.5 text-zinc-400 text-sm transition-all duration-200 pointer-events-none
+                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-400
+                    peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-xs peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                    peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                  >
+                    Adresse email
+                  </Label>
                 </div>
-                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mot de passe</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <div></div>
                   <Link
                     href="/forgot-password"
-                    className="text-xs font-medium text-primary hover:text-primary/80"
+                    className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
                   >
                     Mot de passe oublié ?
                   </Link>
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-3.5 h-4 w-4 text-zinc-500 transition-colors peer-focus:text-red-400" />
                   <Input
                     id="password"
                     name="password"
                     type="password"
                     autoComplete="current-password"
-                    placeholder="••••••••"
+                    placeholder=" "
                     value={form.password}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className={`pl-10 h-11 ${errors.password ? 'border-destructive' : ''}`}
+                    className={`peer pl-10 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-transparent focus:border-red-500 focus:ring-red-500/20 transition-all duration-200 ${errors.password ? 'border-red-500' : ''}`}
                   />
+                  <Label 
+                    htmlFor="password" 
+                    className="absolute left-10 top-3.5 text-zinc-400 text-sm transition-all duration-200 pointer-events-none
+                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-zinc-400
+                    peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-xs peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
+                    peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
+                  >
+                    Mot de passe
+                  </Label>
                 </div>
-                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-11"
+                className="w-full h-11 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Connexion en cours...' : 'Se connecter'}
               </Button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-zinc-400">
               Vous n'avez pas de compte ?{' '}
-              <Link href="/register" className="font-semibold text-primary hover:underline">
+              <Link href="/register" className="font-semibold text-red-400 hover:text-red-300 transition-colors">
                 S'inscrire
               </Link>
             </p>

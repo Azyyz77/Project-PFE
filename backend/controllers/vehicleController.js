@@ -6,7 +6,8 @@ const VEHICLE_FIELD_LIMITS = {
   numero_chassis: 17,
   couleur: 50,
 };
-const TUNIS_STANDARD_PLATE_REGEX = /^(\d{1,3})\s*تونس\s*(\d{1,3})$/u;
+const TUNIS_LEFT_MAX = 260;
+const TUNIS_STANDARD_PLATE_REGEX = /^(\d{1,3})\s*تونس\s*(\d{3,4})$/u;
 const NT_PLATE_REGEX = /^(\d{1,5})\s*ن\.ت$/u;
 
 const VEHICLE_WITH_RELATIONS_SELECT = `
@@ -69,14 +70,30 @@ const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, c
     };
   }
 
-  if (!TUNIS_STANDARD_PLATE_REGEX.test(normalizedImmatriculation) && !NT_PLATE_REGEX.test(normalizedImmatriculation)) {
+  const tunisMatch = normalizedImmatriculation.match(TUNIS_STANDARD_PLATE_REGEX);
+  const isNtPlate = NT_PLATE_REGEX.test(normalizedImmatriculation);
+
+  if (!tunisMatch && !isNtPlate) {
     return {
       status: 400,
       payload: {
         error: 'Immatriculation invalide',
-        message: 'Le format doit être soit "123 تونس 456" soit "12345 ن.ت".'
+        message: 'Le format doit être soit "123 تونس 4567" (3 à 4 chiffres) soit "12345 ن.ت".'
       }
     };
+  }
+
+  if (tunisMatch) {
+    const tunisLeftValue = Number(tunisMatch[1]);
+    if (Number.isNaN(tunisLeftValue) || tunisLeftValue < 1 || tunisLeftValue > TUNIS_LEFT_MAX) {
+      return {
+        status: 400,
+        payload: {
+          error: 'Immatriculation invalide',
+          message: `Le premier bloc doit être entre 1 et ${TUNIS_LEFT_MAX}.`
+        }
+      };
+    }
   }
 
   if (normalizedNumeroChassis.length > VEHICLE_FIELD_LIMITS.numero_chassis) {
