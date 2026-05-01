@@ -167,8 +167,8 @@ const addVehicle = async (req, res) => {
       .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
       .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
       .input('annee', sql.SmallInt, annee)
-      .input('image_vehicule', sql.NVarChar(500), image_vehicule || null)
-      .input('image_carte_grise', sql.NVarChar(500), image_carte_grise || null)
+      .input('image_vehicule', sql.NVarChar(sql.MAX), image_vehicule || null)
+      .input('image_carte_grise', sql.NVarChar(sql.MAX), image_carte_grise || null)
       .query(insertQuery);
 
     res.status(201).json({
@@ -314,8 +314,8 @@ const updateVehicle = async (req, res) => {
       .input('numero_chassis', sql.NVarChar(VEHICLE_FIELD_LIMITS.numero_chassis), numero_chassis)
       .input('couleur', sql.NVarChar(VEHICLE_FIELD_LIMITS.couleur), couleur || null)
       .input('annee', sql.SmallInt, annee)
-      .input('image_vehicule', sql.NVarChar(500), image_vehicule || null)
-      .input('image_carte_grise', sql.NVarChar(500), image_carte_grise || null)
+      .input('image_vehicule', sql.NVarChar(sql.MAX), image_vehicule || null)
+      .input('image_carte_grise', sql.NVarChar(sql.MAX), image_carte_grise || null)
       .query(`
         UPDATE Vehicule
         SET
