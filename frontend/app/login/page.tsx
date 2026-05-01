@@ -31,11 +31,23 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  const { login, isAuthenticated, isLoading, user } = useAuth();
+  const { login, isAuthenticated, isLoading, user, logout } = useAuth();
   const searchParams = useSearchParams();
   const registered = searchParams.get('registered');
   const reset = searchParams.get('reset');
   const phoneVerified = searchParams.get('phone_verified');
+  const forceLogout = searchParams.get('logout');
+
+  // Force logout if logout parameter is present
+  useEffect(() => {
+    if (forceLogout === 'true') {
+      localStorage.clear();
+      document.cookie.split(";").forEach(c => {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/login';
+    }
+  }, [forceLogout]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && user && !isRedirecting) {

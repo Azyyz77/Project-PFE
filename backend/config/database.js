@@ -9,7 +9,8 @@ const dbConfig = useTrustedConnection
       options: {
         trustedConnection: true,
         trustServerCertificate: true,
-        enableArithAbort: true
+        enableArithAbort: true,
+        useUTC: false
       },
       pool: {
         max: 10,
@@ -26,7 +27,8 @@ const dbConfig = useTrustedConnection
       options: {
         encrypt: false,
         trustServerCertificate: true,
-        enableArithAbort: true
+        enableArithAbort: true,
+        useUTC: false
       },
       pool: {
         max: 10,

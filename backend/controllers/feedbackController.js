@@ -1,5 +1,4 @@
-const sql = require('mssql');
-const { getConnection } = require('../config/database');
+const { getConnection, sql } = require('../config/database');
 
 // Soumettre un feedback pour un rendez-vous
 exports.submitFeedback = async (req, res) => {

@@ -1,5 +1,4 @@
-const sql = require('mssql');
-const { getConnection } = require('../config/database');
+const { getConnection, sql } = require('../config/database');
 
 // Récupérer toutes les plages horaires (admin)
 exports.getAllTimeSlots = async (req, res) => {

@@ -216,7 +216,13 @@ const createAppointment = async (req, res) => {
       .input('description', sql.NVarChar(sql.MAX), description || null)
       .input('duree_est', sql.Int, estimatedDuration)
       .query(`
-        DECLARE @date_heure datetime2 = CONVERT(datetime2, @date_heure_str, 126);
+        -- Parse the datetime string
+        DECLARE @date_heure datetime2;
+        SET @date_heure = CAST(@date_heure_str AS datetime2);
+
+        -- Debug: Check the parsed date
+        PRINT 'Parsed date: ' + CONVERT(varchar, @date_heure, 120);
+        PRINT 'Current date: ' + CONVERT(varchar, GETDATE(), 120);
 
         INSERT INTO RendezVous (client_id, vehicule_id, agence_id, date_heure, description, duree_estimee, statut)
         VALUES (@client_id, @vehicule_id, @agence_id, @date_heure, @description, @duree_est, 'PLANIFIE');
@@ -553,8 +559,19 @@ const getAvailableSlots = async (req, res) => {
     const reservations = new Map();
     busy.recordset.forEach((row) => reservations.set(Number(row.heure), Number(row.total)));
 
+    // Get current date and hour to filter out past slots
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const currentHour = now.getHours();
+    const isToday = date === today;
+
     const slots = [];
     for (let h = openHour; h < closeHour; h += 1) {
+      // Skip past hours if this is today
+      if (isToday && h <= currentHour) {
+        continue;
+      }
+
       const used = reservations.get(h) || 0;
       slots.push({
         hour: h,
