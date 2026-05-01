@@ -1,5 +1,4 @@
-const sql = require('mssql');
-const { getConnection } = require('../config/database');
+const { getConnection, sql } = require('../config/database');
 
 // Récupérer toutes les promotions actives
 exports.getActivePromotions = async (req, res) => {
