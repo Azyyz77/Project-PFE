@@ -1,0 +1,19 @@
+Changed database context to 'STA_SAV_DB'.
+Msg 207, Level 16, State 1, Server DALI, Line 84
+Invalid column name 'prix_base'.
+Msg 207, Level 16, State 1, Server DALI, Line 84
+Invalid column name 'duree_estimee_minutes'.
+Msg 207, Level 16, State 1, Server DALI, Line 84
+Invalid column name 'prix_base'.
+Msg 207, Level 16, State 1, Server DALI, Line 84
+Invalid column name 'duree_estimee_minutes'.
+Msg 207, Level 16, State 1, Server DALI, Line 104
+Invalid column name 'type_promotion'.
+Msg 207, Level 16, State 1, Server DALI, Line 104
+Invalid column name 'valeur_reduction'.
+Msg 207, Level 16, State 1, Server DALI, Line 133
+Invalid column name 'type_message'.
+Msg 207, Level 16, State 1, Server DALI, Line 134
+Invalid column name 'cible_role'.
+Msg 207, Level 16, State 1, Server DALI, Line 174
+Invalid column name 'couleur_id'.

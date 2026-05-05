@@ -329,15 +329,13 @@ exports.deleteWorker = async (req, res) => {
 };
 
 /**
- * Affecter un ouvrier à un rendez-vous
+ * Affecter un ouvrier à un rendez-vous (SIMPLIFIÉ)
  */
 exports.assignWorkerToAppointment = async (req, res) => {
   try {
     const {
       rendez_vous_id,
       ouvrier_id,
-      priorite,
-      temps_estime_minutes,
       notes_agent
     } = req.body;
 
@@ -382,23 +380,33 @@ exports.assignWorkerToAppointment = async (req, res) => {
       });
     }
 
-    // Créer l'affectation
+    // Vérifier qu'il n'y a pas déjà une affectation pour ce rendez-vous
+    const existingCheck = await pool.request()
+      .input('rendez_vous_id', sql.BigInt, rendez_vous_id)
+      .query('SELECT id FROM AffectationOuvrier WHERE rendez_vous_id = @rendez_vous_id');
+
+    if (existingCheck.recordset.length > 0) {
+      return res.status(400).json({
+        error: 'Affectation existante',
+        message: 'Ce rendez-vous a déjà un ouvrier affecté'
+      });
+    }
+
+    // Créer l'affectation (SIMPLIFIÉ - sans priorite ni temps_estime)
     const result = await pool.request()
       .input('rendez_vous_id', sql.BigInt, rendez_vous_id)
       .input('ouvrier_id', sql.BigInt, ouvrier_id)
       .input('agent_id', sql.BigInt, agent_id)
-      .input('priorite', sql.NVarChar, priorite || 'NORMALE')
-      .input('temps_estime_minutes', sql.Int, temps_estime_minutes || null)
       .input('notes_agent', sql.NVarChar, notes_agent || null)
       .query(`
         INSERT INTO AffectationOuvrier (
-          rendez_vous_id, ouvrier_id, agent_id, priorite,
-          temps_estime_minutes, notes_agent
+          rendez_vous_id, ouvrier_id, agent_id, 
+          date_affectation, statut, notes_agent
         )
         OUTPUT INSERTED.*
         VALUES (
-          @rendez_vous_id, @ouvrier_id, @agent_id, @priorite,
-          @temps_estime_minutes, @notes_agent
+          @rendez_vous_id, @ouvrier_id, @agent_id,
+          GETDATE(), 'EN_ATTENTE', @notes_agent
         )
       `);
 
@@ -573,12 +581,12 @@ exports.getAllAssignments = async (req, res) => {
 };
 
 /**
- * Mettre à jour le statut d'une affectation
+ * Mettre à jour le statut d'une affectation (SIMPLIFIÉ)
  */
 exports.updateAssignmentStatus = async (req, res) => {
   try {
     const { assignmentId } = req.params;
-    const { statut, notes_ouvrier, temps_reel_minutes, evaluation } = req.body;
+    const { statut, notes_agent } = req.body;
 
     const pool = await getConnection();
     
@@ -588,31 +596,11 @@ exports.updateAssignmentStatus = async (req, res) => {
     if (statut) {
       query += ', statut = @statut';
       request.input('statut', sql.NVarChar, statut);
-
-      // Si statut passe à EN_COURS, enregistrer date_debut
-      if (statut === 'EN_COURS') {
-        query += ', date_debut = GETDATE()';
-      }
-
-      // Si statut passe à TERMINE, enregistrer date_fin
-      if (statut === 'TERMINE') {
-        query += ', date_fin = GETDATE()';
-      }
     }
 
-    if (notes_ouvrier) {
-      query += ', notes_ouvrier = @notes_ouvrier';
-      request.input('notes_ouvrier', sql.NVarChar, notes_ouvrier);
-    }
-
-    if (temps_reel_minutes) {
-      query += ', temps_reel_minutes = @temps_reel_minutes';
-      request.input('temps_reel_minutes', sql.Int, temps_reel_minutes);
-    }
-
-    if (evaluation) {
-      query += ', evaluation = @evaluation';
-      request.input('evaluation', sql.Int, evaluation);
+    if (notes_agent !== undefined) {
+      query += ', notes_agent = @notes_agent';
+      request.input('notes_agent', sql.NVarChar, notes_agent);
     }
 
     query += ' OUTPUT INSERTED.* WHERE id = @assignmentId';
@@ -640,7 +628,7 @@ exports.updateAssignmentStatus = async (req, res) => {
 };
 
 /**
- * Obtenir les statistiques des ouvriers
+ * Obtenir les statistiques des ouvriers (SIMPLIFIÉ)
  */
 exports.getWorkerStatistics = async (req, res) => {
   try {
@@ -676,8 +664,7 @@ exports.getWorkerStatistics = async (req, res) => {
           COUNT(a.id) AS total_affectations,
           SUM(CASE WHEN a.statut = 'TERMINE' THEN 1 ELSE 0 END) AS affectations_terminees,
           SUM(CASE WHEN a.statut = 'EN_COURS' THEN 1 ELSE 0 END) AS affectations_en_cours,
-          AVG(CASE WHEN a.evaluation IS NOT NULL THEN a.evaluation ELSE NULL END) AS evaluation_moyenne,
-          AVG(CASE WHEN a.temps_reel_minutes IS NOT NULL THEN a.temps_reel_minutes ELSE NULL END) AS temps_moyen_minutes
+          SUM(CASE WHEN a.statut = 'EN_ATTENTE' THEN 1 ELSE 0 END) AS affectations_en_attente
         FROM Ouvrier o
         LEFT JOIN AffectationOuvrier a ON o.id = a.ouvrier_id
         WHERE o.agence_id = @agenceId AND o.actif = 1
@@ -699,7 +686,7 @@ exports.getWorkerStatistics = async (req, res) => {
 };
 
 /**
- * Obtenir les ouvriers disponibles pour une date/heure
+ * Obtenir les ouvriers disponibles pour une date/heure (SIMPLIFIÉ)
  */
 exports.getAvailableWorkers = async (req, res) => {
   try {
@@ -747,13 +734,6 @@ exports.getAvailableWorkers = async (req, res) => {
         FROM Ouvrier o
         WHERE o.agence_id = @agenceId 
         AND o.actif = 1
-        AND NOT EXISTS (
-          SELECT 1 FROM DisponibiliteOuvrier d
-          WHERE d.ouvrier_id = o.id
-          AND d.date = @date
-          AND d.disponible = 0
-          AND @heure BETWEEN d.heure_debut AND d.heure_fin
-        )
         ORDER BY affectations_jour ASC, o.nom, o.prenom
       `);
 

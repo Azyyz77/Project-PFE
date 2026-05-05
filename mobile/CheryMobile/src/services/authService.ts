@@ -7,6 +7,11 @@ export const authService = {
     const response = await api.post('/users/login', { email, password });
     const { token, user } = response.data;
     
+    // Ensure the mobile app is directed to the client only
+    if (user.role?.toLowerCase() !== 'client') {
+      throw new Error("L'application mobile est réservée aux clients uniquement.");
+    }
+    
     await SecureStore.setItemAsync('authToken', token);
     await SecureStore.setItemAsync('user', JSON.stringify(user));
     
@@ -19,14 +24,9 @@ export const authService = {
     email: string;
     telephone: string;
     password: string;
-  }): Promise<{ user: User; token: string }> {
+  }): Promise<any> {
     const response = await api.post('/users/register', userData);
-    const { token, user } = response.data;
-    
-    await SecureStore.setItemAsync('authToken', token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
-    
-    return { user, token };
+    return response.data;
   },
 
   async logout(): Promise<void> {

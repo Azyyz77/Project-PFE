@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import WelcomeMessagesBanner from '@/components/client/WelcomeMessagesBanner';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { getMyAppointments } from '@/lib/api/appointments';
 import { fetchClientComplaints } from '@/lib/api/clientDashboard';
@@ -97,8 +96,6 @@ function ClientDashboardContent() {
 
   return (
     <div className="client-page-enter space-y-6 p-6">
-      {/* Welcome Messages Banner */}
-      <WelcomeMessagesBanner afficherDashboard={true} />
       {/* Hero Section */}
       <div className="client-reveal relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)]">
         <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />

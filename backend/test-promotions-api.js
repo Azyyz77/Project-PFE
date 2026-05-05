@@ -1,5 +1,5 @@
 /**
- * Test script for vehicle promotions and welcome messages API
+ * Test script for vehicle promotions API
  */
 
 const axios = require('axios');
@@ -39,35 +39,12 @@ async function testPromotionsAPI() {
   }
 }
 
-async function testWelcomeMessagesAPI() {
-  console.log('\n\n🧪 Testing Welcome Messages API...\n');
-
-  try {
-    // Test 1: Get active messages (AUTH REQUIRED - should fail)
-    console.log('1️⃣ Testing GET /api/welcome-messages/active (AUTH REQUIRED - no auth)');
-    const response1 = await axios.get(`${BASE_URL}/api/welcome-messages/active`);
-    console.log('✅ Success:', response1.status);
-  } catch (error) {
-    console.error('❌ Expected error:', error.response?.status, error.response?.data?.error || error.message);
-  }
-
-  try {
-    // Test 2: Get all messages (ADMIN - should fail without auth)
-    console.log('\n2️⃣ Testing GET /api/welcome-messages (ADMIN - no auth)');
-    const response2 = await axios.get(`${BASE_URL}/api/welcome-messages`);
-    console.log('✅ Success:', response2.status);
-  } catch (error) {
-    console.error('❌ Expected error:', error.response?.status, error.response?.data?.error || error.message);
-  }
-}
-
 async function runTests() {
   console.log('═══════════════════════════════════════════════════════');
-  console.log('  TESTING PROMOTIONS & WELCOME MESSAGES API');
+  console.log('  TESTING VEHICLE PROMOTIONS API');
   console.log('═══════════════════════════════════════════════════════');
 
   await testPromotionsAPI();
-  await testWelcomeMessagesAPI();
 
   console.log('\n═══════════════════════════════════════════════════════');
   console.log('  TESTS COMPLETED');

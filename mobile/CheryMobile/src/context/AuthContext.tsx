@@ -37,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (userData: any) => {
-    const { user } = await authService.register(userData);
-    setUser(user);
+    await authService.register(userData);
+    // User needs to login explicitly after registration
   };
 
   const logout = async () => {

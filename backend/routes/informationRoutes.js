@@ -25,20 +25,20 @@ router.post('/public/documents/:id/download', informationController.incrementDow
 // ============================================================================
 
 // Sections - Admin
-router.get('/admin/sections', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.getAllSections);
-router.post('/admin/sections', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.createSection);
-router.put('/admin/sections/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.updateSection);
-router.delete('/admin/sections/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.deleteSection);
+router.get('/admin/sections', authMiddleware, authorizeRoles('ADMIN'), informationController.getAllSections);
+router.post('/admin/sections', authMiddleware, authorizeRoles('ADMIN'), informationController.createSection);
+router.put('/admin/sections/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.updateSection);
+router.delete('/admin/sections/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.deleteSection);
 
 // Contenus - Admin
-router.get('/admin/contents', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.getAllContents);
-router.post('/admin/contents', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.createContent);
-router.put('/admin/contents/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.updateContent);
-router.delete('/admin/contents/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.deleteContent);
+router.get('/admin/contents', authMiddleware, authorizeRoles('ADMIN'), informationController.getAllContents);
+router.post('/admin/contents', authMiddleware, authorizeRoles('ADMIN'), informationController.createContent);
+router.put('/admin/contents/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.updateContent);
+router.delete('/admin/contents/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.deleteContent);
 
 // Documents - Admin
-router.post('/admin/documents', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.createDocument);
-router.put('/admin/documents/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.updateDocument);
-router.delete('/admin/documents/:id', authMiddleware, authorizeRoles('ADMIN', 'SUPER_ADMIN'), informationController.deleteDocument);
+router.post('/admin/documents', authMiddleware, authorizeRoles('ADMIN'), informationController.createDocument);
+router.put('/admin/documents/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.updateDocument);
+router.delete('/admin/documents/:id', authMiddleware, authorizeRoles('ADMIN'), informationController.deleteDocument);
 
 module.exports = router;

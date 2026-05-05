@@ -26,13 +26,8 @@ export interface Worker {
 export interface Assignment {
   affectation_id: number;
   statut: string;
-  priorite: string;
   date_affectation: string;
-  date_debut?: string;
-  date_fin?: string;
-  temps_estime_minutes?: number;
-  temps_reel_minutes?: number;
-  evaluation?: number;
+  notes_agent?: string;
   rdv_id: number;
   rdv_date: string;
   rdv_statut: string;
@@ -71,16 +66,12 @@ export interface CreateWorkerData {
 export interface AssignWorkerData {
   rendez_vous_id: number;
   ouvrier_id: number;
-  priorite?: 'BASSE' | 'NORMALE' | 'HAUTE' | 'URGENTE';
-  temps_estime_minutes?: number;
   notes_agent?: string;
 }
 
 export interface UpdateAssignmentData {
   statut?: 'EN_ATTENTE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
-  notes_ouvrier?: string;
-  temps_reel_minutes?: number;
-  evaluation?: number;
+  notes_agent?: string;
 }
 
 export interface WorkerStatistics {
@@ -91,8 +82,7 @@ export interface WorkerStatistics {
   total_affectations: number;
   affectations_terminees: number;
   affectations_en_cours: number;
-  evaluation_moyenne: number;
-  temps_moyen_minutes: number;
+  affectations_en_attente: number;
 }
 
 /**

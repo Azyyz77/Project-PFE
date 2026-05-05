@@ -6,7 +6,14 @@ exports.getAllTimeSlots = async (req, res) => {
     const pool = await getConnection();
     const result = await pool.request()
       .query(`
-        SELECT * FROM PlageHoraire
+        SELECT 
+          id,
+          agence_id,
+          jour_semaine,
+          CONVERT(VARCHAR(8), heure_ouverture, 108) as heure_ouverture,
+          CONVERT(VARCHAR(8), heure_fermeture, 108) as heure_fermeture,
+          capacite
+        FROM PlageHoraire
         ORDER BY agence_id, jour_semaine, heure_ouverture
       `);
     
@@ -26,7 +33,14 @@ exports.getAgencyTimeSlots = async (req, res) => {
     const result = await pool.request()
       .input('agence_id', sql.BigInt, agenceId)
       .query(`
-        SELECT * FROM PlageHoraire
+        SELECT 
+          id,
+          agence_id,
+          jour_semaine,
+          CONVERT(VARCHAR(8), heure_ouverture, 108) as heure_ouverture,
+          CONVERT(VARCHAR(8), heure_fermeture, 108) as heure_fermeture,
+          capacite
+        FROM PlageHoraire
         WHERE agence_id = @agence_id
         ORDER BY jour_semaine, heure_ouverture
       `);
@@ -41,22 +55,60 @@ exports.getAgencyTimeSlots = async (req, res) => {
 // Créer une plage horaire
 exports.createTimeSlot = async (req, res) => {
   try {
-    const { agence_id, jour_semaine, heure_ouverture, heure_fermeture, capacite } = req.body;
+    let { agence_id, jour_semaine, heure_ouverture, heure_fermeture, capacite } = req.body;
     
+    // Validation
     if (!agence_id || jour_semaine === undefined || !heure_ouverture || !heure_fermeture || !capacite) {
-      return res.status(400).json({ message: 'Tous les champs sont requis' });
+      return res.status(400).json({ 
+        message: 'Tous les champs sont requis',
+        missing: {
+          agence_id: !agence_id,
+          jour_semaine: jour_semaine === undefined,
+          heure_ouverture: !heure_ouverture,
+          heure_fermeture: !heure_fermeture,
+          capacite: !capacite
+        }
+      });
     }
+
+    // Convertir jour_semaine: JavaScript (0-6) → Database (1-7)
+    // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
+    // Database: 1=Monday, 2=Tuesday, ..., 7=Sunday
+    // Conversion: 0→7, 1→1, 2→2, ..., 6→6
+    if (jour_semaine === 0) {
+      jour_semaine = 7; // Dimanche: 0 → 7
+    }
+
+    // Normaliser le format des heures (ajouter :00 si nécessaire)
+    // Input HTML type="time" envoie "HH:mm", SQL Server attend "HH:mm:ss"
+    if (heure_ouverture && !heure_ouverture.includes(':00')) {
+      heure_ouverture = heure_ouverture + ':00';
+    }
+    if (heure_fermeture && !heure_fermeture.includes(':00')) {
+      heure_fermeture = heure_fermeture + ':00';
+    }
+
+    // Valider que heure_ouverture < heure_fermeture
+    if (heure_ouverture >= heure_fermeture) {
+      return res.status(400).json({ 
+        message: 'L\'heure d\'ouverture doit être avant l\'heure de fermeture',
+        error: 'INVALID_TIME_RANGE',
+        details: { heure_ouverture, heure_fermeture }
+      });
+    }
+
+    console.log('[TimeSlot] Creating with:', { agence_id, jour_semaine, heure_ouverture, heure_fermeture, capacite });
 
     const pool = await getConnection();
     const result = await pool.request()
       .input('agence_id', sql.BigInt, agence_id)
       .input('jour_semaine', sql.TinyInt, jour_semaine)
-      .input('heure_ouverture', sql.Time, heure_ouverture)
-      .input('heure_fermeture', sql.Time, heure_fermeture)
+      .input('heure_ouverture', sql.VarChar(8), heure_ouverture)  // Utiliser VarChar au lieu de Time
+      .input('heure_fermeture', sql.VarChar(8), heure_fermeture)  // Utiliser VarChar au lieu de Time
       .input('capacite', sql.Int, capacite)
       .query(`
         INSERT INTO PlageHoraire (agence_id, jour_semaine, heure_ouverture, heure_fermeture, capacite)
-        VALUES (@agence_id, @jour_semaine, @heure_ouverture, @heure_fermeture, @capacite);
+        VALUES (@agence_id, @jour_semaine, CAST(@heure_ouverture AS TIME), CAST(@heure_fermeture AS TIME), @capacite);
         SELECT SCOPE_IDENTITY() AS id;
       `);
 
@@ -66,7 +118,11 @@ exports.createTimeSlot = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur lors de la création de la plage horaire:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ 
+      message: 'Erreur serveur',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -74,26 +130,86 @@ exports.createTimeSlot = async (req, res) => {
 exports.updateTimeSlot = async (req, res) => {
   try {
     const { id } = req.params;
-    const { jour_semaine, heure_ouverture, heure_fermeture, capacite } = req.body;
+    let { jour_semaine, heure_ouverture, heure_fermeture, capacite } = req.body;
+
+    console.log('[TimeSlot] Update received:', { id, jour_semaine, heure_ouverture, heure_fermeture, capacite });
+
+    // Validation
+    if (jour_semaine === undefined || !heure_ouverture || !heure_fermeture || !capacite) {
+      return res.status(400).json({ 
+        message: 'Tous les champs sont requis',
+        missing: {
+          jour_semaine: jour_semaine === undefined,
+          heure_ouverture: !heure_ouverture,
+          heure_fermeture: !heure_fermeture,
+          capacite: !capacite
+        }
+      });
+    }
+
+    // Convertir jour_semaine: JavaScript (0-6) → Database (1-7)
+    // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
+    // Database: 1=Monday, 2=Tuesday, ..., 7=Sunday
+    // Conversion: 0→7, 1→1, 2→2, ..., 6→6
+    if (jour_semaine === 0) {
+      jour_semaine = 7; // Dimanche: 0 → 7
+    }
+
+    // Normaliser le format des heures (ajouter :00 si nécessaire)
+    // Input HTML type="time" envoie "HH:mm", SQL Server attend "HH:mm:ss"
+    if (heure_ouverture && !heure_ouverture.includes(':00')) {
+      heure_ouverture = heure_ouverture + ':00';
+    }
+    if (heure_fermeture && !heure_fermeture.includes(':00')) {
+      heure_fermeture = heure_fermeture + ':00';
+    }
+
+    // Valider que heure_ouverture < heure_fermeture
+    if (heure_ouverture >= heure_fermeture) {
+      return res.status(400).json({ 
+        message: 'L\'heure d\'ouverture doit être avant l\'heure de fermeture',
+        error: 'INVALID_TIME_RANGE',
+        details: { heure_ouverture, heure_fermeture }
+      });
+    }
+
+    console.log('[TimeSlot] Updating with:', { id, jour_semaine, heure_ouverture, heure_fermeture, capacite });
 
     const pool = await getConnection();
+    
+    // Vérifier que la plage horaire existe
+    const checkResult = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query('SELECT id FROM PlageHoraire WHERE id = @id');
+
+    if (checkResult.recordset.length === 0) {
+      return res.status(404).json({ message: 'Plage horaire introuvable' });
+    }
+
+    // Mettre à jour
     await pool.request()
       .input('id', sql.BigInt, id)
       .input('jour_semaine', sql.TinyInt, jour_semaine)
-      .input('heure_ouverture', sql.Time, heure_ouverture)
-      .input('heure_fermeture', sql.Time, heure_fermeture)
+      .input('heure_ouverture', sql.VarChar(8), heure_ouverture)  // Utiliser VarChar au lieu de Time
+      .input('heure_fermeture', sql.VarChar(8), heure_fermeture)  // Utiliser VarChar au lieu de Time
       .input('capacite', sql.Int, capacite)
       .query(`
         UPDATE PlageHoraire
-        SET jour_semaine = @jour_semaine, heure_ouverture = @heure_ouverture,
-            heure_fermeture = @heure_fermeture, capacite = @capacite
+        SET jour_semaine = @jour_semaine, 
+            heure_ouverture = CAST(@heure_ouverture AS TIME),
+            heure_fermeture = CAST(@heure_fermeture AS TIME), 
+            capacite = @capacite
         WHERE id = @id
       `);
 
     res.json({ message: 'Plage horaire mise à jour avec succès' });
   } catch (error) {
     console.error('Erreur lors de la mise à jour de la plage horaire:', error);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ 
+      message: 'Erreur serveur',
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -125,13 +241,18 @@ exports.getAvailableSlots = async (req, res) => {
 
     const targetDate = new Date(date);
     const dayOfWeek = targetDate.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+    
+    // Convertir jour_semaine: JavaScript (0-6) → Database (1-7)
+    // JavaScript: 0=Sunday, 1=Monday, ..., 6=Saturday
+    // Database: 1=Monday, 2=Tuesday, ..., 7=Sunday
+    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek;
 
     const pool = await getConnection();
     
     // Récupérer les plages horaires pour ce jour
     const plagesResult = await pool.request()
       .input('agence_id', sql.BigInt, agenceId)
-      .input('jour_semaine', sql.TinyInt, dayOfWeek)
+      .input('jour_semaine', sql.TinyInt, dbDayOfWeek)
       .query(`
         SELECT * FROM PlageHoraire
         WHERE agence_id = @agence_id AND jour_semaine = @jour_semaine

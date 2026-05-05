@@ -35,6 +35,9 @@ export default function TimeSlotsAdminPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log('[Submit] Form data being sent:', formData);
+    
     try {
       if (editingSlot) {
         await timeslotsApi.updateTimeSlot(editingSlot.id, formData);
@@ -44,8 +47,16 @@ export default function TimeSlotsAdminPage() {
       setShowModal(false);
       resetForm();
       loadTimeSlots();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erreur lors de l\'opération';
+      const errorDetails = error?.response?.data?.details;
+      
+      if (errorDetails) {
+        alert(`${errorMessage}\n\nDétails:\nOuverture: ${errorDetails.heure_ouverture}\nFermeture: ${errorDetails.heure_fermeture}`);
+      } else {
+        alert(errorMessage);
+      }
     }
   };
 
@@ -67,18 +78,54 @@ export default function TimeSlotsAdminPage() {
 
   const openEditModal = (slot: TimeSlot) => {
     setEditingSlot(slot);
+    
+    // Convert jour_semaine: Database (1-7) → Frontend (0-6)
+    // Database: 1=Monday, ..., 7=Sunday
+    // Frontend: 0=Sunday, 1=Monday, ..., 6=Saturday
+    const frontendDayOfWeek = slot.jour_semaine === 7 ? 0 : slot.jour_semaine;
+    
+    // Strip seconds and milliseconds from time format
+    // SQL Server returns: "HH:mm:ss.0000000" or "HH:mm:ss"
+    // We need: "HH:mm"
+    const normalizeTime = (timeStr: string) => {
+      if (!timeStr) return '';
+      
+      // Remove any whitespace
+      const cleaned = timeStr.trim();
+      
+      // If it contains a dot (milliseconds), take everything before it
+      const withoutMillis = cleaned.split('.')[0];
+      
+      // Now we have "HH:mm:ss", take first 5 characters
+      const normalized = withoutMillis.substring(0, 5);
+      
+      console.log(`[normalizeTime] "${timeStr}" → "${normalized}"`);
+      return normalized;
+    };
+    
+    const heureOuverture = normalizeTime(slot.heure_ouverture);
+    const heureFermeture = normalizeTime(slot.heure_fermeture);
+    
+    console.log('[Edit Modal] Original slot:', slot);
+    console.log('[Edit Modal] Normalized times:', { heureOuverture, heureFermeture });
+    
     setFormData({
       agence_id: slot.agence_id,
-      jour_semaine: slot.jour_semaine,
-      heure_ouverture: slot.heure_ouverture,
-      heure_fermeture: slot.heure_fermeture,
+      jour_semaine: frontendDayOfWeek,
+      heure_ouverture: heureOuverture,
+      heure_fermeture: heureFermeture,
       capacite: slot.capacite,
     });
     setShowModal(true);
   };
 
   const getDayName = (day: number) => {
+    // Database stores: 1=Monday, 2=Tuesday, ..., 7=Sunday
+    // Convert to array index: 1→1, 2→2, ..., 6→6, 7→0
     const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    if (day === 7) {
+      return days[0]; // Sunday
+    }
     return days[day] || day;
   };
 

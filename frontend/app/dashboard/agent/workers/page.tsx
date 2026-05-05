@@ -27,16 +27,6 @@ interface UnassignedAppointment {
   vehicule_modele?: string;
 }
 
-const PRIORITY_OPTIONS = ['NORMALE', 'HAUTE', 'URGENTE', 'BASSE'] as const;
-type Priority = (typeof PRIORITY_OPTIONS)[number];
-
-const PRIORITY_STYLE: Record<Priority, string> = {
-  URGENTE: 'bg-red-100 text-red-700 border-red-200',
-  HAUTE:   'bg-orange-100 text-orange-700 border-orange-200',
-  NORMALE: 'bg-blue-100 text-blue-700 border-blue-200',
-  BASSE:   'bg-gray-100 text-gray-600 border-gray-200',
-};
-
 const STATUS_STYLE: Record<string, string> = {
   EN_ATTENTE: 'bg-yellow-100 text-yellow-800',
   EN_COURS:   'bg-blue-100 text-blue-800',
@@ -62,8 +52,6 @@ export default function WorkersPage() {
   // Assignment panel state
   const [selectedAppt, setSelectedAppt] = useState<UnassignedAppointment | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
-  const [priority, setPriority]   = useState<Priority>('NORMALE');
-  const [duration, setDuration]   = useState(60);
   const [notes, setNotes]         = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -118,13 +106,11 @@ export default function WorkersPage() {
       await assignWorkerToAppointment({
         rendez_vous_id: selectedAppt.id,
         ouvrier_id: selectedWorker.id,
-        priorite: priority,
-        temps_estime_minutes: duration,
         notes_agent: notes || undefined,
       });
       setSuccessMsg(`${selectedWorker.prenom} ${selectedWorker.nom} affecté avec succès !`);
       setSelectedAppt(null); setSelectedWorker(null);
-      setPriority('NORMALE'); setDuration(60); setNotes('');
+      setNotes('');
       await loadAll();
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (e: any) {
@@ -324,33 +310,13 @@ export default function WorkersPage() {
                           {/* Options row */}
                           {selectedWorker && (
                             <div className="mt-4 space-y-3">
-                              {/* Priority */}
-                              <div className="flex flex-wrap gap-2">
-                                <span className="text-xs text-gray-500 self-center">Priorité :</span>
-                                {PRIORITY_OPTIONS.map(p => (
-                                  <button key={p} type="button" onClick={e => { e.stopPropagation(); setPriority(p); }}
-                                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all
-                                      ${priority === p ? PRIORITY_STYLE[p] : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                                    {p}
-                                  </button>
-                                ))}
-                              </div>
-                              {/* Duration + Notes */}
-                              <div className="flex gap-3">
-                                <div>
-                                  <label className="text-xs text-gray-500">Durée (min)</label>
-                                  <input type="number" min={15} step={15} value={duration}
-                                    onClick={e => e.stopPropagation()}
-                                    onChange={e => setDuration(Number(e.target.value))}
-                                    className="mt-1 block w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:outline-none" />
-                                </div>
-                                <div className="flex-1">
-                                  <label className="text-xs text-gray-500">Notes (optionnel)</label>
-                                  <input type="text" value={notes} placeholder="Instructions…"
-                                    onClick={e => e.stopPropagation()}
-                                    onChange={e => setNotes(e.target.value)}
-                                    className="mt-1 block w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:outline-none" />
-                                </div>
+                              {/* Notes */}
+                              <div>
+                                <label className="text-xs text-gray-500">Notes (optionnel)</label>
+                                <input type="text" value={notes} placeholder="Instructions pour le technicien…"
+                                  onClick={e => e.stopPropagation()}
+                                  onChange={e => setNotes(e.target.value)}
+                                  className="mt-1 block w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#E30613] focus:outline-none" />
                               </div>
                               {/* Confirm button */}
                               <button type="button" disabled={submitting} onClick={e => { e.stopPropagation(); handleAssign(); }}
@@ -433,7 +399,7 @@ export default function WorkersPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['Technicien', 'Client / Véhicule', 'Date RDV', 'Priorité', 'Statut', 'Actions'].map(h => (
+                    {['Technicien', 'Client / Véhicule', 'Date RDV', 'Statut', 'Actions'].map(h => (
                       <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -458,11 +424,6 @@ export default function WorkersPage() {
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-600 whitespace-nowrap">
                         {fmtDate(a.date_affectation)}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${PRIORITY_STYLE[a.priorite as Priority] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                          {a.priorite}
-                        </span>
                       </td>
                       <td className="px-5 py-4">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[a.statut] ?? 'bg-gray-100 text-gray-600'}`}>

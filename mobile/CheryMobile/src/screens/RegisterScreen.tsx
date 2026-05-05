@@ -43,7 +43,11 @@ export default function RegisterScreen({ navigation }: any) {
     setLoading(true);
     try {
       await register({ nom, prenom, email, telephone, password });
-      Alert.alert('Succès', 'Compte créé avec succès');
+      Alert.alert(
+        'Succès',
+        'Compte créé avec succès. Veuillez vérifier votre WhatsApp pour le code de vérification puis connectez-vous.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
     } catch (error: any) {
       Alert.alert('Erreur', error.response?.data?.message || 'Échec de l\'inscription');
     } finally {

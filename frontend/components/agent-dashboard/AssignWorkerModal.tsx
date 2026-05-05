@@ -25,8 +25,6 @@ interface AssignWorkerModalProps {
 export default function AssignWorkerModal({ worker, onClose, onSuccess }: AssignWorkerModalProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
-  const [priorite, setPriorite] = useState<'BASSE' | 'NORMALE' | 'HAUTE' | 'URGENTE'>('NORMALE');
-  const [tempsEstime, setTempsEstime] = useState<number>(60);
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -70,8 +68,6 @@ export default function AssignWorkerModal({ worker, onClose, onSuccess }: Assign
       await assignWorkerToAppointment({
         rendez_vous_id: selectedAppointment,
         ouvrier_id: worker.id,
-        priorite,
-        temps_estime_minutes: tempsEstime,
         notes_agent: notes || undefined
       });
 
@@ -205,55 +201,6 @@ export default function AssignWorkerModal({ worker, onClose, onSuccess }: Assign
                     ))}
                   </div>
                 )}
-              </div>
-
-              {/* Priorité */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priorité *
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(['BASSE', 'NORMALE', 'HAUTE', 'URGENTE'] as const).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setPriorite(p)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        priorite === p
-                          ? p === 'URGENTE'
-                            ? 'bg-red-600 text-white'
-                            : p === 'HAUTE'
-                            ? 'bg-orange-600 text-white'
-                            : p === 'NORMALE'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Temps estimé */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="inline h-4 w-4 mr-2" />
-                  Temps estimé (minutes)
-                </label>
-                <input
-                  type="number"
-                  min="15"
-                  step="15"
-                  value={tempsEstime}
-                  onChange={(e) => setTempsEstime(Number(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E30613] focus:border-transparent"
-                  placeholder="60"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Durée estimée de l'intervention en minutes
-                </p>
               </div>
 
               {/* Notes */}
