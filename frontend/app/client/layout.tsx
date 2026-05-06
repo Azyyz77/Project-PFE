@@ -19,7 +19,6 @@ import {
   User,
   Menu,
   LogOut,
-  ShoppingBag,
   Star,
   AlertCircle,
   MessageCircle,
@@ -59,7 +58,6 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Mes Rendez-vous', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
       { label: 'Historique', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
-      { label: 'Commandes', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
       { label: 'Catalogue', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
       { label: 'Promotions Véhicules', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
       { label: 'Factures', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },

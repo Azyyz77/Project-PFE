@@ -21,7 +21,6 @@ const vehicleValidationRoutes = require('./routes/vehicleValidationRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const appointmentFeedbackRoutes = require('./routes/appointmentFeedbackRoutes');
 const interventionCatalogRoutes = require('./routes/interventionCatalogRoutes');
-const clientOrdersRoutes = require('./routes/clientOrdersRoutes');
 const agentDashboardRoutes = require('./routes/agentDashboardRoutes');
 const clientDashboardRoutes = require('./routes/clientDashboardRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
@@ -130,7 +129,6 @@ app.use('/api/agent/vehicles', vehicleValidationRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api', appointmentFeedbackRoutes); // Reverted back to '/api' so routes like /appointments/:id/feedback work correctly
 app.use('/api/catalog', interventionCatalogRoutes);
-app.use('/api/client/orders', clientOrdersRoutes);
 app.use('/api/agent-dashboard', agentDashboardRoutes);
 app.use('/api/client-dashboard', clientDashboardRoutes);
 app.use('/api/complaints', complaintRoutes);

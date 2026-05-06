@@ -55,11 +55,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     setLoadingData(true);
     try {
-      const [vehiclesRes, appointmentsRes, complaintsRes, ordersRes, notifRes] = await Promise.allSettled([
+      const [vehiclesRes, appointmentsRes, complaintsRes, notifRes] = await Promise.allSettled([
         api.get(`/vehicles/user/${user.id}`),
         api.get('/appointments/my'),
         api.get('/complaints/my-complaints'),
-        api.get('/client/orders'),
         api.get('/notifications'),
       ]);
 

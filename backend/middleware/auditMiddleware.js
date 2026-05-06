@@ -25,7 +25,6 @@ const ENTITY_MAPPING = {
   '/api/admin/documents': 'Document',
   '/api/admin/permissions': 'Permission',
   '/api/admin/orders': 'Commande',
-  '/api/client/orders': 'Commande',
   '/api/feedback': 'Feedback',
 };
 

@@ -24,7 +24,6 @@ import {
 export const clientLinks = [
   { label: 'Tableau de bord', href: '/client/dashboard', icon: LayoutDashboard },
   { label: 'Mes véhicules', href: '/client/vehicles', icon: Car },
-  { label: 'Mes commandes de réparation', href: '/client/orders', icon: Wrench },
   { label: 'Réserver un rendez-vous', href: '/dashboard/rendez-vous', icon: CalendarPlus },
   { label: 'Mes factures', href: '/client/invoices', icon: Receipt },
   { label: 'Mon profil', href: '/profile', icon: UserCircle },
