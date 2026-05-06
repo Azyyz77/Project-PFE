@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   vehicleHistoryAPI,
   VehicleHistory,
@@ -13,6 +14,7 @@ import { Download, Calendar, Wrench, TrendingUp, Clock, CheckCircle, XCircle } f
 export default function VehicleHistoryPage() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const vehicleId = parseInt(params.id as string);
 
   const [history, setHistory] = useState<VehicleHistory | null>(null);
@@ -41,7 +43,7 @@ export default function VehicleHistoryPage() {
       setInterventions(interventionsData.interventions);
       setAppointments(appointmentsData.appointments);
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Erreur lors du chargement');
+      setError(err.response?.data?.error || err.message || t('vehicleHistory.errorLoading'));
     } finally {
       setLoading(false);
     }
@@ -60,7 +62,7 @@ export default function VehicleHistoryPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError('Erreur lors de l\'export');
+      setError(t('vehicleHistory.exportError'));
     }
   };
 
@@ -97,7 +99,7 @@ export default function VehicleHistoryPage() {
             onClick={() => router.back()}
             className="mt-4 text-red-600 hover:text-red-800 underline"
           >
-            Retour
+            {t('common.back')}
           </button>
         </div>
       </div>
@@ -107,7 +109,7 @@ export default function VehicleHistoryPage() {
   if (!history) {
     return (
       <div className="p-6">
-        <p className="text-gray-600">Véhicule non trouvé</p>
+        <p className="text-gray-600">{t('vehicleHistory.vehicleNotFound')}</p>
       </div>
     );
   }
@@ -119,7 +121,7 @@ export default function VehicleHistoryPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Historique du véhicule
+              {t('vehicleHistory.detailTitle')}
             </h1>
             <p className="text-gray-600 mt-2">
               {history.marque} {history.modele} - {history.immatriculation}
@@ -130,7 +132,7 @@ export default function VehicleHistoryPage() {
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <Download className="w-5 h-5" />
-            Exporter
+            {t('vehicleHistory.export')}
           </button>
         </div>
       </div>
@@ -146,7 +148,7 @@ export default function VehicleHistoryPage() {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Vue d'ensemble
+            {t('vehicleHistory.overview')}
           </button>
           <button
             onClick={() => setActiveTab('interventions')}
@@ -156,7 +158,7 @@ export default function VehicleHistoryPage() {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Interventions ({interventions.length})
+            {t('vehicleHistory.interventions')} ({interventions.length})
           </button>
           <button
             onClick={() => setActiveTab('appointments')}
@@ -166,7 +168,7 @@ export default function VehicleHistoryPage() {
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Rendez-vous ({appointments.length})
+            {t('vehicleHistory.appointments')} ({appointments.length})
           </button>
         </div>
       </div>
@@ -179,7 +181,7 @@ export default function VehicleHistoryPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total RDV</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.totalRDV')}</p>
                   <p className="text-2xl font-bold text-gray-900">{history.total_rdv}</p>
                 </div>
                 <Calendar className="w-10 h-10 text-blue-500" />
@@ -189,7 +191,7 @@ export default function VehicleHistoryPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Interventions</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.interventions')}</p>
                   <p className="text-2xl font-bold text-gray-900">{history.total_interventions}</p>
                 </div>
                 <Wrench className="w-10 h-10 text-orange-500" />
@@ -199,7 +201,7 @@ export default function VehicleHistoryPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Coût total</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.totalCost')}</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {formatCurrency(history.cout_total_interventions)}
                   </p>
@@ -211,7 +213,7 @@ export default function VehicleHistoryPage() {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Kilométrage</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.mileage')}</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {history.kilometrage.toLocaleString()} km
                   </p>
@@ -223,57 +225,57 @@ export default function VehicleHistoryPage() {
 
           {/* Vehicle Info */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Informations du véhicule</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('vehicleHistory.vehicleInfo')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Marque et modèle</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.brandModel')}</p>
                 <p className="font-medium">{history.marque} {history.modele}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Année</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.year')}</p>
                 <p className="font-medium">{history.annee}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Immatriculation</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.registration')}</p>
                 <p className="font-medium">{history.immatriculation}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Date d'achat</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.purchaseDate')}</p>
                 <p className="font-medium">{formatDate(history.date_achat)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Dernière intervention</p>
-                <p className="font-medium">{history.derniere_intervention ? formatDate(history.derniere_intervention) : 'Aucune'}</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.lastIntervention')}</p>
+                <p className="font-medium">{history.derniere_intervention ? formatDate(history.derniere_intervention) : t('vehicleHistory.none')}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Prochain RDV</p>
-                <p className="font-medium">{history.prochain_rdv ? formatDate(history.prochain_rdv) : 'Aucun'}</p>
+                <p className="text-sm text-gray-600">{t('vehicleHistory.nextRDV')}</p>
+                <p className="font-medium">{history.prochain_rdv ? formatDate(history.prochain_rdv) : t('vehicleHistory.noneM')}</p>
               </div>
             </div>
           </div>
 
           {/* RDV Stats */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Statistiques des rendez-vous</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('vehicleHistory.rdvStats')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-8 h-8 text-green-500" />
                 <div>
-                  <p className="text-sm text-gray-600">Terminés</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.completed')}</p>
                   <p className="text-xl font-bold">{history.rdv_termines}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <XCircle className="w-8 h-8 text-red-500" />
                 <div>
-                  <p className="text-sm text-gray-600">Annulés</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.cancelled')}</p>
                   <p className="text-xl font-bold">{history.rdv_annules}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Clock className="w-8 h-8 text-blue-500" />
                 <div>
-                  <p className="text-sm text-gray-600">En cours</p>
+                  <p className="text-sm text-gray-600">{t('vehicleHistory.inProgress')}</p>
                   <p className="text-xl font-bold">
                     {history.total_rdv - history.rdv_termines - history.rdv_annules}
                   </p>
@@ -289,7 +291,7 @@ export default function VehicleHistoryPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {interventions.length === 0 ? (
             <div className="p-12 text-center text-gray-600">
-              Aucune intervention enregistrée
+              {t('vehicleHistory.noInterventions')}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -297,22 +299,22 @@ export default function VehicleHistoryPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Date
+                      {t('appointments.date')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Type
+                      {t('vehicleHistory.type')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Description
+                      {t('vehicleHistory.description')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Agence
+                      {t('appointments.agency')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Coût
+                      {t('vehicleHistory.cost')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Statut
+                      {t('appointments.status')}
                     </th>
                   </tr>
                 </thead>
@@ -357,7 +359,7 @@ export default function VehicleHistoryPage() {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {appointments.length === 0 ? (
             <div className="p-12 text-center text-gray-600">
-              Aucun rendez-vous enregistré
+              {t('vehicleHistory.noAppointments')}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -365,22 +367,22 @@ export default function VehicleHistoryPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Date
+                      {t('appointments.date')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Heure
+                      {t('vehicleHistory.hour')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Type
+                      {t('vehicleHistory.type')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Agence
+                      {t('appointments.agency')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Motif
+                      {t('vehicleHistory.reason')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Statut
+                      {t('appointments.status')}
                     </th>
                   </tr>
                 </thead>

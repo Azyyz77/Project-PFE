@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getVehiclesByUser, deleteVehicle } from '@/lib/api/vehicles';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function ClientVehiclesPage() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,8 +21,8 @@ export default function ClientVehiclesPage() {
 
   const vehiclesCountLabel = useMemo(() => {
     const count = vehicles.length;
-    return `${count} véhicule${count > 1 ? 's' : ''} enregistré${count > 1 ? 's' : ''}`;
-  }, [vehicles.length]);
+    return `${count} ${t('vehicles.registeredVehicles')}`;
+  }, [vehicles.length, t]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,7 +42,7 @@ export default function ClientVehiclesPage() {
   const handleDelete = async (vehicleId: number) => {
     if (!token) return;
     
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
+    if (!confirm(t('vehicles.confirmDelete'))) {
       return;
     }
 
@@ -48,10 +50,10 @@ export default function ClientVehiclesPage() {
     try {
       await deleteVehicle(vehicleId, token);
       setVehicles(prev => prev.filter(v => v.id !== vehicleId));
-      toast.success('Véhicule supprimé avec succès');
+      toast.success(t('vehicles.deleteSuccess'));
     } catch (error: any) {
       console.error('Failed to delete vehicle:', error);
-      toast.error('Erreur', { description: error.message || 'Impossible de supprimer le véhicule' });
+      toast.error(t('common.error'), { description: error.message || t('vehicles.deleteError') });
     } finally {
       setDeletingId(null);
     }
@@ -62,13 +64,13 @@ export default function ClientVehiclesPage() {
       <div className="mx-auto w-full max-w-7xl px-6 py-6">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Mes véhicules</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">{t('vehicles.title')}</h1>
             <p className="mt-1 text-sm text-slate-500">{vehiclesCountLabel}</p>
           </div>
           <Link href="/client/vehicles/new">
             <Button className="rounded-full bg-[#1b355d] px-5 text-white hover:bg-[#17305a]">
               <Plus className="mr-2 h-4 w-4" />
-              Ajouter un véhicule
+              {t('vehicles.addVehicle')}
             </Button>
           </Link>
         </div>
@@ -93,9 +95,9 @@ export default function ClientVehiclesPage() {
               };
 
               const statusLabels: Record<string, string> = {
-                VALIDE: 'Validé',
-                EN_ATTENTE: 'En attente',
-                REFUSE: 'Refusé',
+                VALIDE: t('vehicles.validated'),
+                EN_ATTENTE: t('dashboard.pending'),
+                REFUSE: t('dashboard.refused'),
               };
 
               const status = vehicle.statut_validation || 'EN_ATTENTE';
@@ -130,7 +132,7 @@ export default function ClientVehiclesPage() {
                         <button
                           type="button"
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-500"
-                          title="Modifier"
+                          title={t('vehicles.modify')}
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -140,7 +142,7 @@ export default function ClientVehiclesPage() {
                         onClick={() => handleDelete(vehicle.id)}
                         disabled={deletingId === vehicle.id}
                         className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
-                        title="Supprimer"
+                        title={t('vehicles.delete')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -149,22 +151,22 @@ export default function ClientVehiclesPage() {
 
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold text-slate-900">
-                      {vehicleName || 'Véhicule'}
+                      {vehicleName || t('vehicles.vehicle')}
                     </h3>
-                    <p className="text-sm text-slate-500">{detailsLine || 'Détails indisponibles'}</p>
+                    <p className="text-sm text-slate-500">{detailsLine || t('vehicles.detailsUnavailable')}</p>
                   </div>
 
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between text-slate-500">
-                      <span>Immatriculation</span>
+                      <span>{t('vehicles.registration')}</span>
                       <span className="font-medium text-slate-700">{vehicle.immatriculation || '—'}</span>
                     </div>
                     <div className="flex items-center justify-between text-slate-500">
-                      <span>Couleur</span>
+                      <span>{t('vehicles.color')}</span>
                       <span className="font-medium text-slate-700">{vehicle.couleur || '—'}</span>
                     </div>
                     <div className="flex items-center justify-between text-slate-500">
-                      <span>Kilométrage</span>
+                      <span>{t('vehicles.mileage')}</span>
                       <span className="font-medium text-slate-700">
                         {mileage ? `${Number(mileage).toLocaleString('fr-FR')} km` : '—'}
                       </span>
@@ -190,7 +192,7 @@ export default function ClientVehiclesPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
                   <Plus className="h-5 w-5" />
                 </div>
-                <span className="text-sm">Ajouter un véhicule</span>
+                <span className="text-sm">{t('vehicles.addVehicle')}</span>
               </div>
             </Link>
           </div>

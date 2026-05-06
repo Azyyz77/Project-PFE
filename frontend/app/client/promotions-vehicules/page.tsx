@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Car, Calendar, Tag, MapPin, Phone, AlertCircle, Sparkles } from 'lucide-react';
 import { getActivePromotions } from '@/lib/api/vehiclePromotions';
 import { VehiclePromotion } from '@/types/promotions';
 
 export default function PromotionsVehiculesPage() {
+  const { t } = useLanguage();
   const [promotions, setPromotions] = useState<VehiclePromotion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function PromotionsVehiculesPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#E30613] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Chargement des promotions...</p>
+          <p className="text-slate-600">{t('promotions.loadingPromotions')}</p>
         </div>
       </div>
     );
@@ -69,10 +71,10 @@ export default function PromotionsVehiculesPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-10 h-10" />
-            <h1 className="text-4xl font-bold">Promotions Véhicules</h1>
+            <h1 className="text-4xl font-bold">{t('promotions.title')}</h1>
           </div>
           <p className="text-white/90 text-lg">
-            Découvrez nos offres exceptionnelles sur une sélection de véhicules neufs
+            {t('promotions.discoverOffers')}
           </p>
         </div>
       </div>
@@ -89,7 +91,7 @@ export default function PromotionsVehiculesPage() {
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               }`}
             >
-              Toutes les marques
+              {t('promotions.allBrands')}
             </button>
             {marques.map(marque => (
               <button
@@ -120,10 +122,10 @@ export default function PromotionsVehiculesPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
             <Car className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">
-              Aucune promotion disponible
+              {t('promotions.noPromotions')}
             </h3>
             <p className="text-slate-500">
-              Revenez bientôt pour découvrir nos nouvelles offres !
+              {t('promotions.comeBackSoon')}
             </p>
           </div>
         )}
@@ -197,7 +199,7 @@ export default function PromotionsVehiculesPage() {
                 <div className="flex items-center gap-2 text-slate-500 text-sm mb-4">
                   <Calendar className="w-4 h-4" />
                   <span>
-                    Jusqu'au {formatDate(promo.date_fin)}
+                    {t('promotions.until')} {formatDate(promo.date_fin)}
                   </span>
                 </div>
 
@@ -207,8 +209,8 @@ export default function PromotionsVehiculesPage() {
                     <Tag className="w-4 h-4 text-amber-600" />
                     <span className={promo.stock_disponible > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                       {promo.stock_disponible > 0
-                        ? `${promo.stock_disponible} véhicule(s) disponible(s)`
-                        : 'Stock épuisé'}
+                        ? `${promo.stock_disponible} ${t('promotions.vehiclesAvailable')}`
+                        : t('promotions.outOfStock')}
                     </span>
                   </div>
                 )}
@@ -245,7 +247,7 @@ export default function PromotionsVehiculesPage() {
 
                 {/* CTA Button */}
                 <button className="w-full mt-4 bg-[#E30613] hover:bg-[#C00510] text-white py-3 rounded-xl font-semibold transition-colors">
-                  Contactez-nous
+                  {t('promotions.contactUs')}
                 </button>
               </div>
             </div>

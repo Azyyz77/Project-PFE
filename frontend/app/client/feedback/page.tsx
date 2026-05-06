@@ -136,15 +136,15 @@ export default function FeedbackPage() {
     <div className="w-full h-full overflow-auto bg-slate-900">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-100 mb-2">Vos Avis</h1>
-          <p className="text-slate-400">Partagez votre expérience avec nos services</p>
+          <h1 className="text-4xl font-bold text-slate-100 mb-2">{t('feedback.title')}</h1>
+          <p className="text-slate-400">{t('feedback.shareExperience')}</p>
         </div>
 
         {appointments.length === 0 ? (
           <div className="text-center py-20 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700">
             <MessageSquare className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg">Aucun rendez-vous terminé</p>
-            <p className="text-slate-500 text-sm mt-2">Vous pourrez laisser un avis après votre premier service</p>
+            <p className="text-slate-400 text-lg">{t('feedback.noCompletedAppointments')}</p>
+            <p className="text-slate-500 text-sm mt-2">{t('feedback.leaveReviewAfterService')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -181,7 +181,7 @@ export default function FeedbackPage() {
                     {appointment.feedback_note && (
                       <div className="flex items-center gap-2 bg-green-900/30 text-green-400 px-3 py-1 rounded-full text-sm">
                         <CheckCircle className="w-4 h-4" />
-                        Avis donné
+                        {t('feedback.reviewGiven')}
                       </div>
                     )}
                   </div>
@@ -192,18 +192,18 @@ export default function FeedbackPage() {
                   // Display existing feedback
                   <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
                     <div className="mb-3">
-                      <p className="text-sm text-slate-400 mb-2">Votre note</p>
+                      <p className="text-sm text-slate-400 mb-2">{t('feedback.yourRating')}</p>
                       {renderStars(appointment.id, appointment.feedback_note, false)}
                     </div>
                     {appointment.feedback_commentaire && (
                       <div>
-                        <p className="text-sm text-slate-400 mb-2">Votre commentaire</p>
+                        <p className="text-sm text-slate-400 mb-2">{t('feedback.yourComment')}</p>
                         <p className="text-slate-300">{appointment.feedback_commentaire}</p>
                       </div>
                     )}
                     {appointment.date_feedback && (
                       <p className="text-xs text-slate-500 mt-3">
-                        Avis donné le {formatDate(appointment.date_feedback)}
+                        {t('feedback.reviewGivenOn')} {formatDate(appointment.date_feedback)}
                       </p>
                     )}
                   </div>
@@ -212,25 +212,25 @@ export default function FeedbackPage() {
                   <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-slate-300 mb-3">
-                        Comment évaluez-vous ce service ?
+                        {t('feedback.howRateService')}
                       </label>
                       {renderStars(appointment.id, null, true)}
                     </div>
 
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Commentaire (optionnel)
+                        {t('feedback.commentOptional')}
                       </label>
                       <textarea
                         value={comments[appointment.id] || ''}
                         onChange={(e) => setComments(prev => ({ ...prev, [appointment.id]: e.target.value }))}
-                        placeholder="Partagez votre expérience..."
+                        placeholder={t('feedback.shareYourExperience')}
                         rows={3}
                         maxLength={500}
                         className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                       />
                       <p className="text-xs text-slate-500 mt-1">
-                        {(comments[appointment.id] || '').length}/500 caractères
+                        {(comments[appointment.id] || '').length}/500 {t('feedback.characters')}
                       </p>
                     </div>
 
@@ -242,12 +242,12 @@ export default function FeedbackPage() {
                       {submitting === appointment.id ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Envoi en cours...
+                          {t('feedback.sending')}
                         </>
                       ) : (
                         <>
                           <Send className="w-5 h-5" />
-                          Envoyer mon avis
+                          {t('feedback.sendReview')}
                         </>
                       )}
                     </button>

@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { updateProfile, changePassword } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
@@ -33,12 +34,12 @@ export default function ProfilePage() {
   );
 }
 
-function getRoleLabel(role: string) {
+function getRoleLabel(role: string, t: (key: string) => string) {
   switch (role) {
-    case 'ADMIN': return 'Administrateur';
-    case 'AGENT': return 'Agent SAV';
-    case 'DIRECTION': return 'Direction';
-    default: return 'Client';
+    case 'ADMIN': return t('profile.administrator');
+    case 'AGENT': return t('profile.agent');
+    case 'DIRECTION': return t('profile.direction');
+    default: return t('profile.client');
   }
 }
 
@@ -61,11 +62,12 @@ function getPasswordStrength(password: string): 'weak' | 'medium' | 'strong' {
 }
 
 function PasswordStrengthIndicator({ password }: { password: string }) {
+  const { t } = useLanguage();
   const strength = getPasswordStrength(password);
   const strengthMap = {
-    weak: { width: '33%', color: 'bg-red-500', label: 'Faible' },
-    medium: { width: '66%', color: 'bg-orange-500', label: 'Moyen' },
-    strong: { width: '100%', color: 'bg-green-500', label: 'Fort' },
+    weak: { width: '33%', color: 'bg-red-500', label: t('profile.weak') },
+    medium: { width: '66%', color: 'bg-orange-500', label: t('profile.medium') },
+    strong: { width: '100%', color: 'bg-green-500', label: t('profile.strong') },
   };
 
   const current = strengthMap[strength];
@@ -74,7 +76,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
     <div className="space-y-2 mt-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-          Force du mot de passe
+          {t('profile.passwordStrength')}
         </span>
         <span className={`text-xs font-semibold ${
           strength === 'strong'
@@ -98,6 +100,7 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
 
 function ProfileContent() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -251,7 +254,7 @@ function ProfileContent() {
                   variant={getRoleBadgeVariant(user.role)} 
                   className="text-sm px-4 py-1.5 font-semibold uppercase tracking-wider"
                 >
-                  {getRoleLabel(user.role)}
+                  {getRoleLabel(user.role, t)}
                 </Badge>
                 <span className="text-white/60 text-sm">•</span>
                 <span className="text-white/80 text-sm font-medium">ID: #{user.id}</span>
@@ -289,8 +292,8 @@ function ProfileContent() {
                   <Lock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl lg:text-2xl font-bold">Sécurité du compte</CardTitle>
-                  <CardDescription className="text-sm lg:text-base">Modifiez votre mot de passe régulièrement</CardDescription>
+                  <CardTitle className="text-xl lg:text-2xl font-bold">{t('profile.accountSecurity')}</CardTitle>
+                  <CardDescription className="text-sm lg:text-base">{t('profile.changePasswordRegularly')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -307,7 +310,7 @@ function ProfileContent() {
               {/* Current Password */}
               <div className="space-y-2">
                 <Label htmlFor="currentPassword" className="text-sm font-medium">
-                  Mot de passe actuel *
+                  {t('profile.currentPassword')} *
                 </Label>
                 <div className="relative">
                   <Input
@@ -350,7 +353,7 @@ function ProfileContent() {
               {/* New Password */}
               <div className="space-y-2">
                 <Label htmlFor="newPassword" className="text-sm font-medium">
-                  Nouveau mot de passe *
+                  {t('profile.newPassword')} *
                 </Label>
                 <div className="relative">
                   <Input
@@ -395,7 +398,7 @@ function ProfileContent() {
               {/* Confirm Password */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirmer le nouveau mot de passe *
+                  {t('profile.confirmNewPassword')} *
                 </Label>
                 <div className="relative">
                   <Input
@@ -443,12 +446,12 @@ function ProfileContent() {
                 {isSavingPassword ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
-                    Modification...
+                    {t('profile.modifying')}
                   </>
                 ) : (
                   <>
                     <Lock className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
-                    Modifier le mot de passe
+                    {t('profile.changePassword')}
                   </>
                 )}
               </Button>
@@ -465,8 +468,8 @@ function ProfileContent() {
                   <User2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl lg:text-2xl font-bold">Modifier les informations</CardTitle>
-                  <CardDescription className="text-sm lg:text-base">Mettez à jour vos informations personnelles</CardDescription>
+                  <CardTitle className="text-xl lg:text-2xl font-bold">{t('profile.modifyInfo')}</CardTitle>
+                  <CardDescription className="text-sm lg:text-base">{t('profile.updatePersonalInfo')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -484,7 +487,7 @@ function ProfileContent() {
                   {/* Prénom */}
                   <div className="space-y-2">
                     <Label htmlFor="prenom" className="text-sm font-medium">
-                      Prénom *
+                      {t('profile.firstName')} *
                     </Label>
                     <Input
                       id="prenom"
@@ -508,7 +511,7 @@ function ProfileContent() {
                   {/* Nom */}
                   <div className="space-y-2">
                     <Label htmlFor="nom" className="text-sm font-medium">
-                      Nom *
+                      {t('profile.lastName')} *
                     </Label>
                     <Input
                       id="nom"
@@ -574,7 +577,7 @@ function ProfileContent() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Non modifiable
+                    {t('profile.notModifiable')}
                   </p>
                 </div>
 
@@ -588,12 +591,12 @@ function ProfileContent() {
                   {isSavingProfile ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
-                      Enregistrement...
+                      {t('profile.saving')}
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
-                      Enregistrer les modifications
+                      {t('profile.saveChanges')}
                     </>
                   )}
                 </Button>

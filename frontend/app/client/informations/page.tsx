@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getActiveSections,
   getContentsBySection,
@@ -35,6 +36,7 @@ const iconMap: Record<string, any> = {
 };
 
 export default function InformationsPage() {
+  const { t } = useLanguage();
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [contents, setContents] = useState<Content[]>([]);
@@ -123,10 +125,10 @@ export default function InformationsPage() {
       <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Informations et Documents
+            {t('informations.title')}
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Tout ce que vous devez savoir sur la garantie, l'assurance et les documents requis
+            {t('informations.everythingYouNeed')}
           </p>
         </div>
       </div>
@@ -137,7 +139,7 @@ export default function InformationsPage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Sections</CardTitle>
+                <CardTitle className="text-lg">{t('informations.sections')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <nav className="space-y-1">
@@ -186,7 +188,7 @@ export default function InformationsPage() {
                         <div>
                           <CardTitle className="text-2xl">{selectedSection.titre}</CardTitle>
                           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            {contents.length} article{contents.length > 1 ? 's' : ''} • {documents.length} document{documents.length > 1 ? 's' : ''}
+                            {contents.length} {t('informations.articles')}{contents.length > 1 ? 's' : ''} • {documents.length} {t('informations.documents')}{documents.length > 1 ? 's' : ''}
                           </p>
                         </div>
                       </div>
@@ -219,7 +221,7 @@ export default function InformationsPage() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Download className="h-5 w-5" />
-                        Documents Téléchargeables
+                        {t('informations.downloadableDocuments')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -247,7 +249,7 @@ export default function InformationsPage() {
                                   {doc.taille_octets && (
                                     <span>{formatFileSize(doc.taille_octets)}</span>
                                   )}
-                                  <span>{doc.nombre_telechargements} téléchargement{doc.nombre_telechargements > 1 ? 's' : ''}</span>
+                                  <span>{doc.nombre_telechargements} {t('informations.downloads')}{doc.nombre_telechargements > 1 ? 's' : ''}</span>
                                 </div>
                               </div>
                             </div>
@@ -256,7 +258,7 @@ export default function InformationsPage() {
                               className="flex-shrink-0 gap-2"
                             >
                               <Download className="h-4 w-4" />
-                              Télécharger
+                              {t('documents.download')}
                             </Button>
                           </div>
                         ))}
@@ -271,7 +273,7 @@ export default function InformationsPage() {
                     <CardContent className="py-12 text-center">
                       <Info className="h-12 w-12 text-slate-400 mx-auto mb-4" />
                       <p className="text-slate-600 dark:text-slate-400">
-                        Aucun contenu disponible pour cette section
+                        {t('informations.noContent')}
                       </p>
                     </CardContent>
                   </Card>
