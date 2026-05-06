@@ -30,6 +30,7 @@ import {
   Receipt,
   LayoutGrid,
   Info,
+  ShoppingBag,
 } from 'lucide-react';
 
 interface NavItem {
@@ -57,26 +58,19 @@ const getNavSections = (): NavSection[] => [
   {
     titleKey: 'SUIVI',
     items: [
-<<<<<<< HEAD
-      { label: 'Mes Rendez-vous', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
-      { label: 'Historique', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
-      { label: 'Catalogue', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
-      { label: 'Promotions Véhicules', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
-      { label: 'Factures', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
-=======
       { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
       { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
+      { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-4 w-4" /> },
       { labelKey: 'nav.clientOrders', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
       { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
       { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
       { labelKey: 'nav.clientDocuments', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
->>>>>>> e0b226b4e1c143551314d49aca0954956d77b152
     ],
   },
   {
     titleKey: 'AUTRES',
     items: [
-      { labelKey: 'nav.clientDocuments', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
+      { labelKey: 'nav.clientInformations', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
       { labelKey: 'nav.clientDocuments', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
       { labelKey: 'nav.clientComplaints', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
       { labelKey: 'nav.clientAssistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },

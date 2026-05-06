@@ -8,6 +8,7 @@ const {
   getRevenueStats,
   getSatisfactionStats,
   getPerformanceStats,
+  getBillingStats,
   exportStats
 } = require('../controllers/directionStatsController');
 
@@ -54,6 +55,14 @@ router.get(
   authMiddleware,
   authorizeRoles('ADMIN', 'DIRECTION'),
   getPerformanceStats
+);
+
+// Statistiques de facturation
+router.get(
+  '/billing',
+  authMiddleware,
+  authorizeRoles('ADMIN', 'DIRECTION'),
+  getBillingStats
 );
 
 // Export des statistiques

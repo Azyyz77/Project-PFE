@@ -516,11 +516,125 @@ const exportStats = async (req, res) => {
   }
 };
 
+/**
+ * Obtenir les statistiques de facturation
+ */
+const getBillingStats = async (req, res) => {
+  try {
+    const { dateDebut, dateFin, agenceId } = req.query;
+    const pool = await getConnection();
+
+    const request = pool.request();
+
+    // Construire les filtres
+    let filters = [];
+    if (dateDebut && dateFin) {
+      request.input('dateDebut', sql.Date, dateDebut);
+      request.input('dateFin', sql.Date, dateFin);
+      filters.push('f.date_emission BETWEEN @dateDebut AND @dateFin');
+    }
+    if (agenceId) {
+      request.input('agenceId', sql.BigInt, agenceId);
+      filters.push('c.agence_id = @agenceId');
+    }
+
+    const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
+
+    // Statistiques globales de facturation
+    const billingResult = await request.query(`
+      SELECT 
+        COUNT(f.id) AS total_factures,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN 1 ELSE 0 END) AS factures_payees,
+        SUM(CASE WHEN f.statut IN ('EMISE', 'ENVOYEE') THEN 1 ELSE 0 END) AS factures_impayees,
+        SUM(CASE WHEN f.statut = 'ANNULEE' THEN 1 ELSE 0 END) AS factures_annulees,
+        SUM(ISNULL(f.montant_ttc, 0)) AS montant_total,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS montant_paye,
+        SUM(CASE WHEN f.statut IN ('EMISE', 'ENVOYEE') THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS montant_impaye,
+        AVG(ISNULL(f.montant_ttc, 0)) AS montant_moyen,
+        CASE 
+          WHEN COUNT(f.id) > 0 
+          THEN CAST(SUM(CASE WHEN f.statut = 'PAYEE' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(f.id) * 100 
+          ELSE 0 
+        END AS taux_paiement
+      FROM Facture f
+      LEFT JOIN CommandeReparation c ON f.commande_id = c.id
+      ${whereClause}
+    `);
+
+    // Facturation par agence
+    const billingByAgencyResult = await pool.request().query(`
+      SELECT 
+        ag.id AS agence_id,
+        ag.nom AS agence_nom,
+        COUNT(f.id) AS total_factures,
+        SUM(ISNULL(f.montant_ttc, 0)) AS montant_total,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS montant_paye,
+        CASE 
+          WHEN COUNT(f.id) > 0 
+          THEN CAST(SUM(CASE WHEN f.statut = 'PAYEE' THEN 1 ELSE 0 END) AS FLOAT) / COUNT(f.id) * 100 
+          ELSE 0 
+        END AS taux_paiement
+      FROM Agence ag
+      LEFT JOIN CommandeReparation c ON c.agence_id = ag.id
+      LEFT JOIN Facture f ON f.commande_id = c.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
+      GROUP BY ag.id, ag.nom
+      HAVING COUNT(f.id) > 0
+      ORDER BY montant_total DESC
+    `);
+
+    // Évolution mensuelle de la facturation
+    const monthlyBillingResult = await pool.request().query(`
+      SELECT 
+        YEAR(f.date_emission) AS annee,
+        MONTH(f.date_emission) AS mois,
+        COUNT(f.id) AS total_factures,
+        SUM(ISNULL(f.montant_ttc, 0)) AS montant_total,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS montant_paye
+      FROM Facture f
+      LEFT JOIN CommandeReparation c ON f.commande_id = c.id
+      ${whereClause}
+      GROUP BY YEAR(f.date_emission), MONTH(f.date_emission)
+      ORDER BY annee DESC, mois DESC
+    `);
+
+    // Modes de paiement
+    const paymentMethodsResult = await pool.request().query(`
+      SELECT 
+        ISNULL(f.mode_paiement, 'Non spécifié') AS mode_paiement,
+        COUNT(f.id) AS count,
+        SUM(ISNULL(f.montant_ttc, 0)) AS montant_total
+      FROM Facture f
+      LEFT JOIN CommandeReparation c ON f.commande_id = c.id
+      ${whereClause}
+        AND f.statut = 'PAYEE'
+      GROUP BY f.mode_paiement
+      ORDER BY montant_total DESC
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        global: billingResult.recordset[0],
+        par_agence: billingByAgencyResult.recordset,
+        evolution_mensuelle: monthlyBillingResult.recordset,
+        modes_paiement: paymentMethodsResult.recordset
+      }
+    });
+  } catch (error) {
+    console.error('Erreur récupération stats facturation:', error);
+    res.status(500).json({
+      error: 'Erreur lors de la récupération des statistiques de facturation',
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   getAgencyStats,
   getGlobalStats,
   getRevenueStats,
   getSatisfactionStats,
   getPerformanceStats,
+  getBillingStats,
   exportStats
 };

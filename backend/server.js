@@ -52,6 +52,8 @@ const workerRoutes = require('./routes/workerRoutes');
 const vehiclePromotionRoutes = require('./routes/vehiclePromotionRoutes');
 const appointmentHistoryRoutes = require('./routes/appointmentHistoryRoutes');
 const informationRoutes = require('./routes/informationRoutes');
+const repairOrderRoutes = require('./routes/repairOrderRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 const { auditMiddleware } = require('./middleware/auditMiddleware');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
@@ -160,6 +162,8 @@ app.use('/api/workers', workerRoutes);
 app.use('/api/vehicle-promotions', vehiclePromotionRoutes);
 app.use('/api/appointments', appointmentHistoryRoutes);
 app.use('/api/information', informationRoutes);
+app.use('/api/repair-orders', repairOrderRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Route d'accueil
 app.get('/', (req, res) => {

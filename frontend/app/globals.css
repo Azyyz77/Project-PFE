@@ -550,3 +550,17 @@ button, a, input, textarea, select {
     animation: none;
   }
 }
+
+/* Shimmer animation for dashboard */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
