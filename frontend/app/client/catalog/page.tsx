@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getInterventionTypes,
   getSubTypes,
@@ -33,6 +34,7 @@ import { toast } from 'sonner';
 
 function CatalogContent() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
   
   const [types, setTypes] = useState<InterventionType[]>([]);
   const [subTypes, setSubTypes] = useState<SubType[]>([]);
@@ -115,16 +117,16 @@ function CatalogContent() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Wrench className="w-8 h-8" />
-                <h1 className="text-3xl sm:text-4xl font-bold">Catalogue de Services</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold">{t('catalog.title')}</h1>
               </div>
-              <p className="text-sm text-blue-100">Découvrez nos services et packages d'entretien</p>
+              <p className="text-sm text-blue-100">{t('catalog.discoverServices')}</p>
             </div>
             
             {/* Search */}
             <div className="relative">
               <input
                 type="text"
-                placeholder="Rechercher..."
+                placeholder={t('catalog.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 w-full sm:w-80 backdrop-blur-sm"
@@ -139,25 +141,25 @@ function CatalogContent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardContent className="p-4">
-                <p className="text-slate-600 dark:text-slate-400 text-sm">Types de service</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">{t('catalog.serviceTypes')}</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total_types}</p>
               </CardContent>
             </Card>
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardContent className="p-4">
-                <p className="text-slate-600 dark:text-slate-400 text-sm">Services disponibles</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">{t('catalog.servicesAvailable')}</p>
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total_sous_types}</p>
               </CardContent>
             </Card>
             <Card className="bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30">
               <CardContent className="p-4">
-                <p className="text-orange-600 dark:text-orange-400 text-sm">Packages disponibles</p>
+                <p className="text-orange-600 dark:text-orange-400 text-sm">{t('catalog.packagesAvailable')}</p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-500">{stats.total_packages_actifs}</p>
               </CardContent>
             </Card>
             <Card className="bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30">
               <CardContent className="p-4">
-                <p className="text-blue-600 dark:text-blue-400 text-sm">Durée moyenne</p>
+                <p className="text-blue-600 dark:text-blue-400 text-sm">{t('catalog.averageDuration')}</p>
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">{Math.round(stats.duree_moyenne)} min</p>
               </CardContent>
             </Card>
@@ -167,17 +169,17 @@ function CatalogContent() {
         {/* Tabs */}
         <Tabs defaultValue="packages" className="space-y-4">
           <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <TabsTrigger value="packages">Packages</TabsTrigger>
-            <TabsTrigger value="types">Types de service</TabsTrigger>
-            <TabsTrigger value="services">Tous les services</TabsTrigger>
+            <TabsTrigger value="packages">{t('catalog.packages')}</TabsTrigger>
+            <TabsTrigger value="types">{t('catalog.serviceTypes')}</TabsTrigger>
+            <TabsTrigger value="services">{t('catalog.allServices')}</TabsTrigger>
           </TabsList>
 
           {/* Packages Tab */}
           <TabsContent value="packages">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">Packages d'entretien</CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">Économisez avec nos offres groupées</p>
+                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.maintenancePackages')}</CardTitle>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{t('catalog.saveWithBundles')}</p>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -187,7 +189,7 @@ function CatalogContent() {
                 ) : filteredPackages.length === 0 ? (
                   <div className="text-center py-12">
                     <PackageIcon className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">Aucun package trouvé</p>
+                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noPackagesFound')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,7 +214,7 @@ function CatalogContent() {
                                 <span className="text-slate-600 dark:text-slate-400 text-sm">TND</span>
                               </div>
                               <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                                {pkg.nombre_interventions} intervention(s) incluse(s)
+                                {pkg.nombre_interventions} {t('catalog.interventionsIncluded')}
                               </p>
                             </div>
                             <Button
@@ -220,7 +222,7 @@ function CatalogContent() {
                               size="sm"
                               className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
                             >
-                              Voir détails
+                              {t('catalog.viewDetails')}
                             </Button>
                           </div>
                         </CardContent>
@@ -236,7 +238,7 @@ function CatalogContent() {
           <TabsContent value="types">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">Types de service</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.serviceTypes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -246,7 +248,7 @@ function CatalogContent() {
                 ) : filteredTypes.length === 0 ? (
                   <div className="text-center py-12">
                     <Wrench className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">Aucun type trouvé</p>
+                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noTypesFound')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -282,7 +284,7 @@ function CatalogContent() {
           <TabsContent value="services">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">Tous les services</CardTitle>
+                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.allServices')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -292,7 +294,7 @@ function CatalogContent() {
                 ) : filteredSubTypes.length === 0 ? (
                   <div className="text-center py-12">
                     <Wrench className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">Aucun service trouvé</p>
+                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noServicesFound')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -324,7 +326,7 @@ function CatalogContent() {
         <Dialog open={packageModalOpen} onOpenChange={setPackageModalOpen}>
           <DialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-w-2xl">
             <DialogHeader>
-              <DialogTitle className="text-slate-900 dark:text-white">Détails du Package</DialogTitle>
+              <DialogTitle className="text-slate-900 dark:text-white">{t('catalog.packageDetails')}</DialogTitle>
             </DialogHeader>
             
             {selectedPackage && (
@@ -346,7 +348,7 @@ function CatalogContent() {
                 <div>
                   <h4 className="text-slate-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    Services inclus:
+                    {t('catalog.servicesIncluded')}:
                   </h4>
                   <div className="space-y-2">
                     {selectedPackage.interventions.map((intervention) => (
@@ -369,7 +371,7 @@ function CatalogContent() {
 
                 <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
                   <p className="text-blue-800 dark:text-blue-300 text-sm">
-                    💡 Pour réserver ce package, rendez-vous dans la section "Rendez-vous" et sélectionnez les services inclus.
+                    💡 {t('catalog.toBookPackage')}
                   </p>
                 </div>
               </div>

@@ -25,6 +25,18 @@ export default function LanguageSelector() {
       </button>
 
       <button
+        onClick={() => setLanguage('en')}
+        className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+          language === 'en'
+            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+            : 'text-slate-600 hover:bg-slate-100 dark:text-white/70 dark:hover:bg-white/10'
+        }`}
+        title={t('language.english')}
+      >
+        {t('language.enShort')}
+      </button>
+
+      <button
         onClick={() => setLanguage('ar')}
         className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
           language === 'ar'

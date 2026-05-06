@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PhoneVerificationRequired } from '@/components/PhoneVerificationRequired';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import {
   createAppointment,
@@ -102,6 +103,7 @@ export default function RendezVousPage() {
 
 function RendezVousContent() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
@@ -319,7 +321,7 @@ function RendezVousContent() {
   const goNextStep = () => {
     if (step === 1) {
       if (!selectedVehicleId || !selectedServiceSubtypeId || !selectedAgencyId) {
-        setGlobalError('Veuillez sélectionner un véhicule, une agence et un type de service.');
+        setGlobalError(t('appointments.errorSelectAll'));
         return;
       }
       setGlobalError('');
@@ -329,7 +331,7 @@ function RendezVousContent() {
 
     if (step === 2) {
       if (!selectedDate || !selectedHour) {
-        setGlobalError('Veuillez choisir une date et un créneau horaire.');
+        setGlobalError(t('appointments.errorSelectDateTime'));
         return;
       }
       if (isDateInPast(selectedDate)) {
@@ -491,11 +493,11 @@ function RendezVousContent() {
   };
 
   const statusInfo = (status: string) => {
-    if (status === 'EN_COURS') return { label: 'En cours', badge: 'bg-amber-100 text-amber-700' };
-    if (status === 'TERMINE') return { label: 'Terminé', badge: 'bg-emerald-100 text-emerald-700' };
-    if (status === 'ANNULE') return { label: 'Annulé', badge: 'bg-red-100 text-red-700' };
+    if (status === 'EN_COURS') return { label: t('appointments.inProgress'), badge: 'bg-amber-100 text-amber-700' };
+    if (status === 'TERMINE') return { label: t('appointments.completed'), badge: 'bg-emerald-100 text-emerald-700' };
+    if (status === 'ANNULE') return { label: t('dashboard.refused'), badge: 'bg-red-100 text-red-700' };
     if (status === 'CONFIRME' || status === 'PLANIFIE') {
-      return { label: 'Planifié', badge: 'bg-blue-100 text-blue-700' };
+      return { label: t('appointments.planned'), badge: 'bg-blue-100 text-blue-700' };
     }
     return { label: status, badge: 'bg-slate-100 text-slate-700' };
   };
@@ -553,13 +555,13 @@ function RendezVousContent() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-              Rendez-vous
+              {t('appointments.title')}
             </h1>
             <Badge variant="secondary" className="font-normal mt-1">
-              {appointments.length} total
+              {appointments.length} {t('appointments.total')}
             </Badge>
           </div>
-          <p className="text-muted-foreground">Gérez et réservez vos rendez-vous de service.</p>
+          <p className="text-muted-foreground">{t('appointments.manageAppointments')}</p>
         </div>
 
         <Button
@@ -568,7 +570,7 @@ function RendezVousContent() {
           size="lg"
           className="w-full md:w-auto"
         >
-          + Réserver un rendez-vous
+          + {t('appointments.bookAppointment')}
         </Button>
       </div>
 
@@ -578,7 +580,7 @@ function RendezVousContent() {
           <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
             <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
             <AlertDescription className="text-amber-800 dark:text-amber-200">
-              Votre véhicule est en attente de validation SAV. Vous pourrez réserver un rendez-vous dès qu'un agent valide votre véhicule.
+              {t('appointments.vehicleValidationRequired')}
             </AlertDescription>
           </Alert>
         )}
@@ -690,11 +692,11 @@ function RendezVousContent() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-red-500" />
-                    <span className="text-xs text-slate-600 dark:text-slate-400">Jour avec rendez-vous</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.dayWithAppointment')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="size-2 rounded-full ring-2 ring-blue-700 dark:ring-blue-400" />
-                    <span className="text-xs text-slate-600 dark:text-slate-400">Aujourd'hui</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.today')}</span>
                   </div>
                 </div>
               </CardContent>
@@ -703,16 +705,16 @@ function RendezVousContent() {
             {/* Appointments List Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">Tous les rendez-vous</CardTitle>
+                <CardTitle className="text-xl">{t('appointments.allAppointments')}</CardTitle>
               </CardHeader>
 
               <CardContent>
                 <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as AppointmentFilter)}>
                   <TabsList className="grid w-full grid-cols-4 mb-6">
-                    <TabsTrigger value="all">Tous</TabsTrigger>
-                    <TabsTrigger value="scheduled">Planifié</TabsTrigger>
-                    <TabsTrigger value="in_progress">En cours</TabsTrigger>
-                    <TabsTrigger value="completed">Terminé</TabsTrigger>
+                    <TabsTrigger value="all">{t('appointments.all')}</TabsTrigger>
+                    <TabsTrigger value="scheduled">{t('appointments.planned')}</TabsTrigger>
+                    <TabsTrigger value="in_progress">{t('appointments.inProgress')}</TabsTrigger>
+                    <TabsTrigger value="completed">{t('appointments.completed')}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value={activeFilter} className="space-y-3">
@@ -720,7 +722,7 @@ function RendezVousContent() {
                       <div className="rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 p-8 text-center">
                         <Calendar className="size-12 mx-auto text-slate-400 dark:text-slate-500 mb-3" />
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                          Aucun rendez-vous trouvé pour ce filtre.
+                          {t('appointments.noAppointmentsFound')}
                         </p>
                         <Button
                           variant="outline"
@@ -729,7 +731,7 @@ function RendezVousContent() {
                           onClick={() => openModal()}
                           disabled={validatedVehicles.length === 0}
                         >
-                          Réserver maintenant
+                          {t('appointments.bookNow')}
                         </Button>
                       </div>
                     ) : (
@@ -799,8 +801,8 @@ function RendezVousContent() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Réserver un rendez-vous</DialogTitle>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">Étape {step} sur 3</p>
+            <DialogTitle>{t('appointments.bookAppointment')}</DialogTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{t('appointments.step')} {step} {t('appointments.of')} 3</p>
           </DialogHeader>
 
           {/* Step Indicator */}
@@ -838,16 +840,16 @@ function RendezVousContent() {
           {/* Step 1: Vehicle & Service */}
           {step === 1 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Sélectionnez un véhicule et un service</h3>
+              <h3 className="text-lg font-semibold">{t('appointments.selectVehicleAndService')}</h3>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Agence *</label>
+                <label className="text-sm font-semibold">{t('appointments.agency')} *</label>
                 <select
                   value={selectedAgencyId}
                   onChange={(e) => setSelectedAgencyId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
                 >
-                  <option value="">Sélectionner une agence</option>
+                  <option value="">{t('appointments.selectAgency')}</option>
                   {agencies.map((agency) => (
                     <option key={agency.id} value={agency.id}>
                       {agency.nom} - {agency.ville}
@@ -857,13 +859,13 @@ function RendezVousContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Véhicule *</label>
+                <label className="text-sm font-semibold">{t('appointments.vehicle')} *</label>
                 <select
                   value={selectedVehicleId}
                   onChange={(e) => setSelectedVehicleId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
                 >
-                  <option value="">Sélectionnez votre véhicule</option>
+                  <option value="">{t('appointments.selectVehicle')}</option>
                   {validatedVehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
                       {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
@@ -891,13 +893,13 @@ function RendezVousContent() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Type de service *</label>
+                <label className="text-sm font-semibold">{t('appointments.serviceType')} *</label>
                 <select
                   value={selectedServiceSubtypeId}
                   onChange={(e) => setSelectedServiceSubtypeId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
                 >
-                  <option value="">Sélectionner un type de service</option>
+                  <option value="">{t('appointments.selectServiceType')}</option>
                   {serviceOptions.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.label}
@@ -910,10 +912,10 @@ function RendezVousContent() {
               {packages.length > 0 && (
                 <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold">Packages disponibles (Optionnel)</label>
+                    <label className="text-sm font-semibold">{t('appointments.packagesAvailable')}</label>
                     {selectedPackageIds.length > 0 && (
                       <Badge variant="secondary" className="text-xs">
-                        {selectedPackageIds.length} sélectionné(s)
+                        {selectedPackageIds.length} {t('appointments.packagesSelected')}
                       </Badge>
                     )}
                   </div>
@@ -968,9 +970,9 @@ function RendezVousContent() {
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs text-slate-600 dark:text-slate-400">Prix estimatif total</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.estimatedTotalPrice')}</p>
                             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                              {selectedPackageIds.length} package(s) sélectionné(s)
+                              {selectedPackageIds.length} {t('appointments.packagesSelectedCount')}
                             </p>
                           </div>
                           <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
@@ -988,10 +990,10 @@ function RendezVousContent() {
           {/* Step 2: Date & Time */}
           {step === 2 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Sélectionnez une date et une heure</h3>
+              <h3 className="text-lg font-semibold">{t('appointments.selectDateAndTime')}</h3>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Date *</label>
+                <label className="text-sm font-semibold">{t('appointments.date')} *</label>
                 <Input
                   type="date"
                   value={selectedDate}
@@ -1003,7 +1005,7 @@ function RendezVousContent() {
 
               {isSlotsLoading ? (
                 <div className="space-y-2">
-                  <p className="text-sm font-semibold">Créneau horaire *</p>
+                  <p className="text-sm font-semibold">{t('appointments.timeSlot')} *</p>
                   <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="h-9 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
@@ -1012,7 +1014,7 @@ function RendezVousContent() {
                 </div>
               ) : slots.length > 0 ? (
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold">Créneau horaire *</label>
+                  <label className="text-sm font-semibold">{t('appointments.timeSlot')} *</label>
                   <div className="grid grid-cols-4 gap-3">
                     {slots.map((slot) => (
                       <div key={slot.hour} className="flex flex-col">
@@ -1023,8 +1025,8 @@ function RendezVousContent() {
                           disabled={slot.is_full}
                           title={
                             slot.is_full
-                              ? `Créneau complet: ${slot.reserved}/${slot.capacity} réservations`
-                              : `${slot.available} place(s) restante(s) sur ${slot.capacity}`
+                              ? `${t('appointments.slotFull')}: ${slot.reserved}/${slot.capacity} ${t('appointments.reservations')}`
+                              : `${slot.available} ${t('appointments.placesRemaining')} ${slot.capacity}`
                           }
                           className={
                             selectedHour === slot.label
@@ -1039,37 +1041,37 @@ function RendezVousContent() {
                         </Button>
                         <span className="text-[10px] text-center mt-1 text-slate-600 dark:text-slate-400">
                           {slot.is_full 
-                            ? 'Complet' 
-                            : `${slot.available}/${slot.capacity} disponible`
+                            ? t('appointments.full')
+                            : `${slot.available}/${slot.capacity} ${t('appointments.available')}`
                           }
                         </span>
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {slots.some((s) => !s.is_full) ? 'Sélectionnez une heure disponible' : 'Aucun créneau disponible'}
+                    {slots.some((s) => !s.is_full) ? t('appointments.selectAvailableSlot') : t('appointments.noSlotsAvailable')}
                   </p>
                 </div>
               ) : (
                 <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
                   <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
                   <AlertDescription className="text-amber-800 dark:text-amber-200">
-                    Aucun créneau disponible pour cette date et agence.
+                    {t('appointments.noSlotsForDate')}
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">Notes supplémentaires (Optionnel)</label>
+                <label className="text-sm font-semibold">{t('appointments.additionalNotes')}</label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Toute demande spéciale ou commentaire..."
+                  placeholder={t('appointments.specialRequest')}
                   className="min-h-24"
                   maxLength={500}
                 />
                 <p className="text-xs text-slate-500">
-                  {notes.length}/500 caractères
+                  {notes.length}/500 {t('appointments.characters')}
                 </p>
               </div>
             </div>
@@ -1078,13 +1080,13 @@ function RendezVousContent() {
           {/* Step 3: Confirmation */}
           {step === 3 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Vérifier et confirmer</h3>
+              <h3 className="text-lg font-semibold">{t('appointments.verifyAndConfirm')}</h3>
 
               {isBookingWith24h && (
                 <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
                   <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
                   <AlertDescription className="text-amber-800 dark:text-amber-200">
-                    Attention: Ce rendez-vous est prévu dans moins de 24h.
+                    {t('appointments.within24h')}
                   </AlertDescription>
                 </Alert>
               )}
@@ -1093,7 +1095,7 @@ function RendezVousContent() {
                 <CardContent className="p-4 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Véhicule</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.vehicle')}</p>
                       <p className="font-semibold text-sm">
                         {selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}
                       </p>
@@ -1102,21 +1104,21 @@ function RendezVousContent() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Agence</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.agency')}</p>
                       <p className="font-semibold text-sm">{selectedAgency?.nom}</p>
                       <p className="text-xs text-slate-500">{selectedAgency?.ville}</p>
                     </div>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Service</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.service')}</p>
                     <p className="font-semibold text-sm">{selectedService?.label}</p>
                   </div>
                   {selectedPackageIds.length > 0 && (
                     <>
                       <Separator />
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">Packages sélectionnés</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">{t('appointments.selectedPackages')}</p>
                         <div className="space-y-1">
                           {selectedPackageIds.map(packageId => {
                             const pkg = packages.find(p => p.id === packageId);
@@ -1130,7 +1132,7 @@ function RendezVousContent() {
                           })}
                         </div>
                         <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                          <span className="font-semibold text-sm">Prix total estimatif</span>
+                          <span className="font-semibold text-sm">{t('appointments.estimatedPrice')}</span>
                           <span className="font-bold text-lg text-blue-700 dark:text-blue-400">
                             {totalPrice.toFixed(3)} TND
                           </span>
@@ -1141,11 +1143,11 @@ function RendezVousContent() {
                   <Separator />
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Date</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.date')}</p>
                       <p className="font-semibold text-sm">{selectedDate}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">Heure</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.time')}</p>
                       <p className="font-semibold text-sm">{selectedHour}</p>
                     </div>
                   </div>
@@ -1153,7 +1155,7 @@ function RendezVousContent() {
                     <>
                       <Separator />
                       <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">Remarques</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.remarks')}</p>
                         <p className="text-sm mt-1">{notes}</p>
                       </div>
                     </>
@@ -1171,7 +1173,7 @@ function RendezVousContent() {
                 onClick={goBackStep}
                 disabled={isSubmitting}
               >
-                Retour
+                {t('appointments.back')}
               </Button>
             )}
             {step < 3 && (
@@ -1180,7 +1182,7 @@ function RendezVousContent() {
                 disabled={isSubmitting}
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
-                Suivant
+                {t('appointments.next')}
               </Button>
             )}
             {step === 3 && (
@@ -1189,7 +1191,7 @@ function RendezVousContent() {
                 disabled={isSubmitting}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                {isSubmitting ? 'Traitement en cours...' : 'Confirmer le rendez-vous'}
+                {isSubmitting ? t('appointments.processing') : t('appointments.confirmAppointment')}
                 {!isSubmitting && <CheckCircle className="size-4 ml-2" />}
               </Button>
             )}
@@ -1201,7 +1203,7 @@ function RendezVousContent() {
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Détails du rendez-vous</DialogTitle>
+            <DialogTitle>{t('appointments.detailsTitle')}</DialogTitle>
           </DialogHeader>
 
           {globalError && (
@@ -1224,7 +1226,7 @@ function RendezVousContent() {
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-slate-50 dark:bg-slate-900/30">
                   <CardContent className="p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Véhicule</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.vehicle')}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Car className="size-4 text-slate-600 dark:text-slate-400" />
                       <div>
@@ -1241,7 +1243,7 @@ function RendezVousContent() {
 
                 <Card className="bg-slate-50 dark:bg-slate-900/30">
                   <CardContent className="p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Agence</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.agency')}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <MapPin className="size-4 text-slate-600 dark:text-slate-400" />
                       <div>
@@ -1260,7 +1262,7 @@ function RendezVousContent() {
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-slate-50 dark:bg-slate-900/30">
                   <CardContent className="p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Date et Heure</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.dateAndTime')}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Clock className="size-4 text-slate-600 dark:text-slate-400" />
                       <p className="font-semibold text-sm">
@@ -1272,11 +1274,11 @@ function RendezVousContent() {
 
                 <Card className="bg-slate-50 dark:bg-slate-900/30">
                   <CardContent className="p-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400">Services</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.services')}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
                       <p className="font-semibold text-sm">
-                        {appointmentInterventions.length} service(s)
+                        {appointmentInterventions.length} {t('appointments.servicesCount')}
                       </p>
                     </div>
                   </CardContent>
@@ -1285,7 +1287,7 @@ function RendezVousContent() {
 
               {/* Services List */}
               <div>
-                <p className="text-sm font-semibold mb-2">Détails des services</p>
+                <p className="text-sm font-semibold mb-2">{t('appointments.serviceDetails')}</p>
                 <div className="space-y-2">
                   {appointmentInterventions.length > 0 ? (
                     appointmentInterventions.map((intervention) => (
@@ -1299,7 +1301,7 @@ function RendezVousContent() {
                       </Card>
                     ))
                   ) : (
-                    <p className="text-sm text-slate-500">Aucun service spécifié</p>
+                    <p className="text-sm text-slate-500">{t('appointments.noServiceSpecified')}</p>
                   )}
                 </div>
               </div>
@@ -1307,7 +1309,7 @@ function RendezVousContent() {
               {/* Notes */}
               {selectedAppointmentDetail.description && (
                 <div className="bg-slate-50 dark:bg-slate-900/30 rounded-lg p-3">
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Remarques</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('appointments.notes')}</p>
                   <p className="text-sm">{selectedAppointmentDetail.description}</p>
                 </div>
               )}
@@ -1326,11 +1328,11 @@ function RendezVousContent() {
                   <AlertTriangle className="size-4" />
                   <AlertDescription>
                     <div className="space-y-3">
-                      <p className="font-semibold">Annuler ce rendez-vous ?</p>
+                      <p className="font-semibold">{t('appointments.cancelAppointment')}</p>
                       <Textarea
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
-                        placeholder="Pourquoi annulez-vous ce rendez-vous ? (optionnel)"
+                        placeholder={t('appointments.cancelReason')}
                         className="min-h-20 dark:bg-slate-900 dark:border-slate-700"
                         maxLength={300}
                       />
@@ -1348,7 +1350,7 @@ function RendezVousContent() {
               onClick={closeDetailModal}
               disabled={isCancelling}
             >
-              Fermer
+              {t('appointments.close')}
             </Button>
             {selectedAppointmentDetail && selectedAppointmentDetail.statut === 'TERMINE' && (
               <AppointmentFeedback
@@ -1365,7 +1367,7 @@ function RendezVousContent() {
                 onClick={submitCancelAppointment}
                 disabled={isCancelling}
               >
-                {isCancelling ? 'Annulation en cours...' : 'Annuler le rendez-vous'}
+                {isCancelling ? t('appointments.cancelling') : t('appointments.cancelButton')}
                 {!isCancelling && <Trash2 className="size-4 ml-2" />}
               </Button>
             )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { documentsApi } from '@/lib/api/documents';
 import { FileText, Download, Eye } from 'lucide-react';
 
@@ -16,6 +17,7 @@ interface Document {
 }
 
 export default function ClientDocumentsPage() {
+  const { t } = useLanguage();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -56,8 +58,8 @@ export default function ClientDocumentsPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-100 mb-2">Mes Documents</h1>
-        <p className="text-slate-400">Accédez à tous vos documents importants</p>
+        <h1 className="text-3xl font-bold text-slate-100 mb-2">{t('documents.title')}</h1>
+        <p className="text-slate-400">{t('documents.accessImportantDocuments')}</p>
       </div>
 
       {/* Filtres par catégorie */}
@@ -72,17 +74,17 @@ export default function ClientDocumentsPage() {
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            {cat === 'all' ? 'Tous' : cat}
+            {cat === 'all' ? t('documents.all') : cat}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-slate-300">Chargement...</div>
+        <div className="text-center py-12 text-slate-300">{t('documents.loading')}</div>
       ) : filteredDocuments.length === 0 ? (
         <div className="bg-slate-900 rounded-lg border border-slate-800 p-12 text-center">
           <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">Aucun document disponible</p>
+          <p className="text-slate-400">{t('documents.noDocuments')}</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -105,8 +107,8 @@ export default function ClientDocumentsPage() {
               )}
               
               <div className="text-xs text-slate-500 mb-4">
-                <div>Ajouté le: {new Date(doc.date_creation).toLocaleDateString()}</div>
-                {doc.taille_mo && <div>Taille: {doc.taille_mo.toFixed(2)} Mo</div>}
+                <div>{t('documents.addedOn')}: {new Date(doc.date_creation).toLocaleDateString()}</div>
+                {doc.taille_mo && <div>{t('documents.size')}: {doc.taille_mo.toFixed(2)} Mo</div>}
               </div>
               
               <div className="flex gap-2">
@@ -117,7 +119,7 @@ export default function ClientDocumentsPage() {
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm"
                 >
                   <Eye className="w-4 h-4" />
-                  Voir
+                  {t('documents.view')}
                 </a>
                 <a
                   href={doc.url}
@@ -125,7 +127,7 @@ export default function ClientDocumentsPage() {
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 text-sm"
                 >
                   <Download className="w-4 h-4" />
-                  Télécharger
+                  {t('documents.download')}
                 </a>
               </div>
             </div>

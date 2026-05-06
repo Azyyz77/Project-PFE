@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,7 @@ type PlateType = 'TUNIS' | 'NT';
 
 export default function NewVehiclePage() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
 
   // Version catalog
@@ -125,7 +127,7 @@ export default function NewVehiclePage() {
       setVersionCatalog(data);
     } catch (err: any) {
       console.error('Error loading catalog:', err);
-      toast.error('Erreur', { description: 'Impossible de charger le catalogue de véhicules' });
+      toast.error(t('common.error'), { description: t('common.error') });
     } finally {
       setIsLoadingCatalog(false);
     }
@@ -141,7 +143,7 @@ export default function NewVehiclePage() {
       setColors(data.filter(c => c.actif));
     } catch (err: any) {
       console.error('Error loading colors:', err);
-      toast.error('Erreur', { description: 'Impossible de charger les couleurs' });
+      toast.error(t('common.error'), { description: t('common.error') });
     } finally {
       setIsLoadingColors(false);
     }
@@ -176,13 +178,13 @@ export default function NewVehiclePage() {
 
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image valide');
+      toast.error(t('common.error'));
       return;
     }
 
     // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('L\'image ne doit pas dépasser 5MB');
+      toast.error(t('common.error'));
       return;
     }
 
@@ -224,50 +226,50 @@ export default function NewVehiclePage() {
 
     const immatriculation = buildImmatriculation();
     if (!immatriculation) {
-      newErrors.immatriculation = 'L\'immatriculation est obligatoire';
+      newErrors.immatriculation = t('common.error');
     } else if (plateType === 'TUNIS') {
       const { part1, part2 } = tunisPlate;
       const num1 = parseInt(part1) || 0;
       
       if (!part1 || num1 < 1 || num1 > 260) {
-        newErrors.immatriculation = 'Le premier chiffre doit être entre 1 et 260';
+        newErrors.immatriculation = t('common.error');
       } else if (!part2 || part2.length < 3 || part2.length > 4) {
-        newErrors.immatriculation = 'Le deuxième chiffre doit contenir 3 ou 4 chiffres';
+        newErrors.immatriculation = t('common.error');
       }
     } else if (plateType === 'NT') {
       if (!ntPlate || ntPlate.length < 4 || ntPlate.length > 5) {
-        newErrors.immatriculation = 'Le numéro NT doit contenir 4 ou 5 chiffres';
+        newErrors.immatriculation = t('common.error');
       }
     }
 
     if (!form.numero_chassis.trim()) {
-      newErrors.numero_chassis = 'Le numéro de châssis est obligatoire';
+      newErrors.numero_chassis = t('common.error');
     }
     if (!form.marque) {
-      newErrors.marque = 'La marque est obligatoire';
+      newErrors.marque = t('common.error');
     }
     if (!form.modele) {
-      newErrors.modele = 'Le modèle est obligatoire';
+      newErrors.modele = t('common.error');
     }
     if (!form.version_id) {
-      newErrors.version_id = 'La version est obligatoire';
+      newErrors.version_id = t('common.error');
     }
     if (!form.annee) {
-      newErrors.annee = 'L\'année est obligatoire';
+      newErrors.annee = t('common.error');
     } else {
       const year = parseInt(form.annee);
       const currentYear = new Date().getFullYear();
       if (year < 1900 || year > currentYear + 1) {
-        newErrors.annee = `L'année doit être entre 1900 et ${currentYear + 1}`;
+        newErrors.annee = t('common.error');
       }
     }
 
     if (!form.couleur) {
-      newErrors.couleur = 'La couleur est obligatoire';
+      newErrors.couleur = t('common.error');
     }
 
     if (!imageCarteGrise) {
-      newErrors.image_carte_grise = 'La photo de la carte grise est obligatoire';
+      newErrors.image_carte_grise = t('common.error');
     }
 
     return newErrors;
@@ -285,7 +287,7 @@ export default function NewVehiclePage() {
     }
 
     if (!user || !token) {
-      setApiError('Vous devez être connecté pour ajouter un véhicule');
+      setApiError(t('common.error'));
       return;
     }
 
@@ -319,21 +321,21 @@ export default function NewVehiclePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'ajout du véhicule');
+        throw new Error(data.error || t('common.error'));
       }
 
       setSuccess(true);
-      toast.success('Véhicule ajouté avec succès!', {
-        description: 'Votre véhicule est en attente de validation par un agent SAV.',
+      toast.success(t('vehicles.vehicleAdded'), {
+        description: t('vehicles.vehicleAddedSuccess'),
       });
 
       setTimeout(() => {
         router.push('/client/vehicles');
       }, 2000);
     } catch (err: any) {
-      const msg = err.message || 'Erreur lors de l\'ajout du véhicule';
+      const msg = err.message || t('common.error');
       setApiError(msg);
-      toast.error('Erreur', { description: msg });
+      toast.error(t('common.error'), { description: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -348,12 +350,12 @@ export default function NewVehiclePage() {
               <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Véhicule ajouté!</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('vehicles.vehicleAdded')}</h2>
               <p className="text-slate-600 dark:text-slate-400">
-                Votre véhicule a été enregistré avec succès. Il sera validé par un agent SAV sous peu.
+                {t('vehicles.vehicleAddedSuccess')}
               </p>
               <Button onClick={() => router.push('/client/vehicles')} className="w-full">
-                Voir mes véhicules
+                {t('vehicles.viewMyVehicles')}
               </Button>
             </div>
           </CardContent>
@@ -373,8 +375,8 @@ export default function NewVehiclePage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Ajouter un véhicule</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">Enregistrez votre véhicule pour le suivi</p>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('vehicles.addNewVehicle')}</h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-1">{t('vehicles.fillRequired')}</p>
           </div>
         </div>
 
@@ -386,8 +388,8 @@ export default function NewVehiclePage() {
                 <Car className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <CardTitle>Informations du véhicule</CardTitle>
-                <CardDescription>Remplissez tous les champs obligatoires (*)</CardDescription>
+                <CardTitle>{t('vehicles.vehicleInfo')}</CardTitle>
+                <CardDescription>{t('vehicles.fillRequired')}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -403,7 +405,7 @@ export default function NewVehiclePage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Plate Type Selection */}
               <div className="space-y-3">
-                <Label>Type d'immatriculation *</Label>
+                <Label>{t('vehicles.plateType')} *</Label>
                 <div className="flex gap-4">
                   <button
                     type="button"
@@ -414,7 +416,7 @@ export default function NewVehiclePage() {
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                     }`}
                   >
-                    <div className="font-semibold">Format Tunis</div>
+                    <div className="font-semibold">{t('vehicles.tunisFormat')}</div>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">123 تونس 4567</div>
                   </button>
                   <button
@@ -426,7 +428,7 @@ export default function NewVehiclePage() {
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                     }`}
                   >
-                    <div className="font-semibold">Format NT</div>
+                    <div className="font-semibold">{t('vehicles.ntFormat')}</div>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">12345 ن.ت</div>
                   </button>
                 </div>
@@ -434,7 +436,7 @@ export default function NewVehiclePage() {
 
               {/* Immatriculation Input */}
               <div className="space-y-2">
-                <Label htmlFor="immatriculation">Immatriculation *</Label>
+                <Label htmlFor="immatriculation">{t('vehicles.registration')} *</Label>
                 {plateType === 'TUNIS' ? (
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
@@ -447,7 +449,7 @@ export default function NewVehiclePage() {
                           
                           // Check if exceeds limit
                           if (numValue > 260) {
-                            setPart1Error('Le numéro maximum actuel en Tunisie est 260');
+                            setPart1Error(t('vehicles.maxPlateNumber'));
                             return;
                           }
                           
@@ -530,14 +532,14 @@ export default function NewVehiclePage() {
                 )}
                 {buildImmatriculation() && (
                   <p className="text-xs text-slate-600 dark:text-slate-400">
-                    Aperçu: {buildImmatriculation()}
+                    {t('vehicles.preview')}: {buildImmatriculation()}
                   </p>
                 )}
               </div>
 
               {/* Numéro de châssis */}
               <div className="space-y-2">
-                <Label htmlFor="numero_chassis">Numéro de châssis *</Label>
+                <Label htmlFor="numero_chassis">{t('vehicles.chassisNumber')} *</Label>
                 <Input
                   id="numero_chassis"
                   name="numero_chassis"
@@ -554,11 +556,11 @@ export default function NewVehiclePage() {
 
               {/* Marque */}
               <div className="space-y-2">
-                <Label htmlFor="marque">Marque *</Label>
+                <Label htmlFor="marque">{t('vehicles.brand')} *</Label>
                 {isLoadingCatalog ? (
                   <div className="flex items-center justify-center p-4 border rounded-md">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    <span className="text-sm text-slate-600">Chargement...</span>
+                    <span className="text-sm text-slate-600">{t('vehicles.loading')}</span>
                   </div>
                 ) : (
                   <select
@@ -571,7 +573,7 @@ export default function NewVehiclePage() {
                       errors.marque ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                     } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   >
-                    <option value="">Sélectionnez une marque</option>
+                    <option value="">{t('vehicles.selectBrand')}</option>
                     {marques.map((marque) => (
                       <option key={marque} value={marque}>
                         {marque}
@@ -586,7 +588,7 @@ export default function NewVehiclePage() {
 
               {/* Modèle */}
               <div className="space-y-2">
-                <Label htmlFor="modele">Modèle *</Label>
+                <Label htmlFor="modele">{t('vehicles.model')} *</Label>
                 <select
                   id="modele"
                   name="modele"
@@ -597,7 +599,7 @@ export default function NewVehiclePage() {
                     errors.modele ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                   } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
                 >
-                  <option value="">Sélectionnez un modèle</option>
+                  <option value="">{t('vehicles.selectModel')}</option>
                   {modeles.map((modele) => (
                     <option key={modele} value={modele}>
                       {modele}
@@ -611,7 +613,7 @@ export default function NewVehiclePage() {
 
               {/* Version */}
               <div className="space-y-2">
-                <Label htmlFor="version_id">Version *</Label>
+                <Label htmlFor="version_id">{t('vehicles.version')} *</Label>
                 <select
                   id="version_id"
                   name="version_id"
@@ -622,7 +624,7 @@ export default function NewVehiclePage() {
                     errors.version_id ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                   } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
                 >
-                  <option value="">Sélectionnez une version</option>
+                  <option value="">{t('vehicles.selectVersion')}</option>
                   {versions.map((version) => (
                     <option key={version.id} value={version.id}>
                       {version.version_nom}
@@ -639,7 +641,7 @@ export default function NewVehiclePage() {
               {/* Année et Couleur */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="annee">Année *</Label>
+                  <Label htmlFor="annee">{t('vehicles.year')} *</Label>
                   <Input
                     id="annee"
                     name="annee"
@@ -658,7 +660,7 @@ export default function NewVehiclePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="couleur">Couleur *</Label>
+                  <Label htmlFor="couleur">{t('vehicles.color')} *</Label>
                   <select
                     id="couleur"
                     name="couleur"
@@ -668,7 +670,7 @@ export default function NewVehiclePage() {
                     className={`w-full rounded-md border ${errors.couleur ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
                   >
                     <option value="">
-                      {isLoadingColors ? 'Chargement...' : 'Sélectionnez une couleur'}
+                      {isLoadingColors ? t('vehicles.loading') : t('vehicles.selectColor')}
                     </option>
                     {colors.map((color) => (
                       <option key={color.id} value={color.nom}>
@@ -680,18 +682,18 @@ export default function NewVehiclePage() {
                     <p className="text-xs text-red-600">{errors.couleur}</p>
                   )}
                   {colors.length === 0 && !isLoadingColors && (
-                    <p className="text-xs text-gray-500">Aucune couleur disponible</p>
+                    <p className="text-xs text-gray-500">{t('common.none')}</p>
                   )}
                 </div>
               </div>
 
               {/* Images Section */}
               <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold text-lg">Photos</h3>
+                <h3 className="font-semibold text-lg">{t('vehicles.photos')}</h3>
                 
                 {/* Photo du véhicule (optionnel) */}
                 <div className="space-y-2">
-                  <Label htmlFor="image_vehicule">Photo du véhicule (optionnel)</Label>
+                  <Label htmlFor="image_vehicule">{t('vehicles.vehiclePhoto')}</Label>
                   <Input
                     type="file"
                     id="image_vehicule"
@@ -700,19 +702,19 @@ export default function NewVehiclePage() {
                     disabled={isSubmitting}
                     className="w-full"
                   />
-                  <p className="text-xs text-slate-500">Format: JPG, PNG, GIF - Taille max: 5MB</p>
+                  <p className="text-xs text-slate-500">{t('vehicles.imageFormat')}</p>
                   {previewVehicule && (
                     <div className="relative inline-block">
                       <img 
                         src={previewVehicule} 
-                        alt="Aperçu véhicule" 
+                        alt={t('vehicles.preview')} 
                         className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
                       />
                       <button
                         type="button"
                         onClick={() => removeImage('vehicule')}
                         className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
-                        title="Supprimer l'image"
+                        title={t('vehicles.removeImage')}
                       >
                         ✕
                       </button>
@@ -722,7 +724,7 @@ export default function NewVehiclePage() {
 
                 {/* Photo carte grise (obligatoire) */}
                 <div className="space-y-2">
-                  <Label htmlFor="image_carte_grise">Photo de la carte grise *</Label>
+                  <Label htmlFor="image_carte_grise">{t('vehicles.carteGrisePhoto')} *</Label>
                   <Input
                     type="file"
                     id="image_carte_grise"
@@ -731,7 +733,7 @@ export default function NewVehiclePage() {
                     disabled={isSubmitting}
                     className={`w-full ${errors.image_carte_grise ? 'border-red-500' : ''}`}
                   />
-                  <p className="text-xs text-slate-500">Format: JPG, PNG, GIF - Taille max: 5MB</p>
+                  <p className="text-xs text-slate-500">{t('vehicles.imageFormat')}</p>
                   {errors.image_carte_grise && (
                     <p className="text-xs text-red-600">{errors.image_carte_grise}</p>
                   )}
@@ -739,14 +741,14 @@ export default function NewVehiclePage() {
                     <div className="relative inline-block">
                       <img 
                         src={previewCarteGrise} 
-                        alt="Aperçu carte grise" 
+                        alt={t('vehicles.preview')} 
                         className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
                       />
                       <button
                         type="button"
                         onClick={() => removeImage('carte_grise')}
                         className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
-                        title="Supprimer l'image"
+                        title={t('vehicles.removeImage')}
                       >
                         ✕
                       </button>
@@ -759,7 +761,7 @@ export default function NewVehiclePage() {
               <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900">
                 <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <AlertDescription className="text-blue-800 dark:text-blue-200">
-                  Votre véhicule sera vérifié et validé par un agent SAV avant de pouvoir prendre rendez-vous.
+                  {t('vehicles.vehicleAddedSuccess')}
                 </AlertDescription>
               </Alert>
 
@@ -767,7 +769,7 @@ export default function NewVehiclePage() {
               <div className="flex gap-4 pt-4">
                 <Link href="/client/vehicles" className="flex-1">
                   <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
-                    Annuler
+                    {t('common.cancel')}
                   </Button>
                 </Link>
                 <Button
@@ -778,12 +780,12 @@ export default function NewVehiclePage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Ajout en cours...
+                      {t('common.loading')}
                     </>
                   ) : (
                     <>
                       <Car className="mr-2 h-4 w-4" />
-                      Ajouter le véhicule
+                      {t('vehicles.addVehicle')}
                     </>
                   )}
                 </Button>

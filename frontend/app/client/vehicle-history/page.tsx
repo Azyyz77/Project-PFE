@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Car, History, TrendingUp, Calendar } from 'lucide-react';
 
 interface Vehicle {
@@ -17,6 +18,7 @@ interface Vehicle {
 
 export default function VehicleHistoryListPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,7 +34,7 @@ export default function VehicleHistoryListPage() {
       const userStr = localStorage.getItem('user');
       
       if (!userStr) {
-        throw new Error('Utilisateur non connecté');
+        throw new Error(t('vehicleHistory.notConnected'));
       }
       
       const user = JSON.parse(userStr);
@@ -45,7 +47,7 @@ export default function VehicleHistoryListPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des véhicules');
+        throw new Error(t('vehicleHistory.errorLoading'));
       }
 
       const data = await response.json();
@@ -75,10 +77,10 @@ export default function VehicleHistoryListPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
           <History className="w-8 h-8 text-red-600" />
-          Historique de mes véhicules
+          {t('vehicleHistory.title')}
         </h1>
         <p className="text-gray-600 mt-2">
-          Consultez l'historique complet de vos véhicules : interventions, rendez-vous et statistiques
+          {t('vehicleHistory.consultHistory')}
         </p>
       </div>
 
@@ -93,15 +95,15 @@ export default function VehicleHistoryListPage() {
       {vehicles.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">Aucun véhicule enregistré</p>
+          <p className="text-gray-600 text-lg">{t('vehicleHistory.noVehicles')}</p>
           <p className="text-gray-500 text-sm mt-2">
-            Ajoutez un véhicule pour consulter son historique
+            {t('vehicleHistory.addVehicleToConsult')}
           </p>
           <button
             onClick={() => router.push('/client/vehicles/new')}
             className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
-            Ajouter un véhicule
+            {t('vehicleHistory.addVehicle')}
           </button>
         </div>
       ) : (
@@ -130,7 +132,7 @@ export default function VehicleHistoryListPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 flex items-center gap-2">
                     <TrendingUp className="w-4 h-4" />
-                    Kilométrage
+                    {t('vehicleHistory.mileage')}
                   </span>
                   <span className="font-medium text-gray-900">
                     {vehicle.kilometrage?.toLocaleString() || 0} km
@@ -139,14 +141,14 @@ export default function VehicleHistoryListPage() {
 
                 {vehicle.couleur && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Couleur</span>
+                    <span className="text-gray-600">{t('vehicleHistory.color')}</span>
                     <span className="font-medium text-gray-900">{vehicle.couleur}</span>
                   </div>
                 )}
 
                 {vehicle.statut_validation && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Statut</span>
+                    <span className="text-gray-600">{t('vehicleHistory.status')}</span>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         vehicle.statut_validation === 'VALIDE'
@@ -169,7 +171,7 @@ export default function VehicleHistoryListPage() {
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
                   <History className="w-5 h-5" />
-                  Voir l'historique
+                  {t('vehicleHistory.viewHistory')}
                 </button>
               </div>
             </div>
@@ -183,13 +185,13 @@ export default function VehicleHistoryListPage() {
           <Calendar className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
           <div>
             <h3 className="font-semibold text-blue-900 mb-2">
-              Que contient l'historique ?
+              {t('vehicleHistory.whatContainsTitle')}
             </h3>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Toutes les interventions effectuées sur votre véhicule</li>
-              <li>• L'historique complet de vos rendez-vous</li>
-              <li>• Les statistiques et coûts totaux</li>
-              <li>• La possibilité d'exporter vos données</li>
+              <li>• {t('vehicleHistory.allInterventionsPerformed')}</li>
+              <li>• {t('vehicleHistory.completeAppointmentHistory')}</li>
+              <li>• {t('vehicleHistory.statisticsAndCosts')}</li>
+              <li>• {t('vehicleHistory.exportPossibility')}</li>
             </ul>
           </div>
         </div>

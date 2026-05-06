@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { getMyAppointments } from '@/lib/api/appointments';
@@ -35,6 +36,7 @@ export default function ClientDashboardPage() {
 
 function ClientDashboardContent() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -105,26 +107,26 @@ function ClientDashboardContent() {
         </div>
 
         <div className="relative z-10">
-          <p className="mb-1 text-sm text-blue-200">Bonjour,</p>
+          <p className="mb-1 text-sm text-blue-200">{t('dashboard.hello')},</p>
           <h1 className="mb-2 text-3xl font-bold">
             {user?.prenom} {user?.nom}
           </h1>
           <p className="mb-6 text-sm text-blue-100">
-            Bienvenue sur votre espace client STA Chery Tunisia
+            {t('dashboard.welcomeMessage')}
           </p>
 
           <div className="flex flex-wrap gap-3">
             <Link href="/client/rendez-vous">
               <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg">
                 <Plus className="mr-2 h-4 w-4" />
-                Prendre un RDV
+                {t('dashboard.takeAppointment')}
               </Button>
             </Link>
 
             <Link href="/client/vehicles">
               <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm">
                 <Car className="mr-2 h-4 w-4" />
-                Mes véhicules
+                {t('dashboard.myVehicles')}
               </Button>
             </Link>
           </div>
@@ -137,7 +139,7 @@ function ClientDashboardContent() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-600">RDV à venir</p>
+                <p className="text-sm text-slate-600">{t('dashboard.upcomingAppointments')}</p>
                 <p className="mt-2 text-3xl font-bold text-slate-900">{upcomingAppointments.length}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100">
@@ -151,7 +153,7 @@ function ClientDashboardContent() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-600">Véhicules</p>
+                <p className="text-sm text-slate-600">{t('dashboard.vehicles')}</p>
                 <p className="mt-2 text-3xl font-bold text-slate-900">{vehicles.length}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100">
@@ -165,7 +167,7 @@ function ClientDashboardContent() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-600">Réclamations</p>
+                <p className="text-sm text-slate-600">{t('dashboard.complaints')}</p>
                 <p className="mt-2 text-3xl font-bold text-slate-900">{pendingComplaints}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
@@ -179,11 +181,11 @@ function ClientDashboardContent() {
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-600">RDV complétés</p>
+                <p className="text-sm text-slate-600">{t('dashboard.completedAppointments')}</p>
                 <p className="mt-2 text-3xl font-bold text-slate-900">{completedAppointments}</p>
                 {completedThisMonth > 0 && (
                   <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                    <span className="font-medium">+{completedThisMonth} ce mois</span>
+                    <span className="font-medium">+{completedThisMonth} {t('dashboard.thisMonth')}</span>
                   </div>
                 )}
               </div>
@@ -201,10 +203,10 @@ function ClientDashboardContent() {
           <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
             <CardContent className="p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">Mes Rendez-vous</h2>
+                <h2 className="text-lg font-semibold text-slate-900">{t('dashboard.myAppointments')}</h2>
                 <Link href="/client/rendez-vous">
                   <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                    Voir tout
+                    {t('dashboard.viewAll')}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
@@ -214,11 +216,11 @@ function ClientDashboardContent() {
                 {recentAppointments.length === 0 ? (
                   <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
                     <Calendar className="mb-4 h-12 w-12 text-slate-400" />
-                    <p className="mb-4 text-sm text-slate-600">Aucun rendez-vous à venir</p>
+                    <p className="mb-4 text-sm text-slate-600">{t('dashboard.noUpcomingAppointments')}</p>
                     <Link href="/client/rendez-vous">
                       <Button>
                         <Plus className="mr-2 h-4 w-4" />
-                        Prendre un RDV
+                        {t('dashboard.takeAppointment')}
                       </Button>
                     </Link>
                   </div>
@@ -239,9 +241,9 @@ function ClientDashboardContent() {
                     };
 
                     const statusLabels = {
-                      CONFIRME: 'Confirmé',
-                      PLANIFIE: 'Planifié',
-                      EN_COURS: 'En cours',
+                      CONFIRME: t('dashboard.confirmed'),
+                      PLANIFIE: t('dashboard.planned'),
+                      EN_COURS: t('dashboard.inProgress'),
                     };
 
                     return (
@@ -262,16 +264,16 @@ function ClientDashboardContent() {
                               <h3 className="font-semibold text-slate-900">
                                 {appointment.interventions?.[0]
                                   ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
-                                  : 'Rendez-vous de service'}
+                                  : t('dashboard.serviceAppointment')}
                               </h3>
                               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
                                 <span className="flex items-center gap-1">
                                   <Car className="h-3 w-3" />
-                                  {appointment.immatriculation || 'Véhicule'}
+                                  {appointment.immatriculation || t('dashboard.vehicle')}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {appointment.agence_nom || 'Agence'}
+                                  {appointment.agence_nom || t('dashboard.agency')}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -297,7 +299,7 @@ function ClientDashboardContent() {
         <div>
           <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
             <CardContent className="p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">Actions rapides</h2>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">{t('dashboard.quickActions')}</h2>
               <div className="space-y-3">
                 <Link href="/client/rendez-vous" className="block">
                   <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
@@ -306,8 +308,8 @@ function ClientDashboardContent() {
                         <Calendar className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Prendre un RDV</p>
-                        <p className="text-xs text-slate-500">Réserver un nouveau rendez-vous</p>
+                        <p className="text-sm font-semibold text-slate-900">{t('dashboard.takeAppointment')}</p>
+                        <p className="text-xs text-slate-500">{t('dashboard.bookAppointment')}</p>
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
@@ -321,8 +323,8 @@ function ClientDashboardContent() {
                         <MessageSquare className="h-5 w-5 text-amber-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Soumettre réclamation</p>
-                        <p className="text-xs text-slate-500">Signaler un problème</p>
+                        <p className="text-sm font-semibold text-slate-900">{t('dashboard.submitComplaint')}</p>
+                        <p className="text-xs text-slate-500">{t('dashboard.reportProblem')}</p>
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-slate-400" />
@@ -338,10 +340,10 @@ function ClientDashboardContent() {
         <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
           <CardContent className="p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Mes véhicules</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{t('dashboard.myVehicles')}</h2>
               <Link href="/client/vehicles">
                 <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                  Voir tout
+                  {t('dashboard.viewAll')}
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
@@ -350,11 +352,11 @@ function ClientDashboardContent() {
             {vehicles.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
                 <Car className="mb-4 h-12 w-12 text-slate-400" />
-                <p className="mb-4 text-sm text-slate-600">Aucun véhicule enregistré</p>
+                <p className="mb-4 text-sm text-slate-600">{t('dashboard.noVehicles')}</p>
                 <Link href="/client/vehicles">
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Ajouter un véhicule
+                    {t('dashboard.addVehicle')}
                   </Button>
                 </Link>
               </div>
@@ -368,9 +370,9 @@ function ClientDashboardContent() {
                   };
 
                   const statusLabels: Record<string, string> = {
-                    VALIDE: 'Validé',
-                    EN_ATTENTE: 'En attente',
-                    REFUSE: 'Refusé',
+                    VALIDE: t('dashboard.validated'),
+                    EN_ATTENTE: t('dashboard.pending'),
+                    REFUSE: t('dashboard.refused'),
                   };
 
                   const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
@@ -385,16 +387,16 @@ function ClientDashboardContent() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-slate-900">
-                            {vehicleName || vehicle.immatriculation || 'Véhicule'}
+                            {vehicleName || vehicle.immatriculation || t('dashboard.vehicle')}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {vehicle.immatriculation || 'Immatriculation inconnue'}
+                            {vehicle.immatriculation || t('dashboard.unknownPlate')}
                             {vehicle.annee ? ` · ${vehicle.annee}` : ''}
                           </p>
                         </div>
                       </div>
                       <Badge className={`${statusStyles[vehicle.statut_validation || ''] || 'bg-slate-100 text-slate-700 border-slate-200'} border`}>
-                        {statusLabels[vehicle.statut_validation || ''] || 'Non défini'}
+                        {statusLabels[vehicle.statut_validation || ''] || t('dashboard.undefined')}
                       </Badge>
                     </div>
                   );

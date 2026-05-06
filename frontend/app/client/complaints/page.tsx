@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ interface Complaint {
 
 export default function ComplaintsPage() {
   const { user, token } = useAuth();
+  const { t } = useLanguage();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -158,22 +160,22 @@ export default function ComplaintsPage() {
   const getStatusInfo = (status: ComplaintStatus) => {
     const statusMap = {
       SOUMISE: {
-        label: 'Soumise',
+        label: t('complaints.submitted'),
         icon: <Clock className="w-4 h-4" />,
         className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
       },
       EN_COURS: {
-        label: 'En cours',
+        label: t('complaints.inProgress'),
         icon: <Loader2 className="w-4 h-4 animate-spin" />,
         className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
       },
       TRAITEE: {
-        label: 'Traitée',
+        label: t('complaints.processed'),
         icon: <CheckCircle className="w-4 h-4" />,
         className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
       },
       CLOTUREE: {
-        label: 'Clôturée',
+        label: t('complaints.closed'),
         icon: <XCircle className="w-4 h-4" />,
         className: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
       },
@@ -188,21 +190,21 @@ export default function ComplaintsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-slate-100 mb-2">Mes Réclamations</h1>
+            <h1 className="text-4xl font-bold text-slate-100 mb-2">{t('complaints.title')}</h1>
             <p className="text-slate-400">
-              Gérez vos réclamations et suivez leur traitement
+              {t('complaints.manageComplaints')}
             </p>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger className="inline-flex items-center justify-center rounded-lg bg-cyan-600 hover:bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors">
               <Plus className="w-4 h-4 mr-2" />
-              Nouvelle réclamation
+              {t('complaints.newComplaint')}
             </DialogTrigger>
 
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Créer une réclamation</DialogTitle>
+                <DialogTitle>{t('complaints.createComplaint')}</DialogTitle>
               </DialogHeader>
 
               {apiError && (
@@ -214,7 +216,7 @@ export default function ComplaintsPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sujet">Sujet *</Label>
+                  <Label htmlFor="sujet">{t('complaints.subject')} *</Label>
                   <Input
                     id="sujet"
                     name="sujet"
@@ -230,7 +232,7 @@ export default function ComplaintsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">{t('complaints.description')} *</Label>
                   <Textarea
                     id="description"
                     name="description"
@@ -254,7 +256,7 @@ export default function ComplaintsPage() {
                     disabled={isSubmitting}
                     className="flex-1"
                   >
-                    Annuler
+                    {t('complaints.cancel')}
                   </Button>
                   <Button
                     type="submit"
@@ -264,12 +266,12 @@ export default function ComplaintsPage() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Envoi...
+                        {t('complaints.sending')}
                       </>
                     ) : (
                       <>
                         <Send className="mr-2 h-4 w-4" />
-                        Envoyer
+                        {t('complaints.send')}
                       </>
                     )}
                   </Button>
@@ -290,17 +292,17 @@ export default function ComplaintsPage() {
               <MessageSquare className="w-8 h-8 text-slate-400" />
             </div>
             <h3 className="text-lg font-semibold text-slate-100 mb-2">
-              Aucune réclamation
+              {t('complaints.noComplaints')}
             </h3>
             <p className="text-slate-400 mb-4">
-              Vous n'avez pas encore créé de réclamation
+              {t('complaints.notCreatedYet')}
             </p>
             <Button
               onClick={() => setIsDialogOpen(true)}
               className="bg-cyan-600 hover:bg-cyan-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Créer une réclamation
+              {t('complaints.create')}
             </Button>
           </div>
         ) : (
@@ -325,7 +327,7 @@ export default function ComplaintsPage() {
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-400">
-                        Créée le {createdDate} • Réclamation #{complaint.id}
+                        {t('complaints.createdOn')} {createdDate} • {t('complaints.complaintNumber')} #{complaint.id}
                       </p>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -32,7 +33,7 @@ import {
 } from 'lucide-react';
 
 interface NavItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: React.ReactNode;
   badge?: number;
@@ -40,44 +41,54 @@ interface NavItem {
 }
 
 interface NavSection {
-  title: string;
+  titleKey: string;
   items: NavItem[];
 }
 
-const NAV_SECTIONS: NavSection[] = [
+const getNavSections = (): NavSection[] => [
   {
-    title: 'PRINCIPAL',
+    titleKey: 'PRINCIPAL',
     items: [
-      { label: 'Tableau de bord', href: '/client/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-      { label: 'Mes Véhicules', href: '/client/vehicles', icon: <Car className="h-4 w-4" /> },
-      { label: 'Prendre RDV', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" /> },
+      { labelKey: 'nav.clientDashboard', href: '/client/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
+      { labelKey: 'nav.clientVehicles', href: '/client/vehicles', icon: <Car className="h-4 w-4" /> },
+      { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" /> },
     ],
   },
   {
-    title: 'SUIVI',
+    titleKey: 'SUIVI',
     items: [
+<<<<<<< HEAD
       { label: 'Mes Rendez-vous', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
       { label: 'Historique', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
       { label: 'Catalogue', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
       { label: 'Promotions Véhicules', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
       { label: 'Factures', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
+=======
+      { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
+      { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
+      { labelKey: 'nav.clientOrders', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
+      { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
+      { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
+      { labelKey: 'nav.clientDocuments', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
+>>>>>>> e0b226b4e1c143551314d49aca0954956d77b152
     ],
   },
   {
-    title: 'AUTRES',
+    titleKey: 'AUTRES',
     items: [
-      { label: 'Informations', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
-      { label: 'Documents', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
-      { label: 'Réclamations', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
-      { label: 'Assistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },
-      { label: 'Assistant SAV', href: '/client/chatbot', icon: <MessageCircle className="h-4 w-4" /> },
-      { label: 'Mes Avis', href: '/client/feedback', icon: <Star className="h-4 w-4" /> },
-      { label: 'Mon profil', href: '/client/profile', icon: <User className="h-4 w-4" /> },
+      { labelKey: 'nav.clientDocuments', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
+      { labelKey: 'nav.clientDocuments', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
+      { labelKey: 'nav.clientComplaints', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
+      { labelKey: 'nav.clientAssistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },
+      { labelKey: 'nav.clientChatbot', href: '/client/chatbot', icon: <MessageCircle className="h-4 w-4" /> },
+      { labelKey: 'nav.clientFeedback', href: '/client/feedback', icon: <Star className="h-4 w-4" /> },
+      { labelKey: 'nav.clientProfile', href: '/client/profile', icon: <User className="h-4 w-4" /> },
     ],
   },
 ];
 
 function SidebarLink({ item, isActive, badgeCount }: { item: NavItem; isActive: boolean; badgeCount?: number }) {
+  const { t } = useLanguage();
   const shouldShowBadge = typeof badgeCount === 'number' && badgeCount > 0;
   return (
     <Link
@@ -96,7 +107,7 @@ function SidebarLink({ item, isActive, badgeCount }: { item: NavItem; isActive: 
       <span className={isActive ? 'text-white' : 'text-slate-400'}>
         {item.icon}
       </span>
-      <span className="flex-1 whitespace-nowrap">{item.label}</span>
+      <span className="flex-1 whitespace-nowrap">{t(item.labelKey)}</span>
       {shouldShowBadge && (
         <Badge className="h-5 min-w-[20px] rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
           {badgeCount}
@@ -115,6 +126,8 @@ function SidebarContent({
 }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
+  const navSections = getNavSections();
 
   return (
     <div className="client-sidebar flex h-full flex-col bg-[#0f2543]">
@@ -125,7 +138,7 @@ function SidebarContent({
         </div>
         <div>
           <p className="text-sm font-bold text-white">STA Chery</p>
-          <p className="text-[10px] uppercase tracking-wider text-slate-400">ESPACE CLIENT</p>
+          <p className="text-[10px] uppercase tracking-wider text-slate-400">{t('nav.clientSpace')}</p>
         </div>
       </div>
 
@@ -138,7 +151,7 @@ function SidebarContent({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{user.prenom} {user.nom}</p>
-              <p className="text-xs text-slate-400">Client</p>
+              <p className="text-xs text-slate-400">{t('common.client')}</p>
             </div>
           </div>
         </div>
@@ -146,10 +159,10 @@ function SidebarContent({
 
       {/* Navigation Sections */}
       <nav className="client-sidebar-scroll flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {NAV_SECTIONS.map((section) => (
-          <div key={section.title}>
+        {navSections.map((section) => (
+          <div key={section.titleKey}>
             <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-              {section.title}
+              {t(section.titleKey)}
             </h3>
             <div className="space-y-1">
               {section.items.map((item) => {
@@ -175,7 +188,7 @@ function SidebarContent({
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-[#17325a] hover:text-white"
           >
             <LogOut className="h-4 w-4" />
-            <span>Déconnexion</span>
+            <span>{t('nav.logout')}</span>
           </button>
         </div>
       )}
@@ -254,6 +267,7 @@ function ClientMobileMenu() {
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isLoggingOut } = useAuth();
+  const { t } = useLanguage();
   const pathname = usePathname();
   const [isPageReady, setIsPageReady] = useState(false);
 
@@ -277,7 +291,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="absolute inset-0 rounded-full border-2 border-red-500/20" />
             <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-red-500" />
           </div>
-          <p className="text-sm uppercase tracking-widest text-slate-400">Chargement...</p>
+          <p className="text-sm uppercase tracking-widest text-slate-400">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -295,8 +309,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-4">
             <ClientMobileMenu />
             <div className="leading-tight">
-              <h1 className="text-base font-semibold text-slate-700">Tableau de bord</h1>
-              <p className="text-xs text-slate-500">Client</p>
+              <h1 className="text-base font-semibold text-slate-700">{t('nav.dashboard')}</h1>
+              <p className="text-xs text-slate-500">{t('common.client')}</p>
             </div>
           </div>
 
@@ -307,7 +321,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <div className="h-6 w-px bg-slate-200" />
 
             {/* Settings Icon */}
-            <button type="button" className="rounded-full p-2 text-slate-600 hover:bg-slate-100">
+            <button 
+              type="button" 
+              className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
+              aria-label="Settings"
+            >
               <Settings className="h-5 w-5" />
             </button>
 
