@@ -59,6 +59,24 @@ router.get('/catalog/versions', vehicleController.getVersionCatalog);
 
 /**
  * @swagger
+ * /api/vehicles/my:
+ *   get:
+ *     summary: Obtenir mes véhicules (utilisateur connecté)
+ *     tags: [Vehicles]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste de mes véhicules
+ *       401:
+ *         description: Token manquant ou invalide
+ *       404:
+ *         description: Aucun véhicule trouvé
+ */
+router.get('/my', vehicleController.getMyVehicles);
+
+/**
+ * @swagger
  * /api/vehicles/user/{userId}:
  *   get:
  *     summary: Obtenir tous les véhicules d\'un utilisateur

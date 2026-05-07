@@ -204,6 +204,30 @@ const addVehicle = async (req, res) => {
   }
 };
 
+const getMyVehicles = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const pool = await getConnection();
+
+    const result = await pool.request()
+      .input('userId', sql.BigInt, userId)
+      .query(`${VEHICLE_WITH_RELATIONS_SELECT} WHERE vh.client_id = @userId ORDER BY vh.date_ajout DESC`);
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ 
+        error: 'Aucun véhicule trouvé',
+        count: 0,
+        vehicles: []
+      });
+    }
+
+    res.json({ count: result.recordset.length, vehicles: result.recordset });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de mes véhicules:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération de mes véhicules', message: error.message });
+  }
+};
+
 const getVehiclesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -429,6 +453,7 @@ const getVersionCatalog = async (req, res) => {
 
 module.exports = {
   addVehicle,
+  getMyVehicles,
   getVehiclesByUser,
   getVehicleById,
   updateVehicle,
