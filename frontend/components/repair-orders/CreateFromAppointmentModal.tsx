@@ -94,7 +94,17 @@ export default function CreateFromAppointmentModal({
       window.location.reload();
     } catch (err: any) {
       console.error('Erreur création commande:', err);
-      setError(err.response?.data?.error || 'Erreur lors de la création de la commande');
+      
+      // Gestion spécifique pour les commandes existantes (409)
+      if (err.response?.status === 409) {
+        const data = err.response.data;
+        const commandeInfo = data.commande_numero 
+          ? ` (${data.commande_numero} - ${data.commande_statut})`
+          : '';
+        setError(`Une commande existe déjà pour ce rendez-vous${commandeInfo}. Veuillez consulter la liste des commandes existantes.`);
+      } else {
+        setError(err.response?.data?.message || err.response?.data?.error || 'Erreur lors de la création de la commande');
+      }
     } finally {
       setCreating(false);
     }

@@ -25,7 +25,7 @@ router.get(
 
 // Routes CLIENT - DOIT ÊTRE AVANT /:id pour éviter le conflit
 router.get(
-  '/my/orders',
+  '/my',
   authMiddleware,
   authorizeRoles('CLIENT'),
   repairOrderController.getMyRepairOrders

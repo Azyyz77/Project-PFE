@@ -28,6 +28,7 @@ export const colors = {
   blue: '#DBEAFE',
   yellow: '#FEF3C7',
   green: '#D1FAE5',
+  teal: '#CCFBF1',
   orange: '#FED7AA',
   indigo: '#E0E7FF',
   pink: '#FCE7F3',

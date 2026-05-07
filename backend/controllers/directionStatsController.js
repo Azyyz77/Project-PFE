@@ -134,6 +134,7 @@ const getGlobalStats = async (req, res) => {
 
 /**
  * Obtenir les statistiques de revenus
+ * CORRIGÉ: Utilise les montants réels des factures au lieu des prix du catalogue
  */
 const getRevenueStats = async (req, res) => {
   try {
@@ -147,76 +148,75 @@ const getRevenueStats = async (req, res) => {
     if (dateDebut && dateFin) {
       request.input('dateDebut', sql.Date, dateDebut);
       request.input('dateFin', sql.Date, dateFin);
-      filters.push('r.date_heure BETWEEN @dateDebut AND @dateFin');
+      filters.push('f.date_emission BETWEEN @dateDebut AND @dateFin');
     }
     if (agenceId) {
       request.input('agenceId', sql.BigInt, agenceId);
-      filters.push('r.agence_id = @agenceId');
+      filters.push('c.agence_id = @agenceId');
     }
 
     const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
 
-    // Revenus globaux
+    // Revenus globaux (basés sur les factures réelles)
     const revenueResult = await request.query(`
       SELECT 
-        COUNT(DISTINCT r.id) AS total_rdv,
-        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
-        AVG(ISNULL(ic.prix, 0)) AS revenu_moyen,
-        MIN(ISNULL(ic.prix, 0)) AS revenu_min,
-        MAX(ISNULL(ic.prix, 0)) AS revenu_max
-      FROM RendezVous r
-      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
-      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
-      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+        COUNT(f.id) AS total_factures,
+        SUM(ISNULL(f.montant_ttc, 0)) AS revenu_total,
+        AVG(ISNULL(f.montant_ttc, 0)) AS revenu_moyen,
+        MIN(ISNULL(f.montant_ttc, 0)) AS revenu_min,
+        MAX(ISNULL(f.montant_ttc, 0)) AS revenu_max,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS revenu_paye,
+        SUM(CASE WHEN f.statut IN ('EMISE', 'ENVOYEE') THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS revenu_impaye
+      FROM Facture f
+      LEFT JOIN CommandeReparation c ON f.commande_id = c.id
       ${whereClause}
     `);
 
-    // Revenus par agence
+    // Revenus par agence (basés sur les factures)
     const revenueByAgencyResult = await pool.request().query(`
       SELECT 
         ag.id AS agence_id,
         ag.nom AS agence_nom,
-        COUNT(DISTINCT r.id) AS total_rdv,
-        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
-        AVG(ISNULL(ic.prix, 0)) AS revenu_moyen
+        COUNT(f.id) AS total_factures,
+        SUM(ISNULL(f.montant_ttc, 0)) AS revenu_total,
+        AVG(ISNULL(f.montant_ttc, 0)) AS revenu_moyen,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS revenu_paye
       FROM Agence ag
-      LEFT JOIN RendezVous r ON r.agence_id = ag.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
-      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
-      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
-      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+      LEFT JOIN CommandeReparation c ON c.agence_id = ag.id
+      LEFT JOIN Facture f ON f.commande_id = c.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
       GROUP BY ag.id, ag.nom
+      HAVING COUNT(f.id) > 0
       ORDER BY revenu_total DESC
     `);
 
-    // Revenus par type d'intervention
+    // Revenus par type d'intervention (basés sur les lignes de commande)
     const revenueByTypeResult = await pool.request().query(`
       SELECT 
-        ic.nom AS intervention,
-        COUNT(r.id) AS nombre_rdv,
-        SUM(ISNULL(ic.prix, 0)) AS revenu_total,
-        AVG(ISNULL(ic.prix, 0)) AS prix_moyen
-      FROM RendezVous r
-      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
-      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
-      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+        lc.type_ligne AS type_intervention,
+        COUNT(DISTINCT c.id) AS nombre_commandes,
+        SUM(ISNULL(lc.montant_total, 0)) AS revenu_total,
+        AVG(ISNULL(lc.montant_total, 0)) AS montant_moyen
+      FROM CommandeReparation c
+      LEFT JOIN LigneCommande lc ON c.id = lc.commande_id
+      LEFT JOIN Facture f ON f.commande_id = c.id
       ${whereClause}
-      GROUP BY ic.nom, ic.prix
+      GROUP BY lc.type_ligne
+      HAVING SUM(ISNULL(lc.montant_total, 0)) > 0
       ORDER BY revenu_total DESC
     `);
 
-    // Évolution mensuelle des revenus
+    // Évolution mensuelle des revenus (basés sur les factures)
     const monthlyRevenueResult = await pool.request().query(`
       SELECT 
-        YEAR(r.date_heure) AS annee,
-        MONTH(r.date_heure) AS mois,
-        COUNT(r.id) AS total_rdv,
-        SUM(ISNULL(ic.prix, 0)) AS revenu_total
-      FROM RendezVous r
-      LEFT JOIN InterventionRDV ir ON r.id = ir.rdv_id
-      LEFT JOIN SousTypeIntervention sti ON ir.sous_type_id = sti.id
-      LEFT JOIN InterventionCatalog ic ON sti.type_intervention_id = ic.id
+        YEAR(f.date_emission) AS annee,
+        MONTH(f.date_emission) AS mois,
+        COUNT(f.id) AS total_factures,
+        SUM(ISNULL(f.montant_ttc, 0)) AS revenu_total,
+        SUM(CASE WHEN f.statut = 'PAYEE' THEN ISNULL(f.montant_ttc, 0) ELSE 0 END) AS revenu_paye
+      FROM Facture f
+      LEFT JOIN CommandeReparation c ON f.commande_id = c.id
       ${whereClause}
-      GROUP BY YEAR(r.date_heure), MONTH(r.date_heure)
+      GROUP BY YEAR(f.date_emission), MONTH(f.date_emission)
       ORDER BY annee DESC, mois DESC
     `);
 

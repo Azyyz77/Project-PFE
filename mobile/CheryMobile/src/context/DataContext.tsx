@@ -8,6 +8,7 @@ interface DataContextType {
   appointments: any[];
   complaints: any[];
   orders: any[];
+  invoices: any[];
   notifications: any[];
   agencies: any[];
   interventions: any[];
@@ -31,6 +32,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [appointments, setAppointments] = useState<any[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [agencies, setAgencies] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
@@ -47,6 +49,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAppointments([]);
       setComplaints([]);
       setOrders([]);
+      setInvoices([]);
       setNotifications([]);
     }
   }, [user]);
@@ -55,32 +58,55 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     setLoadingData(true);
     try {
-      const [vehiclesRes, appointmentsRes, complaintsRes, notifRes] = await Promise.allSettled([
+      const [vehiclesRes, appointmentsRes, complaintsRes, ordersRes, invoicesRes, notifRes] = await Promise.allSettled([
         api.get(`/vehicles/user/${user.id}`),
         api.get('/appointments/my'),
         api.get('/complaints/my-complaints'),
+        api.get('/repair-orders/my'),
+        api.get('/invoices/my'),
         api.get('/notifications'),
       ]);
 
       if (vehiclesRes.status === 'fulfilled') {
         const data = vehiclesRes.value.data.vehicles || vehiclesRes.value.data;
         setVehicles(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', vehiclesRes.reason?.response?.status, '- /vehicles/user/' + user.id);
       }
+      
       if (appointmentsRes.status === 'fulfilled') {
         const data = appointmentsRes.value.data.appointments || appointmentsRes.value.data;
         setAppointments(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', appointmentsRes.reason?.response?.status, '- /appointments/my');
       }
+      
       if (complaintsRes.status === 'fulfilled') {
         const data = complaintsRes.value.data;
         setComplaints(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', complaintsRes.reason?.response?.status, '- /complaints/my-complaints');
       }
+      
       if (ordersRes.status === 'fulfilled') {
         const data = ordersRes.value.data.orders || ordersRes.value.data;
         setOrders(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', ordersRes.reason?.response?.status, '- /repair-orders/my');
       }
+      
+      if (invoicesRes.status === 'fulfilled') {
+        const data = invoicesRes.value.data.invoices || invoicesRes.value.data;
+        setInvoices(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', invoicesRes.reason?.response?.status, '- /invoices/my');
+      }
+      
       if (notifRes.status === 'fulfilled') {
         const data = notifRes.value.data.notifications || notifRes.value.data;
         setNotifications(Array.isArray(data) ? data : []);
+      } else {
+        console.error('API Error:', notifRes.reason?.response?.status, '- /notifications');
       }
     } catch (error: any) {
       console.error('Failed to load user data:', error.message);
@@ -150,6 +176,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appointments,
       complaints,
       orders,
+      invoices,
       notifications,
       agencies,
       interventions,

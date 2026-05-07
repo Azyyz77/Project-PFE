@@ -1,0 +1,9 @@
+-- Vérifier la structure de la table CommandeReparation
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'CommandeReparation'
+ORDER BY ORDINAL_POSITION;

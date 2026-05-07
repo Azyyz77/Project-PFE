@@ -20,6 +20,7 @@ export default function HomeScreen({ navigation }: any) {
     { icon: '📅', title: 'Rendez-vous',    count: appointments.length, bg: colors.blue,   screen: 'Appointments' },
     { icon: '📝', title: 'Réclamations',   count: null,                bg: colors.yellow, screen: 'Complaints' },
     { icon: '🔧', title: 'Commandes',      count: null,                bg: colors.green,  screen: 'Orders' },
+    { icon: '💰', title: 'Factures',       count: null,                bg: colors.teal,   screen: 'Invoices' },
     { icon: '🔔', title: 'Notifications',  count: notifications.length, bg: colors.orange, screen: 'Notifications', badge: unreadNotifications },
     { icon: '💬', title: 'Assistant SAV',  count: null,                bg: colors.blue,   screen: 'Chatbot' },
     { icon: '👤', title: 'Profil',         count: null,                bg: colors.indigo, screen: 'Profile' },

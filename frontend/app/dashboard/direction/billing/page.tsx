@@ -14,6 +14,7 @@ import {
   FileText,
   Calendar,
   Download,
+  Printer,
   CreditCard,
   CheckCircle,
   Clock,
@@ -92,6 +93,7 @@ export default function DirectionBillingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
   
   // Data states
   const [billingStats, setBillingStats] = useState<BillingStats | null>(null);
@@ -102,6 +104,23 @@ export default function DirectionBillingPage() {
   useEffect(() => {
     loadData();
   }, [token]);
+
+  useEffect(() => {
+    // Fermer le menu d'export quand on clique ailleurs
+    const handleClickOutside = () => {
+      if (showExportMenu) {
+        setShowExportMenu(false);
+      }
+    };
+
+    if (showExportMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showExportMenu]);
 
   const loadData = async () => {
     try {
@@ -140,8 +159,209 @@ export default function DirectionBillingPage() {
     setTimeout(() => loadData(), 100);
   };
 
-  const handleExport = () => {
-    toast.info('Export en cours de développement');
+  const handleExportPDF = async () => {
+    try {
+      if (!billingStats) {
+        toast.error('Aucune donnée à exporter');
+        return;
+      }
+
+      toast.info('Génération du PDF en cours...');
+
+      // Créer le contenu HTML pour le PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #e11d48; text-align: center; }
+            h2 { color: #334155; margin-top: 30px; border-bottom: 2px solid #e11d48; padding-bottom: 5px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+            .stat-card { border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; }
+            .stat-label { color: #64748b; font-size: 14px; }
+            .stat-value { font-size: 24px; font-weight: bold; color: #0f172a; margin: 5px 0; }
+            .stat-sub { color: #64748b; font-size: 12px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th { background-color: #e11d48; color: white; padding: 12px; text-align: left; }
+            td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+            tr:hover { background-color: #f8fafc; }
+            .footer { text-align: center; margin-top: 40px; color: #64748b; font-size: 12px; }
+            .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+            .badge-success { background-color: #dcfce7; color: #166534; }
+            .badge-warning { background-color: #fef3c7; color: #92400e; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>📊 Rapport de Facturation - Direction</h1>
+            <p>STA Chery Automobile</p>
+            <p>Date: ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            ${dateDebut || dateFin ? `<p>Période: ${dateDebut || 'Début'} - ${dateFin || 'Fin'}</p>` : ''}
+          </div>
+
+          <h2>📈 Statistiques Globales</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Revenu Total</div>
+              <div class="stat-value" style="color: #10b981;">${billingStats.montant_total.toLocaleString('fr-TN')} TND</div>
+              <div class="stat-sub">${billingStats.total_factures} factures</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Montant Payé</div>
+              <div class="stat-value" style="color: #10b981;">${billingStats.montant_paye.toLocaleString('fr-TN')} TND</div>
+              <div class="stat-sub">${billingStats.factures_payees} factures payées</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Montant Impayé</div>
+              <div class="stat-value" style="color: #f59e0b;">${billingStats.montant_impaye.toLocaleString('fr-TN')} TND</div>
+              <div class="stat-sub">${billingStats.factures_impayees} factures impayées</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Taux de Paiement</div>
+              <div class="stat-value">${billingStats.taux_paiement.toFixed(1)}%</div>
+              <div class="stat-sub">Moyenne: ${billingStats.montant_moyen.toLocaleString('fr-TN')} TND</div>
+            </div>
+          </div>
+
+          <h2>🏢 Facturation par Agence</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Agence</th>
+                <th style="text-align: center;">Factures</th>
+                <th style="text-align: right;">Montant Total</th>
+                <th style="text-align: right;">Montant Payé</th>
+                <th style="text-align: center;">Taux Paiement</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${facturesByAgency.map(agency => `
+                <tr>
+                  <td><strong>${agency.agence_nom}</strong></td>
+                  <td style="text-align: center;">${agency.total_factures}</td>
+                  <td style="text-align: right;">${agency.montant_total.toLocaleString('fr-TN')} TND</td>
+                  <td style="text-align: right; color: #10b981;">${agency.montant_paye.toLocaleString('fr-TN')} TND</td>
+                  <td style="text-align: center;">
+                    <span class="badge ${agency.taux_paiement >= 80 ? 'badge-success' : 'badge-warning'}">
+                      ${agency.taux_paiement.toFixed(1)}%
+                    </span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          ${paymentMethods.length > 0 ? `
+            <h2>💳 Modes de Paiement</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Mode de Paiement</th>
+                  <th style="text-align: center;">Nombre</th>
+                  <th style="text-align: right;">Montant Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${paymentMethods.map(method => `
+                  <tr>
+                    <td><strong>${method.mode_paiement}</strong></td>
+                    <td style="text-align: center;">${method.count}</td>
+                    <td style="text-align: right;">${method.montant_total.toLocaleString('fr-TN')} TND</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : ''}
+
+          <div class="footer">
+            <p>Document généré automatiquement par le système STA Chery</p>
+            <p>© ${new Date().getFullYear()} STA Chery Automobile - Tous droits réservés</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Ouvrir une nouvelle fenêtre pour l'impression
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Veuillez autoriser les pop-ups pour générer le PDF');
+        return;
+      }
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Attendre que le contenu soit chargé
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          toast.success('PDF généré ! Utilisez la fonction d\'impression pour sauvegarder.');
+        }, 250);
+      };
+
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      toast.error('Erreur lors de la génération du PDF');
+    }
+  };
+
+  const handleExportCSV = () => {
+    try {
+      if (facturesByAgency.length === 0) {
+        toast.error('Aucune donnée à exporter');
+        return;
+      }
+
+      // Créer le contenu CSV
+      let csvContent = 'Agence,Total Factures,Montant Total (TND),Montant Payé (TND),Taux Paiement (%)\n';
+      
+      facturesByAgency.forEach((agency) => {
+        csvContent += `"${agency.agence_nom}",${agency.total_factures},${agency.montant_total},${agency.montant_paye},${agency.taux_paiement.toFixed(2)}\n`;
+      });
+
+      // Ajouter les statistiques globales
+      if (billingStats) {
+        csvContent += '\n\nStatistiques Globales\n';
+        csvContent += `Total Factures,${billingStats.total_factures}\n`;
+        csvContent += `Factures Payées,${billingStats.factures_payees}\n`;
+        csvContent += `Factures Impayées,${billingStats.factures_impayees}\n`;
+        csvContent += `Montant Total (TND),${billingStats.montant_total}\n`;
+        csvContent += `Montant Payé (TND),${billingStats.montant_paye}\n`;
+        csvContent += `Montant Impayé (TND),${billingStats.montant_impaye}\n`;
+        csvContent += `Taux de Paiement (%),${billingStats.taux_paiement.toFixed(2)}\n`;
+      }
+
+      // Créer un blob CSV avec BOM pour Excel
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + csvContent], {
+        type: 'text/csv;charset=utf-8;'
+      });
+
+      // Créer un lien de téléchargement
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Nom du fichier avec date
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.download = `facturation_direction_${dateStr}.csv`;
+      
+      // Déclencher le téléchargement
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyer
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Export CSV réussi !');
+    } catch (error) {
+      console.error('Erreur export CSV:', error);
+      toast.error('Erreur lors de l\'export CSV');
+    }
   };
 
   if (isLoading) {
@@ -178,10 +398,46 @@ export default function DirectionBillingPage() {
             Vue d'ensemble des revenus et de la facturation
           </p>
         </div>
-        <Button variant="outline" onClick={handleExport} className="gap-2">
-          <Download className="h-4 w-4" />
-          Exporter
-        </Button>
+        <div className="relative">
+          <Button 
+            variant="outline" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowExportMenu(!showExportMenu);
+            }} 
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exporter
+          </Button>
+          {showExportMenu && (
+            <div 
+              className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-slate-200 dark:border-slate-700 z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  handleExportPDF();
+                  setShowExportMenu(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 rounded-t-md text-slate-900 dark:text-white"
+              >
+                <Printer className="h-4 w-4" />
+                Exporter en PDF
+              </button>
+              <button
+                onClick={() => {
+                  handleExportCSV();
+                  setShowExportMenu(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 rounded-b-md text-slate-900 dark:text-white"
+              >
+                <FileText className="h-4 w-4" />
+                Exporter en CSV
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

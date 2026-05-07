@@ -119,7 +119,7 @@ async function getInvoiceDetails(factureId, pool) {
         f.numero,
         f.commande_id,
         f.montant_ttc,
-        f.statut,
+        f.statut AS statut_paiement,
         f.date_emission,
         f.date_envoi,
         f.date_paiement,
@@ -128,6 +128,9 @@ async function getInvoiceDetails(factureId, pool) {
         c.numero AS commande_numero,
         c.client_id,
         c.vehicule_id,
+        c.montant_total AS montant_ht,
+        CAST(c.montant_total * 0.19 AS DECIMAL(10,2)) AS montant_tva,
+        19 AS taux_tva,
         u.nom AS client_nom,
         u.prenom AS client_prenom,
         u.email AS client_email,
@@ -166,7 +169,7 @@ async function getInvoiceDetails(factureId, pool) {
         l.type,
         l.quantite,
         l.prix_unitaire,
-        l.prix_total,
+        l.prix_total AS montant_total,
         CASE 
           WHEN l.type = 'INTERVENTION' AND l.intervention_id IS NOT NULL 
             THEN ISNULL(sti.nom, 'Intervention')
@@ -467,7 +470,7 @@ const getMyInvoices = async (req, res) => {
         SELECT 
           f.id,
           f.numero,
-          f.statut,
+          f.statut AS statut_paiement,
           f.montant_ttc,
           f.date_emission,
           f.date_paiement,
@@ -484,7 +487,7 @@ const getMyInvoices = async (req, res) => {
 
     return res.json({
       count: result.recordset.length,
-      factures: result.recordset
+      invoices: result.recordset
     });
 
   } catch (error) {

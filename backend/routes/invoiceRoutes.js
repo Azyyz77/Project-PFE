@@ -18,7 +18,7 @@ router.get(
 
 // Routes CLIENT - DOIT ÊTRE AVANT /:id
 router.get(
-  '/my/invoices',
+  '/my',
   authMiddleware,
   authorizeRoles('CLIENT'),
   invoiceController.getMyInvoices
