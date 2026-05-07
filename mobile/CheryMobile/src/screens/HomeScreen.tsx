@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { colors, spacing, borderRadius, fontSize, shadows } from '../styles/theme';
 import { commonStyles } from '../styles/commonStyles';
+import SimpleSidebar from '../components/SimpleSidebar';
 
 export default function HomeScreen({ navigation }: any) {
   const { user, logout } = useAuth();
-  const { vehicles, appointments, notifications, loadingData, loadBookingData } = useData();
+  const { vehicles, appointments, notifications, loadBookingData } = useData();
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const unreadNotifications = notifications.filter((n: any) => !n.lu).length;
 
@@ -19,7 +21,7 @@ export default function HomeScreen({ navigation }: any) {
     { icon: '🚗', title: 'Véhicules',      count: vehicles.length,     bg: colors.purple, screen: 'Vehicles' },
     { icon: '📅', title: 'Rendez-vous',    count: appointments.length, bg: colors.blue,   screen: 'Appointments' },
     { icon: '📝', title: 'Réclamations',   count: null,                bg: colors.yellow, screen: 'Complaints' },
-    { icon: '🔧', title: 'Commandes',      count: null,                bg: colors.green,  screen: 'Orders' },
+    { icon: '🔧', title: 'Commandes',      count: null,                bg: colors.green,  screen: 'RepairOrders' },
     { icon: '💰', title: 'Factures',       count: null,                bg: colors.teal,   screen: 'Invoices' },
     { icon: '🔔', title: 'Notifications',  count: notifications.length, bg: colors.orange, screen: 'Notifications', badge: unreadNotifications },
     { icon: '💬', title: 'Assistant SAV',  count: null,                bg: colors.blue,   screen: 'Chatbot' },
@@ -31,6 +33,13 @@ export default function HomeScreen({ navigation }: any) {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Banner */}
         <View style={styles.banner}>
+          {/* Menu Button */}
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setSidebarVisible(true)}>
+            <Text style={styles.menuIcon}>☰</Text>
+          </TouchableOpacity>
+
           <View style={styles.bannerContent}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{user?.prenom?.[0]}{user?.nom?.[0]}</Text>
@@ -107,6 +116,13 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Simple Sidebar */}
+      <SimpleSidebar
+        visible={sidebarVisible}
+        onClose={() => setSidebarVisible(false)}
+        navigation={navigation}
+      />
     </View>
   );
 }
@@ -116,6 +132,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, paddingTop: 60,
     paddingBottom: 30, paddingHorizontal: spacing.xl,
     borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
+  },
+  menuButton: {
+    position: 'absolute',
+    top: 50,
+    left: spacing.lg,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  menuIcon: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   bannerContent: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xl },
   avatar: {

@@ -24,6 +24,8 @@ import AppointmentFeedbackScreen from '../screens/AppointmentFeedbackScreen';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import InvoicesScreen from '../screens/InvoicesScreen';
 import InvoiceDetailScreen from '../screens/InvoiceDetailScreen';
+import RepairOrdersScreen from '../screens/RepairOrdersScreen';
+import RepairOrderDetailScreen from '../screens/RepairOrderDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +55,8 @@ export default function AppNavigator() {
             <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
             <Stack.Screen name="Complaints" component={ComplaintsScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />
+            <Stack.Screen name="RepairOrders" component={RepairOrdersScreen} />
+            <Stack.Screen name="RepairOrderDetail" component={RepairOrderDetailScreen} />
             <Stack.Screen name="Invoices" component={InvoicesScreen} />
             <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
