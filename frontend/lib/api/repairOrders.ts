@@ -38,7 +38,17 @@ export const repairOrdersApi = {
     date_debut?: string;
     date_fin?: string;
   }): Promise<RepairOrderSummary[]> => {
-    const response = await axios.get('/repair-orders', { params: filters });
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const url = queryString ? `/repair-orders?${queryString}` : '/repair-orders';
+    const response = await axios.get(url);
     return response.data.commandes;
   },
 

@@ -15,6 +15,7 @@ export interface RepairOrderLine {
   id: number;
   type: LineType;
   intervention_id?: number;
+  description?: string;
   quantite: number;
   prix_unitaire: number;
   prix_total: number;
@@ -31,6 +32,7 @@ export interface RepairOrder {
   montant_total: number;
   date_creation: string;
   date_validation?: string;
+  date_debut?: string;
   date_fin?: string;
   
   // Relations

@@ -15,7 +15,17 @@ export const invoicesApi = {
    * Lister les factures (avec filtres optionnels)
    */
   list: async (filters?: InvoiceFilters): Promise<InvoiceSummary[]> => {
-    const response = await axios.get('/invoices', { params: filters });
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, String(value));
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const url = queryString ? `/invoices?${queryString}` : '/invoices';
+    const response = await axios.get(url);
     return response.data.factures;
   },
 

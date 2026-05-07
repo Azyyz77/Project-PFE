@@ -289,7 +289,7 @@ export default function DirectionStaffPage() {
                   <XAxis dataKey="nom" angle={-45} textAnchor="end" height={80} />
                   <YAxis domain={[0, 5]} />
                   <Tooltip 
-                    formatter={(value: any, name: string) => {
+                    formatter={(value: any, name: string | number | undefined) => {
                       if (name === 'note') return [`${Number(value).toFixed(2)} / 5`, 'Note'];
                       return [value, 'Feedbacks'];
                     }}

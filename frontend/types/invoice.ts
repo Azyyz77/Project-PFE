@@ -51,6 +51,7 @@ export interface InvoiceSummary {
   commande_numero: string;
   client_nom: string;
   client_prenom: string;
+  vehicule_immatriculation?: string;
   montant_ttc: number;
   statut: InvoiceStatus;
   date_emission: string;

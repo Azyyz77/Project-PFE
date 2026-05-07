@@ -74,30 +74,6 @@ function CatalogContent() {
     }
   }, [token, loadCatalog]);
 
-  const loadCatalog = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      setLoading(true);
-      const [typesData, subTypesData, packagesData, statsData] = await Promise.all([
-        getInterventionTypes(token),
-        getSubTypes(token),
-        getPackages(token),
-        getCatalogStats(token)
-      ]);
-      
-      setTypes(typesData);
-      setSubTypes(subTypesData);
-      setPackages(packagesData.filter(pkg => pkg.actif)); // Afficher uniquement les packages actifs
-      setStats(statsData);
-    } catch (error) {
-      console.error(error);
-      toast.error('Erreur', { description: 'Impossible de charger le catalogue' });
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
   const openPackageDetails = async (packageId: number) => {
     if (!token) return;
     

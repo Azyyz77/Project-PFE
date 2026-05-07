@@ -16,7 +16,17 @@ export async function getActivePromotions(params?: {
   agence_id?: number;
   marque_id?: number;
 }): Promise<VehiclePromotion[]> {
-  const response = await api.get('/vehicle-promotions/public/active', { params });
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, String(value));
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  const url = queryString ? `/vehicle-promotions/public/active?${queryString}` : '/vehicle-promotions/public/active';
+  const response = await api.get(url);
   return response.data.promotions;
 }
 
@@ -35,7 +45,17 @@ export async function getAllPromotions(params?: {
   actif?: boolean;
   agence_id?: number;
 }): Promise<VehiclePromotion[]> {
-  const response = await api.get('/vehicle-promotions', { params });
+  const queryParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, String(value));
+      }
+    });
+  }
+  const queryString = queryParams.toString();
+  const url = queryString ? `/vehicle-promotions?${queryString}` : '/vehicle-promotions';
+  const response = await api.get(url);
   return response.data.promotions;
 }
 

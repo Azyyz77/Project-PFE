@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   MessageSquare, 
@@ -80,34 +81,6 @@ export default function ComplaintsPage() {
   useEffect(() => {
     loadComplaints();
   }, [loadComplaints]);
-
-  const loadComplaints = useCallback(async () => {
-    if (!token) return;
-
-    setIsLoading(true);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/complaints/my-complaints`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || `Erreur HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      setComplaints(data);
-    } catch (err) {
-      const error = err as Error;
-      console.error('Error loading complaints:', error);
-      toast.error('Erreur', { description: error.message || 'Erreur lors du chargement des réclamations' });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
