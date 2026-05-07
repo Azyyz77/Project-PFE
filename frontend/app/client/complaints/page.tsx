@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   MessageSquare, 
@@ -37,7 +35,7 @@ interface Complaint {
 }
 
 export default function ComplaintsPage() {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const { t } = useLanguage();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,11 +49,7 @@ export default function ComplaintsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
 
-  useEffect(() => {
-    loadComplaints();
-  }, [token]);
-
-  const loadComplaints = async () => {
+  const loadComplaints = useCallback(async () => {
     if (!token) return;
 
     setIsLoading(true);
@@ -74,13 +68,46 @@ export default function ComplaintsPage() {
 
       const data = await response.json();
       setComplaints(data);
-    } catch (err: any) {
-      console.error('Error loading complaints:', err);
-      toast.error('Erreur', { description: err.message || 'Erreur lors du chargement des réclamations' });
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error loading complaints:', error);
+      toast.error('Erreur', { description: error.message || 'Erreur lors du chargement des réclamations' });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadComplaints();
+  }, [loadComplaints]);
+
+  const loadComplaints = useCallback(async () => {
+    if (!token) return;
+
+    setIsLoading(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_URL}/api/complaints/my-complaints`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || `Erreur HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      setComplaints(data);
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error loading complaints:', error);
+      toast.error('Erreur', { description: error.message || 'Erreur lors du chargement des réclamations' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -148,8 +175,9 @@ export default function ComplaintsPage() {
       setForm({ sujet: '', description: '' });
       setIsDialogOpen(false);
       loadComplaints();
-    } catch (err: any) {
-      const msg = err.message || 'Erreur lors de la création';
+    } catch (err) {
+      const error = err as Error;
+      const msg = error.message || 'Erreur lors de la création';
       setApiError(msg);
       toast.error('Erreur', { description: msg });
     } finally {

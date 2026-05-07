@@ -19,7 +19,7 @@ export default function ChatbotPage() {
     {
       id: '0',
       role: 'bot',
-      text: t('chatbot.greeting') || 'Bonjour ! Je suis l\'assistant virtuel Chery. Comment puis-je vous aider aujourd\'hui ?',
+      text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?',
       timestamp: new Date()
     }
   ]);
@@ -36,7 +36,7 @@ export default function ChatbotPage() {
       if (updated[0].id === '0' && updated[0].role === 'bot') {
         updated[0] = { 
           ...updated[0], 
-          text: t('chatbot.greeting') || 'Bonjour ! Je suis l\'assistant virtuel Chery. Comment puis-je vous aider aujourd\'hui ?' 
+          text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?' 
         };
       }
       return updated;
@@ -135,7 +135,7 @@ export default function ChatbotPage() {
     'Comment prendre un rendez-vous ?',
     'Quels sont les modèles Chery disponibles ?',
     'Quelle est la garantie sur les véhicules ?',
-    'Où se trouve l\'agence la plus proche ?'
+    'Où se trouve l&apos;agence la plus proche ?'
   ];
 
   const handleQuickQuestion = (question: string) => {
@@ -262,7 +262,7 @@ export default function ChatbotPage() {
                   <div className="w-2 h-2 bg-[#E30613] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {t('chatbot.typing') || 'En train d\'écrire...'}
+                  {t('chatbot.typing') || 'En train d&apos;écrire...'}
                 </span>
               </div>
             </div>

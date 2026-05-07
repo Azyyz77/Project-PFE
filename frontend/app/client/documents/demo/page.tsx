@@ -28,7 +28,7 @@ export default function FileUploadDemoPage() {
             </h1>
           </div>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Démonstration complète du système d'upload et de gestion des pièces jointes
+            Démonstration complète du système d&apos;upload et de gestion des pièces jointes
           </p>
           <div className="flex items-center justify-center space-x-2">
             <Badge variant="secondary" className="bg-green-600 text-white">
@@ -98,7 +98,7 @@ export default function FileUploadDemoPage() {
               {selectedDemo === 'basic' && (
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <label className="text-white">ID d'entité de test:</label>
+                    <label className="text-white">ID d&apos;entité de test:</label>
                     <input
                       type="number"
                       value={demoEntityId}
@@ -176,7 +176,7 @@ export default function FileUploadDemoPage() {
                 <ul className="text-sm space-y-1">
                   <li>• Taille max: 10MB par fichier</li>
                   <li>• Maximum: 5 fichiers par upload</li>
-                  <li>• Types d'entités: RDV, RECLAMATION</li>
+                  <li>• Types d&apos;entités: RDV, RECLAMATION</li>
                 </ul>
               </div>
 
@@ -205,7 +205,7 @@ export default function FileUploadDemoPage() {
               <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
                 <h4 className="font-semibold text-blue-300 mb-1">💡 Conseil</h4>
                 <p className="text-sm text-blue-200">
-                  Utilisez les composants prêts à l'emploi dans vos pages existantes pour une intégration rapide.
+                  Utilisez les composants prêts à l&apos;emploi dans vos pages existantes pour une intégration rapide.
                 </p>
               </div>
             </CardContent>
@@ -215,7 +215,7 @@ export default function FileUploadDemoPage() {
         {/* Usage Examples */}
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white">Exemples d'intégration</CardTitle>
+            <CardTitle className="text-white">Exemples d&apos;intégration</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="basic" className="w-full">
