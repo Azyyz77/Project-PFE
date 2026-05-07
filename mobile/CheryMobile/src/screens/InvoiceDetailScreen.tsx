@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, RefreshControl, Platform,
+  ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { File } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import api from '../config/api';
@@ -111,48 +111,46 @@ export default function InvoiceDetailScreen() {
       // Construire l'URL du PDF
       const pdfUrl = `${api.defaults.baseURL}/invoices/${invoiceId}/pdf`;
       
-      // Nom du fichier
+      // Nom et chemin du fichier - utiliser documentDirectory qui est accessible
       const fileName = `Facture_${invoice?.numero || invoiceId}.pdf`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
       
-      // Créer un fichier dans le cache de l'application
-      const file = new File(fileName);
+      console.log('Downloading PDF from:', pdfUrl);
+      console.log('Saving to:', fileUri);
       
-      // Télécharger le fichier avec la nouvelle API
-      const response = await fetch(pdfUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Télécharger le fichier avec l'API legacy
+      const downloadResult = await FileSystem.downloadAsync(
+        pdfUrl,
+        fileUri,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      console.log('Download result:', downloadResult);
       
-      // Obtenir l'ArrayBuffer et le convertir en Uint8Array
-      const arrayBuffer = await response.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      // Créer et écrire dans le fichier
-      await file.create();
-      await file.write(uint8Array);
-      
-      // Vérifier si le partage est disponible
-      const isAvailable = await Sharing.isAvailableAsync();
-      
-      if (isAvailable) {
-        // Partager le fichier (ouvre le menu de partage natif)
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: 'Ouvrir la facture',
-          UTI: 'com.adobe.pdf',
-        });
+      if (downloadResult.status === 200) {
+        // Vérifier si le partage est disponible
+        const isAvailable = await Sharing.isAvailableAsync();
+        
+        if (isAvailable) {
+          // Partager le fichier (ouvre le menu de partage natif)
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: 'application/pdf',
+            dialogTitle: 'Ouvrir la facture',
+            UTI: 'com.adobe.pdf',
+          });
+        } else {
+          Alert.alert(
+            'Succès',
+            `Le PDF a été téléchargé dans ${fileUri}`,
+            [{ text: 'OK' }]
+          );
+        }
       } else {
-        Alert.alert(
-          'Succès',
-          `Le PDF a été téléchargé`,
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Erreur', `Impossible de télécharger le PDF (Status: ${downloadResult.status})`);
       }
     } catch (error: any) {
       console.error('Failed to download PDF:', error);

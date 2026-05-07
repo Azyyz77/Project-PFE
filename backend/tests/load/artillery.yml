@@ -1,0 +1,122 @@
+# Artillery Load Test Configuration
+# STA Chery Tunisia — Backend API Load Tests
+#
+# Usage:
+#   npm install -g artillery
+#   artillery run tests/load/artillery.yml --output tests/load/report.json
+#   artillery report tests/load/report.json --output tests/load/report.html
+#
+# Or via npm script (add to backend/package.json):
+#   "test:load": "artillery run tests/load/artillery.yml"
+
+config:
+  target: "http://localhost:3000"
+  http:
+    timeout: 30
+  phases:
+    # ── Phase 1: Warm-up (gentle ramp) ───────────────────────────────
+    - name: "Warm-up"
+      duration: 30
+      arrivalRate: 2
+      rampTo: 10
+
+    # ── Phase 2: Normal Load ──────────────────────────────────────────
+    - name: "Normal Load"
+      duration: 60
+      arrivalRate: 10
+
+    # ── Phase 3: Peak Load (stress) ───────────────────────────────────
+    - name: "Peak Load"
+      duration: 30
+      arrivalRate: 30
+
+    # ── Phase 4: Cool-down ────────────────────────────────────────────
+    - name: "Cool-down"
+      duration: 15
+      arrivalRate: 5
+
+  # Thresholds: fail if these are exceeded
+  ensure:
+    thresholds:
+      - http.response_time.p95: 2000   # 95th percentile < 2 seconds
+      - http.response_time.p99: 5000   # 99th percentile < 5 seconds
+    conditions:
+      - expression: "http.request_rate > 0"
+        strict: false
+
+  # Variables reused across scenarios
+  variables:
+    apiBase: "/api"
+
+# ── Scenarios ──────────────────────────────────────────────────────────────
+scenarios:
+  # ── Scenario 1: Auth endpoints ─────────────────────────────────────
+  - name: "Authentication Endpoints"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/users/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            email: "loadtest@example.com"
+            password: "Password123!"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      - think: 1
+
+      - get:
+          url: "/api/appointments/my"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          ifTrue: "authToken"
+
+  # ── Scenario 2: Public endpoints ──────────────────────────────────
+  - name: "Public Endpoint Reads"
+    weight: 40
+    flow:
+      - get:
+          url: "/api/appointments"
+          headers:
+            Content-Type: "application/json"
+
+      - think: 0.5
+
+      - post:
+          url: "/api/users/login"
+          json:
+            email: "bad_email@nowhere.com"
+            password: "wrongpassword"
+          # Expect 401 — we're testing resilience of auth rejection
+          expect:
+            - statusCode: [401, 404]
+
+  # ── Scenario 3: Appointment creation burst ─────────────────────────
+  - name: "Appointment Booking Burst"
+    weight: 20
+    flow:
+      # Login first
+      - post:
+          url: "/api/users/login"
+          json:
+            email: "loadtest@example.com"
+            password: "Password123!"
+          capture:
+            - json: "$.token"
+              as: "bookToken"
+
+      - think: 0.5
+
+      # Try to book — OK to get 400/422 for invalid data, testing throughput
+      - post:
+          url: "/api/appointments"
+          headers:
+            Authorization: "Bearer {{ bookToken }}"
+            Content-Type: "application/json"
+          json:
+            date_heure: "2099-12-31T10:00:00.000Z"
+            vehicule_id: 1
+            agence_id: 1
+          ifTrue: "bookToken"
