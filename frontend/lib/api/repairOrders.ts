@@ -94,7 +94,7 @@ export const repairOrdersApi = {
    * Mes commandes (pour le client)
    */
   getMyOrders: async (): Promise<RepairOrderSummary[]> => {
-    const response = await axios.get('/repair-orders/my/orders');
-    return response.data.commandes;
+    const response = await axios.get('/repair-orders/my');
+    return response.data.orders;
   },
 };

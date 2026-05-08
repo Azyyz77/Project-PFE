@@ -92,8 +92,8 @@ export const invoicesApi = {
    * Mes factures (pour le client)
    */
   getMyInvoices: async (): Promise<InvoiceSummary[]> => {
-    const response = await axios.get('/invoices/my/invoices');
-    return response.data.factures;
+    const response = await axios.get('/invoices/my');
+    return response.data.invoices;
   },
 
   /**
