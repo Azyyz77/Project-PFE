@@ -470,7 +470,7 @@ const getMyInvoices = async (req, res) => {
         SELECT 
           f.id,
           f.numero,
-          f.statut AS statut_paiement,
+          f.statut,
           f.montant_ttc,
           f.date_emission,
           f.date_paiement,

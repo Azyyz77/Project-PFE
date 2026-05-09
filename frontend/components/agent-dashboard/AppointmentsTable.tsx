@@ -40,7 +40,7 @@ export default function AppointmentsTable({ token }: Props) {
       const filters = viewMode === 'date' 
         ? { fromDate: selectedDate, toDate: selectedDate }
         : {};
-      const data = await fetchAppointments(token, filters);
+      const data = await fetchAppointments(filters);
       setAppointments(data);
     } catch (error) {
       console.error(error);
@@ -94,7 +94,7 @@ export default function AppointmentsTable({ token }: Props) {
         case 'cancel':
           // Utiliser l'ancienne fonction pour l'annulation
           const { cancelAppointment: cancelFn } = await import('@/lib/api/agentDashboard');
-          await cancelFn(token, confirmDialog.id, 'Annulé par agent');
+          await cancelFn(confirmDialog.id, 'Annulé par agent');
           label = 'Rendez-vous annulé';
           break;
       }

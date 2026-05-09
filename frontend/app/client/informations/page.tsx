@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getActiveSections,
@@ -10,8 +11,14 @@ import {
   formatFileSize,
 } from '@/lib/api/information';
 import type { Section, Content, Document } from '@/types/information';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import {
+  ClientPageWrapper,
+  ClientCard,
+  ClientButton,
+  ClientStatCard,
+  ClientEmptyState,
+  ClientLoadingState,
+} from '@/components/client';
 import {
   Shield,
   FileText,
@@ -22,8 +29,17 @@ import {
   FileIcon,
   ChevronRight,
   Info,
+  BookOpen,
+  Sparkles,
+  Search,
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle,
+  Zap,
+  History,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Map icon names to components
 const iconMap: Record<string, any> = {
@@ -37,6 +53,7 @@ const iconMap: Record<string, any> = {
 
 export default function InformationsPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
   const [contents, setContents] = useState<Content[]>([]);
@@ -95,10 +112,9 @@ export default function InformationsPage() {
       await incrementDownloadCount(doc.id);
       
       // In a real app, this would download the actual file
-      // For now, we just show a message
       toast.success(`Téléchargement de ${doc.nom_fichier} démarré`);
       
-      // TODO: Implement actual file download
+      // TODO: Implement actual file download if the API provides a URL
       // window.open(doc.chemin_fichier, '_blank');
     } catch (error: any) {
       console.error('Erreur téléchargement:', error);
@@ -112,177 +128,226 @@ export default function InformationsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-rose-500"></div>
-      </div>
-    );
+    return <ClientLoadingState message="Chargement des informations..." />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            {t('informations.title')}
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            {t('informations.everythingYouNeed')}
-          </p>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar - Sections */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t('informations.sections')}</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <nav className="space-y-1">
-                  {sections.map((section) => {
-                    const Icon = getIcon(section.icone);
-                    const isSelected = selectedSection?.id === section.id;
-                    
-                    return (
-                      <button
-                        key={section.id}
-                        onClick={() => setSelectedSection(section)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                          isSelected
-                            ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-l-4 border-rose-500'
-                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-l-4 border-transparent'
-                        }`}
-                      >
-                        <Icon className="h-5 w-5 flex-shrink-0" />
-                        <span className="flex-1 font-medium">{section.titre}</span>
-                        <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                      </button>
-                    );
-                  })}
-                </nav>
-              </CardContent>
-            </Card>
+    <ClientPageWrapper className="space-y-12 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-2xl text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+              <BookOpen className="h-3.5 w-3.5" />
+              Centre de Connaissances Chery
+            </div>
+            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+              Informations <span className="text-red-500">Utiles</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+              Tout ce que vous devez savoir sur votre véhicule, nos services, la garantie et l'assistance technique.
+            </p>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {isLoadingContent ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-rose-500"></div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {/* Section Title */}
-                {selectedSection && (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        {(() => {
-                          const Icon = getIcon(selectedSection.icone);
-                          return <Icon className="h-8 w-8 text-rose-500" />;
-                        })()}
-                        <div>
-                          <CardTitle className="text-2xl">{selectedSection.titre}</CardTitle>
-                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                            {contents.length} {t('informations.articles')}{contents.length > 1 ? 's' : ''} • {documents.length} {t('informations.documents')}{documents.length > 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                )}
+          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+             <div className="text-center">
+                <Sparkles className="h-10 w-10 text-blue-400 mx-auto mb-2" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aide & Guide</p>
+             </div>
+          </div>
+        </div>
+      </motion.div>
 
-                {/* Contents */}
-                {contents.length > 0 && (
-                  <div className="space-y-4">
-                    {contents.map((content) => (
-                      <Card key={content.id}>
-                        <CardHeader>
-                          <CardTitle className="text-xl">{content.titre}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div
-                            className="prose prose-slate dark:prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: content.contenu }}
-                          />
-                        </CardContent>
-                      </Card>
-                    ))}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* ─── Sidebar - Sections ─── */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="px-4">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Catégories</h3>
+          </div>
+          <div className="grid gap-2">
+            {sections.map((section, idx) => {
+              const Icon = getIcon(section.icone);
+              const isSelected = selectedSection?.id === section.id;
+              
+              return (
+                <motion.button
+                  key={section.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => setSelectedSection(section)}
+                  className={`group relative flex items-center gap-4 p-4 rounded-[1.5rem] transition-all duration-300 text-left border-none ${
+                    isSelected
+                      ? 'bg-red-600 text-white shadow-xl shadow-red-500/20 translate-x-2'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm hover:shadow-md'
+                  }`}
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
+                    isSelected ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-slate-200'
+                  }`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="flex-1 font-bold text-sm tracking-tight">{section.titre}</span>
+                  <ChevronRight className={`h-4 w-4 transition-transform ${isSelected ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'}`} />
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <div className="p-6 rounded-[2rem] bg-blue-50 border border-blue-100 mt-8">
+             <Phone className="h-6 w-6 text-blue-600 mb-3" />
+             <h4 className="font-black text-slate-800 text-sm mb-1 uppercase tracking-tight">Besoin d'aide ?</h4>
+             <p className="text-xs text-slate-500 font-medium mb-4 leading-relaxed">Notre équipe technique est disponible 24/7 pour vous accompagner.</p>
+             <ClientButton variant="primary" className="w-full text-xs py-2 h-auto" onClick={() => router.push('/client/assistance')}>
+                Contacter l'assistance
+             </ClientButton>
+          </div>
+        </div>
+
+        {/* ─── Main Content ─── */}
+        <div className="lg:col-span-3">
+          <AnimatePresence mode="wait">
+            {isLoadingContent ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="grid gap-6"
+              >
+                {[1, 2].map(i => (
+                  <div key={i} className="h-64 rounded-[2.5rem] bg-white animate-pulse" />
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key={selectedSection?.id || 'empty'}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-10"
+              >
+                {/* Section Header */}
+                {selectedSection && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4">
+                    <div>
+                       <h2 className="text-3xl font-black text-slate-800 tracking-tight">{selectedSection.titre}</h2>
+                       <p className="text-slate-400 text-sm font-medium mt-1">
+                          {contents.length} Article{contents.length > 1 ? 's' : ''} • {documents.length} Document{documents.length > 1 ? 's' : ''}
+                       </p>
+                    </div>
+                    <div className="h-px flex-1 bg-slate-100 hidden sm:block mx-8" />
+                    <div className="flex items-center gap-2">
+                       <Zap className="h-4 w-4 text-amber-500" />
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mis à jour</span>
+                    </div>
                   </div>
                 )}
 
-                {/* Documents */}
-                {documents.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Download className="h-5 w-5" />
-                        {t('informations.downloadableDocuments')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {documents.map((doc) => (
+                {/* Contents List */}
+                <div className="space-y-6">
+                  {contents.length > 0 ? (
+                    contents.map((content, idx) => (
+                      <motion.div
+                        key={content.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                      >
+                        <ClientCard className="p-8 sm:p-10 border-none shadow-xl shadow-slate-100 group">
+                          <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-6 group-hover:text-red-600 transition-colors">
+                            {content.titre}
+                          </h3>
                           <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div className="flex-shrink-0">
-                                <FileIcon className="h-8 w-8 text-rose-500" />
+                            className="prose prose-slate max-w-none prose-p:text-slate-500 prose-p:leading-relaxed prose-headings:text-slate-800 prose-strong:text-slate-800"
+                            dangerouslySetInnerHTML={{ __html: content.contenu }}
+                          />
+                        </ClientCard>
+                      </motion.div>
+                    ))
+                  ) : (
+                    !documents.length && (
+                      <ClientEmptyState
+                        icon={Info}
+                        title="Aucun contenu"
+                        description="Cette section ne contient pas encore d'articles."
+                        className="bg-white border-none shadow-xl shadow-slate-100"
+                      />
+                    )
+                  )}
+                </div>
+
+                {/* Documents List */}
+                {documents.length > 0 && (
+                  <div className="space-y-6">
+                    <div className="px-4">
+                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Documents téléchargeables</h3>
+                    </div>
+                    <div className="grid gap-4">
+                      {documents.map((doc, idx) => (
+                        <motion.div
+                          key={doc.id}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                        >
+                          <ClientCard className="p-6 border-none shadow-lg shadow-slate-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group">
+                            <div className="flex flex-col sm:flex-row items-center gap-6">
+                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                                <FileIcon className="h-8 w-8" />
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-slate-900 dark:text-white">
+                              <div className="flex-1 text-center sm:text-left min-w-0">
+                                <h4 className="font-black text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors">
                                   {doc.titre}
                                 </h4>
                                 {doc.description && (
-                                  <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                  <p className="text-sm text-slate-400 font-medium mt-1 line-clamp-1">
                                     {doc.description}
                                   </p>
                                 )}
-                                <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                                  <span>{doc.nom_fichier}</span>
-                                  {doc.taille_octets && (
-                                    <span>{formatFileSize(doc.taille_octets)}</span>
-                                  )}
-                                  <span>{doc.nombre_telechargements} {t('informations.downloads')}{doc.nombre_telechargements > 1 ? 's' : ''}</span>
+                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3">
+                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                     <History className="h-3 w-3" />
+                                     {doc.nom_fichier?.split('.').pop()?.toUpperCase()}
+                                  </span>
+                                  <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                     <Zap className="h-3 w-3" />
+                                     {doc.taille_octets ? formatFileSize(doc.taille_octets) : 'N/A'}
+                                  </span>
+                                  <span className="h-1 w-1 rounded-full bg-slate-200" />
+                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5 text-blue-500/60">
+                                     <Download className="h-3 w-3" />
+                                     {doc.nombre_telechargements} Téléchargements
+                                  </span>
                                 </div>
                               </div>
+                              <ClientButton
+                                variant="secondary"
+                                onClick={() => handleDownload(doc)}
+                                icon={Download}
+                                className="w-full sm:w-auto rounded-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
+                              >
+                                {t('documents.download')}
+                              </ClientButton>
                             </div>
-                            <Button
-                              onClick={() => handleDownload(doc)}
-                              className="flex-shrink-0 gap-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              {t('documents.download')}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          </ClientCard>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-
-                {/* Empty State */}
-                {contents.length === 0 && documents.length === 0 && (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Info className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-slate-600 dark:text-slate-400">
-                        {t('informations.noContent')}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+    </ClientPageWrapper>
   );
 }

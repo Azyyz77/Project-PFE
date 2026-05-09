@@ -7,7 +7,7 @@ import {
   VersionCatalogResponse,
 } from '@/types/vehicle';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -25,7 +25,7 @@ function buildAuthHeaders(token: string) {
 
 export async function getVehiclesByUser(userId: number, token: string): Promise<Vehicle[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles/user/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/user/${userId}`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -46,7 +46,7 @@ export async function getVehiclesByUser(userId: number, token: string): Promise<
 
 export async function getVehicleById(id: number, token: string): Promise<Vehicle> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -70,7 +70,7 @@ export async function getVehicleById(id: number, token: string): Promise<Vehicle
 
 export async function createVehicle(data: CreateVehicleData, token: string): Promise<Vehicle> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(data),
@@ -95,7 +95,7 @@ export async function createVehicle(data: CreateVehicleData, token: string): Pro
 
 export async function updateVehicle(id: number, data: UpdateVehicleData, token: string): Promise<Vehicle> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
       method: 'PUT',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(data),
@@ -120,7 +120,7 @@ export async function updateVehicle(id: number, data: UpdateVehicleData, token: 
 
 export async function deleteVehicle(id: number, token: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
       method: 'DELETE',
       headers: buildAuthHeaders(token),
     });
@@ -138,7 +138,7 @@ export async function deleteVehicle(id: number, token: string): Promise<void> {
 
 export async function getVersionCatalog(token: string): Promise<VersionCatalogItem[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/vehicles/catalog/versions`, {
+    const response = await fetch(`${API_BASE_URL}/vehicles/catalog/versions`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });

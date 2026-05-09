@@ -5,16 +5,32 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Car, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  ClientPageWrapper,
+  ClientButton,
+  ClientCard,
+  ClientLoadingState,
+} from '@/components/client';
+import { 
+  ArrowLeft, 
+  Car, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2,
+  ShieldCheck,
+  Zap,
+  Camera,
+  FileText,
+  ChevronRight,
+  Info,
+  X,
+  Plus
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { getVersionCatalog } from '@/lib/api/vehicles';
 import { getAllColors, type Color } from '@/lib/api/colors';
 import type { VersionCatalogItem } from '@/types/vehicle';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type PlateType = 'TUNIS' | 'NT';
 
@@ -94,7 +110,6 @@ export default function NewVehiclePage() {
       ).sort();
       setModeles(filteredModeles);
       
-      // Reset modele and version if marque changes
       setForm(prev => ({ ...prev, modele: '', version_id: '' }));
       setVersions([]);
     } else {
@@ -111,7 +126,6 @@ export default function NewVehiclePage() {
         .sort((a, b) => a.version_nom.localeCompare(b.version_nom));
       setVersions(filteredVersions);
       
-      // Reset version if modele changes
       setForm(prev => ({ ...prev, version_id: '' }));
     } else {
       setVersions([]);
@@ -120,14 +134,12 @@ export default function NewVehiclePage() {
 
   const loadVersionCatalog = async () => {
     if (!token) return;
-
     setIsLoadingCatalog(true);
     try {
       const data = await getVersionCatalog(token);
       setVersionCatalog(data);
     } catch (err: any) {
       console.error('Error loading catalog:', err);
-      toast.error(t('common.error'), { description: t('common.error') });
     } finally {
       setIsLoadingCatalog(false);
     }
@@ -135,15 +147,12 @@ export default function NewVehiclePage() {
 
   const loadColors = async () => {
     if (!token) return;
-
     setIsLoadingColors(true);
     try {
       const data = await getAllColors();
-      // Filtrer seulement les couleurs actives
       setColors(data.filter(c => c.actif));
     } catch (err: any) {
       console.error('Error loading colors:', err);
-      toast.error(t('common.error'), { description: t('common.error') });
     } finally {
       setIsLoadingColors(false);
     }
@@ -176,19 +185,16 @@ export default function NewVehiclePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
-      toast.error(t('common.error'));
+      toast.error('Veuillez sélectionner une image valide.');
       return;
     }
 
-    // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(t('common.error'));
+      toast.error('L\'image est trop lourde (max 5Mo).');
       return;
     }
 
-    // Créer un aperçu
     const reader = new FileReader();
     reader.onloadend = () => {
       if (type === 'vehicule') {
@@ -201,7 +207,6 @@ export default function NewVehiclePage() {
     };
     reader.readAsDataURL(file);
 
-    // Supprimer l'erreur si elle existe
     if (errors[`image_${type}`]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -223,55 +228,15 @@ export default function NewVehiclePage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     const immatriculation = buildImmatriculation();
-    if (!immatriculation) {
-      newErrors.immatriculation = t('common.error');
-    } else if (plateType === 'TUNIS') {
-      const { part1, part2 } = tunisPlate;
-      const num1 = parseInt(part1) || 0;
-      
-      if (!part1 || num1 < 1 || num1 > 260) {
-        newErrors.immatriculation = t('common.error');
-      } else if (!part2 || part2.length < 3 || part2.length > 4) {
-        newErrors.immatriculation = t('common.error');
-      }
-    } else if (plateType === 'NT') {
-      if (!ntPlate || ntPlate.length < 4 || ntPlate.length > 5) {
-        newErrors.immatriculation = t('common.error');
-      }
-    }
-
-    if (!form.numero_chassis.trim()) {
-      newErrors.numero_chassis = t('common.error');
-    }
-    if (!form.marque) {
-      newErrors.marque = t('common.error');
-    }
-    if (!form.modele) {
-      newErrors.modele = t('common.error');
-    }
-    if (!form.version_id) {
-      newErrors.version_id = t('common.error');
-    }
-    if (!form.annee) {
-      newErrors.annee = t('common.error');
-    } else {
-      const year = parseInt(form.annee);
-      const currentYear = new Date().getFullYear();
-      if (year < 1900 || year > currentYear + 1) {
-        newErrors.annee = t('common.error');
-      }
-    }
-
-    if (!form.couleur) {
-      newErrors.couleur = t('common.error');
-    }
-
-    if (!imageCarteGrise) {
-      newErrors.image_carte_grise = t('common.error');
-    }
-
+    if (!immatriculation) newErrors.immatriculation = 'Requis';
+    if (!form.numero_chassis.trim()) newErrors.numero_chassis = 'Requis';
+    if (!form.marque) newErrors.marque = 'Requis';
+    if (!form.modele) newErrors.modele = 'Requis';
+    if (!form.version_id) newErrors.version_id = 'Requis';
+    if (!form.annee) newErrors.annee = 'Requis';
+    if (!form.couleur) newErrors.couleur = 'Requis';
+    if (!imageCarteGrise) newErrors.image_carte_grise = 'Requis';
     return newErrors;
   };
 
@@ -283,11 +248,12 @@ export default function NewVehiclePage() {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error('Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
     if (!user || !token) {
-      setApiError(t('common.error'));
+      setApiError('Session expirée');
       return;
     }
 
@@ -295,13 +261,11 @@ export default function NewVehiclePage() {
 
     try {
       const immatriculation = buildImmatriculation();
-      
-      // Prepare image data (already in Base64 from FileReader)
       const image_vehicule_base64 = previewVehicule || undefined;
       const image_carte_grise_base64 = previewCarteGrise || undefined;
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/vehicles`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+      const response = await fetch(`${API_URL}/vehicles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,21 +285,18 @@ export default function NewVehiclePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || t('common.error'));
+        throw new Error(data.error || 'Erreur lors de l\'ajout');
       }
 
       setSuccess(true);
-      toast.success(t('vehicles.vehicleAdded'), {
-        description: t('vehicles.vehicleAddedSuccess'),
-      });
+      toast.success('Véhicule ajouté avec succès !');
 
       setTimeout(() => {
         router.push('/client/vehicles');
       }, 2000);
     } catch (err: any) {
-      const msg = err.message || t('common.error');
-      setApiError(msg);
-      toast.error(t('common.error'), { description: msg });
+      setApiError(err.message);
+      toast.error(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -343,457 +304,320 @@ export default function NewVehiclePage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('vehicles.vehicleAdded')}</h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                {t('vehicles.vehicleAddedSuccess')}
-              </p>
-              <Button onClick={() => router.push('/client/vehicles')} className="w-full">
-                {t('vehicles.viewMyVehicles')}
-              </Button>
+      <ClientPageWrapper className="flex items-center justify-center min-h-[70vh]">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <ClientCard className="max-w-md w-full text-center p-12">
+            <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-500/20">
+               <CheckCircle className="w-12 h-12 text-white" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <h2 className="text-3xl font-black text-slate-800 mb-4">Véhicule Enregistré</h2>
+            <p className="text-slate-500 font-medium mb-8">
+              Votre véhicule a été ajouté à votre garage. Un agent STA Chery vérifiera vos documents sous peu.
+            </p>
+            <ClientButton variant="primary" fullWidth onClick={() => router.push('/client/vehicles')}>
+              Voir mon garage
+            </ClientButton>
+          </ClientCard>
+        </motion.div>
+      </ClientPageWrapper>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href="/client/vehicles">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('vehicles.addNewVehicle')}</h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">{t('vehicles.fillRequired')}</p>
-          </div>
-        </div>
-
-        {/* Form Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                <Car className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <CardTitle>{t('vehicles.vehicleInfo')}</CardTitle>
-                <CardDescription>{t('vehicles.fillRequired')}</CardDescription>
+    <ClientPageWrapper className="space-y-12 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="max-w-2xl text-center md:text-left">
+            <div className="mb-6 flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <button 
+                onClick={() => router.back()}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+                <Car className="h-3.5 w-3.5" />
+                Nouveau Véhicule
               </div>
             </div>
-          </CardHeader>
+            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+              Ajoutez un <span className="text-red-500">Moteur</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+              Enregistrez votre véhicule STA Chery pour accéder à l'historique complet des entretiens et réserver vos prochains rendez-vous en un clic.
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
-          <CardContent>
-            {apiError && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{apiError}</AlertDescription>
-              </Alert>
-            )}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* Main Form Fields */}
+        <div className="lg:col-span-2 space-y-8">
+          <ClientCard className="p-10 space-y-10">
+            <div className="flex items-center gap-4">
+               <div className="h-12 w-12 rounded-2xl bg-red-50 flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-red-600" />
+               </div>
+               <div>
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Spécifications Techniques</h2>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Détails de votre véhicule</p>
+               </div>
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Plate Type Selection */}
-              <div className="space-y-3">
-                <Label>{t('vehicles.plateType')} *</Label>
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setPlateType('TUNIS')}
-                    className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-                      plateType === 'TUNIS'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">{t('vehicles.tunisFormat')}</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">123 تونس 4567</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPlateType('NT')}
-                    className={`flex-1 p-4 rounded-lg border-2 transition-all ${
-                      plateType === 'NT'
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="font-semibold">{t('vehicles.ntFormat')}</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">12345 ن.ت</div>
-                  </button>
-                </div>
-              </div>
+            {/* Plate Selection */}
+            <div className="space-y-4">
+               <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Type d'immatriculation *</label>
+               <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { id: 'TUNIS', label: 'Tunisie (123 تونس 456)', icon: Zap },
+                    { id: 'NT', label: 'N.T (12345 ن.ت)', icon: ShieldCheck }
+                  ].map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setPlateType(type.id as PlateType)}
+                      className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 ${
+                        plateType === type.id 
+                          ? 'border-red-500 bg-red-50 text-red-600 shadow-xl shadow-red-500/10' 
+                          : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
+                      }`}
+                    >
+                      <type.icon className="h-6 w-6" />
+                      <span className="text-xs font-black uppercase tracking-widest">{type.label}</span>
+                    </button>
+                  ))}
+               </div>
 
-              {/* Immatriculation Input */}
-              <div className="space-y-2">
-                <Label htmlFor="immatriculation">{t('vehicles.registration')} *</Label>
-                {plateType === 'TUNIS' ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <Input
-                        id="tunis_part1"
-                        value={tunisPlate.part1}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          const numValue = parseInt(value) || 0;
-                          
-                          // Check if exceeds limit
-                          if (numValue > 260) {
-                            setPart1Error(t('vehicles.maxPlateNumber'));
-                            return;
-                          }
-                          
-                          // Clear error if valid
-                          setPart1Error('');
-                          
-                          // Validate: must be between 1 and 260
-                          if (value === '' || (numValue >= 1 && numValue <= 260)) {
-                            setTunisPlate(prev => ({ ...prev, part1: value.slice(0, 3) }));
-                            if (errors.immatriculation) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev };
-                                delete newErrors.immatriculation;
-                                return newErrors;
-                              });
-                            }
-                          }
-                        }}
-                        placeholder="123"
-                        disabled={isSubmitting}
-                        maxLength={3}
-                        className={`text-center ${errors.immatriculation || part1Error ? 'border-red-500' : ''}`}
-                      />
-                      {part1Error && (
-                        <p className="text-[11px] text-red-600 mt-1 text-center">{part1Error}</p>
-                      )}
-                    </div>
-                    <span className="text-lg font-semibold">تونس</span>
-                    <div className="flex-1">
-                      <Input
-                        id="tunis_part2"
-                        value={tunisPlate.part2}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          // Allow 3 to 4 digits
-                          if (value.length <= 4) {
-                            setTunisPlate(prev => ({ ...prev, part2: value }));
-                            if (errors.immatriculation) {
-                              setErrors(prev => {
-                                const newErrors = { ...prev };
-                                delete newErrors.immatriculation;
-                                return newErrors;
-                              });
-                            }
-                          }
-                        }}
-                        placeholder="4567"
-                        disabled={isSubmitting}
-                        maxLength={4}
-                        className={`text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
-                      />
-                    </div>
+               <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+                  <div className="relative z-10">
+                    {plateType === 'TUNIS' ? (
+                      <div className="flex items-center justify-center gap-6">
+                        <input 
+                          type="text" 
+                          placeholder="123"
+                          value={tunisPlate.part1}
+                          onChange={(e) => setTunisPlate(prev => ({ ...prev, part1: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
+                          className="bg-white/10 border-2 border-white/20 rounded-2xl w-24 p-5 text-2xl font-black text-center focus:border-red-500 outline-none transition-all"
+                        />
+                        <span className="text-3xl font-black opacity-40">تونس</span>
+                        <input 
+                          type="text" 
+                          placeholder="4567"
+                          value={tunisPlate.part2}
+                          onChange={(e) => setTunisPlate(prev => ({ ...prev, part2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                          className="bg-white/10 border-2 border-white/20 rounded-2xl w-32 p-5 text-2xl font-black text-center focus:border-red-500 outline-none transition-all"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-6">
+                        <input 
+                          type="text" 
+                          placeholder="12345"
+                          value={ntPlate}
+                          onChange={(e) => setNtPlate(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                          className="bg-white/10 border-2 border-white/20 rounded-2xl w-48 p-5 text-2xl font-black text-center focus:border-red-500 outline-none transition-all"
+                        />
+                        <span className="text-3xl font-black opacity-40">ن.ت</span>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="nt_plate"
-                      value={ntPlate}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                        setNtPlate(value);
-                        if (errors.immatriculation) {
-                          setErrors(prev => {
-                            const newErrors = { ...prev };
-                            delete newErrors.immatriculation;
-                            return newErrors;
-                          });
-                        }
-                      }}
-                      placeholder="12345"
-                      disabled={isSubmitting}
-                      maxLength={5}
-                      className={`flex-1 ${errors.immatriculation ? 'border-red-500' : ''}`}
-                    />
-                    <span className="text-lg font-semibold">ن.ت</span>
-                  </div>
-                )}
-                {errors.immatriculation && (
-                  <p className="text-xs text-red-600">{errors.immatriculation}</p>
-                )}
-                {buildImmatriculation() && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    {t('vehicles.preview')}: {buildImmatriculation()}
-                  </p>
-                )}
-              </div>
+                  {errors.immatriculation && <p className="text-center text-red-400 text-[10px] font-bold mt-4 uppercase tracking-widest">Immatriculation requise</p>}
+               </div>
+            </div>
 
-              {/* Numéro de châssis */}
-              <div className="space-y-2">
-                <Label htmlFor="numero_chassis">{t('vehicles.chassisNumber')} *</Label>
-                <Input
-                  id="numero_chassis"
-                  name="numero_chassis"
-                  value={form.numero_chassis}
-                  onChange={handleChange}
-                  placeholder="Ex: VF1RFD00654123456"
-                  disabled={isSubmitting}
-                  className={errors.numero_chassis ? 'border-red-500' : ''}
-                />
-                {errors.numero_chassis && (
-                  <p className="text-xs text-red-600">{errors.numero_chassis}</p>
-                )}
-              </div>
-
-              {/* Marque */}
-              <div className="space-y-2">
-                <Label htmlFor="marque">{t('vehicles.brand')} *</Label>
-                {isLoadingCatalog ? (
-                  <div className="flex items-center justify-center p-4 border rounded-md">
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    <span className="text-sm text-slate-600">{t('vehicles.loading')}</span>
-                  </div>
-                ) : (
-                  <select
-                    id="marque"
-                    name="marque"
-                    value={form.marque}
+            {/* Technical Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Numéro de Châssis *</label>
+                  <input 
+                    name="numero_chassis"
+                    value={form.numero_chassis}
                     onChange={handleChange}
-                    disabled={isSubmitting}
-                    className={`w-full rounded-md border ${
-                      errors.marque ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
-                    } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  >
-                    <option value="">{t('vehicles.selectBrand')}</option>
-                    {marques.map((marque) => (
-                      <option key={marque} value={marque}>
-                        {marque}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {errors.marque && (
-                  <p className="text-xs text-red-600">{errors.marque}</p>
-                )}
-              </div>
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                    placeholder="VF1..."
+                  />
+                  {errors.numero_chassis && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">Requis</p>}
+               </div>
 
-              {/* Modèle */}
-              <div className="space-y-2">
-                <Label htmlFor="modele">{t('vehicles.model')} *</Label>
-                <select
-                  id="modele"
-                  name="modele"
-                  value={form.modele}
-                  onChange={handleChange}
-                  disabled={isSubmitting || !form.marque}
-                  className={`w-full rounded-md border ${
-                    errors.modele ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
-                  } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
-                >
-                  <option value="">{t('vehicles.selectModel')}</option>
-                  {modeles.map((modele) => (
-                    <option key={modele} value={modele}>
-                      {modele}
-                    </option>
-                  ))}
-                </select>
-                {errors.modele && (
-                  <p className="text-xs text-red-600">{errors.modele}</p>
-                )}
-              </div>
-
-              {/* Version */}
-              <div className="space-y-2">
-                <Label htmlFor="version_id">{t('vehicles.version')} *</Label>
-                <select
-                  id="version_id"
-                  name="version_id"
-                  value={form.version_id}
-                  onChange={handleChange}
-                  disabled={isSubmitting || !form.modele}
-                  className={`w-full rounded-md border ${
-                    errors.version_id ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
-                  } bg-white dark:bg-slate-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
-                >
-                  <option value="">{t('vehicles.selectVersion')}</option>
-                  {versions.map((version) => (
-                    <option key={version.id} value={version.id}>
-                      {version.version_nom}
-                      {version.motorisation && ` - ${version.motorisation}`}
-                      {version.transmission && ` - ${version.transmission}`}
-                    </option>
-                  ))}
-                </select>
-                {errors.version_id && (
-                  <p className="text-xs text-red-600">{errors.version_id}</p>
-                )}
-              </div>
-
-              {/* Année et Couleur */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="annee">{t('vehicles.year')} *</Label>
-                  <Input
-                    id="annee"
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Année *</label>
+                  <input 
                     name="annee"
                     type="number"
                     value={form.annee}
                     onChange={handleChange}
-                    placeholder="Ex: 2023"
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
-                    disabled={isSubmitting}
-                    className={errors.annee ? 'border-red-500' : ''}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                    placeholder="2023"
                   />
-                  {errors.annee && (
-                    <p className="text-xs text-red-600">{errors.annee}</p>
-                  )}
-                </div>
+                  {errors.annee && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">Requis</p>}
+               </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="couleur">{t('vehicles.color')} *</Label>
-                  <select
-                    id="couleur"
-                    name="couleur"
-                    value={form.couleur}
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marque *</label>
+                  <select 
+                    name="marque"
+                    value={form.marque}
                     onChange={handleChange}
-                    disabled={isSubmitting || isLoadingColors}
-                    className={`w-full rounded-md border ${errors.couleur ? 'border-red-500' : 'border-gray-300'} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50`}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all appearance-none"
                   >
-                    <option value="">
-                      {isLoadingColors ? t('vehicles.loading') : t('vehicles.selectColor')}
-                    </option>
-                    {colors.map((color) => (
-                      <option key={color.id} value={color.nom}>
-                        {color.nom}
+                    <option value="">Sélectionnez une marque</option>
+                    {marques.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+               </div>
+
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modèle *</label>
+                  <select 
+                    name="modele"
+                    value={form.modele}
+                    onChange={handleChange}
+                    disabled={!form.marque}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all appearance-none disabled:opacity-50"
+                  >
+                    <option value="">Sélectionnez un modèle</option>
+                    {modeles.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+               </div>
+
+               <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version *</label>
+                  <select 
+                    name="version_id"
+                    value={form.version_id}
+                    onChange={handleChange}
+                    disabled={!form.modele}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all appearance-none disabled:opacity-50"
+                  >
+                    <option value="">Sélectionnez une version</option>
+                    {versions.map(v => (
+                      <option key={v.id} value={v.id}>
+                        {v.version_nom} {v.motorisation ? `(${v.motorisation})` : ''}
                       </option>
                     ))}
                   </select>
-                  {errors.couleur && (
-                    <p className="text-xs text-red-600">{errors.couleur}</p>
-                  )}
-                  {colors.length === 0 && !isLoadingColors && (
-                    <p className="text-xs text-gray-500">{t('common.none')}</p>
-                  )}
-                </div>
+               </div>
+
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Couleur *</label>
+                  <select 
+                    name="couleur"
+                    value={form.couleur}
+                    onChange={handleChange}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all appearance-none"
+                  >
+                    <option value="">Couleur</option>
+                    {colors.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
+                  </select>
+               </div>
+            </div>
+          </ClientCard>
+        </div>
+
+        {/* Sidebar: Documents & Photos */}
+        <div className="space-y-8">
+           <ClientCard className="p-8 space-y-8">
+              <div className="flex items-center gap-4">
+                 <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Camera className="h-5 w-5 text-blue-600" />
+                 </div>
+                 <h3 className="text-xl font-black text-slate-800 tracking-tight">Documents</h3>
               </div>
 
-              {/* Images Section */}
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="font-semibold text-lg">{t('vehicles.photos')}</h3>
-                
-                {/* Photo du véhicule (optionnel) */}
-                <div className="space-y-2">
-                  <Label htmlFor="image_vehicule">{t('vehicles.vehiclePhoto')}</Label>
-                  <Input
-                    type="file"
-                    id="image_vehicule"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, 'vehicule')}
-                    disabled={isSubmitting}
-                    className="w-full"
-                  />
-                  <p className="text-xs text-slate-500">{t('vehicles.imageFormat')}</p>
-                  {previewVehicule && (
-                    <div className="relative inline-block">
-                      <img 
-                        src={previewVehicule} 
-                        alt={t('vehicles.preview')} 
-                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage('vehicule')}
-                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
-                        title={t('vehicles.removeImage')}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Photo carte grise (obligatoire) */}
-                <div className="space-y-2">
-                  <Label htmlFor="image_carte_grise">{t('vehicles.carteGrisePhoto')} *</Label>
-                  <Input
-                    type="file"
-                    id="image_carte_grise"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, 'carte_grise')}
-                    disabled={isSubmitting}
-                    className={`w-full ${errors.image_carte_grise ? 'border-red-500' : ''}`}
-                  />
-                  <p className="text-xs text-slate-500">{t('vehicles.imageFormat')}</p>
-                  {errors.image_carte_grise && (
-                    <p className="text-xs text-red-600">{errors.image_carte_grise}</p>
-                  )}
-                  {previewCarteGrise && (
-                    <div className="relative inline-block">
-                      <img 
-                        src={previewCarteGrise} 
-                        alt={t('vehicles.preview')} 
-                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage('carte_grise')}
-                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
-                        title={t('vehicles.removeImage')}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
+              {/* Photo Carte Grise */}
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                    Carte Grise *
+                    {previewCarteGrise && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Reçue</span>}
+                 </label>
+                 <div className={`relative group ${errors.image_carte_grise ? 'border-red-500' : ''}`}>
+                    {previewCarteGrise ? (
+                      <div className="relative rounded-[2rem] overflow-hidden aspect-video border-2 border-emerald-100 shadow-xl">
+                        <img src={previewCarteGrise} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <button type="button" onClick={() => removeImage('carte_grise')} className="p-3 bg-red-600 text-white rounded-full">
+                              <X className="h-5 w-5" />
+                           </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-red-500/30 transition-all cursor-pointer">
+                        <Plus className="h-8 w-8 text-slate-300 mb-2" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ajouter la photo</span>
+                        <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'carte_grise')} className="hidden" />
+                      </label>
+                    )}
+                 </div>
+                 {errors.image_carte_grise && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest text-center">La carte grise est obligatoire</p>}
               </div>
 
-              {/* Info Alert */}
-              <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900">
-                <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="text-blue-800 dark:text-blue-200">
-                  {t('vehicles.vehicleAddedSuccess')}
-                </AlertDescription>
-              </Alert>
-
-              {/* Buttons */}
-              <div className="flex gap-4 pt-4">
-                <Link href="/client/vehicles" className="flex-1">
-                  <Button type="button" variant="outline" className="w-full" disabled={isSubmitting}>
-                    {t('common.cancel')}
-                  </Button>
-                </Link>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('common.loading')}
-                    </>
-                  ) : (
-                    <>
-                      <Car className="mr-2 h-4 w-4" />
-                      {t('vehicles.addVehicle')}
-                    </>
-                  )}
-                </Button>
+              {/* Photo Vehicule */}
+              <div className="space-y-4">
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                    Photo du Véhicule
+                    {previewVehicule && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Reçue</span>}
+                 </label>
+                 <div className="relative group">
+                    {previewVehicule ? (
+                      <div className="relative rounded-[2rem] overflow-hidden aspect-video border-2 border-blue-100 shadow-xl">
+                        <img src={previewVehicule} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <button type="button" onClick={() => removeImage('vehicule')} className="p-3 bg-red-600 text-white rounded-full">
+                              <X className="h-5 w-5" />
+                           </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-red-500/30 transition-all cursor-pointer">
+                        <Plus className="h-8 w-8 text-slate-300 mb-2" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ajouter la photo</span>
+                        <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'vehicule')} className="hidden" />
+                      </label>
+                    )}
+                 </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+           </ClientCard>
+
+           <div className="p-8 rounded-[2.5rem] bg-blue-50 border border-blue-100">
+              <div className="flex gap-4">
+                 <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                 <p className="text-xs font-medium text-blue-800 leading-relaxed">
+                    Vos documents seront cryptés et transmis de manière sécurisée à nos agents pour validation.
+                 </p>
+              </div>
+           </div>
+
+           <div className="space-y-4">
+              <ClientButton 
+                type="submit" 
+                variant="primary" 
+                fullWidth 
+                size="large" 
+                disabled={isSubmitting}
+                icon={isSubmitting ? undefined : Plus}
+              >
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer le Véhicule'}
+              </ClientButton>
+              <ClientButton 
+                type="button" 
+                variant="outline" 
+                fullWidth 
+                size="large"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+              >
+                Annuler
+              </ClientButton>
+           </div>
+        </div>
+      </form>
+    </ClientPageWrapper>
   );
 }

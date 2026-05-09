@@ -93,7 +93,9 @@ class AgentDashboardService {
           a.nom              AS agence_nom,
           a.ville            AS agence_ville,
           m.nom              AS marque_nom,
-          mo.nom             AS modele_nom
+          mo.nom             AS modele_nom,
+          cr.id              AS commande_id,
+          cr.numero          AS commande_numero
         FROM RendezVous r
         JOIN Utilisateur u  ON u.id  = r.client_id
         JOIN Vehicule    v  ON v.id  = r.vehicule_id
@@ -101,6 +103,7 @@ class AgentDashboardService {
         JOIN Version     ve ON ve.id = v.version_id
         JOIN Modele      mo ON mo.id = ve.modele_id
         JOIN Marque      m  ON m.id  = mo.marque_id
+        LEFT JOIN CommandeReparation cr ON cr.rdv_id = r.id
         WHERE r.agence_id = @agent_agence_id
           AND (r.agent_id = @agent_id OR r.agent_id IS NULL)
       `;

@@ -85,12 +85,7 @@ const AGENT_NAV_ITEMS: NavItem[] = [
     label: 'Réclamations',
     href: '/dashboard/agent/complaints',
     icon: <MessageSquare className="w-5 h-5" />,
-  },
-  {
-    label: 'Statistiques',
-    href: '/dashboard/agent/statistics',
-    icon: <BarChart3 className="w-5 h-5" />,
-  },
+  }
 ];
 
 function AgentSidebar() {

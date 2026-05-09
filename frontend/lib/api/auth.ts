@@ -5,7 +5,7 @@
 
 import { LoginData, RegisterData, AuthResponse, RegisterResponse, User } from '@/types/auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -16,7 +16,7 @@ class ApiError extends Error {
 
 export async function registerUser(data: RegisterData): Promise<RegisterResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/register`, {
+    const response = await fetch(`${API_BASE_URL}/users/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export async function registerUser(data: RegisterData): Promise<RegisterResponse
 
 export async function loginUser(data: LoginData): Promise<AuthResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+    const response = await fetch(`${API_BASE_URL}/users/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export async function loginUser(data: LoginData): Promise<AuthResponse> {
 
 export async function getUserById(id: number, token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export async function forgotPassword(
   email: string
 ): Promise<{ message: string; telephone_hint?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/forgot-password`, {
+    const response = await fetch(`${API_BASE_URL}/users/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export async function verifyOtp(
   otp: string
 ): Promise<{ message: string; resetToken: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/verify-otp`, {
+    const response = await fetch(`${API_BASE_URL}/users/verify-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ export async function resetPassword(
   newPassword: string
 ): Promise<{ message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/reset-password`, {
+    const response = await fetch(`${API_BASE_URL}/users/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -188,7 +188,7 @@ export async function updateProfile(
   token: string
 ): Promise<{ message: string; user: User }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}/profile`, {
+    const response = await fetch(`${API_BASE_URL}/users/${id}/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ export async function changePassword(
   token: string
 ): Promise<{ message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/${id}/password`, {
+    const response = await fetch(`${API_BASE_URL}/users/${id}/password`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -247,7 +247,7 @@ export async function resendVerificationCode(
   email: string
 ): Promise<{ message: string; telephone_hint?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/resend-verification`, {
+    const response = await fetch(`${API_BASE_URL}/users/resend-verification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ export async function verifyPhoneNumber(
   otp: string
 ): Promise<{ message: string; verified: boolean }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/verify-phone`, {
+    const response = await fetch(`${API_BASE_URL}/users/verify-phone`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

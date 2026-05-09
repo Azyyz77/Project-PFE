@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { fetchComplaints, updateComplaintStatus } from '@/lib/api/agentDashboard';
 
 type ComplaintStatus = 'SOUMISE' | 'EN_COURS' | 'TRAITEE' | 'CLOTUREE';
 
@@ -39,26 +39,11 @@ export default function ComplaintsManagement({ token }: Props) {
   const loadComplaints = async () => {
     try {
       setLoading(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const url = filter 
-        ? `${API_URL}/api/complaints?statut=${filter}`
-        : `${API_URL}/api/complaints`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors du chargement des réclamations');
-      }
-
-      const data = await response.json();
-      setComplaints(data.complaints || data);
+      const data = await fetchComplaints(filter || undefined);
+      setComplaints(data);
       
       if (activeComplaint) {
-        const updated = (data.complaints || data).find((c: Complaint) => c.id === activeComplaint.id);
+        const updated = data.find((c: Complaint) => c.id === activeComplaint.id);
         setActiveComplaint(updated || null);
       }
     } catch (error) {
@@ -91,20 +76,7 @@ export default function ComplaintsManagement({ token }: Props) {
     if (!confirm(`Passer au statut ${statut} ?`)) return;
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/complaints/${activeComplaint.id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ statut }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour du statut');
-      }
-
+      await updateComplaintStatus(activeComplaint.id, statut);
       toast.success('Statut mis à jour avec succès');
       loadComplaints();
     } catch (e) {

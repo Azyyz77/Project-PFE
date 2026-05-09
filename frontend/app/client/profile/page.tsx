@@ -5,10 +5,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { updateProfile, changePassword } from '@/lib/api/auth';
-import { Button } from '@/components/ui/button';
+import {
+  ClientPageWrapper,
+  ClientCard,
+  ClientButton,
+  ClientStatCard,
+  ClientLoadingState,
+} from '@/components/client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -22,9 +27,16 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  User,
+  Shield,
+  Key,
+  Camera,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { validateProfileForm } from '@/lib/auth-utils';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProfilePage() {
   return (
@@ -66,8 +78,8 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
   const strength = getPasswordStrength(password);
   const strengthMap = {
     weak: { width: '33%', color: 'bg-red-500', label: t('profile.weak') },
-    medium: { width: '66%', color: 'bg-orange-500', label: t('profile.medium') },
-    strong: { width: '100%', color: 'bg-green-500', label: t('profile.strong') },
+    medium: { width: '66%', color: 'bg-amber-500', label: t('profile.medium') },
+    strong: { width: '100%', color: 'bg-emerald-500', label: t('profile.strong') },
   };
 
   const current = strengthMap[strength];
@@ -75,23 +87,24 @@ function PasswordStrengthIndicator({ password }: { password: string }) {
   return (
     <div className="space-y-2 mt-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
           {t('profile.passwordStrength')}
         </span>
-        <span className={`text-xs font-semibold ${
+        <span className={`text-[10px] font-black uppercase tracking-widest ${
           strength === 'strong'
-            ? 'text-green-600'
+            ? 'text-emerald-500'
             : strength === 'medium'
-            ? 'text-orange-600'
-            : 'text-red-600'
+            ? 'text-amber-500'
+            : 'text-red-500'
         }`}>
           {current.label}
         </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-        <div
-          className={`h-full transition-all duration-300 ${current.color}`}
-          style={{ width: current.width }}
+      <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: current.width }}
+          className={`h-full transition-all duration-500 ${current.color}`}
         />
       </div>
     </div>
@@ -102,7 +115,6 @@ function ProfileContent() {
   const { user, token } = useAuth();
   const { t } = useLanguage();
 
-  // Profile Form State
   const [profileForm, setProfileForm] = useState({
     prenom: user?.prenom || '',
     nom: user?.nom || '',
@@ -112,7 +124,6 @@ function ProfileContent() {
   const [profileError, setProfileError] = useState('');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  // Password Form State
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -127,7 +138,7 @@ function ProfileContent() {
     confirm: false,
   });
 
-  if (!user || !token) return null;
+  if (!user || !token) return <ClientLoadingState />;
 
   const initials = `${user.prenom.charAt(0)}${user.nom.charAt(0) || ''}`.toUpperCase();
 
@@ -225,386 +236,287 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070c14]">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-[#0c1527] dark:via-[#111e35] dark:to-[#0a1120] py-16">
-        {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-white/10 dark:bg-[#1c4a9f]/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-10 h-72 w-72 rounded-full bg-white/10 dark:bg-[#f33e49]/12 blur-3xl" />
+    <ClientPageWrapper className="space-y-10 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          {/* Profile Picture / Initials */}
+          <div className="relative group">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="h-32 w-32 sm:h-40 sm:w-40 rounded-[2.5rem] bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center text-5xl sm:text-6xl font-black text-white shadow-2xl shadow-red-500/20 border-4 border-white/10"
+            >
+              {initials}
+            </motion.div>
+            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-slate-50 transition-colors">
+              <Camera className="h-5 w-5 text-slate-800" />
+            </div>
+          </div>
 
-        <div className="relative mx-auto max-w-4xl px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col sm:flex-row items-center gap-8 text-white">
-            {/* Avatar */}
-            <div className="flex-shrink-0 relative">
-              <div className="flex h-32 w-32 items-center justify-center rounded-2xl ring-4 ring-white/30 bg-gradient-to-br from-[#f33e49] to-[#ff8a92] text-white text-5xl font-bold shadow-2xl shadow-black/20">
-                {initials}
-              </div>
-              <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-green-500 border-4 border-white dark:border-[#0c1527] flex items-center justify-center">
-                <CheckCircle2 className="h-4 w-4 text-white" />
-              </div>
+          <div className="flex-1 text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+              <Shield className="h-3.5 w-3.5" />
+              Compte Sécurisé
+            </div>
+            <h1 className="mb-2 text-4xl sm:text-5xl font-black tracking-tight leading-none">
+              {user.prenom} <span className="text-red-500">{user.nom}</span>
+            </h1>
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start items-center mb-6">
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400 border border-slate-700 rounded-full px-4 py-1.5">
+                {getRoleLabel(user.role, t)}
+              </span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">ID: #{user.id}</span>
             </div>
 
-            {/* User Info */}
-            <div className="text-center sm:text-left flex-1">
-              <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight">
-                {user.prenom} {user.nom}
-              </h1>
-              <div className="flex flex-wrap gap-3 justify-center sm:justify-start items-center mb-4">
-                <Badge 
-                  variant={getRoleBadgeVariant(user.role)} 
-                  className="text-sm px-4 py-1.5 font-semibold uppercase tracking-wider"
-                >
-                  {getRoleLabel(user.role, t)}
-                </Badge>
-                <span className="text-white/60 text-sm">•</span>
-                <span className="text-white/80 text-sm font-medium">ID: #{user.id}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto md:mx-0">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10">
+                <Mail className="h-4 w-4 text-red-500" />
+                <span className="text-sm font-bold text-slate-300 truncate">{user.email}</span>
               </div>
-              <div className="space-y-2 text-white/90">
-                <div className="flex items-center gap-3 justify-center sm:justify-start">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">{user.email}</span>
-                </div>
-                {user.telephone && (
-                  <div className="flex items-center gap-3 justify-center sm:justify-start">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm">
-                      <Phone className="h-4 w-4" />
-                    </div>
-                    <span className="text-sm font-medium">{user.telephone}</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/5 border border-white/10">
+                <Phone className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-bold text-slate-300">{user.telephone || 'Non renseigné'}</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-6 py-10 sm:px-8 lg:px-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Left Column - Change Password Card */}
-          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div className="h-2 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500" />
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30">
-                  <Lock className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+      {/* ─── Forms Section ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* Personal Information */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <ClientCard className="h-full">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                <User2 className="h-7 w-7 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('profile.modifyInfo')}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('profile.updatePersonalInfo')}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="space-y-6">
+              {profileError && (
+                <Alert className="bg-red-50 border-red-100 text-red-600 rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="font-bold">{profileError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    {t('profile.firstName')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    name="prenom"
+                    value={profileForm.prenom}
+                    onChange={handleProfileInputChange}
+                    disabled={isSavingProfile}
+                    className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all"
+                  />
                 </div>
-                <div>
-                  <CardTitle className="text-xl lg:text-2xl font-bold">{t('profile.accountSecurity')}</CardTitle>
-                  <CardDescription className="text-sm lg:text-base">{t('profile.changePasswordRegularly')}</CardDescription>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                    {t('profile.lastName')} <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    name="nom"
+                    value={profileForm.nom}
+                    onChange={handleProfileInputChange}
+                    disabled={isSavingProfile}
+                    className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all"
+                  />
                 </div>
               </div>
-            </CardHeader>
 
-          <CardContent>
-            {passwordError && (
-              <Alert variant="destructive" className="mb-4 border-red-200">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{passwordError}</AlertDescription>
-              </Alert>
-            )}
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              {/* Current Password */}
               <div className="space-y-2">
-                <Label htmlFor="currentPassword" className="text-sm font-medium">
-                  {t('profile.currentPassword')} *
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  {t('common.phone')}
+                </Label>
+                <Input
+                  name="telephone"
+                  value={profileForm.telephone}
+                  onChange={handleProfileInputChange}
+                  disabled={isSavingProfile}
+                  placeholder="+216 XX XXX XXX"
+                  className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  Email
                 </Label>
                 <div className="relative">
                   <Input
-                    id="currentPassword"
+                    value={user.email}
+                    disabled
+                    className="rounded-2xl bg-slate-100 border-slate-200 py-6 px-5 font-bold text-slate-400 opacity-70 cursor-not-allowed"
+                  />
+                  <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 italic">L'adresse email ne peut pas être modifiée.</p>
+              </div>
+
+              <div className="pt-4">
+                <ClientButton
+                  type="submit"
+                  variant="primary"
+                  fullWidth
+                  size="large"
+                  disabled={isSavingProfile}
+                  icon={isSavingProfile ? undefined : CheckCircle2}
+                >
+                  {isSavingProfile ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      {t('profile.saving')}
+                    </span>
+                  ) : (
+                    t('profile.saveChanges')
+                  )}
+                </ClientButton>
+              </div>
+            </form>
+          </ClientCard>
+        </motion.div>
+
+        {/* Password Management */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <ClientCard className="h-full border-2 border-red-50">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="h-14 w-14 rounded-2xl bg-red-50 flex items-center justify-center">
+                <Key className="h-7 w-7 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('profile.accountSecurity')}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('profile.changePasswordRegularly')}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-6">
+              {passwordError && (
+                <Alert className="bg-red-50 border-red-100 text-red-600 rounded-2xl">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="font-bold">{passwordError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  {t('profile.currentPassword')} <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
                     name="currentPassword"
                     type={showPassword.current ? 'text' : 'password'}
-                    placeholder="••••••••"
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className={`rounded-lg pr-10 ${
-                      passwordErrors.currentPassword
-                        ? 'border-red-500 focus-visible:ring-red-500'
-                        : ''
-                    }`}
+                    className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all pr-12"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword((p) => ({ ...p, current: !p.current }))
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    onClick={() => setShowPassword(p => ({ ...p, current: !p.current }))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors"
                   >
-                    {showPassword.current ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword.current ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {passwordErrors.currentPassword && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {passwordErrors.currentPassword}
-                  </p>
-                )}
               </div>
 
-              <Separator className="my-4" />
+              <Separator className="my-2 bg-slate-100" />
 
-              {/* New Password */}
               <div className="space-y-2">
-                <Label htmlFor="newPassword" className="text-sm font-medium">
-                  {t('profile.newPassword')} *
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  {t('profile.newPassword')} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Input
-                    id="newPassword"
                     name="newPassword"
                     type={showPassword.new ? 'text' : 'password'}
-                    placeholder="••••••••"
                     value={passwordForm.newPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className={`rounded-lg pr-10 ${
-                      passwordErrors.newPassword
-                        ? 'border-red-500 focus-visible:ring-red-500'
-                        : ''
-                    }`}
+                    className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all pr-12"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword((p) => ({ ...p, new: !p.new }))
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    onClick={() => setShowPassword(p => ({ ...p, new: !p.new }))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors"
                   >
-                    {showPassword.new ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword.new ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {passwordErrors.newPassword && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {passwordErrors.newPassword}
-                  </p>
-                )}
-
                 {passwordForm.newPassword && (
                   <PasswordStrengthIndicator password={passwordForm.newPassword} />
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  {t('profile.confirmNewPassword')} *
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                  {t('profile.confirmNewPassword')} <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Input
-                    id="confirmPassword"
                     name="confirmPassword"
                     type={showPassword.confirm ? 'text' : 'password'}
-                    placeholder="••••••••"
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className={`rounded-lg pr-10 ${
-                      passwordErrors.confirmPassword
-                        ? 'border-red-500 focus-visible:ring-red-500'
-                        : ''
-                    }`}
+                    className="rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-red-500/10 transition-all pr-12"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword((p) => ({ ...p, confirm: !p.confirm }))
-                    }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    onClick={() => setShowPassword(p => ({ ...p, confirm: !p.confirm }))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 transition-colors"
                   >
-                    {showPassword.confirm ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                {passwordErrors.confirmPassword && (
-                  <p className="text-xs text-red-600 dark:text-red-400">
-                    {passwordErrors.confirmPassword}
-                  </p>
-                )}
               </div>
 
-              <Separator className="my-4" />
-
-              <Button
-                type="submit"
-                disabled={isSavingPassword}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-xl px-6 py-5 text-sm lg:text-base shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {isSavingPassword ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
-                    {t('profile.modifying')}
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
-                    {t('profile.changePassword')}
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-          {/* Right Column - Edit Profile Card */}
-          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-            <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30">
-                  <User2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl lg:text-2xl font-bold">{t('profile.modifyInfo')}</CardTitle>
-                  <CardDescription className="text-sm lg:text-base">{t('profile.updatePersonalInfo')}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              {profileError && (
-                <Alert variant="destructive" className="mb-4 border-red-200">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{profileError}</AlertDescription>
-                </Alert>
-              )}
-
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {/* Prénom */}
-                  <div className="space-y-2">
-                    <Label htmlFor="prenom" className="text-sm font-medium">
-                      {t('profile.firstName')} *
-                    </Label>
-                    <Input
-                      id="prenom"
-                      name="prenom"
-                      type="text"
-                      value={profileForm.prenom}
-                      onChange={handleProfileInputChange}
-                      disabled={isSavingProfile}
-                      className={`rounded-lg ${
-                        profileErrors.prenom ? 'border-red-500 focus-visible:ring-red-500' : ''
-                      }`}
-                      placeholder="Votre prénom"
-                    />
-                    {profileErrors.prenom && (
-                      <p className="text-xs text-red-600 dark:text-red-400">
-                        {profileErrors.prenom}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Nom */}
-                  <div className="space-y-2">
-                    <Label htmlFor="nom" className="text-sm font-medium">
-                      {t('profile.lastName')} *
-                    </Label>
-                    <Input
-                      id="nom"
-                      name="nom"
-                      type="text"
-                      value={profileForm.nom}
-                      onChange={handleProfileInputChange}
-                      disabled={isSavingProfile}
-                      className={`rounded-lg ${
-                        profileErrors.nom ? 'border-red-500 focus-visible:ring-red-500' : ''
-                      }`}
-                      placeholder="Votre nom"
-                    />
-                    {profileErrors.nom && (
-                      <p className="text-xs text-red-600 dark:text-red-400">
-                        {profileErrors.nom}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Téléphone */}
-                <div className="space-y-2">
-                  <Label htmlFor="telephone" className="text-sm font-medium flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Téléphone
-                  </Label>
-                  <Input
-                    id="telephone"
-                    name="telephone"
-                    type="tel"
-                    value={profileForm.telephone}
-                    onChange={handleProfileInputChange}
-                    disabled={isSavingProfile}
-                    className={`rounded-lg pl-10 ${
-                      profileErrors.telephone
-                        ? 'border-red-500 focus-visible:ring-red-500'
-                        : ''
-                    }`}
-                    placeholder="+216 XX XXX XXX"
-                  />
-                  {profileErrors.telephone && (
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {profileErrors.telephone}
-                    </p>
-                  )}
-                </div>
-
-                {/* Email (disabled) */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="email"
-                      type="email"
-                      value={user.email}
-                      disabled
-                      className="bg-slate-50 dark:bg-slate-900/30 cursor-not-allowed opacity-60 pl-10 rounded-lg"
-                    />
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {t('profile.notModifiable')}
-                  </p>
-                </div>
-
-                <Separator className="my-4" />
-
-                <Button
+              <div className="pt-4">
+                <ClientButton
                   type="submit"
-                  disabled={isSavingProfile}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl px-6 py-5 text-sm lg:text-base shadow-lg hover:shadow-xl transition-all duration-200"
+                  variant="secondary"
+                  fullWidth
+                  size="large"
+                  disabled={isSavingPassword}
+                  icon={isSavingPassword ? undefined : Lock}
                 >
-                  {isSavingProfile ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5 animate-spin" />
-                      {t('profile.saving')}
-                    </>
+                  {isSavingPassword ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      {t('profile.modifying')}
+                    </span>
                   ) : (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4 lg:h-5 lg:w-5" />
-                      {t('profile.saveChanges')}
-                    </>
+                    t('profile.changePassword')
                   )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+                </ClientButton>
+              </div>
+            </form>
+          </ClientCard>
+        </motion.div>
+      </div>
+    </ClientPageWrapper>
   );
 }

@@ -1,25 +1,15 @@
-/**
- * lib/api/agentDashboard.ts
- * Couche API pour le Dashboard Agent SAV
- */
-
-import axios from 'axios';
+import api from './axios';
 import {
   DashboardSummary, Appointment, Vehicle,
   Complaint, AgentNotification, Statistics
 } from '@/types/agentDashboard';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const AGENT_DASHBOARD_BASE = `${API_BASE}/api/agent-dashboard`;
-
-function headers(token: string) {
-  return { Authorization: `Bearer ${token}` };
-}
+const BASE = '/agent-dashboard';
 
 // ── Dashboard ──────────────────────────────────────────────
-export async function fetchSummary(token: string): Promise<DashboardSummary> {
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/summary`, { headers: headers(token) });
-  return r.data.data;
+export async function fetchSummary(): Promise<DashboardSummary> {
+  const r = await api.get(`${BASE}/summary`);
+  return r.data.data || r.data;
 }
 
 // ── Rendez-vous ────────────────────────────────────────────
@@ -30,104 +20,102 @@ export interface AppointmentFilters {
   agenceId?:  number;
 }
 
-export async function fetchAppointments(token: string, filters: AppointmentFilters = {}): Promise<Appointment[]> {
-  const params = Object.fromEntries(
-    Object.entries(filters).filter(([, v]) => v !== undefined && v !== '')
-  );
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/appointments`, { headers: headers(token), params });
-  return r.data.data;
+export async function fetchAppointments(filters: AppointmentFilters = {}): Promise<Appointment[]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      queryParams.append(key, String(value));
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  const url = queryString ? `${BASE}/appointments?${queryString}` : `${BASE}/appointments`;
+  const r = await api.get(url);
+  return r.data.data || r.data;
 }
 
-export async function confirmAppointment(token: string, id: number) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/appointments/${id}/confirm`, {}, { headers: headers(token) });
+export async function confirmAppointment(id: number) {
+  const r = await api.put(`${BASE}/appointments/${id}/confirm`, {});
   return r.data;
 }
 
-export async function updateAppointment(token: string, id: number, payload: { date_rendez_vous?: string; description?: string }) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/appointments/${id}/update`, payload, { headers: headers(token) });
+export async function updateAppointment(id: number, payload: { date_rendez_vous?: string; description?: string }) {
+  const r = await api.put(`${BASE}/appointments/${id}/update`, payload);
   return r.data;
 }
 
-export async function startIntervention(token: string, id: number) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/appointments/${id}/start`, {}, { headers: headers(token) });
+export async function startIntervention(id: number) {
+  const r = await api.put(`${BASE}/appointments/${id}/start`, {});
   return r.data;
 }
 
-export async function finishIntervention(token: string, id: number, notes?: string) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/appointments/${id}/finish`, { notes }, { headers: headers(token) });
+export async function finishIntervention(id: number, notes?: string) {
+  const r = await api.put(`${BASE}/appointments/${id}/finish`, { notes });
   return r.data;
 }
 
-export async function cancelAppointment(token: string, id: number, reason?: string) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/appointments/${id}/cancel`, { reason }, { headers: headers(token) });
+export async function cancelAppointment(id: number, reason?: string) {
+  const r = await api.put(`${BASE}/appointments/${id}/cancel`, { reason });
   return r.data;
 }
 
 // ── Véhicules ──────────────────────────────────────────────
-export async function fetchVehicles(token: string, statut?: string): Promise<Vehicle[]> {
-  const params = statut ? { statut } : {};
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/vehicles`, { headers: headers(token), params });
-  return r.data.data;
+export async function fetchVehicles(statut?: string): Promise<Vehicle[]> {
+  const url = statut ? `${BASE}/vehicles?statut=${statut}` : `${BASE}/vehicles`;
+  const r = await api.get(url);
+  return r.data.data || r.data;
 }
 
-export async function fetchVehiclesToValidate(token: string): Promise<Vehicle[]> {
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/vehicles/to-validate`, { headers: headers(token) });
-  return r.data.data;
+export async function fetchVehiclesToValidate(): Promise<Vehicle[]> {
+  const r = await api.get(`${BASE}/vehicles/to-validate`);
+  return r.data.data || r.data;
 }
 
-export async function validateVehicle(token: string, id: number) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/vehicles/${id}/validate`, {}, { headers: headers(token) });
+export async function validateVehicle(id: number) {
+  const r = await api.put(`${BASE}/vehicles/${id}/validate`, {});
   return r.data;
 }
 
-export async function rejectVehicle(token: string, id: number, reason?: string) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/vehicles/${id}/reject`, { reason }, { headers: headers(token) });
+export async function rejectVehicle(id: number, reason?: string) {
+  const r = await api.put(`${BASE}/vehicles/${id}/reject`, { reason });
   return r.data;
 }
 
 // ── Réclamations ───────────────────────────────────────────
-export async function fetchComplaints(token: string, statut?: string): Promise<Complaint[]> {
-  const params = statut ? { statut } : {};
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/complaints`, { headers: headers(token), params });
-  return r.data.data;
+export async function fetchComplaints(statut?: string): Promise<Complaint[]> {
+  const url = statut ? `${BASE}/complaints?statut=${statut}` : `${BASE}/complaints`;
+  const r = await api.get(url);
+  return r.data.data || r.data;
 }
 
-export async function answerComplaint(token: string, id: number, response: string) {
-  const r = await axios.post(
-    `${AGENT_DASHBOARD_BASE}/complaints/${id}/answer`,
-    { response },
-    { headers: headers(token) }
-  );
+export async function answerComplaint(id: number, response: string) {
+  const r = await api.post(`${BASE}/complaints/${id}/answer`, { response });
   return r.data;
 }
 
-export async function updateComplaintStatus(token: string, id: number, statut: string) {
-  const r = await axios.put(
-    `${AGENT_DASHBOARD_BASE}/complaints/${id}/status`,
-    { statut },
-    { headers: headers(token) }
-  );
+export async function updateComplaintStatus(id: number, statut: string) {
+  const r = await api.put(`${BASE}/complaints/${id}/status`, { statut });
   return r.data;
 }
 
 // ── Notifications ──────────────────────────────────────────
-export async function fetchNotifications(token: string): Promise<AgentNotification[]> {
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/notifications`, { headers: headers(token) });
-  return r.data.data;
+export async function fetchNotifications(): Promise<AgentNotification[]> {
+  const r = await api.get(`${BASE}/notifications`);
+  return r.data.data || r.data;
 }
 
-export async function markNotificationRead(token: string, id: number) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/notifications/${id}/read`, {}, { headers: headers(token) });
+export async function markNotificationRead(id: number) {
+  const r = await api.put(`${BASE}/notifications/${id}/read`, {});
   return r.data;
 }
 
-export async function markAllNotificationsRead(token: string) {
-  const r = await axios.put(`${AGENT_DASHBOARD_BASE}/notifications/read-all`, {}, { headers: headers(token) });
+export async function markAllNotificationsRead() {
+  const r = await api.put(`${BASE}/notifications/read-all`, {});
   return r.data;
 }
 
 // ── Statistiques ───────────────────────────────────────────
-export async function fetchStatistics(token: string): Promise<Statistics> {
-  const r = await axios.get(`${AGENT_DASHBOARD_BASE}/statistics`, { headers: headers(token) });
-  return r.data.data;
+export async function fetchStatistics(): Promise<Statistics> {
+  const r = await api.get(`${BASE}/statistics`);
+  return r.data.data || r.data;
 }

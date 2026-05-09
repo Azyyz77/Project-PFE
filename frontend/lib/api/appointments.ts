@@ -9,7 +9,7 @@ import {
   CancelAppointmentPayload,
 } from '@/types/appointment';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -35,7 +35,7 @@ async function parseJson<T>(response: Response): Promise<T> {
 
 export async function getAgencies(token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/agencies`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/agencies`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -51,7 +51,7 @@ export async function getAgencies(token: string) {
 export async function getAvailableSlots(agenceId: number, date: string, token: string) {
   try {
     const params = new URLSearchParams({ agenceId: String(agenceId), date });
-    const response = await fetch(`${API_BASE_URL}/api/appointments/slots?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/slots?${params.toString()}`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -66,7 +66,7 @@ export async function getAvailableSlots(agenceId: number, date: string, token: s
 
 export async function getInterventionCatalog(token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/interventions`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/interventions`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -81,7 +81,7 @@ export async function getInterventionCatalog(token: string) {
 
 export async function getAvailablePackages(token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/packages`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/packages`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -96,7 +96,7 @@ export async function getAvailablePackages(token: string) {
 
 export async function getMyAppointments(token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/my`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/my`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -111,7 +111,7 @@ export async function getMyAppointments(token: string) {
 
 export async function createAppointment(payload: CreateAppointmentPayload, token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments`, {
+    const response = await fetch(`${API_BASE_URL}/appointments`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),
@@ -126,7 +126,7 @@ export async function createAppointment(payload: CreateAppointmentPayload, token
 
 export async function getAppointmentDetails(appointmentId: number, token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -144,7 +144,7 @@ export async function cancelAppointment(
   token: string
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
       method: 'DELETE',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),
@@ -182,7 +182,7 @@ export async function updateAppointment(
   token: string
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}`, {
       method: 'PUT',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),
@@ -200,7 +200,7 @@ export async function updateAppointment(
  */
 export async function confirmAppointment(appointmentId: number, token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/confirm`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/confirm`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
     });
@@ -217,7 +217,7 @@ export async function confirmAppointment(appointmentId: number, token: string) {
  */
 export async function startAppointment(appointmentId: number, token: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/start`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/start`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
     });
@@ -238,7 +238,7 @@ export async function completeAppointment(
   token: string
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/appointments/${appointmentId}/complete`, {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/complete`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),

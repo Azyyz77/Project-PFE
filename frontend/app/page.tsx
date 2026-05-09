@@ -3,371 +3,492 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  ArrowRight,
+  Button,
+  Card,
+  Chip,
+  Separator,
+} from "@heroui/react";
+import {
   CalendarClock,
   CarFront,
   ShieldCheck,
   Wrench,
-  Clock3,
-  MapPin,
-  MonitorSmartphone,
   Sparkles,
-  CheckCircle2,
+  ChevronRight,
+  Menu,
 } from "lucide-react";
 
 const heroSlides = [
   {
-    nom: "Chery Tiggo 8 Pro",
-    slogan: "SUV familial premium",
-    details: "Confort, securite et technologie au quotidien.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Tiggo_8_Pro_009.jpg",
-  },
-  {
-    nom: "Chery Tiggo 7 Plus",
-    slogan: "Design moderne, esprit urbain",
-    details: "Un SUV intelligent pour vos trajets en ville et au-dela.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Tiggo_7_Plus_2023_facelift_001.jpg",
-  },
-  {
-    nom: "Chery Arrizo 8",
-    slogan: "Berline elegante et puissante",
-    details: "Experience premium et conduite dynamique.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Arrizo_8_004.jpg",
-  },
-];
-
-const modeles = [
-  {
     nom: "Tiggo 8 Pro",
-    description: "SUV familial premium, ideal pour les longs trajets et la vie quotidienne.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Tiggo_8_Pro_005.jpg",
-  },
-  {
-    nom: "Tiggo 7 Plus",
-    description: "Confort intelligent, design moderne et technologie embarquee avancee.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Tiggo_7_Plus_2023_facelift_001.jpg",
+    slogan: "SUV Familial Haut de Gamme",
+    details:
+      "Le confort raffiné rencontre la sécurité moderne pour chaque trajet.",
+    image:
+      "https://images.unsplash.com/photo-1621235189211-13180f970635?auto=format&fit=crop&q=80&w=2000",
   },
   {
     nom: "Arrizo 8",
-    description: "Berline elegante orientee performance, securite et experience premium.",
-    image: "https://commons.wikimedia.org/wiki/Special:FilePath/Chery_Arrizo_8_004.jpg",
+    slogan: "L’Art de la Berline",
+    details:
+      "Des lignes élégantes et des performances dynamiques pour les conducteurs exigeants.",
+    image:
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=2000",
   },
 ];
 
 const services = [
   {
-    titre: "Prise de rendez-vous SAV",
-    texte: "Selectionnez votre date et votre atelier en quelques secondes.",
+    titre: "Planification Simplifiée",
+    texte:
+      "Choisissez l’horaire qui correspond à votre emploi du temps dans l’atelier de votre choix.",
     href: "/login",
     icon: CalendarClock,
+    className: "md:col-span-2 bg-muted/30 border-none",
   },
   {
-    titre: "Suivi de vehicule",
-    texte: "Consultez l'historique et le statut de vos interventions.",
+    titre: "Historique d’Entretien",
+    texte:
+      "Un suivi complet de toutes les opérations de maintenance de votre véhicule.",
     href: "/login",
     icon: CarFront,
+    className: "bg-white border-border/50 shadow-sm",
   },
   {
-    titre: "Assistance & securite",
-    texte: "Un accompagnement complet par nos equipes techniques.",
+    titre: "Assistance Experte",
+    texte:
+      "Notre équipe technique est à votre disposition pour garantir votre tranquillité.",
     href: "/login",
     icon: ShieldCheck,
+    className: "bg-white border-border/50 shadow-sm",
   },
-];
-
-const metrics = [
-  { label: "Disponibilite en ligne", value: "24/7", icon: Clock3 },
-  { label: "Points de service", value: "+10", icon: MapPin },
-  { label: "Parcours digitalise", value: "100%", icon: MonitorSmartphone },
 ];
 
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5500);
-
+    }, 6000);
     return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-[size:46px_46px]" />
-
-      <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl">
-        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500 shadow-[0_0_14px_rgba(244,63,94,0.55)]" />
-            <div>
-              <p className="text-sm font-bold tracking-[0.18em] text-slate-900">CHERY SERVICE</p>
-              <p className="text-[0.66rem] uppercase tracking-[0.2em] text-slate-500">Plateforme officielle SAV</p>
-            </div>
-          </Link>
-
-          <div className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
-            <a href="#services" className="transition hover:text-slate-900">Prise de rendez-vous</a>
-            <a href="#modeles" className="transition hover:text-slate-900">Top modeles Chery</a>
-            <a href="#contact" className="transition hover:text-slate-900">Assistance client</a>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/login"
-              className="rounded-full border border-slate-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-400 hover:bg-slate-100 sm:text-sm"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-sm transition hover:bg-slate-800 sm:text-sm"
-            >
-              Inscription
-            </Link>
-          </div>
-        </nav>
-      </header>
-
-      <section className="relative mx-auto grid w-full max-w-7xl gap-8 px-4 pb-10 pt-8 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-10 lg:px-8 lg:pb-16 lg:pt-14">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-rose-600">
-            <Sparkles className="h-3.5 w-3.5" />
-            Chery Tunisia Service Experience
-          </span>
-
-          <h1 className="mt-5 text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
-            Le SAV automobile
-            <span className="block bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 bg-clip-text text-transparent">
-              pense pour la vitesse
-            </span>
-          </h1>
-
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            Planifiez vos interventions, suivez vos dossiers et echangez avec vos equipes techniques
-            depuis une interface moderne, claire et accessible sur tous vos ecrans.
-          </p>
-
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800"
-            >
-              Prendre rendez-vous
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/register"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-            >
-              Creer mon compte
-            </Link>
-          </div>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {metrics.map((metric) => {
-              const Icon = metric.icon;
-              return (
-                <div
-                  key={metric.label}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.06)]"
-                >
-                  <Icon className="h-4 w-4 text-rose-500" />
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{metric.value}</p>
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{metric.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-3 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
-            {heroSlides.map((slide, index) => (
-              <img
-                key={slide.nom}
-                src={slide.image}
-                alt={slide.nom}
-                className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-                  index === activeSlide ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            ))}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/25 to-transparent" />
-
-            <div className="absolute bottom-0 left-0 right-0 p-5 text-white sm:p-6">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/75">Modele phare</p>
-              <h2 className="mt-1 text-2xl font-semibold sm:text-3xl">{heroSlides[activeSlide].nom}</h2>
-              <p className="mt-1 text-sm text-white/80">{heroSlides[activeSlide].slogan}</p>
-              <p className="mt-2 text-sm text-white/85">{heroSlides[activeSlide].details}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between gap-4 px-1">
-            <div className="flex items-center gap-2">
-              {heroSlides.map((slide, index) => (
-                <button
-                  key={slide.nom}
-                  onClick={() => setActiveSlide(index)}
-                  className={`h-2 rounded-full transition-all ${
-                    index === activeSlide ? "w-8 bg-rose-500" : "w-2 bg-slate-300 hover:bg-slate-400"
-                  }`}
-                  aria-label={`Afficher ${slide.nom}`}
-                />
-              ))}
-            </div>
-            <span className="text-xs font-medium text-slate-500">Slide {activeSlide + 1}/3</span>
-          </div>
-        </div>
-      </section>
-
-      <section id="services" className="border-y border-slate-200/80 bg-white py-14 lg:py-18">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Services digitaux</p>
-          <h2 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">
-            Tout votre SAV dans une experience unifiee
-          </h2>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {services.map((service) => {
-              const Icon = service.icon;
-
-              return (
-                <Link
-                  key={service.titre}
-                  href={service.href}
-                  className="group rounded-2xl border border-slate-200 bg-slate-50/70 p-6 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_20px_45px_rgba(15,23,42,0.08)]"
-                >
-                  <Icon className="h-6 w-6 text-rose-500" />
-                  <h3 className="mt-4 text-xl font-semibold text-slate-900">{service.titre}</h3>
-                  <p className="mt-2 text-sm text-slate-600">{service.texte}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                    En savoir plus
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white sm:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-screen bg-background selection:bg-primary/10">
+      {/* Navigation */}
+      <nav className="fixed w-full z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-12">
+            <Link href="/" className="flex items-center gap-3 group">
+              <span className="w-1.5 h-6 bg-primary rounded-full" />
               <div>
-                <h3 className="text-2xl font-semibold">Besoin d&apos;une intervention rapide ?</h3>
-                <p className="mt-2 text-sm text-slate-300 sm:text-base">
-                  Connectez-vous et programmez votre visite atelier en moins de 2 minutes.
+                <p className="text-sm font-semibold tracking-widest text-foreground uppercase">
+                  Chery Service
+                </p>
+                <p className="text-[0.6rem] tracking-[0.2em] text-muted-foreground uppercase">
+                  Tunisie
                 </p>
               </div>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
               <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-200"
+                href="#services"
+                className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors font-medium"
               >
-                <Wrench className="h-4 w-4" />
-                Commencer
+                Services
+              </Link>
+
+              <Link
+                href="#fleet"
+                className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                La Gamme
+              </Link>
+
+              <Link
+                href="#assistance"
+                className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                Assistance
               </Link>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section id="modeles" className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Selection commerciale</p>
-            <h2 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Top 3 des modeles les plus vendus</h2>
-            <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
-              Ces modeles representent les meilleures ventes Chery actuellement. D&apos;autres modeles
-              sont egalement disponibles selon le stock et le reseau.
+          <div className="flex items-center gap-4">
+            <Link
+              href="/login"
+              className="hidden sm:flex items-center justify-center text-xs font-semibold uppercase tracking-widest text-foreground px-6 hover:bg-muted/50 transition-colors h-11"
+            >
+              Connexion
+            </Link>
+
+            <Link
+              href="/register"
+              className="bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold uppercase tracking-widest px-8 rounded-none h-11 transition-opacity hover:opacity-90"
+            >
+              Rejoindre
+            </Link>
+
+            <button
+              className="md:hidden p-2"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu size={20} />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main>
+        {/* Hero Section */}
+        <section className="relative px-6 py-20 md:py-32 lg:py-40 max-w-7xl mx-auto overflow-hidden">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="relative z-10">
+              <Chip
+                variant="soft"
+                className="bg-primary/10 text-primary border-none font-medium px-3 mb-8 gap-2"
+              >
+                <Sparkles size={14} />
+                <span>Une Expérience de Service Raffinée</span>
+              </Chip>
+
+              <h1 className="text-5xl md:text-7xl mb-8 leading-[1.1] text-foreground">
+                L’art de <br />
+                <span className="text-primary italic">
+                  l’entretien automobile.
+                </span>
+              </h1>
+
+              <p className="text-lg text-muted-foreground max-w-xl mb-12 leading-relaxed font-light">
+                Un service soigneusement conçu pour votre Chery. Gérez vos
+                rendez-vous, suivez l’entretien de votre véhicule et échangez
+                avec nos spécialistes via une interface pensée pour la
+                simplicité et le confort.
+              </p>
+
+              <div className="flex flex-wrap gap-6">
+                <Link
+                  href="/login"
+                  className="bg-foreground text-background flex items-center justify-center px-10 rounded-none h-14 text-sm font-semibold uppercase tracking-widest transition-opacity hover:opacity-90"
+                >
+                  Réserver un Rendez-vous
+                </Link>
+
+                <Link
+                  href="/register"
+                  className="border border-border flex items-center justify-center text-foreground px-10 rounded-none h-14 text-sm font-semibold uppercase tracking-widest hover:bg-muted/50 transition-colors"
+                >
+                  Créer un Compte
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative aspect-[4/5] md:aspect-square group overflow-hidden bg-muted">
+              {heroSlides.map((slide, index) => (
+                <div
+                  key={slide.nom}
+                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                    index === activeSlide ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <img
+                    src={slide.image}
+                    alt={slide.nom}
+                    className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                  <div className="absolute bottom-10 left-10 text-white z-20">
+                    <p className="text-xs uppercase tracking-[0.3em] font-medium opacity-80 mb-2">
+                      La Collection
+                    </p>
+
+                    <h2 className="text-3xl font-serif mb-1">
+                      {slide.nom}
+                    </h2>
+
+                    <p className="text-sm font-light italic">
+                      {slide.slogan}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Slide Indicators */}
+              <div className="absolute top-10 right-10 z-20 flex gap-3">
+                {heroSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveSlide(index)}
+                    className={`w-12 h-[1px] transition-all ${
+                      index === activeSlide ? "bg-white" : "bg-white/30"
+                    }`}
+                    aria-label={`Slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Services */}
+        <section
+          id="services"
+          className="bg-muted/20 py-32 md:py-48 border-y border-border/30"
+        >
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="mb-20">
+              <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary mb-4">
+                Notre Engagement
+              </p>
+
+              <h2 className="text-4xl md:text-5xl text-foreground max-w-2xl leading-tight">
+                Une expérience pensée pour votre temps et votre tranquillité.
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {services.map((service, i) => (
+                <Card
+                  key={i}
+                  className={`rounded-none border-none shadow-none ${service.className}`}
+                >
+                  <Card.Content className="p-10">
+                    <div className="w-12 h-12 flex items-center justify-center bg-primary/5 text-primary mb-8">
+                      <service.icon size={24} strokeWidth={1.5} />
+                    </div>
+
+                    <h3 className="text-2xl font-serif mb-4 text-foreground">
+                      {service.titre}
+                    </h3>
+
+                    <p className="text-muted-foreground mb-10 leading-relaxed font-light">
+                      {service.texte}
+                    </p>
+
+                    <Link
+                      href={service.href}
+                      className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground hover:text-primary transition-colors"
+                    >
+                      Découvrir <ChevronRight size={14} />
+                    </Link>
+                  </Card.Content>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Assistance */}
+        <section
+          id="assistance"
+          className="py-32 md:py-48 max-w-4xl mx-auto px-6 text-center"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full border border-primary/20 bg-primary/5 text-primary mb-12">
+            <Wrench size={32} strokeWidth={1} />
+          </div>
+
+          <h2 className="text-4xl md:text-6xl mb-8 leading-tight">
+            Besoin d’une assistance immédiate ?
+          </h2>
+
+          <p className="text-lg text-muted-foreground mb-12 font-light leading-relaxed">
+            Notre équipe technique est disponible pour répondre à toutes vos
+            questions concernant votre véhicule ou le processus de service.
+          </p>
+
+          <Link
+            href="/login"
+            className="bg-primary text-primary-foreground flex items-center justify-center px-12 rounded-none h-16 text-sm font-semibold uppercase tracking-widest transition-opacity hover:opacity-90"
+          >
+            Contacter un Expert
+          </Link>
+        </section>
+
+        <Separator className="max-w-7xl mx-auto opacity-40" />
+
+        {/* Fleet */}
+        <section
+          id="fleet"
+          className="py-32 md:py-48 max-w-7xl mx-auto px-6"
+        >
+          <div className="grid lg:grid-cols-2 gap-20 items-end mb-20">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.4em] text-primary mb-4">
+                La Gamme
+              </p>
+
+              <h2 className="text-4xl md:text-5xl leading-tight">
+                L’Excellence Sélectionnée
+              </h2>
+            </div>
+
+            <p className="text-muted-foreground font-light leading-relaxed">
+              Nous sommes spécialisés dans l’entretien des derniers modèles
+              Chery afin de garantir des performances optimales grâce à des
+              pièces d’origine et un savoir-faire expert.
             </p>
           </div>
-          <Link
-            href="/register"
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-100"
-          >
-            Creer un compte
-          </Link>
-        </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {modeles.map((modele) => (
-            <article
-              key={modele.nom}
-              className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,23,42,0.07)]"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={modele.image}
-                  alt={modele.nom}
-                  className="h-64 w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-                <span className="absolute left-4 top-4 inline-flex rounded-full bg-slate-950/85 px-3 py-1 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-white">
-                  Top ventes
-                </span>
-              </div>
-              <div className="p-5">
-                <h3 className="text-2xl font-semibold text-slate-900">{modele.nom}</h3>
-                <p className="mt-2 text-sm text-slate-600">{modele.description}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_20px_55px_rgba(15,23,42,0.08)] sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Parcours client</p>
-          <h3 className="mt-2 text-2xl font-semibold text-slate-900 sm:text-3xl">Comment prendre rendez-vous ?</h3>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-1px bg-border border border-border overflow-hidden">
             {[
-              "Creer un compte",
-              "Saisir la demande",
-              "Validation admin",
-              "Notification & suivi",
-            ].map((step, index) => (
+              {
+                name: "Tiggo 8 Pro",
+                type: "SUV Exécutif",
+                img:
+                  "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1000",
+              },
+              {
+                name: "Tiggo 7 Plus",
+                type: "SUV Urbain",
+                img:
+                  "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000",
+              },
+              {
+                name: "Arrizo 8",
+                type: "Berline Premium",
+                img:
+                  "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1000",
+              },
+            ].map((car, i) => (
               <div
-                key={step}
-                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                key={i}
+                className="group relative aspect-[3/4] bg-background overflow-hidden"
               >
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-rose-600">
-                  Etape {String(index + 1).padStart(2, "0")}
-                </p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">{step}</p>
+                <img
+                  src={car.img}
+                  alt={car.name}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                />
+
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+
+                <div className="absolute bottom-10 left-10 text-white transition-transform duration-500 translate-y-2 group-hover:translate-y-0">
+                  <h3 className="text-2xl font-serif mb-1">
+                    {car.name}
+                  </h3>
+
+                  <p className="text-xs uppercase tracking-widest font-medium opacity-80">
+                    {car.type}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
+        </section>
+      </main>
 
-          <div className="mt-6 grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 sm:grid-cols-3 sm:items-center">
-            <div className="inline-flex items-center gap-2 font-semibold">
-              <CheckCircle2 className="h-4 w-4" />
-              Reservation simple
+      {/* Footer */}
+      <footer className="bg-muted/30 border-t border-border/50 py-20 md:py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-3 mb-8">
+                <span className="w-1.5 h-6 bg-primary rounded-full" />
+
+                <p className="text-sm font-semibold tracking-widest text-foreground uppercase">
+                  Chery Tunisie
+                </p>
+              </div>
+
+              <p className="text-muted-foreground font-light leading-relaxed max-w-sm">
+                La plateforme officielle de service après-vente pour les
+                propriétaires Chery en Tunisie. Engagés à offrir l’excellence à
+                chaque interaction.
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 font-semibold">
-              <CheckCircle2 className="h-4 w-4" />
-              Suivi transparent
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-foreground mb-8">
+                Navigation
+              </p>
+
+              <ul className="space-y-4">
+                <li>
+                  <Link
+                    href="/login"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Connexion
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/register"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Inscription
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Récupération
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <div className="inline-flex items-center gap-2 font-semibold">
-              <CheckCircle2 className="h-4 w-4" />
-              Assistance rapide
+
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-foreground mb-8">
+                Support
+              </p>
+
+              <ul className="space-y-4">
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Mentions Légales
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Politique de Confidentialité
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="#"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors font-light"
+                  >
+                    Contactez-nous
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
 
-      <footer id="contact" className="border-t border-slate-200 bg-white/80">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
-          <div>
-            <p className="text-lg font-semibold text-slate-900">CHERY TUNISIE - Service Client</p>
-            <p className="mt-2 max-w-md text-sm text-slate-600">
-              Plateforme de reservation et de suivi des rendez-vous SAV pour nos clients.
+          <Separator className="opacity-40 mb-10" />
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-[0.7rem] uppercase tracking-widest text-muted-foreground">
+              © 2026 Chery Tunisie. Tous droits réservés.
             </p>
-          </div>
 
-          <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-600">
-            <Link href="/login" className="transition hover:text-slate-900">Connexion</Link>
-            <Link href="/register" className="transition hover:text-slate-900">Inscription</Link>
-            <Link href="/forgot-password" className="transition hover:text-slate-900">Mot de passe oublie</Link>
-            <a href="#" className="transition hover:text-slate-900">Mentions legales</a>
+            <div className="flex gap-10">
+              <span className="text-[0.7rem] uppercase tracking-widest text-muted-foreground font-medium">
+                Instagram
+              </span>
+
+              <span className="text-[0.7rem] uppercase tracking-widest text-muted-foreground font-medium">
+                LinkedIn
+              </span>
+            </div>
           </div>
         </div>
       </footer>

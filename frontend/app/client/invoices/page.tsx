@@ -5,8 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { invoicesApi } from '@/lib/api/invoices';
 import type { InvoiceSummary, InvoiceStatus } from '@/types/invoice';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import {
+  ClientPageWrapper,
+  ClientCard,
+  ClientButton,
+  ClientStatCard,
+  ClientEmptyState,
+  ClientLoadingState,
+} from '@/components/client';
+import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
   Download, 
@@ -14,14 +21,25 @@ import {
   Search,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  History,
+  TrendingUp,
+  CreditCard,
+  Receipt,
+  SearchIcon,
+  ChevronRight,
+  ShieldCheck,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
-const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  EMISE: 'bg-blue-500',
-  ENVOYEE: 'bg-purple-500',
-  PAYEE: 'bg-green-500',
-  ANNULEE: 'bg-red-500',
+const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string; icon: any }> = {
+  EMISE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
+  ENVOYEE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Zap },
+  PAYEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle },
+  ANNULEE: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -29,13 +47,6 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
   ENVOYEE: 'Envoyée',
   PAYEE: 'Payée',
   ANNULEE: 'Annulée',
-};
-
-const STATUS_ICONS: Record<InvoiceStatus, any> = {
-  EMISE: Clock,
-  ENVOYEE: Clock,
-  PAYEE: CheckCircle,
-  ANNULEE: XCircle,
 };
 
 export default function ClientInvoicesPage() {
@@ -83,8 +94,9 @@ export default function ClientInvoicesPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success('Téléchargement démarré', { description: `Facture ${numero} en cours de téléchargement.` });
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Erreur lors du téléchargement');
+      toast.error('Erreur', { description: err.response?.data?.error || 'Erreur lors du téléchargement' });
     }
   };
 
@@ -93,203 +105,225 @@ export default function ClientInvoicesPage() {
     f.commande_numero.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculer les statistiques
-  const totalFactures = factures.length;
-  const facturesPayees = factures.filter(f => f.statut === 'PAYEE').length;
-  const facturesEnAttente = factures.filter(f => f.statut === 'EMISE' || f.statut === 'ENVOYEE').length;
-  const montantTotal = factures.reduce((sum, f) => sum + f.montant_ttc, 0);
-  const montantPaye = factures.filter(f => f.statut === 'PAYEE').reduce((sum, f) => sum + f.montant_ttc, 0);
-  const montantEnAttente = factures.filter(f => f.statut === 'EMISE' || f.statut === 'ENVOYEE').reduce((sum, f) => sum + f.montant_ttc, 0);
+  const stats = {
+    total: factures.length,
+    paid: factures.filter(f => f.statut === 'PAYEE').length,
+    pending: factures.filter(f => f.statut === 'EMISE' || f.statut === 'ENVOYEE').length,
+    totalAmount: factures.reduce((sum, f) => sum + f.montant_ttc, 0),
+    paidAmount: factures.filter(f => f.statut === 'PAYEE').reduce((sum, f) => sum + f.montant_ttc, 0),
+    pendingAmount: factures.filter(f => f.statut === 'EMISE' || f.statut === 'ENVOYEE').reduce((sum, f) => sum + f.montant_ttc, 0)
+  };
 
   if (isLoading || !user || !token) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
-      </div>
-    );
+    return <ClientLoadingState message="Chargement de vos factures..." />;
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <FileText className="w-8 h-8" />
-            Mes Factures
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Consultez et téléchargez vos factures
-          </p>
-        </div>
-
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Total factures</p>
-                  <p className="text-2xl font-bold text-white">{totalFactures}</p>
-                </div>
-                <FileText className="w-8 h-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Payées</p>
-                  <p className="text-2xl font-bold text-green-500">{facturesPayees}</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">En attente</p>
-                  <p className="text-2xl font-bold text-orange-500">{facturesEnAttente}</p>
-                </div>
-                <Clock className="w-8 h-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div>
-                <p className="text-slate-400 text-sm">Montant total</p>
-                <p className="text-2xl font-bold text-white">{montantTotal.toFixed(2)} TND</p>
-                <div className="mt-2 text-xs">
-                  <span className="text-green-500">Payé: {montantPaye.toFixed(2)} TND</span>
-                  <br />
-                  <span className="text-orange-500">En attente: {montantEnAttente.toFixed(2)} TND</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recherche */}
-        <Card className="bg-slate-900 border-slate-800">
-          <CardContent className="p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Rechercher par numéro de facture ou commande..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+    <ClientPageWrapper className="space-y-12 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-emerald-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-2xl text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-400 backdrop-blur-md border border-white/10">
+              <Receipt className="h-3.5 w-3.5" />
+              Espace Facturation Chery
             </div>
-          </CardContent>
-        </Card>
+            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+              Vos <span className="text-red-500">Factures</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+              Gérez votre historique de paiement, téléchargez vos factures PDF et suivez vos dépenses d'entretien.
+            </p>
+          </div>
 
-        {/* Liste des factures */}
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              {filteredFactures.length} facture(s)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">
-                Chargement des factures...
-              </div>
-            ) : error ? (
-              <div className="text-center py-8 text-red-400">
-                {error}
-              </div>
-            ) : filteredFactures.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                Aucune facture trouvée
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredFactures.map((facture) => {
-                  const StatusIcon = STATUS_ICONS[facture.statut];
-                  return (
-                    <div
-                      key={facture.id}
-                      className="p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+          <div className="relative w-full md:w-80">
+            <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Rechercher une facture..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-2xl bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ─── Stats Grid ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ClientStatCard
+          label="Total Factures"
+          value={stats.total}
+          icon={Receipt}
+          iconColor="text-blue-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+        <ClientStatCard
+          label="Factures Payées"
+          value={stats.paid}
+          icon={ShieldCheck}
+          iconColor="text-emerald-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+        <ClientStatCard
+          label="En Attente"
+          value={stats.pending}
+          icon={Clock}
+          iconColor="text-amber-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+        <ClientStatCard
+          label="Total Dépenses"
+          value={`${stats.totalAmount.toFixed(2)}`}
+          icon={TrendingUp}
+          iconColor="text-red-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+      </div>
+
+      {/* ─── Invoices List ─── */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-4">
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Historique de facturation</h2>
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stats.paidAmount.toFixed(3)} TND PAYÉS</span>
+          </div>
+        </div>
+
+        <AnimatePresence mode="popLayout">
+          {loading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid gap-6"
+            >
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 rounded-[2rem] bg-white animate-pulse shadow-sm" />
+              ))}
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-12 text-center bg-red-50 rounded-[3rem] border border-red-100"
+            >
+              <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="text-red-600 font-bold">{error}</p>
+              <ClientButton onClick={loadFactures} variant="secondary" className="mt-6">Réessayer</ClientButton>
+            </motion.div>
+          ) : filteredFactures.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <ClientEmptyState
+                icon={FileText}
+                title="Aucune facture"
+                description={searchTerm ? "Aucun résultat pour votre recherche." : "Vous n'avez pas encore de factures émises."}
+                className="bg-white border-none shadow-2xl shadow-slate-100"
+              />
+            </motion.div>
+          ) : (
+            <div className="grid gap-6">
+              {filteredFactures.map((facture, idx) => {
+                const status = STATUS_COLORS[facture.statut] || STATUS_COLORS.EMISE;
+                const StatusIcon = status.icon;
+
+                return (
+                  <motion.div
+                    key={facture.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <ClientCard 
+                      className="group cursor-pointer p-6 sm:p-8 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-white font-semibold text-lg">
+                      <div className="flex flex-col lg:flex-row items-center gap-8">
+                        {/* Status Block */}
+                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors shrink-0">
+                          <StatusIcon className={`h-8 w-8 ${status.text} mb-1`} />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Facture</span>
+                        </div>
+
+                        {/* Invoice Info */}
+                        <div className="flex-1 text-center lg:text-left">
+                          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
+                            <span className="text-xl font-black text-slate-800 tracking-tight font-mono">
                               {facture.numero}
-                            </h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[facture.statut]} text-white flex items-center gap-1`}>
-                              <StatusIcon className="w-3 h-3" />
-                              {STATUS_LABELS[facture.statut]}
                             </span>
+                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                              {STATUS_LABELS[facture.statut] || facture.statut}
+                            </Badge>
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-slate-400">Commande</p>
-                              <p className="text-white">{facture.commande_numero}</p>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Référence Commande</p>
+                              <p className="font-bold text-slate-700">{facture.commande_numero}</p>
+                              <p className="text-xs text-slate-400 font-medium">{facture.vehicule_immatriculation}</p>
                             </div>
-                            <div>
-                              <p className="text-slate-400">Véhicule</p>
-                              <p className="text-white">{facture.vehicule_immatriculation}</p>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Date d'émission</p>
+                              <p className="font-bold text-slate-700">{new Date(facture.date_emission).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
-                            <div>
-                              <p className="text-slate-400">Date</p>
-                              <p className="text-white">
-                                {new Date(facture.date_emission).toLocaleDateString('fr-FR')}
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Montant TTC</p>
+                              <p className="text-2xl font-black text-slate-800 tracking-tight">
+                                {facture.montant_ttc.toFixed(3)}
+                                <span className="text-[10px] ml-1 text-slate-400 uppercase tracking-widest">TND</span>
                               </p>
                             </div>
-                            <div>
-                              <p className="text-slate-400">Montant</p>
-                              <p className="text-white font-semibold">
-                                {facture.montant_ttc.toFixed(2)} TND
-                              </p>
-                            </div>
                           </div>
+                          
                           {facture.date_paiement && (
-                            <div className="mt-2 text-sm">
-                              <span className="text-green-400">
-                                ✓ Payée le {new Date(facture.date_paiement).toLocaleDateString('fr-FR')}
-                              </span>
+                            <div className="mt-4 flex items-center justify-center lg:justify-start gap-2">
+                               <CheckCircle className="h-4 w-4 text-emerald-500" />
+                               <span className="text-xs font-bold text-emerald-600">Payée le {new Date(facture.date_paiement).toLocaleDateString('fr-FR')}</span>
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
+
+                        {/* Actions */}
+                        <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-50 w-full lg:w-auto">
+                          <ClientButton
+                            variant="secondary"
                             onClick={() => router.push(`/client/invoices/${facture.id}`)}
-                            className="border-slate-700"
+                            icon={Eye}
+                            className="w-full sm:w-auto"
                           >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Voir
-                          </Button>
-                          <Button
-                            size="sm"
+                            Consulter
+                          </ClientButton>
+                          <ClientButton
+                            variant="primary"
                             onClick={() => handleDownloadPDF(facture.id, facture.numero)}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            icon={Download}
+                            className="w-full sm:w-auto"
                           >
-                            <Download className="w-4 h-4 mr-2" />
-                            PDF
-                          </Button>
+                            Télécharger PDF
+                          </ClientButton>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </ClientCard>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </ClientPageWrapper>
   );
 }

@@ -26,33 +26,56 @@ const api = {
       Object.assign(headers, config.headers);
     }
 
-    console.log('[axios.get] Request:', { url: `${API_BASE_URL}${url}`, hasToken: !!token });
+    const fullUrl = `${API_BASE_URL}${url}`;
+    console.log('[axios.get] Request:', { url: fullUrl, hasToken: !!token });
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'GET',
-      headers,
-      ...config,
-    });
+    try {
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers,
+        ...config,
+      });
 
-    console.log('[axios.get] Response:', { status: response.status, ok: response.ok });
+      console.log('[axios.get] Response:', { status: response.status, ok: response.ok });
 
-    if (!response.ok) {
-      let errorData: any;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = { error: 'Erreur réseau', message: `HTTP ${response.status}` };
+      if (!response.ok) {
+        let errorData: any;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { 
+            error: 'Réponse non-JSON', 
+            message: `Le serveur a renvoyé un status ${response.status} mais le corps n'est pas du JSON valide (possible conflit de port ou page 404 HTML)`
+          };
+        }
+        console.error('[axios.get] Error response:', errorData);
+        const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+        err.response = { data: errorData, status: response.status };
+        throw err;
       }
-      console.error('[axios.get] Error response:', errorData);
-      const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
-      err.response = { data: errorData, status: response.status };
-      throw err;
-    }
 
-    const data = await response.json();
-    console.log('[axios.get] Success:', { dataKeys: Object.keys(data) });
-    // Retourner dans le format { data: ... } pour correspondre à axios
-    return { data };
+      const data = await response.json();
+      console.log('[axios.get] Success:', { dataKeys: Object.keys(data) });
+      return { data };
+    } catch (error) {
+      console.error('[axios.get] Fetch failed:', error);
+      
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        const err: any = new Error(
+          `Impossible de se connecter au serveur à ${API_BASE_URL}. Vérifiez que le backend est démarré.`
+        );
+        err.response = { 
+          data: { 
+            error: 'Network Error',
+            message: 'Backend server is not running or not accessible'
+          }, 
+          status: 0 
+        };
+        throw err;
+      }
+      
+      throw error;
+    }
   },
 
   post: async (url: string, data?: any, config?: RequestInit) => {
@@ -75,14 +98,15 @@ const api = {
       Object.assign(headers, config.headers);
     }
 
+    const fullUrl = `${API_BASE_URL}${url}`;
     console.log('[axios.post] Request:', { 
-      url: `${API_BASE_URL}${url}`, 
+      url: fullUrl, 
       hasToken: !!token,
       isFormData 
     });
 
     try {
-      const response = await fetch(`${API_BASE_URL}${url}`, {
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers,
         body: isFormData ? data : JSON.stringify(data),
@@ -96,7 +120,10 @@ const api = {
         try {
           errorData = await response.json();
         } catch {
-          errorData = { error: 'Erreur réseau', message: `HTTP ${response.status}` };
+          errorData = { 
+            error: 'Réponse non-JSON', 
+            message: `Le serveur a renvoyé un status ${response.status} mais le corps n'est pas du JSON valide (possible conflit de port ou page 404 HTML)`
+          };
         }
         console.error('[axios.post] Error response:', errorData);
         const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
@@ -110,10 +137,9 @@ const api = {
     } catch (error) {
       console.error('[axios.post] Fetch failed:', error);
       
-      // Better error message for network failures
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      if (error instanceof TypeError && (error.message === 'Failed to fetch' || error.message.includes('fetch'))) {
         const err: any = new Error(
-          'Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur http://localhost:3000'
+          `Impossible de se connecter au serveur à ${API_BASE_URL}. Vérifiez que le backend est démarré.`
         );
         err.response = { 
           data: { 
@@ -141,27 +167,36 @@ const api = {
       Object.assign(headers, config.headers);
     }
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(data),
-      ...config,
-    });
+    const fullUrl = `${API_BASE_URL}${url}`;
+    try {
+      const response = await fetch(fullUrl, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(data),
+        ...config,
+      });
 
-    if (!response.ok) {
-      let errorData: any;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = { error: 'Erreur réseau', message: `HTTP ${response.status}` };
+      if (!response.ok) {
+        let errorData: any;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { 
+            error: 'Réponse non-JSON', 
+            message: `Le serveur a renvoyé un status ${response.status} mais le corps n'est pas du JSON valide`
+          };
+        }
+        const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+        err.response = { data: errorData, status: response.status };
+        throw err;
       }
-      const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
-      err.response = { data: errorData, status: response.status };
-      throw err;
-    }
 
-    const responseData = await response.json();
-    return { data: responseData };
+      const responseData = await response.json();
+      return { data: responseData };
+    } catch (error) {
+      console.error('[axios.put] Fetch failed:', error);
+      throw error;
+    }
   },
 
   delete: async (url: string, config?: RequestInit) => {
@@ -176,26 +211,35 @@ const api = {
       Object.assign(headers, config.headers);
     }
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'DELETE',
-      headers,
-      ...config,
-    });
+    const fullUrl = `${API_BASE_URL}${url}`;
+    try {
+      const response = await fetch(fullUrl, {
+        method: 'DELETE',
+        headers,
+        ...config,
+      });
 
-    if (!response.ok) {
-      let errorData: any;
-      try {
-        errorData = await response.json();
-      } catch {
-        errorData = { error: 'Erreur réseau', message: `HTTP ${response.status}` };
+      if (!response.ok) {
+        let errorData: any;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { 
+            error: 'Réponse non-JSON', 
+            message: `Le serveur a renvoyé un status ${response.status} mais le corps n'est pas du JSON valide`
+          };
+        }
+        const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+        err.response = { data: errorData, status: response.status };
+        throw err;
       }
-      const err: any = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
-      err.response = { data: errorData, status: response.status };
-      throw err;
-    }
 
-    const data = await response.json();
-    return { data };
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('[axios.delete] Fetch failed:', error);
+      throw error;
+    }
   },
 };
 

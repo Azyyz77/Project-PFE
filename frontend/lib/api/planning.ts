@@ -3,8 +3,8 @@
  * API client for the agent planning feature
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const PLANNING_BASE = `${API_BASE}/api/agent/planning`;
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const PLANNING_BASE = `${API_BASE}/agent/planning`;
 
 function buildHeaders(token: string) {
   return {

@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { PhoneVerificationBanner } from '@/components/PhoneVerificationBanner';
 import NotificationBell from '@/components/NotificationBell';
@@ -30,7 +31,9 @@ import {
   Receipt,
   LayoutGrid,
   Info,
-  ShoppingBag,
+  ChevronRight,
+  Bell,
+  Search,
 } from 'lucide-react';
 
 interface NavItem {
@@ -50,33 +53,28 @@ const getNavSections = (): NavSection[] => [
   {
     titleKey: 'PRINCIPAL',
     items: [
-      { labelKey: 'nav.clientDashboard', href: '/client/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
-      { labelKey: 'nav.clientVehicles', href: '/client/vehicles', icon: <Car className="h-4 w-4" /> },
-      { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" /> },
+      { labelKey: 'nav.clientDashboard', href: '/client/dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
+      { labelKey: 'nav.clientVehicles', href: '/client/vehicles', icon: <Car className="h-5 w-5" /> },
+      { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-5 w-5" /> },
     ],
   },
   {
     titleKey: 'SUIVI',
     items: [
-      { labelKey: 'nav.clientAppointments', href: '/client/rendez-vous', icon: <Calendar className="h-4 w-4" />, badgeKey: 'appointments' },
-      { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-4 w-4" /> },
-      { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-4 w-4" /> },
-      { labelKey: 'nav.clientOrders', href: '/client/orders', icon: <ShoppingBag className="h-4 w-4" /> },
-      { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-4 w-4" /> },
-      { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-4 w-4" /> },
-      { labelKey: 'nav.clientDocuments', href: '/client/invoices', icon: <Receipt className="h-4 w-4" /> },
+      { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-5 w-5" /> },
+      { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-5 w-5" /> },
+      { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-5 w-5" /> },
+      { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-5 w-5" /> },
     ],
   },
   {
     titleKey: 'AUTRES',
     items: [
-      { labelKey: 'nav.clientInformations', href: '/client/informations', icon: <Info className="h-4 w-4" /> },
-      { labelKey: 'nav.clientDocuments', href: '/client/documents', icon: <FileText className="h-4 w-4" /> },
-      { labelKey: 'nav.clientComplaints', href: '/client/complaints', icon: <AlertCircle className="h-4 w-4" />, badgeKey: 'complaints' },
-      { labelKey: 'nav.clientAssistance', href: '/client/assistance', icon: <LifeBuoy className="h-4 w-4" /> },
-      { labelKey: 'nav.clientChatbot', href: '/client/chatbot', icon: <MessageCircle className="h-4 w-4" /> },
-      { labelKey: 'nav.clientFeedback', href: '/client/feedback', icon: <Star className="h-4 w-4" /> },
-      { labelKey: 'nav.clientProfile', href: '/client/profile', icon: <User className="h-4 w-4" /> },
+      { labelKey: 'nav.clientInformations', href: '/client/informations', icon: <Info className="h-5 w-5" /> },
+      { labelKey: 'nav.clientDocuments', href: '/client/documents', icon: <FileText className="h-5 w-5" /> },
+      { labelKey: 'nav.clientComplaints', href: '/client/complaints', icon: <AlertCircle className="h-5 w-5" />, badgeKey: 'complaints' },
+      { labelKey: 'nav.clientChatbot', href: '/client/chatbot', icon: <MessageCircle className="h-5 w-5" /> },
+      { labelKey: 'nav.clientProfile', href: '/client/profile', icon: <User className="h-5 w-5" /> },
     ],
   },
 ];
@@ -84,29 +82,45 @@ const getNavSections = (): NavSection[] => [
 function SidebarLink({ item, isActive, badgeCount }: { item: NavItem; isActive: boolean; badgeCount?: number }) {
   const { t } = useLanguage();
   const shouldShowBadge = typeof badgeCount === 'number' && badgeCount > 0;
+
   return (
-    <Link
-      href={item.href}
-      className={`group relative flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-sm transition-all duration-300 ${
-        isActive
-          ? 'bg-[#1b355d] text-white font-medium shadow-[0_10px_20px_rgba(12,28,52,0.35)]'
-          : 'text-slate-300 hover:bg-[#17325a] hover:text-white'
-      }`}
-    >
-      <span
-        className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-red-500 transition-all duration-300 ${
-          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+    <Link href={item.href} className="relative block group">
+      <motion.div
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className={`flex items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 ${
+          isActive
+            ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg shadow-red-900/20'
+            : 'text-slate-400 hover:bg-white/5 hover:text-white'
         }`}
-      />
-      <span className={isActive ? 'text-white' : 'text-slate-400'}>
-        {item.icon}
-      </span>
-      <span className="flex-1 whitespace-nowrap">{t(item.labelKey)}</span>
-      {shouldShowBadge && (
-        <Badge className="h-5 min-w-[20px] rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-          {badgeCount}
-        </Badge>
-      )}
+      >
+        <span className={`${isActive ? 'text-white' : 'group-hover:text-red-400 transition-colors'}`}>
+          {item.icon}
+        </span>
+        <span className="flex-1 text-sm font-medium tracking-wide">
+          {t(item.labelKey)}
+        </span>
+        
+        {shouldShowBadge && (
+          <Badge className="h-5 min-w-[20px] rounded-full bg-white text-red-600 px-1.5 text-[10px] font-bold">
+            {badgeCount}
+          </Badge>
+        )}
+
+        {isActive && (
+          <motion.div
+            layoutId="activeTab"
+            className="absolute left-0 w-1 h-6 bg-white rounded-r-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
+        )}
+        
+        {!isActive && (
+          <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+        )}
+      </motion.div>
     </Link>
   );
 }
@@ -124,41 +138,40 @@ function SidebarContent({
   const navSections = getNavSections();
 
   return (
-    <div className="client-sidebar flex h-full flex-col bg-[#0f2543]">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-6 border-b border-[#1a3559]">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600">
-          <Car className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-white">STA Chery</p>
-          <p className="text-[10px] uppercase tracking-wider text-slate-400">{t('nav.clientSpace')}</p>
-        </div>
-      </div>
-
-      {/* User Info */}
-      {user && (
-        <div className="px-4 py-4 border-b border-[#1a3559]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-              {user.prenom?.[0]}{user.nom?.[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user.prenom} {user.nom}</p>
-              <p className="text-xs text-slate-400">{t('common.client')}</p>
+    <div className="flex h-full flex-col bg-[#0b1221] text-slate-300 border-r border-white/5">
+      {/* Logo Section */}
+      <div className="px-8 py-10">
+        <Link href="/client/dashboard" className="flex items-center gap-3 group">
+          <div className="relative">
+            <div className="absolute -inset-1 rounded-xl bg-red-600/20 blur-sm group-hover:bg-red-600/40 transition-all duration-300" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-600 to-red-700 shadow-xl shadow-red-900/30">
+              <Car className="h-6 w-6 text-white" />
             </div>
           </div>
-        </div>
-      )}
+          <div>
+            <h2 className="text-lg font-black tracking-tighter text-white uppercase">
+              STA <span className="text-red-500">Chery</span>
+            </h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              {t('nav.clientSpace')}
+            </p>
+          </div>
+        </Link>
+      </div>
 
-      {/* Navigation Sections */}
-      <nav className="client-sidebar-scroll flex-1 overflow-y-auto px-3 py-4 space-y-6">
-        {navSections.map((section) => (
-          <div key={section.titleKey}>
-            <h3 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-4 space-y-8 scrollbar-none">
+        {navSections.map((section, idx) => (
+          <motion.div 
+            key={section.titleKey}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1 }}
+          >
+            <h3 className="mb-4 px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-slate-600">
               {t(section.titleKey)}
             </h3>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 const badgeCount = item.badgeKey ? badgeCounts?.[item.badgeKey] : item.badge;
@@ -169,55 +182,32 @@ function SidebarContent({
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         ))}
       </nav>
 
-      {/* Footer Actions */}
-      {user && (
-        <div className="border-t border-[#1a3559] p-3">
+      {/* Footer / Logout */}
+      <div className="p-6">
+        <div className="rounded-3xl bg-white/5 p-4 border border-white/5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
+              {user?.prenom?.[0]}{user?.nom?.[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">{user?.prenom} {user?.nom}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+            </div>
+          </div>
           <button
-            type="button"
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-[#17325a] hover:text-white"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600/10 py-2.5 text-xs font-bold text-red-500 transition-all hover:bg-red-600 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
             <span>{t('nav.logout')}</span>
           </button>
         </div>
-      )}
+      </div>
     </div>
-  );
-}
-
-function ClientSidebar() {
-  const { user, token } = useAuth();
-  const [badgeCounts, setBadgeCounts] = useState({ appointments: 0, complaints: 0 });
-
-  useEffect(() => {
-    const loadCounts = async () => {
-      if (!user || !token || user.role !== 'CLIENT') return;
-      try {
-        const [appointmentsData, complaintsData] = await Promise.all([
-          getMyAppointments(token),
-          fetchClientComplaints(token),
-        ]);
-        setBadgeCounts({
-          appointments: appointmentsData.length,
-          complaints: complaintsData.length,
-        });
-      } catch (error) {
-        console.error('Error loading client sidebar counts:', error);
-      }
-    };
-
-    loadCounts();
-  }, [user, token]);
-
-  return (
-    <aside className="hidden h-screen w-[240px] shrink-0 overflow-hidden bg-[#0f2543] lg:flex lg:flex-col">
-      <SidebarContent badgeCounts={badgeCounts} />
-    </aside>
   );
 }
 
@@ -239,20 +229,18 @@ function ClientMobileMenu() {
           complaints: complaintsData.length,
         });
       } catch (error) {
-        console.error('Error loading client mobile sidebar counts:', error);
+        console.error('Error loading mobile counts:', error);
       }
     };
-
     loadCounts();
   }, [user, token]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger className="inline-flex items-center justify-center rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 lg:hidden">
+      <SheetTrigger className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-all hover:bg-red-50 hover:text-red-600 lg:hidden focus:outline-none">
         <Menu className="h-5 w-5" />
       </SheetTrigger>
-
-      <SheetContent side="left" className="h-full w-[240px] border-0 bg-[#0f2543] p-0">
+      <SheetContent side="left" className="w-[300px] border-0 bg-[#0b1221] p-0">
         <SidebarContent onLinkClick={() => setIsOpen(false)} badgeCounts={badgeCounts} />
       </SheetContent>
     </Sheet>
@@ -260,10 +248,10 @@ function ClientMobileMenu() {
 }
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, isLoggingOut } = useAuth();
+  const { user, isLoading, isLoggingOut, token } = useAuth();
   const { t } = useLanguage();
   const pathname = usePathname();
-  const [isPageReady, setIsPageReady] = useState(false);
+  const [badgeCounts, setBadgeCounts] = useState({ appointments: 0, complaints: 0 });
 
   useEffect(() => {
     if (!isLoading && !isLoggingOut && (!user || user.role !== 'CLIENT')) {
@@ -272,20 +260,36 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }, [user, isLoading, isLoggingOut]);
 
   useEffect(() => {
-    setIsPageReady(false);
-    const id = requestAnimationFrame(() => setIsPageReady(true));
-    return () => cancelAnimationFrame(id);
-  }, [pathname]);
+    const loadCounts = async () => {
+      if (!user || !token || user.role !== 'CLIENT') return;
+      try {
+        const [appointmentsData, complaintsData] = await Promise.all([
+          getMyAppointments(token),
+          fetchClientComplaints(token),
+        ]);
+        setBadgeCounts({
+          appointments: appointmentsData.length,
+          complaints: complaintsData.length,
+        });
+      } catch (error) {
+        console.error('Error loading layout counts:', error);
+      }
+    };
+    loadCounts();
+  }, [user, token]);
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative h-12 w-12">
-            <div className="absolute inset-0 rounded-full border-2 border-red-500/20" />
-            <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-red-500" />
+      <div className="flex min-h-screen items-center justify-center bg-[#0b1221]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative h-20 w-20">
+            <div className="absolute inset-0 rounded-3xl border-4 border-red-500/20 animate-pulse" />
+            <div className="absolute inset-0 animate-spin rounded-3xl border-4 border-t-red-500" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Car className="h-8 w-8 text-white" />
+            </div>
           </div>
-          <p className="text-sm uppercase tracking-widest text-slate-400">{t('common.loading')}</p>
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-white/40">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -293,53 +297,84 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   if (!user || user.role !== 'CLIENT') return null;
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f7fa]">
-      <ClientSidebar />
+  // Find current page title from nav items
+  const allNavItems = getNavSections().flatMap(s => s.items);
+  const currentItem = allNavItems.find(item => pathname === item.href || pathname.startsWith(item.href + '/'));
+  const pageTitle = currentItem ? t(currentItem.labelKey) : t('nav.dashboard');
 
-      <div className="flex min-w-0 flex-1 flex-col min-h-0">
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3.5 shadow-sm">
-          <div className="flex items-center gap-4">
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#f8fafc]">
+      {/* Desktop Sidebar */}
+      <aside className="hidden h-screen w-[280px] shrink-0 lg:block">
+        <SidebarContent badgeCounts={badgeCounts} />
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col relative">
+        {/* Modern Top Header */}
+        <header className="sticky top-0 z-40 flex items-center justify-between px-8 py-5">
+          {/* Glassmorphism Header Background */}
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-xl border-b border-slate-200/50 -z-10" />
+          
+          <div className="flex items-center gap-6">
             <ClientMobileMenu />
-            <div className="leading-tight">
-              <h1 className="text-base font-semibold text-slate-700">{t('nav.dashboard')}</h1>
-              <p className="text-xs text-slate-500">{t('common.client')}</p>
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold text-slate-800 tracking-tight">{pageTitle}</h1>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  {t('common.client')} • {user.prenom} {user.nom}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <LanguageSelector />
-            <NotificationBell />
+          <div className="flex items-center gap-4">
+            {/* Search Bar - Aesthetic only for now */}
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-100/50 border border-slate-200 text-slate-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-red-500/20 transition-all duration-300">
+              <Search className="h-4 w-4" />
+              <input type="text" placeholder="Rechercher..." className="bg-transparent border-none outline-none text-xs w-40 font-medium" />
+            </div>
 
-            <div className="h-6 w-px bg-slate-200" />
+            <div className="flex items-center gap-2">
+              <LanguageSelector />
+              <NotificationBell />
+            </div>
 
-            {/* Settings Icon */}
-            <button 
-              type="button" 
-              className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
-              aria-label="Settings"
-            >
-              <Settings className="h-5 w-5" />
-            </button>
+            <div className="h-8 w-px bg-slate-200 mx-1" />
 
-            {/* User Avatar */}
-            <Link href="/client/profile">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white cursor-pointer hover:bg-blue-700 transition-colors">
-                {user?.prenom?.[0]}{user?.nom?.[0]}
+            <Link href="/client/profile" className="relative group">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity blur-sm" />
+              <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-sm transition-transform group-hover:scale-95">
+                <span className="text-sm font-black text-red-600 uppercase">
+                  {user.prenom?.[0]}{user.nom?.[0]}
+                </span>
               </div>
             </Link>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto relative scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <PhoneVerificationBanner />
-          <div
-            key={pathname}
-            className={`client-page-transition client-page-stagger ${isPageReady ? 'client-page-enter' : 'opacity-0'}`}
-          >
-            {children}
+          
+          <div className="max-w-[1600px] mx-auto p-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="min-h-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
+
+          {/* Subtle Background Elements */}
+          <div className="absolute top-0 right-0 -z-10 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         </main>
       </div>
     </div>

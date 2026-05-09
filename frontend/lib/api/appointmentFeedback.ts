@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 function headers(token: string) {
   return { Authorization: `Bearer ${token}` };
@@ -43,7 +43,7 @@ export interface FeedbackStats {
 
 export async function submitFeedback(token: string, appointmentId: number, data: FeedbackData) {
   const r = await axios.post(
-    `${API_BASE}/api/appointments/${appointmentId}/feedback`,
+    `${API_BASE}/appointments/${appointmentId}/feedback`,
     data,
     { headers: headers(token) }
   );
@@ -62,7 +62,7 @@ export async function getFeedbacks(token: string, filters?: {
   if (filters?.minNote) queryParams.append('minNote', filters.minNote.toString());
   if (filters?.maxNote) queryParams.append('maxNote', filters.maxNote.toString());
   
-  const url = `${API_BASE}/api/feedbacks${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const url = `${API_BASE}/feedbacks${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
   const r = await axios.get(url, {
     headers: headers(token)
   });
@@ -70,7 +70,7 @@ export async function getFeedbacks(token: string, filters?: {
 }
 
 export async function getFeedbackStats(token: string): Promise<FeedbackStats> {
-  const r = await axios.get(`${API_BASE}/api/feedbacks/stats`, {
+  const r = await axios.get(`${API_BASE}/feedbacks/stats`, {
     headers: headers(token)
   });
   return r.data.stats;
@@ -124,14 +124,14 @@ export interface Cancellation {
 }
 
 export async function getAppointmentHistory(token: string, appointmentId: number): Promise<AppointmentHistory> {
-  const r = await axios.get(`${API_BASE}/api/appointments/${appointmentId}/history`, {
+  const r = await axios.get(`${API_BASE}/appointments/${appointmentId}/history`, {
     headers: headers(token)
   });
   return r.data;
 }
 
 export async function getDurationStats(token: string): Promise<DurationStats> {
-  const r = await axios.get(`${API_BASE}/api/appointments/stats/duration`, {
+  const r = await axios.get(`${API_BASE}/appointments/stats/duration`, {
     headers: headers(token)
   });
   return r.data.stats;
@@ -145,7 +145,7 @@ export async function getCancellationHistory(token: string, filters?: {
   if (filters?.fromDate) queryParams.append('fromDate', filters.fromDate);
   if (filters?.toDate) queryParams.append('toDate', filters.toDate);
   
-  const url = `${API_BASE}/api/appointments/cancellations/history${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+  const url = `${API_BASE}/appointments/cancellations/history${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
   const r = await axios.get(url, {
     headers: headers(token)
   });

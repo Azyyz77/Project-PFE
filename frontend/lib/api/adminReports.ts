@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Types
 export interface GlobalReport {
@@ -85,7 +85,7 @@ async function parseJson<T>(response: Response): Promise<T> {
  */
 export async function getGlobalReport(token: string): Promise<GlobalReport> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/reports/global`, {
+    const response = await fetch(`${API_BASE_URL}/admin/reports/global`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -102,7 +102,7 @@ export async function getGlobalReport(token: string): Promise<GlobalReport> {
  */
 export async function getAgencyReport(token: string): Promise<AgencyReport[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/reports/agencies`, {
+    const response = await fetch(`${API_BASE_URL}/admin/reports/agencies`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -129,7 +129,7 @@ export async function getPeriodReport(
       date_fin: dateFin,
     });
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/reports/period?${params}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/reports/period?${params}`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -147,7 +147,7 @@ export async function getPeriodReport(
  */
 export async function getTopInterventions(token: string): Promise<TopIntervention[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/reports/top-interventions`, {
+    const response = await fetch(`${API_BASE_URL}/admin/reports/top-interventions`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });

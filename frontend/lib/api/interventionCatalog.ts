@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 function headers(token: string) {
   return { Authorization: `Bearer ${token}` };
@@ -63,35 +63,35 @@ export interface CatalogStats {
 
 // API Functions
 export async function getInterventionTypes(token: string): Promise<InterventionType[]> {
-  const r = await axios.get(`${API_BASE}/api/catalog/types`, {
+  const r = await axios.get(`${API_BASE}/catalog/types`, {
     headers: headers(token)
   });
   return r.data.types;
 }
 
 export async function getSubTypes(token: string): Promise<SubType[]> {
-  const r = await axios.get(`${API_BASE}/api/catalog/subtypes`, {
+  const r = await axios.get(`${API_BASE}/catalog/subtypes`, {
     headers: headers(token)
   });
   return r.data.subTypes;
 }
 
 export async function getPackages(token: string): Promise<Package[]> {
-  const r = await axios.get(`${API_BASE}/api/catalog/packages`, {
+  const r = await axios.get(`${API_BASE}/catalog/packages`, {
     headers: headers(token)
   });
   return r.data.packages;
 }
 
 export async function getPackageDetails(token: string, packageId: number): Promise<PackageDetails> {
-  const r = await axios.get(`${API_BASE}/api/catalog/packages/${packageId}`, {
+  const r = await axios.get(`${API_BASE}/catalog/packages/${packageId}`, {
     headers: headers(token)
   });
   return r.data;
 }
 
 export async function getCatalogStats(token: string): Promise<CatalogStats> {
-  const r = await axios.get(`${API_BASE}/api/catalog/stats`, {
+  const r = await axios.get(`${API_BASE}/catalog/stats`, {
     headers: headers(token)
   });
   return r.data.stats;

@@ -37,7 +37,7 @@ export const statusesAPI = {
    * Obtenir tous les statuts de tous les types
    */
   getAll: async (): Promise<AllStatuses> => {
-    const response = await axios.get('/api/admin/statuses');
+    const response = await axios.get('/admin/statuses');
     return response.data;
   },
 
@@ -45,7 +45,7 @@ export const statusesAPI = {
    * Obtenir les statuts d'un type spécifique
    */
   getByType: async (type: StatusType): Promise<StatusResponse> => {
-    const response = await axios.get(`/api/admin/statuses/${type}`);
+    const response = await axios.get(`/admin/statuses/${type}`);
     return response.data;
   },
 
@@ -53,7 +53,7 @@ export const statusesAPI = {
    * Obtenir les statistiques d'utilisation des statuts
    */
   getStats: async (type: StatusType): Promise<StatusStatsResponse> => {
-    const response = await axios.get(`/api/admin/statuses/${type}/stats`);
+    const response = await axios.get(`/admin/statuses/${type}/stats`);
     return response.data;
   },
 
@@ -61,7 +61,7 @@ export const statusesAPI = {
    * Créer un nouveau statut
    */
   create: async (type: StatusType, data: { code: string; libelle: string }): Promise<{ message: string; status: Status }> => {
-    const response = await axios.post(`/api/admin/statuses/${type}`, data);
+    const response = await axios.post(`/admin/statuses/${type}`, data);
     return response.data;
   },
 
@@ -69,7 +69,7 @@ export const statusesAPI = {
    * Mettre à jour un statut
    */
   update: async (type: StatusType, code: string, libelle: string): Promise<{ message: string; status: Status }> => {
-    const response = await axios.put(`/api/admin/statuses/${type}/${code}`, { libelle });
+    const response = await axios.put(`/admin/statuses/${type}/${code}`, { libelle });
     return response.data;
   },
 
@@ -77,7 +77,7 @@ export const statusesAPI = {
    * Supprimer un statut
    */
   delete: async (type: StatusType, code: string): Promise<{ message: string; code: string }> => {
-    const response = await axios.delete(`/api/admin/statuses/${type}/${code}`);
+    const response = await axios.delete(`/admin/statuses/${type}/${code}`);
     return response.data;
   }
 };

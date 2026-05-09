@@ -28,7 +28,7 @@ export default function AgentDashboardPage() {
     try {
       setLoadingSummary(true);
       setError(null);
-      const data = await fetchSummary(token);
+      const data = await fetchSummary();
       setSummaryData(data);
     } catch (err: any) {
       console.error(err);

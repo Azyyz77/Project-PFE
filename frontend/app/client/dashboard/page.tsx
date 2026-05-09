@@ -1,11 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import {
+  ClientPageWrapper,
+  ClientButton,
+  ClientCard,
+  ClientCardHeader,
+  ClientCardContent,
+  ClientLoadingState,
+  ClientStatCard,
+  ClientEmptyState,
+} from '@/components/client';
 import { getVehiclesByUser } from '@/lib/api/vehicles';
 import { getMyAppointments } from '@/lib/api/appointments';
 import { fetchClientComplaints } from '@/lib/api/clientDashboard';
@@ -13,219 +23,199 @@ import { Vehicle } from '@/types/vehicle';
 import { Appointment } from '@/types/appointment';
 import {
   Plus,
-  ChevronRight,
   Car,
   Calendar,
   MessageSquare,
+  CheckCircle2,
   Clock,
   MapPin,
-  CheckCircle2,
   ArrowRight,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 export default function ClientDashboardPage() {
-  return (
-    <ProtectedRoute>
-      <ClientDashboardContent />
-    </ProtectedRoute>
-  );
-}
-
-function ClientDashboardContent() {
-  const { user, token } = useAuth();
+  const { user, token, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
+  
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [complaintsCount, setComplaintsCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const isClient = useMemo(() => user?.role === 'CLIENT', [user]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && !isClient) router.replace('/dashboard/agent');
-  }, [user, isClient, router]);
+    if (!authLoading && (!user || user.role !== 'CLIENT')) {
+      router.replace('/login');
+    }
+  }, [user, authLoading, router]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!user || !token || !isClient) return;
+    const loadData = async () => {
+      if (!user || !token || user.role !== 'CLIENT') return;
+      
       try {
+        setLoading(true);
         const [vehiclesData, appointmentsData, complaintsData] = await Promise.all([
           getVehiclesByUser(user.id, token),
           getMyAppointments(token),
           fetchClientComplaints(token),
         ]);
+        
         setVehicles(vehiclesData);
         setAppointments(appointmentsData);
         setComplaintsCount(complaintsData.length);
       } catch (error) {
         console.error('Error loading dashboard:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    load();
-  }, [user, token, isClient]);
 
-  if (!isClient || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-      </div>
-    );
+    loadData();
+  }, [user, token]);
+
+  if (authLoading || !user || !token) {
+    return <ClientLoadingState />;
   }
 
-  // Calculate stats
-  const upcomingAppointments = appointments.filter((apt) => !['TERMINE', 'ANNULE'].includes(apt.statut));
+  if (loading) {
+    return <ClientLoadingState message={t('dashboard.loading') || 'Chargement du tableau de bord...'} />;
+  }
 
-  const pendingComplaints = complaintsCount;
+  const upcomingAppointments = appointments.filter(
+    (apt) => !['TERMINE', 'ANNULE'].includes(apt.statut)
+  );
   const completedAppointments = appointments.filter((apt) => apt.statut === 'TERMINE').length;
-  const now = new Date();
-  const completedThisMonth = appointments.filter((apt) => {
-    if (apt.statut !== 'TERMINE') return false;
-    const aptDate = new Date(apt.date_heure);
-    return aptDate.getFullYear() === now.getFullYear() && aptDate.getMonth() === now.getMonth();
-  }).length;
 
-  // Get recent appointments (last 2)
-  const recentAppointments = appointments
-    .filter((apt) => !['TERMINE', 'ANNULE'].includes(apt.statut))
+  const recentAppointments = upcomingAppointments
     .sort((a, b) => new Date(a.date_heure).getTime() - new Date(b.date_heure).getTime())
     .slice(0, 2);
 
   return (
-    <div className="client-page-enter space-y-6 p-6">
-      {/* Hero Section */}
-      <div className="client-reveal relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)]">
-        <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 opacity-10">
-          <Car className="h-40 w-40" />
-        </div>
+    <ClientPageWrapper className="space-y-10 pb-20">
+      {/* ─── Modern Welcome Banner ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-16 text-white shadow-2xl"
+      >
+        {/* Abstract Background Design */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-red-600/10 blur-[100px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-96 w-96 rounded-full bg-blue-600/10 blur-[100px]" />
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
 
-        <div className="relative z-10">
-          <p className="mb-1 text-sm text-blue-200">{t('dashboard.hello')},</p>
-          <h1 className="mb-2 text-3xl font-bold">
-            {user?.prenom} {user?.nom}
-          </h1>
-          <p className="mb-6 text-sm text-blue-100">
-            {t('dashboard.welcomeMessage')}
-          </p>
-
-          <div className="flex flex-wrap gap-3">
-            <Link href="/client/rendez-vous">
-              <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg">
-                <Plus className="mr-2 h-4 w-4" />
-                {t('dashboard.takeAppointment')}
-              </Button>
-            </Link>
-
-            <Link href="/client/vehicles">
-              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm">
-                <Car className="mr-2 h-4 w-4" />
-                {t('dashboard.myVehicles')}
-              </Button>
-            </Link>
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="text-center md:text-left max-w-xl">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {t('dashboard.hello')}, {user.prenom}
+            </motion.div>
+            <h1 className="mb-6 text-4xl sm:text-6xl font-black tracking-tight leading-[1.1]">
+              Votre <span className="text-red-500 underline decoration-red-500/30 underline-offset-8">Chery</span> mérite le meilleur service.
+            </h1>
+            <p className="mb-10 text-lg text-slate-400 font-medium leading-relaxed">
+              {t('dashboard.welcomeMessage') || 'Bienvenue sur votre espace client. Gérez vos véhicules, vos rendez-vous et vos documents en toute simplicité.'}
+            </p>
+            
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <Link href="/client/rendez-vous">
+                <ClientButton variant="primary" icon={Plus} size="large">
+                  {t('dashboard.takeAppointment')}
+                </ClientButton>
+              </Link>
+              <Link href="/client/vehicles">
+                <ClientButton variant="outline" icon={Car} size="large" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                  {t('dashboard.myVehicles')}
+                </ClientButton>
+              </Link>
+            </div>
           </div>
+
+          {/* Decorative Element */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ delay: 0.4, type: "spring" }}
+            className="hidden lg:block relative"
+          >
+            <div className="absolute -inset-10 rounded-full bg-red-600/20 blur-[60px] animate-pulse" />
+            <div className="h-72 w-72 rounded-[4rem] border-2 border-white/10 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-2xl flex items-center justify-center p-8 shadow-inner">
+               <Car className="h-40 w-40 text-white opacity-20 absolute" />
+               <div className="text-center">
+                  <span className="block text-5xl font-black text-white">{vehicles.length}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('dashboard.vehicles')}</span>
+               </div>
+            </div>
+          </motion.div>
         </div>
+      </motion.div>
+
+      {/* ─── Statistics Grid ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <ClientStatCard
+          label={t('dashboard.upcomingAppointments')}
+          value={upcomingAppointments.length}
+          icon={Calendar}
+          iconColor="text-red-600"
+          subtitle="Prochainement"
+        />
+        <ClientStatCard
+          label={t('dashboard.vehicles')}
+          value={vehicles.length}
+          icon={Car}
+          iconColor="text-blue-600"
+          subtitle="Actifs"
+        />
+        <ClientStatCard
+          label={t('dashboard.complaints')}
+          value={complaintsCount}
+          icon={MessageSquare}
+          iconColor="text-amber-500"
+          subtitle="En attente"
+        />
+        <ClientStatCard
+          label={t('dashboard.completedAppointments')}
+          value={completedAppointments}
+          icon={CheckCircle2}
+          iconColor="text-emerald-500"
+          subtitle="Total"
+        />
       </div>
 
-      {/* Stats Cards */}
-      <div className="client-reveal client-reveal-delay-1 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">{t('dashboard.upcomingAppointments')}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{upcomingAppointments.length}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100">
-                <Calendar className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">{t('dashboard.vehicles')}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{vehicles.length}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100">
-                <Car className="h-6 w-6 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">{t('dashboard.complaints')}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{pendingComplaints}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100">
-                <MessageSquare className="h-6 w-6 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-600">{t('dashboard.completedAppointments')}</p>
-                <p className="mt-2 text-3xl font-bold text-slate-900">{completedAppointments}</p>
-                {completedThisMonth > 0 && (
-                  <div className="mt-1 flex items-center gap-1 text-xs text-emerald-600">
-                    <span className="font-medium">+{completedThisMonth} {t('dashboard.thisMonth')}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-100">
-                <CheckCircle2 className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="client-reveal client-reveal-delay-2 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Mes Rendez-vous Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* ─── My Appointments Section ─── */}
         <div className="lg:col-span-2">
-          <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-slate-900">{t('dashboard.myAppointments')}</h2>
+          <ClientCard>
+            <ClientCardHeader
+              title={t('dashboard.myAppointments')}
+              subtitle="Consultez vos rendez-vous récents"
+              action={
                 <Link href="/client/rendez-vous">
-                  <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                  <ClientButton variant="outline" size="small">
                     {t('dashboard.viewAll')}
                     <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  </ClientButton>
                 </Link>
-              </div>
-
-              <div className="space-y-3">
-                {recentAppointments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
-                    <Calendar className="mb-4 h-12 w-12 text-slate-400" />
-                    <p className="mb-4 text-sm text-slate-600">{t('dashboard.noUpcomingAppointments')}</p>
-                    <Link href="/client/rendez-vous">
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        {t('dashboard.takeAppointment')}
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  recentAppointments.map((appointment, index) => {
+              }
+            />
+            <ClientCardContent>
+              {recentAppointments.length === 0 ? (
+                <ClientEmptyState
+                  icon={Calendar}
+                  title={t('dashboard.noUpcomingAppointments')}
+                  description={t('dashboard.bookAppointmentDescription')}
+                  actionLabel={t('dashboard.takeAppointment')}
+                  onAction={() => router.push('/client/rendez-vous')}
+                />
+              ) : (
+                <div className="grid gap-4">
+                  {recentAppointments.map((appointment, idx) => {
                     const date = new Date(appointment.date_heure);
                     const dayNumber = date.getDate();
                     const monthLabel = date.toLocaleDateString('fr-FR', { month: 'short' });
@@ -234,178 +224,129 @@ function ClientDashboardContent() {
                       minute: '2-digit',
                     });
 
-                    const statusColors = {
-                      CONFIRME: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                      PLANIFIE: 'bg-blue-100 text-blue-700 border-blue-200',
-                      EN_COURS: 'bg-amber-100 text-amber-700 border-amber-200',
-                    };
-
-                    const statusLabels = {
-                      CONFIRME: t('dashboard.confirmed'),
-                      PLANIFIE: t('dashboard.planned'),
-                      EN_COURS: t('dashboard.inProgress'),
-                    };
-
                     return (
-                      <div
+                      <motion.div
                         key={appointment.id}
-                        className={`flex items-center gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm ${
-                          index === recentAppointments.length - 1 ? '' : ''
-                        }`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * idx }}
+                        className="group flex items-center gap-6 rounded-3xl border border-slate-100 bg-slate-50/50 p-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-200/50"
                       >
-                        <div className="flex flex-col items-center justify-center rounded-xl bg-blue-50 px-4 py-3 min-w-[70px]">
-                          <span className="text-2xl font-bold text-blue-900">{String(dayNumber).padStart(2, '0')}</span>
-                          <span className="text-xs uppercase text-blue-600">{monthLabel}</span>
+                        <div className="flex flex-col items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 px-5 py-4 min-w-[80px]">
+                          <span className="text-3xl font-black text-slate-800 tracking-tighter">
+                            {String(dayNumber).padStart(2, '0')}
+                          </span>
+                          <span className="text-[10px] font-black uppercase text-red-600 tracking-widest">{monthLabel}</span>
                         </div>
 
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h3 className="font-semibold text-slate-900">
-                                {appointment.interventions?.[0]
-                                  ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
-                                  : t('dashboard.serviceAppointment')}
-                              </h3>
-                              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
-                                <span className="flex items-center gap-1">
-                                  <Car className="h-3 w-3" />
-                                  {appointment.immatriculation || t('dashboard.vehicle')}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {appointment.agence_nom || t('dashboard.agency')}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {timeLabel}
-                                </span>
-                              </div>
-                            </div>
-                            <Badge className={`${statusColors[appointment.statut as keyof typeof statusColors] || 'bg-slate-100 text-slate-700'} border`}>
-                              {statusLabels[appointment.statut as keyof typeof statusLabels] || appointment.statut}
-                            </Badge>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-800 text-lg truncate">
+                            {appointment.interventions?.[0]
+                              ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
+                              : t('dashboard.serviceAppointment') || 'Rendez-vous service'}
+                          </h3>
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            <span className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg">
+                              <Car className="h-3.5 w-3.5" />
+                              {appointment.immatriculation || t('dashboard.vehicle')}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <MapPin className="h-3.5 w-3.5" />
+                              {appointment.agence_nom || t('dashboard.agency')}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Clock className="h-3.5 w-3.5" />
+                              {timeLabel}
+                            </span>
                           </div>
                         </div>
-                      </div>
+
+                        <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 transition-colors group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-white">
+                          <ChevronRight className="h-5 w-5" />
+                        </div>
+                      </motion.div>
                     );
-                  })
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  })}
+                </div>
+              )}
+            </ClientCardContent>
+          </ClientCard>
         </div>
 
-        {/* Actions rapides */}
-        <div>
-          <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
-            <CardContent className="p-6">
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">{t('dashboard.quickActions')}</h2>
-              <div className="space-y-3">
-                <Link href="/client/rendez-vous" className="block">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                        <Calendar className="h-5 w-5 text-blue-600" />
+        {/* ─── Quick Actions & Stats Sidebar ─── */}
+        <div className="space-y-6">
+          <ClientCard>
+            <ClientCardHeader title={t('dashboard.quickActions')} />
+            <ClientCardContent>
+              <div className="grid gap-4">
+                <Link href="/client/rendez-vous" className="group">
+                  <div className="flex items-center justify-between rounded-[1.5rem] bg-red-600 p-5 text-white shadow-lg shadow-red-200 transition-all hover:translate-x-1 hover:shadow-red-300">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md">
+                        <Calendar className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{t('dashboard.takeAppointment')}</p>
-                        <p className="text-xs text-slate-500">{t('dashboard.bookAppointment')}</p>
+                        <p className="text-sm font-black uppercase tracking-wider">Prendre RDV</p>
+                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Réservez un créneau</p>
                       </div>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                    <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white transition-colors" />
                   </div>
                 </Link>
 
-                <Link href="/client/complaints" className="block">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-                        <MessageSquare className="h-5 w-5 text-amber-600" />
+                <Link href="/client/complaints" className="group">
+                  <div className="flex items-center justify-between rounded-[1.5rem] bg-slate-800 p-5 text-white shadow-lg shadow-slate-200 transition-all hover:translate-x-1 hover:shadow-slate-300">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md">
+                        <MessageSquare className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{t('dashboard.submitComplaint')}</p>
-                        <p className="text-xs text-slate-500">{t('dashboard.reportProblem')}</p>
+                        <p className="text-sm font-black uppercase tracking-wider">Réclamation</p>
+                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Signaler un problème</p>
                       </div>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                    <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white transition-colors" />
                   </div>
                 </Link>
               </div>
-            </CardContent>
-          </Card>
+            </ClientCardContent>
+          </ClientCard>
+          
+          {/* My Vehicles Card */}
+          <ClientCard>
+            <ClientCardHeader 
+              title={t('dashboard.myVehicles')} 
+              action={
+                <Link href="/client/vehicles" className="text-xs font-bold text-red-600 hover:underline">
+                  Voir tout
+                </Link>
+              }
+            />
+            <ClientCardContent>
+              {vehicles.length === 0 ? (
+                <div className="text-center py-6">
+                  <Car className="h-10 w-10 text-slate-200 mx-auto mb-2" />
+                  <p className="text-xs text-slate-400 font-bold uppercase">Aucun véhicule</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {vehicles.slice(0, 3).map((vehicle) => (
+                    <div key={vehicle.id} className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                        <Car className="h-5 w-5 text-slate-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-800 truncate">{vehicle.marque_nom} {vehicle.modele_nom}</p>
+                        <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{vehicle.immatriculation}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ClientCardContent>
+          </ClientCard>
         </div>
       </div>
-
-      <div className="client-reveal client-reveal-delay-3">
-        <Card className="rounded-2xl border border-slate-200/70 shadow-sm">
-          <CardContent className="p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">{t('dashboard.myVehicles')}</h2>
-              <Link href="/client/vehicles">
-                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                  {t('dashboard.viewAll')}
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-
-            {vehicles.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 p-10 text-center">
-                <Car className="mb-4 h-12 w-12 text-slate-400" />
-                <p className="mb-4 text-sm text-slate-600">{t('dashboard.noVehicles')}</p>
-                <Link href="/client/vehicles">
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('dashboard.addVehicle')}
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {vehicles.map((vehicle) => {
-                  const statusStyles: Record<string, string> = {
-                    VALIDE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                    EN_ATTENTE: 'bg-amber-100 text-amber-700 border-amber-200',
-                    REFUSE: 'bg-rose-100 text-rose-700 border-rose-200',
-                  };
-
-                  const statusLabels: Record<string, string> = {
-                    VALIDE: t('dashboard.validated'),
-                    EN_ATTENTE: t('dashboard.pending'),
-                    REFUSE: t('dashboard.refused'),
-                  };
-
-                  const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
-                    .filter(Boolean)
-                    .join(' ');
-
-                  return (
-                    <div key={vehicle.id} className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                          <Car className="h-6 w-6 text-slate-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {vehicleName || vehicle.immatriculation || t('dashboard.vehicle')}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {vehicle.immatriculation || t('dashboard.unknownPlate')}
-                            {vehicle.annee ? ` · ${vehicle.annee}` : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className={`${statusStyles[vehicle.statut_validation || ''] || 'bg-slate-100 text-slate-700 border-slate-200'} border`}>
-                        {statusLabels[vehicle.statut_validation || ''] || t('dashboard.undefined')}
-                      </Badge>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </ClientPageWrapper>
   );
 }

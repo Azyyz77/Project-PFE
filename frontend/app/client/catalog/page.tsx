@@ -16,8 +16,16 @@ import {
   PackageDetails,
   CatalogStats
 } from '@/lib/api/interventionCatalog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  ClientPageWrapper,
+  ClientCard,
+  ClientCardHeader,
+  ClientCardContent,
+  ClientButton,
+  ClientStatCard,
+  ClientEmptyState,
+  ClientLoadingState,
+} from '@/components/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
@@ -26,9 +34,13 @@ import {
   Clock, 
   CheckCircle,
   Search,
-  Tag
+  Tag,
+  ChevronRight,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 function CatalogContent() {
   const { user, token } = useAuth();
@@ -58,7 +70,7 @@ function CatalogContent() {
       
       setTypes(typesData);
       setSubTypes(subTypesData);
-      setPackages(packagesData.filter(pkg => pkg.actif)); // Afficher uniquement les packages actifs
+      setPackages(packagesData.filter(pkg => pkg.actif));
       setStats(statsData);
     } catch (error) {
       console.error(error);
@@ -101,283 +113,318 @@ function CatalogContent() {
     pkg.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (!user || !token) {
-    return null;
+  if (loading) {
+    return <ClientLoadingState message={t('catalog.loading') || 'Chargement du catalogue...'} />;
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4 sm:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-800 dark:from-blue-900 dark:via-blue-800 dark:to-indigo-950 p-6 sm:p-8 text-white shadow-lg">
-          <div className="absolute -right-20 -top-20 size-40 rounded-full bg-white/5 blur-3xl" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Wrench className="w-8 h-8" />
-                <h1 className="text-3xl sm:text-4xl font-bold">{t('catalog.title')}</h1>
-              </div>
-              <p className="text-sm text-blue-100">{t('catalog.discoverServices')}</p>
+    <ClientPageWrapper className="space-y-10 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-xl text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+              <Sparkles className="h-3.5 w-3.5" />
+              {t('catalog.discoverServices')}
             </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={t('catalog.search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 pl-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 w-full sm:w-80 backdrop-blur-sm"
-              />
-              <Search className="w-5 h-5 text-blue-200 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
+            <h1 className="mb-4 text-4xl sm:text-5xl font-black tracking-tight leading-none">
+              Catalogue <span className="text-red-500">Services</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+              Explorez notre gamme complète de services d'entretien et de forfaits exclusifs pour votre véhicule.
+            </p>
+          </div>
+
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder={t('catalog.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-2xl bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+            />
           </div>
         </div>
+      </motion.div>
 
-        {/* Stats */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4">
-                <p className="text-slate-600 dark:text-slate-400 text-sm">{t('catalog.serviceTypes')}</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total_types}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4">
-                <p className="text-slate-600 dark:text-slate-400 text-sm">{t('catalog.servicesAvailable')}</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.total_sous_types}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30">
-              <CardContent className="p-4">
-                <p className="text-orange-600 dark:text-orange-400 text-sm">{t('catalog.packagesAvailable')}</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-500">{stats.total_packages_actifs}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30">
-              <CardContent className="p-4">
-                <p className="text-blue-600 dark:text-blue-400 text-sm">{t('catalog.averageDuration')}</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">{Math.round(stats.duree_moyenne)} min</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+      {/* ─── Stats Grid ─── */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ClientStatCard
+            label={t('catalog.serviceTypes')}
+            value={stats.total_types}
+            icon={Wrench}
+            iconColor="text-red-600"
+          />
+          <ClientStatCard
+            label={t('catalog.servicesAvailable')}
+            value={stats.total_sous_types}
+            icon={CheckCircle}
+            iconColor="text-blue-600"
+          />
+          <ClientStatCard
+            label={t('catalog.packagesAvailable')}
+            value={stats.total_packages_actifs}
+            icon={PackageIcon}
+            iconColor="text-amber-500"
+          />
+          <ClientStatCard
+            label={t('catalog.averageDuration')}
+            value={`${Math.round(stats.duree_moyenne)} min`}
+            icon={Clock}
+            iconColor="text-emerald-500"
+          />
+        </div>
+      )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="packages" className="space-y-4">
-          <TabsList className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <TabsTrigger value="packages">{t('catalog.packages')}</TabsTrigger>
-            <TabsTrigger value="types">{t('catalog.serviceTypes')}</TabsTrigger>
-            <TabsTrigger value="services">{t('catalog.allServices')}</TabsTrigger>
+      {/* ─── Catalog Tabs ─── */}
+      <Tabs defaultValue="packages" className="space-y-8">
+        <div className="flex justify-center">
+          <TabsList className="h-auto p-1.5 bg-white border border-slate-200 rounded-3xl shadow-sm">
+            <TabsTrigger value="packages" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+              {t('catalog.packages')}
+            </TabsTrigger>
+            <TabsTrigger value="types" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+              {t('catalog.serviceTypes')}
+            </TabsTrigger>
+            <TabsTrigger value="services" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+              {t('catalog.allServices')}
+            </TabsTrigger>
           </TabsList>
+        </div>
 
-          {/* Packages Tab */}
-          <TabsContent value="packages">
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.maintenancePackages')}</CardTitle>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{t('catalog.saveWithBundles')}</p>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                  </div>
-                ) : filteredPackages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <PackageIcon className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noPackagesFound')}</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredPackages.map((pkg) => (
-                      <Card key={pkg.id} className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500/50 transition-all hover:shadow-lg">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <PackageIcon className="w-5 h-5 text-orange-500" />
-                                <h3 className="text-slate-900 dark:text-white font-semibold text-lg">{pkg.nom}</h3>
-                              </div>
-                              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{pkg.description}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-end justify-between">
-                            <div>
-                              <div className="flex items-baseline gap-2">
-                                <p className="text-3xl font-bold text-orange-500">
-                                  {pkg.prix.toFixed(3)}
-                                </p>
-                                <span className="text-slate-600 dark:text-slate-400 text-sm">TND</span>
-                              </div>
-                              <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
-                                {pkg.nombre_interventions} {t('catalog.interventionsIncluded')}
-                              </p>
-                            </div>
-                            <Button
-                              onClick={() => openPackageDetails(pkg.id)}
-                              size="sm"
-                              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
-                            >
-                              {t('catalog.viewDetails')}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Types Tab */}
-          <TabsContent value="types">
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.serviceTypes')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                  </div>
-                ) : filteredTypes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Wrench className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noTypesFound')}</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredTypes.map((type) => (
-                      <Card key={type.id} className="bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-orange-500 dark:hover:border-orange-500/50 transition-all">
-                        <CardContent className="p-5">
-                          <div className="flex items-start justify-between mb-3">
-                            <h3 className="text-slate-900 dark:text-white font-semibold text-lg">{type.nom}</h3>
-                            <div className="w-10 h-10 bg-orange-500/20 rounded-full flex items-center justify-center">
-                              <Wrench className="w-5 h-5 text-orange-500" />
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                              <span className="text-slate-700 dark:text-slate-300">Délai: {type.delai_moyen} min</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Tag className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                              <span className="text-slate-700 dark:text-slate-300">{type.nombre_sous_types} service(s)</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Services Tab */}
-          <TabsContent value="services">
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-slate-900 dark:text-white">{t('catalog.allServices')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                  </div>
-                ) : filteredSubTypes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Wrench className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">{t('catalog.noServicesFound')}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {filteredSubTypes.map((subType) => (
-                      <div
-                        key={subType.id}
-                        className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-orange-500 dark:hover:border-orange-500/50 transition-all"
-                      >
-                        <div className="flex-1">
-                          <h3 className="text-slate-900 dark:text-white font-semibold">{subType.nom}</h3>
-                          <p className="text-slate-600 dark:text-slate-400 text-sm">{subType.type_nom}</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                            <span className="text-slate-700 dark:text-slate-300 text-sm">{subType.duree_estimee} min</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Package Details Modal */}
-        <Dialog open={packageModalOpen} onOpenChange={setPackageModalOpen}>
-          <DialogContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-slate-900 dark:text-white">{t('catalog.packageDetails')}</DialogTitle>
-            </DialogHeader>
-            
-            {selectedPackage && (
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-500/10 dark:to-red-500/10 border border-orange-200 dark:border-orange-500/30 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <PackageIcon className="w-6 h-6 text-orange-500" />
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedPackage.package.nom}</h3>
-                  </div>
-                  <p className="text-slate-700 dark:text-slate-300 mb-4">{selectedPackage.package.description}</p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-bold text-orange-500">
-                      {selectedPackage.package.prix.toFixed(3)}
-                    </p>
-                    <span className="text-slate-600 dark:text-slate-400 text-lg">TND</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-slate-900 dark:text-white font-semibold mb-3 flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                    {t('catalog.servicesIncluded')}:
-                  </h4>
-                  <div className="space-y-2">
-                    {selectedPackage.interventions.map((intervention) => (
-                      <div
-                        key={intervention.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg"
-                      >
-                        <div>
-                          <p className="text-slate-900 dark:text-white font-medium">{intervention.nom}</p>
-                          <p className="text-slate-600 dark:text-slate-400 text-sm">{intervention.type_nom}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                          <span className="text-slate-700 dark:text-slate-300 text-sm">{intervention.duree_estimee} min</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
-                  <p className="text-blue-800 dark:text-blue-300 text-sm">
-                    💡 {t('catalog.toBookPackage')}
-                  </p>
-                </div>
+        {/* Packages Tab */}
+        <TabsContent value="packages">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {filteredPackages.length === 0 ? (
+              <div className="col-span-full">
+                <ClientEmptyState
+                  icon={PackageIcon}
+                  title={t('catalog.noPackagesFound')}
+                  description="Essayez de modifier vos critères de recherche."
+                />
               </div>
+            ) : (
+              filteredPackages.map((pkg, idx) => (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <ClientCard className="group h-full overflow-hidden border-none shadow-xl shadow-slate-200/50">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                       <PackageIcon className="h-32 w-32 -mr-10 -mt-10 rotate-12" />
+                    </div>
+                    
+                    <div className="flex flex-col h-full relative z-10">
+                      <div className="mb-6 flex items-start justify-between">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-red-50 text-red-600 shadow-inner">
+                          <PackageIcon className="h-8 w-8" />
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Prix Forfaitaire</p>
+                          <div className="flex items-baseline justify-end gap-1">
+                            <span className="text-4xl font-black text-slate-800 tracking-tighter">{pkg.prix.toFixed(3)}</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase">TND</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-2">{pkg.nom}</h3>
+                          <p className="text-slate-500 font-medium leading-relaxed">{pkg.description}</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider">
+                              <Wrench className="h-3.5 w-3.5" />
+                              {pkg.nombre_interventions} Services
+                           </span>
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
+                              <Tag className="h-3.5 w-3.5" />
+                              Offre Spéciale
+                           </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
+                         <div className="text-slate-400 text-xs font-bold">
+                            TVA Incluse
+                         </div>
+                         <ClientButton 
+                           variant="primary" 
+                           onClick={() => openPackageDetails(pkg.id)}
+                           icon={ArrowRight}
+                           iconPosition="right"
+                         >
+                           {t('catalog.viewDetails')}
+                         </ClientButton>
+                      </div>
+                    </div>
+                  </ClientCard>
+                </motion.div>
+              ))
             )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </main>
+          </div>
+        </TabsContent>
+
+        {/* Types Tab */}
+        <TabsContent value="types">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTypes.map((type, idx) => (
+              <motion.div
+                key={type.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <ClientCard hover className="h-full border-slate-100/50">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-red-50 group-hover:text-red-500 transition-colors">
+                      <Wrench className="h-6 w-6" />
+                    </div>
+                    <span className="px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                       {type.nombre_sous_types} Services
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">{type.nom}</h3>
+                  
+                  <div className="mt-4 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      {type.delai_moyen} Min
+                    </span>
+                  </div>
+                </ClientCard>
+              </motion.div>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Services Tab */}
+        <TabsContent value="services">
+          <ClientCard className="p-2 overflow-hidden border-slate-100 shadow-xl shadow-slate-200/40">
+            <div className="divide-y divide-slate-50">
+              {filteredSubTypes.map((subType, idx) => (
+                <motion.div
+                  key={subType.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors group"
+                >
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-red-600 transition-colors">{subType.nom}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{subType.type_nom}</p>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                      <Clock className="h-3.5 w-3.5" />
+                      {subType.duree_estimee} min
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </ClientCard>
+        </TabsContent>
+      </Tabs>
+
+      {/* ─── Package Details Modal ─── */}
+      <Dialog open={packageModalOpen} onOpenChange={setPackageModalOpen}>
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
+          {selectedPackage && (
+            <div className="relative">
+               {/* Modal Header */}
+               <div className="bg-[#0b1221] p-10 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-red-600/20 blur-3xl" />
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <PackageIcon className="h-8 w-8 text-red-500" />
+                      <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Détails du Forfait</span>
+                    </div>
+                    <h2 className="text-3xl font-black tracking-tight mb-2">{selectedPackage.package.nom}</h2>
+                    <p className="text-slate-400 font-medium leading-relaxed">{selectedPackage.package.description}</p>
+                  </div>
+               </div>
+
+               <div className="p-8 bg-white">
+                  <div className="grid grid-cols-2 gap-6 mb-10">
+                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Prix Total</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-black text-slate-800">{selectedPackage.package.prix.toFixed(3)}</span>
+                          <span className="text-xs font-bold text-slate-400 uppercase">TND</span>
+                        </div>
+                     </div>
+                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Interventions</p>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-black text-slate-800">{selectedPackage.interventions.length}</span>
+                          <span className="text-xs font-bold text-slate-400 uppercase">Incluses</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="px-1 text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                      Services Inclus
+                    </h4>
+                    <div className="grid gap-3">
+                      {selectedPackage.interventions.map((intervention) => (
+                        <div
+                          key={intervention.id}
+                          className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:border-red-100 group"
+                        >
+                          <div>
+                            <p className="font-bold text-slate-800 text-sm group-hover:text-red-600 transition-colors">{intervention.nom}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intervention.type_nom}</p>
+                          </div>
+                          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white shadow-sm text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                            <Clock className="h-3 w-3" />
+                            {intervention.duree_estimee} min
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-10 p-6 rounded-[2rem] bg-red-50/50 border border-red-100 text-center">
+                    <p className="text-sm font-bold text-red-600">
+                      💡 {t('catalog.toBookPackage')}
+                    </p>
+                  </div>
+               </div>
+
+               <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-4">
+                  <ClientButton variant="secondary" onClick={() => setPackageModalOpen(false)}>
+                    Fermer
+                  </ClientButton>
+                  <ClientButton variant="primary" onClick={() => {
+                    setPackageModalOpen(false);
+                    // Add logic to navigate to booking with this package
+                  }}>
+                    Réserver ce forfait
+                  </ClientButton>
+               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </ClientPageWrapper>
   );
 }
 

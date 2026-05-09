@@ -44,7 +44,7 @@ export default function ClientsPage() {
     try {
       setLoading(true);
       // Récupérer tous les rendez-vous pour extraire les clients
-      const appointments = await fetchAppointments(token, {});
+      const appointments = await fetchAppointments({});
       
       // Grouper par client
       const clientsMap = new Map<number, Client>();

@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Types
 export interface AdminUser {
@@ -82,7 +82,7 @@ export async function getAllUsers(
     if (filters?.search) params.append('search', filters.search);
 
     const queryString = params.toString();
-    const url = `${API_BASE_URL}/api/admin/users${queryString ? `?${queryString}` : ''}`;
+    const url = `${API_BASE_URL}/admin/users${queryString ? `?${queryString}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -102,7 +102,7 @@ export async function getAllUsers(
  */
 export async function getUserStats(token: string): Promise<UserStats> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/stats`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/stats`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -120,7 +120,7 @@ export async function getUserStats(token: string): Promise<UserStats> {
  */
 export async function getRoles(token: string): Promise<Role[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/roles`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/roles`, {
       method: 'GET',
       headers: buildAuthHeaders(token),
     });
@@ -138,7 +138,7 @@ export async function getRoles(token: string): Promise<Role[]> {
  */
 export async function createUser(token: string, payload: CreateUserPayload): Promise<{ userId: number }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),
@@ -160,7 +160,7 @@ export async function updateUser(
   payload: UpdateUserPayload
 ): Promise<{ message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'PUT',
       headers: buildAuthHeaders(token),
       body: JSON.stringify(payload),
@@ -178,7 +178,7 @@ export async function updateUser(
  */
 export async function deleteUser(token: string, userId: number): Promise<{ message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'DELETE',
       headers: buildAuthHeaders(token),
     });
@@ -199,7 +199,7 @@ export async function resetUserPassword(
   newPassword: string
 ): Promise<{ message: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/reset-password`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/reset-password`, {
       method: 'POST',
       headers: buildAuthHeaders(token),
       body: JSON.stringify({ newPassword }),

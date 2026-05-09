@@ -5,23 +5,37 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { repairOrdersApi } from '@/lib/api/repairOrders';
 import type { RepairOrderSummary, RepairOrderStatus } from '@/types/repairOrder';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import {
+  ClientPageWrapper,
+  ClientCard,
+  ClientButton,
+  ClientStatCard,
+  ClientEmptyState,
+  ClientLoadingState,
+} from '@/components/client';
+import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
   Eye,
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronRight,
+  History,
+  TrendingUp,
+  CreditCard,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const STATUS_COLORS: Record<RepairOrderStatus, string> = {
-  BROUILLON: 'bg-gray-500',
-  EN_COURS: 'bg-blue-500',
-  TERMINEE: 'bg-green-500',
-  FACTUREE: 'bg-purple-500',
-  ANNULEE: 'bg-red-500',
+const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon: any }> = {
+  BROUILLON: { bg: 'bg-slate-100', text: 'text-slate-700', icon: AlertCircle },
+  EN_COURS: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
+  TERMINEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
+  FACTUREE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: CreditCard },
+  ANNULEE: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
 };
 
 const STATUS_LABELS: Record<RepairOrderStatus, string> = {
@@ -30,14 +44,6 @@ const STATUS_LABELS: Record<RepairOrderStatus, string> = {
   TERMINEE: 'Terminée',
   FACTUREE: 'Facturée',
   ANNULEE: 'Annulée',
-};
-
-const STATUS_ICONS: Record<RepairOrderStatus, any> = {
-  BROUILLON: AlertCircle,
-  EN_COURS: Clock,
-  TERMINEE: CheckCircle2,
-  FACTUREE: FileText,
-  ANNULEE: XCircle,
 };
 
 export default function ClientRepairOrdersPage() {
@@ -74,141 +80,199 @@ export default function ClientRepairOrdersPage() {
   };
 
   if (isLoading || !user || !token) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
-      </div>
-    );
+    return <ClientLoadingState message="Chargement de vos commandes..." />;
   }
 
+  const stats = {
+    total: commandes.length,
+    active: commandes.filter(c => c.statut === 'EN_COURS').length,
+    completed: commandes.filter(c => c.statut === 'TERMINEE' || c.statut === 'FACTUREE').length,
+    totalSpent: commandes.reduce((acc, c) => acc + (c.montant_total || 0), 0)
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <FileText className="w-8 h-8 text-blue-500" />
-            Mes Commandes de Réparation
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Consultez l'historique de vos réparations et factures
-          </p>
+    <ClientPageWrapper className="space-y-12 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="max-w-2xl text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Historique des Réparations
+            </div>
+            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+              Vos <span className="text-red-500">Commandes</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+              Consultez le détail de vos interventions SAV, l'état d'avancement de vos réparations et vos factures.
+            </p>
+          </div>
+
+          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+            <div className="text-center">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dépenses</p>
+              <p className="text-2xl font-black text-white">{stats.totalSpent.toFixed(2)}</p>
+              <p className="text-[10px] font-bold text-slate-500">TND</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ─── Stats Grid ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ClientStatCard
+          label="Total Interventions"
+          value={stats.total}
+          icon={History}
+          iconColor="text-blue-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+        <ClientStatCard
+          label="En Cours"
+          value={stats.active}
+          icon={Zap}
+          iconColor="text-amber-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+        <ClientStatCard
+          label="Terminées"
+          value={stats.completed}
+          icon={CheckCircle2}
+          iconColor="text-emerald-500"
+          className="bg-white border-none shadow-xl shadow-slate-100"
+        />
+      </div>
+
+      {/* ─── Orders List ─── */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-4">
+          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Historique des ordres</h2>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{commandes.length} Interventions</span>
+          </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(['EN_COURS', 'TERMINEE', 'FACTUREE', 'ANNULEE'] as RepairOrderStatus[]).map((status) => {
-            const count = commandes.filter(c => c.statut === status).length;
-            const Icon = STATUS_ICONS[status];
-            return (
-              <Card key={status} className="bg-slate-900 border-slate-800">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-slate-400 text-sm">{STATUS_LABELS[status]}</p>
-                      <p className="text-2xl font-bold text-white mt-1">{count}</p>
-                    </div>
-                    <div className={`w-10 h-10 rounded-lg ${STATUS_COLORS[status]}/10 flex items-center justify-center`}>
-                      <Icon className={`w-5 h-5 ${STATUS_COLORS[status].replace('bg-', 'text-')}`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <AnimatePresence mode="popLayout">
+          {loading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid gap-6"
+            >
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 rounded-[2rem] bg-white animate-pulse shadow-sm" />
+              ))}
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-12 text-center bg-red-50 rounded-[3rem] border border-red-100"
+            >
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="text-red-600 font-bold">{error}</p>
+              <ClientButton onClick={loadCommandes} variant="secondary" className="mt-6">Réessayer</ClientButton>
+            </motion.div>
+          ) : commandes.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <ClientEmptyState
+                icon={FileText}
+                title="Aucune intervention"
+                description="Vous n'avez pas encore d'historique de réparation pour vos véhicules."
+                className="bg-white border-none shadow-2xl shadow-slate-100"
+              />
+            </motion.div>
+          ) : (
+            <div className="grid gap-6">
+              {commandes.map((commande, idx) => {
+                const status = STATUS_COLORS[commande.statut] || STATUS_COLORS.BROUILLON;
+                const StatusIcon = status.icon;
 
-        {/* Liste des commandes */}
-        <Card className="bg-slate-900 border-slate-800">
-          <CardHeader>
-            <CardTitle className="text-white">
-              Historique ({commandes.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-slate-400">
-                Chargement de vos commandes...
-              </div>
-            ) : error ? (
-              <div className="text-center py-8 text-red-400">
-                {error}
-              </div>
-            ) : commandes.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg">Aucune commande pour le moment</p>
-                <p className="text-slate-500 text-sm mt-2">
-                  Vos commandes de réparation apparaîtront ici
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {commandes.map((commande) => {
-                  const Icon = STATUS_ICONS[commande.statut];
-                  return (
-                    <div
-                      key={commande.id}
-                      className="p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                return (
+                  <motion.div
+                    key={commande.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <ClientCard 
+                      className="group cursor-pointer p-6 sm:p-8 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
+                      onClick={() => router.push(`/client/repair-orders/${commande.id}`)}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-white font-mono font-semibold">
-                              {commande.numero}
+                      <div className="flex flex-col lg:flex-row items-center gap-8">
+                        {/* Status Block */}
+                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shrink-0">
+                          <StatusIcon className={`h-8 w-8 ${status.text} mb-1`} />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Statut</span>
+                        </div>
+
+                        {/* Order Info */}
+                        <div className="flex-1 text-center lg:text-left">
+                          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
+                            <span className="text-xl font-black text-slate-800 tracking-tight font-mono">
+                              #{commande.numero}
                             </span>
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white ${STATUS_COLORS[commande.statut]}`}>
-                              <Icon className="w-3 h-3" />
-                              {STATUS_LABELS[commande.statut]}
-                            </span>
+                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                              {STATUS_LABELS[commande.statut] || commande.statut}
+                            </Badge>
                           </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                            <div>
-                              <p className="text-slate-400 text-sm">Véhicule</p>
-                              <p className="text-white font-medium">{commande.immatriculation}</p>
-                              <p className="text-slate-400 text-sm">
-                                {commande.marque_nom} {commande.modele_nom}
-                              </p>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Véhicule</p>
+                              <p className="font-bold text-slate-700">{commande.immatriculation}</p>
+                              <p className="text-xs text-slate-400 font-medium">{commande.marque_nom} {commande.modele_nom}</p>
                             </div>
-                            
-                            <div>
-                              <p className="text-slate-400 text-sm">Agence</p>
-                              <p className="text-white font-medium">{commande.agence_nom}</p>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Localisation</p>
+                              <p className="font-bold text-slate-700">{commande.agence_nom}</p>
+                              <p className="text-xs text-slate-400 font-medium">Agence SAV</p>
                             </div>
-                            
-                            <div>
-                              <p className="text-slate-400 text-sm">Date</p>
-                              <p className="text-white font-medium">
-                                {new Date(commande.date_creation).toLocaleDateString('fr-FR')}
-                              </p>
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Date Intervention</p>
+                              <p className="font-bold text-slate-700">{new Date(commande.date_creation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
-                          </div>
-                          
-                          <div className="mt-3 pt-3 border-t border-slate-700">
-                            <p className="text-slate-400 text-sm">Montant total</p>
-                            <p className="text-white text-2xl font-bold">
-                              {commande.montant_total?.toFixed(2) || '0.00'} TND
-                            </p>
                           </div>
                         </div>
-                        
-                        <Button
-                          onClick={() => router.push(`/client/repair-orders/${commande.id}`)}
-                          className="bg-blue-600 hover:bg-blue-700 ml-4"
-                        >
-                          <Eye className="w-4 h-4 mr-2" />
-                          Détails
-                        </Button>
+
+                        {/* Amount & Action */}
+                        <div className="flex flex-col sm:flex-row items-center gap-6 shrink-0 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-50 w-full lg:w-auto">
+                          <div className="text-center lg:text-right">
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Montant Total</p>
+                            <p className="text-2xl font-black text-slate-800 tracking-tight">
+                              {commande.montant_total?.toFixed(3)}
+                              <span className="text-[10px] ml-1 text-slate-400 uppercase tracking-widest">TND</span>
+                            </p>
+                          </div>
+                          
+                          <div className="h-14 w-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm group-hover:shadow-blue-500/30">
+                            <ChevronRight className="h-6 w-6" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </ClientCard>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </AnimatePresence>
       </div>
-    </div>
+    </ClientPageWrapper>
   );
 }

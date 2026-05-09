@@ -6,10 +6,33 @@ import { getVehiclesByUser, deleteVehicle } from '@/lib/api/vehicles';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Car, CheckCircle2, Clock3, AlertTriangle } from 'lucide-react';
+import {
+  ClientPageWrapper,
+  ClientButton,
+  ClientCard,
+  ClientStatCard,
+  ClientEmptyState,
+  ClientLoadingState,
+} from '@/components/client';
+import { 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Car, 
+  CheckCircle2, 
+  Clock3, 
+  AlertTriangle,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+  ChevronRight,
+  Settings,
+  Shield,
+  Search,
+  ArrowRight
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ClientVehiclesPage() {
   const { user, token } = useAuth();
@@ -18,16 +41,13 @@ export default function ClientVehiclesPage() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  const vehiclesCountLabel = useMemo(() => {
-    const count = vehicles.length;
-    return `${count} ${t('vehicles.registeredVehicles')}`;
-  }, [vehicles.length, t]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
       if (!user || !token) return;
       try {
+        setIsLoading(true);
         const data = await getVehiclesByUser(user.id, token);
         setVehicles(data);
       } catch (error) {
@@ -59,145 +79,236 @@ export default function ClientVehiclesPage() {
     }
   };
 
+  const filteredVehicles = useMemo(() => {
+    if (!searchQuery) return vehicles;
+    const lowerQuery = searchQuery.toLowerCase();
+    return vehicles.filter(v => 
+      v.immatriculation?.toLowerCase().includes(lowerQuery) ||
+      v.marque_nom?.toLowerCase().includes(lowerQuery) ||
+      v.modele_nom?.toLowerCase().includes(lowerQuery)
+    );
+  }, [vehicles, searchQuery]);
+
+  const stats = useMemo(() => ({
+    total: vehicles.length,
+    validated: vehicles.filter(v => v.statut_validation === 'VALIDE').length,
+    pending: vehicles.filter(v => v.statut_validation === 'EN_ATTENTE').length,
+  }), [vehicles]);
+
+  if (isLoading) return <ClientLoadingState message="Recherche de votre garage personnel..." />;
+
   return (
-    <div className="min-h-full bg-[#f5f7fa]">
-      <div className="mx-auto w-full max-w-7xl px-6 py-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">{t('vehicles.title')}</h1>
-            <p className="mt-1 text-sm text-slate-500">{vehiclesCountLabel}</p>
+    <ClientPageWrapper className="space-y-12 pb-20">
+      {/* ─── Premium Header ─── */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+          <div className="max-w-2xl text-center md:text-left">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Garage Personnel
+            </div>
+            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+              Vos <span className="text-red-500">Véhicules</span>
+            </h1>
+            <p className="text-slate-400 font-medium text-lg leading-relaxed mb-8">
+              Gérez votre parc automobile, suivez la validation de vos véhicules et accédez rapidement aux services d'entretien STA Chery.
+            </p>
+            
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+              <Link href="/client/vehicles/new">
+                <ClientButton variant="primary" size="large" icon={Plus}>
+                  {t('vehicles.addVehicle')}
+                </ClientButton>
+              </Link>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-slate-500 group-focus-within:text-red-500 transition-colors" />
+                </div>
+                <input 
+                  type="text"
+                  placeholder="Rechercher par immatriculation..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-3 text-sm font-medium focus:ring-4 focus:ring-red-500/20 focus:bg-white/10 focus:border-red-500/50 outline-none transition-all w-full sm:w-64"
+                />
+              </div>
+            </div>
           </div>
-          <Link href="/client/vehicles/new">
-            <Button className="rounded-full bg-[#1b355d] px-5 text-white hover:bg-[#17305a]">
-              <Plus className="mr-2 h-4 w-4" />
-              {t('vehicles.addVehicle')}
-            </Button>
-          </Link>
+
+          {/* Stats Summary In Header */}
+          <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md text-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Total</p>
+              <p className="text-3xl font-black text-white">{stats.total}</p>
+            </div>
+            <div className="p-6 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-center">
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Validés</p>
+              <p className="text-3xl font-black text-white">{stats.validated}</p>
+            </div>
+          </div>
         </div>
+      </motion.div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-          </div>
+      {/* ─── Vehicles Grid ─── */}
+      <AnimatePresence mode="popLayout">
+        {filteredVehicles.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <ClientEmptyState
+              icon={Car}
+              title={searchQuery ? "Aucun véhicule trouvé" : t('vehicles.noVehicles')}
+              description={searchQuery ? "Essayez une autre recherche." : "Vous n'avez pas encore enregistré de véhicule dans votre garage."}
+              {...(!searchQuery ? {
+                actionLabel: t('vehicles.addVehicle'),
+                onAction: () => router.push('/client/vehicles/new')
+              } : {})}
+            />
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {vehicles.map((vehicle) => {
-              const statusStyles: Record<string, string> = {
-                VALIDE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                EN_ATTENTE: 'bg-amber-50 text-amber-700 border-amber-200',
-                REFUSE: 'bg-rose-50 text-rose-700 border-rose-200',
-              };
-
-              const statusTextStyles: Record<string, string> = {
-                VALIDE: 'text-emerald-700',
-                EN_ATTENTE: 'text-amber-700',
-                REFUSE: 'text-rose-700',
-              };
-
-              const statusLabels: Record<string, string> = {
-                VALIDE: t('vehicles.validated'),
-                EN_ATTENTE: t('dashboard.pending'),
-                REFUSE: t('dashboard.refused'),
-              };
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredVehicles.map((vehicle, idx) => {
               const status = vehicle.statut_validation || 'EN_ATTENTE';
-              const statusLabel = statusLabels[status] || 'En attente';
-              const statusIcon = status === 'VALIDE'
-                ? <CheckCircle2 className="h-3.5 w-3.5" />
-                : status === 'REFUSE'
-                  ? <AlertTriangle className="h-3.5 w-3.5" />
-                  : <Clock3 className="h-3.5 w-3.5" />;
-
+              const isValide = status === 'VALIDE';
+              const isRefuse = status === 'REFUSE';
+              
               const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
                 .filter(Boolean)
                 .join(' ');
 
-              const detailsLine = [vehicle.motorisation, vehicle.transmission, vehicle.annee]
-                .filter(Boolean)
-                .join(' · ');
-
               const mileage = vehicle.kilometrage ?? vehicle.kilometrage_actuel ?? vehicle.kilometrage_km;
 
               return (
-                <div
+                <motion.div
                   key={vehicle.id}
-                  className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm transition hover:shadow-md"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  whileHover={{ y: -10 }}
+                  layout
                 >
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-                      <Car className="h-6 w-6 text-slate-500" />
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <Link href={`/client/vehicles/${vehicle.id}/edit`}>
-                        <button
-                          type="button"
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-500"
-                          title={t('vehicles.modify')}
+                  <ClientCard className="h-full flex flex-col p-0 overflow-hidden border-none shadow-xl shadow-slate-200/40 group">
+                    {/* Top Decorative Area */}
+                    <div className={`h-24 w-full relative overflow-hidden ${
+                      isValide ? 'bg-emerald-600' : isRefuse ? 'bg-red-600' : 'bg-[#0b1221]'
+                    }`}>
+                      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
+                      <div className="absolute top-4 right-6 flex gap-2">
+                        <Link href={`/client/vehicles/${vehicle.id}/edit`}>
+                          <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10">
+                            <Settings className="h-4 w-4" />
+                          </button>
+                        </Link>
+                        <button 
+                          onClick={() => handleDelete(vehicle.id)}
+                          disabled={deletingId === vehicle.id}
+                          className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/40 text-white backdrop-blur-md transition-colors border border-white/10"
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(vehicle.id)}
-                        disabled={deletingId === vehicle.id}
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
-                        title={t('vehicles.delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      </div>
+                      
+                      <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                      <div className="absolute top-6 left-8">
+                         <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                            <Car className="h-6 w-6 text-white" />
+                         </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {vehicleName || t('vehicles.vehicle')}
-                    </h3>
-                    <p className="text-sm text-slate-500">{detailsLine || t('vehicles.detailsUnavailable')}</p>
-                  </div>
+                    {/* Main Info */}
+                    <div className="p-8 flex flex-col flex-1">
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`h-2 w-2 rounded-full ${isValide ? 'bg-emerald-500' : isRefuse ? 'bg-red-500' : 'bg-amber-500'}`} />
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            {isValide ? 'Véhicule Validé' : isRefuse ? 'Validation Refusée' : 'Validation en attente'}
+                          </span>
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-2 group-hover:text-red-600 transition-colors">
+                          {vehicleName || t('vehicles.vehicle')}
+                        </h3>
+                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{vehicle.immatriculation}</p>
+                      </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between text-slate-500">
-                      <span>{t('vehicles.registration')}</span>
-                      <span className="font-medium text-slate-700">{vehicle.immatriculation || '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-500">
-                      <span>{t('vehicles.color')}</span>
-                      <span className="font-medium text-slate-700">{vehicle.couleur || '—'}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-slate-500">
-                      <span>{t('vehicles.mileage')}</span>
-                      <span className="font-medium text-slate-700">
-                        {mileage ? `${Number(mileage).toLocaleString('fr-FR')} km` : '—'}
-                      </span>
-                    </div>
-                  </div>
+                      <div className="space-y-4 mb-8">
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                              <Zap className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kilométrage</p>
+                              <p className="text-sm font-black text-slate-700">
+                                {mileage ? `${Number(mileage).toLocaleString('fr-FR')} km` : '—'}
+                              </p>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-slate-300" />
+                        </div>
 
-                  <div className="mt-5 flex items-center justify-between">
-                    <Badge className={`border px-3 py-1 text-xs ${statusStyles[status] || 'bg-slate-50 text-slate-700 border-slate-200'}`}>
-                      <span className="mr-1 inline-block h-2 w-2 rounded-full bg-current" />
-                      {statusLabel}
-                    </Badge>
-                    <div className={`flex items-center gap-2 text-xs ${statusTextStyles[status] || 'text-slate-400'}`}>
-                      {statusIcon}
-                      <span>{statusLabel}</span>
+                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                              <Shield className="h-5 w-5 text-blue-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Motorisation</p>
+                              <p className="text-sm font-black text-slate-700">{vehicle.motorisation || '—'}</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-slate-300" />
+                        </div>
+                      </div>
+
+                      <div className="mt-auto grid grid-cols-2 gap-4">
+                        <Link href={`/client/vehicles/${vehicle.id}/history`} className="w-full">
+                          <ClientButton variant="outline" fullWidth size="small">
+                            Historique
+                          </ClientButton>
+                        </Link>
+                        <Link href="/client/rendez-vous" className="w-full">
+                          <ClientButton variant={isValide ? "primary" : "secondary"} fullWidth size="small" disabled={!isValide}>
+                            Réserver
+                          </ClientButton>
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </ClientCard>
+                </motion.div>
               );
             })}
-
-            <Link href="/client/vehicles/new" className="flex">
-              <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-12 text-slate-400 transition hover:border-slate-300">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-                  <Plus className="h-5 w-5" />
+            
+            {/* Add New Vehicle Card Placeholder */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: filteredVehicles.length * 0.1 }}
+            >
+              <Link href="/client/vehicles/new" className="h-full block">
+                <div className="h-full min-h-[400px] rounded-[2.5rem] border-4 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center gap-6 group hover:border-red-500/30 hover:bg-red-50/20 transition-all duration-500">
+                  <div className="h-20 w-20 rounded-[2rem] bg-white border-2 border-slate-100 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
+                    <Plus className="h-10 w-10 text-slate-300 group-hover:text-red-500 transition-colors" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-black text-slate-400 group-hover:text-red-600 transition-colors">{t('vehicles.addVehicle')}</p>
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">Agrandissez votre garage</p>
+                  </div>
                 </div>
-                <span className="text-sm">{t('vehicles.addVehicle')}</span>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           </div>
         )}
-      </div>
-    </div>
+      </AnimatePresence>
+    </ClientPageWrapper>
   );
 }

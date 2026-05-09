@@ -180,7 +180,7 @@ const getRepairOrder = async (req, res) => {
       return res.status(404).json({ error: 'Commande non trouvée' });
     }
 
-    return res.json({ order });
+    return res.json({ commande: order });
 
   } catch (error) {
     console.error('Erreur récupération commande:', error);
@@ -205,26 +205,21 @@ async function getRepairOrderDetails(commandeId, pool) {
         c.vehicule_id,
         c.agence_id,
         c.statut,
-        ROUND(c.montant_total / 1.19, 2) AS montant_total_ht,
-        ROUND(c.montant_total - (c.montant_total / 1.19), 2) AS montant_tva,
-        c.montant_total AS montant_total_ttc,
-        19.00 AS taux_tva,
+        c.montant_total,
         c.date_creation,
-        NULL AS date_modification,
         c.date_validation,
         c.date_fin,
         u.nom AS client_nom,
         u.prenom AS client_prenom,
         u.telephone AS client_telephone,
         u.email AS client_email,
-        v.immatriculation AS vehicule_immatriculation,
+        v.immatriculation,
         v.numero_chassis,
-        mo.nom AS vehicule_modele,
-        ma.nom AS vehicule_marque,
+        mo.nom AS modele_nom,
+        ma.nom AS marque_nom,
         ag.nom AS agence_nom,
         ag.adresse AS agence_adresse,
         ag.telephone AS agence_telephone,
-        NULL AS agent_nom,
         f.numero AS facture_numero
       FROM CommandeReparation c
       JOIN Utilisateur u ON u.id = c.client_id
@@ -249,23 +244,16 @@ async function getRepairOrderDetails(commandeId, pool) {
     .query(`
       SELECT 
         l.id,
-        l.type AS type_ligne,
+        l.type,
         l.intervention_id,
-        NULL AS piece_id,
         l.quantite,
         l.prix_unitaire,
-        l.prix_total AS montant_total,
+        l.prix_total,
         CASE 
           WHEN l.type = 'INTERVENTION' AND l.intervention_id IS NOT NULL 
             THEN sti.nom
           ELSE 'Intervention'
-        END AS description,
-        CASE 
-          WHEN l.type = 'INTERVENTION' AND l.intervention_id IS NOT NULL 
-            THEN sti.nom
-          ELSE NULL
-        END AS intervention_nom,
-        NULL AS piece_reference
+        END AS description
       FROM LigneCommande l
       LEFT JOIN SousTypeIntervention sti ON sti.id = l.intervention_id AND l.type = 'INTERVENTION'
       WHERE l.commande_id = @commande_id
@@ -696,18 +684,22 @@ const getMyRepairOrders = async (req, res) => {
           c.id,
           c.numero,
           c.statut,
-          c.montant_total AS montant_total_ttc,
+          c.montant_total,
           c.date_creation,
           c.date_fin,
-          v.immatriculation AS vehicule_immatriculation,
-          CONCAT(ma.nom, ' ', mo.nom) AS vehicule_modele,
-          ag.nom AS agence_nom
+          v.immatriculation,
+          mo.nom AS modele_nom,
+          ma.nom AS marque_nom,
+          ag.nom AS agence_nom,
+          u.nom AS client_nom,
+          u.prenom AS client_prenom
         FROM CommandeReparation c
         JOIN Vehicule v ON v.id = c.vehicule_id
         JOIN Version ve ON ve.id = v.version_id
         JOIN Modele mo ON mo.id = ve.modele_id
         JOIN Marque ma ON ma.id = mo.marque_id
         JOIN Agence ag ON ag.id = c.agence_id
+        JOIN Utilisateur u ON u.id = c.client_id
         WHERE c.client_id = @client_id
         ORDER BY c.date_creation DESC
       `);
