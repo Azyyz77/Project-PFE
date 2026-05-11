@@ -153,24 +153,24 @@ export default function ChatbotPage() {
   ];
 
   return (
-    <ClientPageWrapper noPadding fullHeight className="flex flex-col bg-[#f8fafc] overflow-hidden rounded-[2.5rem] shadow-2xl border border-slate-200">
+    <ClientPageWrapper noPadding fullHeight className="flex flex-col bg-[#f8fafc] overflow-hidden rounded-lg shadow-md border border-[#E4E6EB]">
       {/* ─── Chat Header ─── */}
-      <div className="bg-[#0b1221] p-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-red-600/20 blur-3xl" />
+      <div className="bg-white p-6 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
         <div className="absolute bottom-0 left-0 -ml-10 -mb-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
         
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center shadow-lg shadow-red-500/20">
+              <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <Bot className="h-6 w-6 text-white" />
               </div>
               <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-[#0b1221]" />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight leading-none mb-1">AI Assistant</h1>
+              <h1 className="text-xl font-bold tracking-tight leading-none mb-1">AI Assistant</h1>
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">STA Chery Intelligent Agent</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8]">STA Chery Intelligent Agent</span>
               </div>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function ChatbotPage() {
             </button>
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Groq Powered</span>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Groq Powered</span>
             </div>
           </div>
         </div>
@@ -206,12 +206,12 @@ export default function ChatbotPage() {
                 {/* Avatar */}
                 <div className={`shrink-0 h-8 w-8 rounded-xl flex items-center justify-center shadow-sm ${
                   message.role === 'user' 
-                    ? 'bg-white border border-slate-200' 
-                    : 'bg-[#0b1221]'
+                    ? 'bg-white border border-[#E4E6EB]' 
+                    : 'bg-white'
                 }`}>
                   {message.role === 'user' 
-                    ? <User className="h-4 w-4 text-slate-600" /> 
-                    : <Bot className="h-4 w-4 text-red-500" />
+                    ? <User className="h-4 w-4 text-[#65676B]" /> 
+                    : <Bot className="h-4 w-4 text-blue-500" />
                   }
                 </div>
 
@@ -219,15 +219,15 @@ export default function ChatbotPage() {
                 <div className="space-y-1">
                   <div className={`px-5 py-3.5 rounded-[1.5rem] shadow-sm font-medium text-[15px] leading-relaxed ${
                     message.role === 'user'
-                      ? 'bg-red-600 text-white rounded-tr-none'
+                      ? 'bg-blue-600 text-white rounded-tr-none'
                       : message.error
-                      ? 'bg-red-50 text-red-700 border border-red-100 rounded-tl-none'
-                      : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-100 rounded-tl-none'
+                      : 'bg-white text-[#050505] border border-[#E4E6EB] rounded-tl-none'
                   }`}>
                     {message.text}
                   </div>
                   {message.timestamp && (
-                    <p className={`text-[10px] font-bold uppercase tracking-widest opacity-40 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-wide opacity-40 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                       {formatTime(message.timestamp)}
                     </p>
                   )}
@@ -244,16 +244,16 @@ export default function ChatbotPage() {
             animate={{ opacity: 1 }}
             className="flex justify-start items-center gap-3"
           >
-            <div className="h-8 w-8 rounded-xl bg-[#0b1221] flex items-center justify-center shadow-sm">
-              <Bot className="h-4 w-4 text-red-500" />
+            <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
+              <Bot className="h-4 w-4 text-blue-500" />
             </div>
-            <div className="px-5 py-3.5 bg-white border border-slate-100 rounded-[1.5rem] rounded-tl-none shadow-sm flex items-center gap-2">
+            <div className="px-5 py-3.5 bg-white border border-[#E4E6EB] rounded-[1.5rem] rounded-tl-none shadow-sm flex items-center gap-2">
               <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Assistant réfléchit...</span>
+              <span className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">Assistant réfléchit...</span>
             </div>
           </motion.div>
         )}
@@ -273,7 +273,7 @@ export default function ChatbotPage() {
                   setInput(q);
                   inputRef.current?.focus();
                 }}
-                className="px-4 py-2 rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:border-red-500 hover:text-red-600 transition-all shadow-sm active:scale-95"
+                className="px-4 py-2 rounded-full bg-white border border-[#E4E6EB] text-xs font-bold text-[#65676B] hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95"
               >
                 {q}
               </button>
@@ -285,7 +285,7 @@ export default function ChatbotPage() {
       </div>
 
       {/* ─── Input Area ─── */}
-      <div className="p-6 bg-white border-t border-slate-100">
+      <div className="p-6 bg-white border-t border-[#E4E6EB]">
         <div className="max-w-4xl mx-auto relative group">
           <textarea
             ref={inputRef}
@@ -293,7 +293,7 @@ export default function ChatbotPage() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Posez votre question ici..."
-            className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] pl-6 pr-20 py-4 text-[15px] font-medium resize-none focus:outline-none focus:ring-4 focus:ring-red-500/10 focus:bg-white transition-all max-h-32 min-h-[60px]"
+            className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg pl-6 pr-20 py-4 text-[15px] font-medium resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white transition-all max-h-32 min-h-[60px]"
             rows={1}
             disabled={loading}
           />
@@ -303,13 +303,13 @@ export default function ChatbotPage() {
               disabled={loading || !input.trim()}
               variant="primary"
               size="small"
-              className="rounded-2xl h-[44px] w-[44px] !p-0 flex items-center justify-center shadow-red-500/20"
+              className="rounded-lg h-[44px] w-[44px] !p-0 flex items-center justify-center shadow-blue-500/20"
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </ClientButton>
           </div>
         </div>
-        <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-widest mt-4">
+        <p className="text-[10px] text-center text-[#B0B3B8] font-bold uppercase tracking-wide mt-4">
           L'IA peut faire des erreurs. Vérifiez les informations importantes.
         </p>
       </div>

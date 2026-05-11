@@ -2,121 +2,122 @@ import { twMerge } from 'tailwind-merge';
 import { clsx, type ClassValue } from 'clsx';
 
 /**
- * Artisan Theme for Chery Tunisia
- * Handcrafted, warm, and intentional design system.
+ * Facebook-Inspired Theme for Chery Tunisia
+ * Clean, minimal, and familiar design system inspired by Facebook's UI.
+ * Primary Color: #1877F2 (Facebook Blue)
  */
 
 export const clientTheme = {
-  // Artisan Palette
+  // Facebook-Style Palette
   background: {
-    primary: 'bg-[#FDFCFB]',        // Warm Cream
-    secondary: 'bg-white',          // Paper White
-    tertiary: 'bg-[#F4F1EA]',       // Soft Sand
-    hover: 'hover:bg-[#F4F1EA]',    
-    dark: 'bg-[#1C1A16]', 
-    blue: 'bg-[#1E40AF]', 
-    green: 'bg-[#16A34A]', 
-    red: 'bg-[#DC2626]', 
-    yellow: 'bg-[#EA580C]' 
+    primary: 'bg-[#F0F2F5]',        // Facebook Light Gray
+    secondary: 'bg-white',          // Pure White
+    tertiary: 'bg-[#E4E6EB]',       // Facebook Lighter Gray
+    hover: 'hover:bg-[#F2F3F5]',    
+    dark: 'bg-[#18191A]',           // Facebook Dark Mode
+    blue: 'bg-[#1877F2]',           // Facebook Blue
+    green: 'bg-[#42B72A]',          // Facebook Green
+    red: 'bg-[#F02849]',            // Facebook Red
+    yellow: 'bg-[#F7B928]'          // Facebook Yellow
   },
 
-  // Refined Borders
+  // Facebook Borders
   border: {
-    primary: 'border-[#E8E4DC]',
-    secondary: 'border-[#F4F1EA]',
-    hover: 'hover:border-[#C16E4F]',
+    primary: 'border-[#CED0D4]',
+    secondary: 'border-[#E4E6EB]',
+    hover: 'hover:border-[#1877F2]',
   },
 
-  // Human Typography
+  // Facebook Typography
   text: {
-    primary: 'text-[#1C1A16]',      // Warm Ink
-    secondary: 'text-[#5F5C56]',    // Muted Earth
-    tertiary: 'text-[#8E8A82]',     
-    muted: 'text-[#8E8A82]',        
-    accent: 'text-[#C16E4F]',       // Terracotta
+    primary: 'text-[#050505]',      // Facebook Black
+    secondary: 'text-[#65676B]',    // Facebook Gray
+    tertiary: 'text-[#8A8D91]',     
+    muted: 'text-[#B0B3B8]',        
+    accent: 'text-[#1877F2]',       // Facebook Blue
   },
 
-  // Handcrafted Buttons
+  // Facebook Buttons
   button: {
-    primary: 'bg-[#1C1A16] hover:bg-[#2D2A24] text-[#FDFCFB] font-semibold px-8 py-4 rounded-none transition-all duration-300 active:scale-95 disabled:opacity-50 tracking-widest uppercase text-xs',
-    secondary: 'bg-[#C16E4F] hover:bg-[#A95D43] text-white font-semibold px-8 py-4 rounded-none transition-all duration-300 active:scale-95 tracking-widest uppercase text-xs',
-    outline: 'border border-[#1C1A16] text-[#1C1A16] hover:bg-[#1C1A16]/5 font-semibold px-8 py-4 rounded-none transition-all duration-300 active:scale-95 tracking-widest uppercase text-xs',
-    danger: 'bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-8 py-4 rounded-none transition-all duration-300 uppercase text-xs tracking-widest',
-    success: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-8 py-4 rounded-none transition-all duration-300 uppercase text-xs tracking-widest',
-    small: 'px-5 py-2.5 text-[10px]',
-    large: 'px-10 py-5 text-sm',
+    primary: 'bg-[#1877F2] hover:bg-[#166FE5] text-white font-semibold px-6 py-2.5 rounded-md transition-all duration-200 active:scale-[0.98] disabled:opacity-50',
+    secondary: 'bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#050505] font-semibold px-6 py-2.5 rounded-md transition-all duration-200 active:scale-[0.98]',
+    outline: 'border border-[#CED0D4] text-[#050505] hover:bg-[#F2F3F5] font-semibold px-6 py-2.5 rounded-md transition-all duration-200 active:scale-[0.98]',
+    danger: 'bg-[#F02849] hover:bg-[#D91F3C] text-white font-semibold px-6 py-2.5 rounded-md transition-all duration-200',
+    success: 'bg-[#42B72A] hover:bg-[#36A420] text-white font-semibold px-6 py-2.5 rounded-md transition-all duration-200',
+    small: 'px-4 py-1.5 text-sm',
+    large: 'px-8 py-3 text-base',
   },
 
-  // Intentional Cards
+  // Facebook Cards
   card: {
-    base: 'bg-white border border-[#E8E4DC] rounded-none shadow-none overflow-hidden',
-    hover: 'hover:border-[#C16E4F]/30 hover:shadow-2xl hover:shadow-[#1C1A16]/5 transition-all duration-500',
-    padding: 'p-10',
-    header: 'border-b border-[#F4F1EA] pb-8 mb-8',
+    base: 'bg-white border border-[#E4E6EB] rounded-lg shadow-sm overflow-hidden',
+    hover: 'hover:shadow-md transition-all duration-200',
+    padding: 'p-4',
+    header: 'border-b border-[#E4E6EB] pb-3 mb-3',
   },
 
-  // Refined Inputs
+  // Facebook Inputs
   input: {
-    base: 'w-full px-6 py-4 bg-[#FDFCFB] border border-[#E8E4DC] rounded-none text-[#1C1A16] placeholder-[#8E8A82] focus:outline-none focus:border-[#C16E4F] transition-all duration-300 font-light',
-    error: 'border-red-300 focus:border-red-500',
-    disabled: 'opacity-50 cursor-not-allowed bg-[#F4F1EA]',
+    base: 'w-full px-4 py-2.5 bg-[#F0F2F5] border border-transparent rounded-md text-[#050505] placeholder-[#8A8D91] focus:outline-none focus:bg-white focus:border-[#1877F2] transition-all duration-200',
+    error: 'border-[#F02849] focus:border-[#F02849]',
+    disabled: 'opacity-50 cursor-not-allowed',
   },
 
-  // Minimal Badges
+  // Facebook Badges
   badge: {
-    blue: 'bg-blue-50 text-blue-700 border border-blue-100',
-    green: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-    red: 'bg-rose-50 text-rose-700 border border-rose-100',
-    yellow: 'bg-amber-50 text-amber-700 border border-amber-100',
-    purple: 'bg-stone-100 text-stone-700 border border-stone-200',
-    gray: 'bg-[#F4F1EA] text-[#5F5C56] border border-[#E8E4DC]',
-    base: 'px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em]',
+    blue: 'bg-[#E7F3FF] text-[#1877F2]',
+    green: 'bg-[#E5F5E0] text-[#42B72A]',
+    red: 'bg-[#FFEBE9] text-[#F02849]',
+    yellow: 'bg-[#FFF3CD] text-[#856404]',
+    purple: 'bg-[#F3E8FF] text-[#8B5CF6]',
+    gray: 'bg-[#E4E6EB] text-[#65676B]',
+    base: 'px-2.5 py-1 text-xs font-semibold rounded-full',
   },
 
-  // Spacious Layout
+  // Facebook Layout
   layout: {
-    container: 'max-w-7xl mx-auto px-6 lg:px-12',
-    section: 'py-24 space-y-12',
+    container: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8',
+    section: 'py-8 space-y-6',
     grid: {
-      cols1: 'grid grid-cols-1 gap-12',
-      cols2: 'grid grid-cols-1 md:grid-cols-2 gap-12',
-      cols3: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12',
-      cols4: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12',
+      cols1: 'grid grid-cols-1 gap-4',
+      cols2: 'grid grid-cols-1 md:grid-cols-2 gap-4',
+      cols3: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4',
+      cols4: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4',
     },
   },
 } as const;
 
 export const clientClasses = {
-  page: `min-h-screen ${clientTheme.background.primary} py-20 px-6 lg:px-12`,
-  pageHeader: 'mb-16 max-w-3xl',
-  pageTitle: `text-4xl md:text-5xl font-serif tracking-tight ${clientTheme.text.primary} leading-tight`,
-  pageSubtitle: `${clientTheme.text.secondary} mt-6 text-lg font-light leading-relaxed`,
+  page: `min-h-screen ${clientTheme.background.primary} py-8 px-4 lg:px-8`,
+  pageHeader: 'mb-8 max-w-3xl',
+  pageTitle: `text-3xl md:text-4xl font-bold tracking-tight ${clientTheme.text.primary} leading-tight`,
+  pageSubtitle: `${clientTheme.text.secondary} mt-3 text-base font-normal leading-relaxed`,
   
-  section: 'py-16 space-y-12',
-  sectionTitle: `text-2xl md:text-3xl font-serif ${clientTheme.text.primary} tracking-tight`,
+  section: 'py-8 space-y-6',
+  sectionTitle: `text-xl md:text-2xl font-bold ${clientTheme.text.primary} tracking-tight`,
   
   card: `${clientTheme.card.base} ${clientTheme.card.padding}`,
   cardHeader: `${clientTheme.card.header}`,
-  cardTitle: `text-xl md:text-2xl font-serif ${clientTheme.text.primary} tracking-tight`,
+  cardTitle: `text-lg md:text-xl font-bold ${clientTheme.text.primary} tracking-tight`,
   
-  list: 'space-y-6',
-  listItem: `bg-white p-6 border border-[#E8E4DC] hover:border-[#C16E4F]/40 transition-all duration-300 cursor-pointer`,
+  list: 'space-y-3',
+  listItem: `bg-white p-4 border border-[#E4E6EB] hover:bg-[#F2F3F5] transition-all duration-200 cursor-pointer rounded-lg`,
   
-  statCard: `${clientTheme.card.base} p-10 flex flex-col gap-4`,
-  statValue: `text-4xl md:text-5xl font-serif ${clientTheme.text.primary} tracking-tight`,
-  statLabel: `${clientTheme.text.secondary} text-[10px] font-bold uppercase tracking-[0.3em]`,
+  statCard: `${clientTheme.card.base} p-6 flex flex-col gap-3`,
+  statValue: `text-3xl md:text-4xl font-bold ${clientTheme.text.primary} tracking-tight`,
+  statLabel: `${clientTheme.text.secondary} text-xs font-semibold uppercase tracking-wide`,
   
-  emptyState: 'text-center py-24 px-8 bg-[#F4F1EA]/30 border border-[#E8E4DC]',
-  emptyIcon: `w-16 h-16 text-[#8E8A82] mx-auto mb-8 stroke-[1px]`,
-  emptyText: `${clientTheme.text.primary} text-2xl font-serif mb-4`,
-  emptyDesc: `${clientTheme.text.secondary} text-base max-w-sm mx-auto font-light leading-relaxed`,
+  emptyState: 'text-center py-16 px-6 bg-white border border-[#E4E6EB] rounded-lg',
+  emptyIcon: `w-12 h-12 text-[#8A8D91] mx-auto mb-4`,
+  emptyText: `${clientTheme.text.primary} text-xl font-bold mb-2`,
+  emptyDesc: `${clientTheme.text.secondary} text-sm max-w-sm mx-auto font-normal leading-relaxed`,
   
-  loading: `flex items-center justify-center min-h-screen bg-[#FDFCFB]`,
-  loadingText: `${clientTheme.text.secondary} font-bold uppercase tracking-[0.4em] text-[10px]`,
+  loading: `flex items-center justify-center min-h-screen bg-[#F0F2F5]`,
+  loadingText: `${clientTheme.text.secondary} font-semibold uppercase tracking-wider text-xs`,
   
-  error: 'text-center py-16 px-8 bg-rose-50/30 border border-rose-100',
-  errorIcon: 'w-12 h-12 text-rose-500 mx-auto mb-6 stroke-[1px]',
-  errorText: 'text-rose-700 font-serif text-xl',
+  error: 'text-center py-12 px-6 bg-[#FFEBE9] border border-[#F02849] rounded-lg',
+  errorIcon: 'w-10 h-10 text-[#F02849] mx-auto mb-4',
+  errorText: 'text-[#F02849] font-bold text-lg',
 } as const;
 
 /**

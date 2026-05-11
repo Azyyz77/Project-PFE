@@ -157,6 +157,15 @@ const getRevenueStats = async (req, res) => {
 
     const whereClause = filters.length > 0 ? 'WHERE ' + filters.join(' AND ') : '';
 
+    // Vérifier d'abord si les tables existent et ont des données
+    const checkResult = await pool.request().query(`
+      SELECT 
+        (SELECT COUNT(*) FROM Facture) AS nb_factures,
+        (SELECT COUNT(*) FROM CommandeReparation) AS nb_commandes
+    `);
+
+    console.log('📊 Vérification des données:', checkResult.recordset[0]);
+
     // Revenus globaux (basés sur les factures réelles)
     const revenueResult = await request.query(`
       SELECT 
@@ -189,21 +198,9 @@ const getRevenueStats = async (req, res) => {
       ORDER BY revenu_total DESC
     `);
 
-    // Revenus par type d'intervention (basés sur les lignes de commande)
-    const revenueByTypeResult = await pool.request().query(`
-      SELECT 
-        lc.type_ligne AS type_intervention,
-        COUNT(DISTINCT c.id) AS nombre_commandes,
-        SUM(ISNULL(lc.montant_total, 0)) AS revenu_total,
-        AVG(ISNULL(lc.montant_total, 0)) AS montant_moyen
-      FROM CommandeReparation c
-      LEFT JOIN LigneCommande lc ON c.id = lc.commande_id
-      LEFT JOIN Facture f ON f.commande_id = c.id
-      ${whereClause}
-      GROUP BY lc.type_ligne
-      HAVING SUM(ISNULL(lc.montant_total, 0)) > 0
-      ORDER BY revenu_total DESC
-    `);
+    // Revenus par type d'intervention - DÉSACTIVÉ car table LigneCommandeReparation n'existe pas
+    // Cette fonctionnalité sera ajoutée plus tard quand la table sera créée
+    const revenueByTypeResult = { recordset: [] };
 
     // Évolution mensuelle des revenus (basés sur les factures)
     const monthlyRevenueResult = await pool.request().query(`
@@ -231,9 +228,19 @@ const getRevenueStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur récupération stats revenus:', error);
+    
+    // Message d'erreur plus détaillé
+    let errorMessage = 'Erreur lors de la récupération des statistiques de revenus';
+    if (error.message.includes('Invalid column name')) {
+      errorMessage += ' - Colonne manquante dans la base de données. Veuillez exécuter la migration fix_facture_revenue_columns.sql';
+    } else if (error.message.includes('Invalid object name')) {
+      errorMessage += ' - Table manquante. Veuillez vérifier que les tables Facture et CommandeReparation existent';
+    }
+    
     res.status(500).json({
-      error: 'Erreur lors de la récupération des statistiques de revenus',
-      message: error.message
+      error: errorMessage,
+      message: error.message,
+      details: error.toString()
     });
   }
 };

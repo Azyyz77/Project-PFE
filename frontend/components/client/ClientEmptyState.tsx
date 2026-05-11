@@ -26,7 +26,7 @@ export function ClientEmptyState({
       <Icon className={clientClasses.emptyIcon} />
       <p className={clientClasses.emptyText}>{title}</p>
       {description && (
-        <p className="text-slate-500 text-sm mt-2">{description}</p>
+        <p className="text-[#8A8D91] text-sm mt-2">{description}</p>
       )}
       {actionLabel && onAction && (
         <ClientButton

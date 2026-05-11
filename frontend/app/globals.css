@@ -472,3 +472,23 @@ button, a, input, textarea, select {
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+/* Hide scrollbars globally for modals and dialogs */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Dialog content scrollbar hiding */
+[role="dialog"] *::-webkit-scrollbar {
+  display: none;
+}
+
+[role="dialog"] * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

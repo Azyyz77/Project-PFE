@@ -86,33 +86,33 @@ export default function ClientAssistancePage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <LifeBuoy className="h-3.5 w-3.5" />
               Centre d'Assistance Client
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Comment pouvons-nous <span className="text-red-500">vous aider ?</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
+              Comment pouvons-nous <span className="text-blue-500">vous aider ?</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Explorez nos ressources, contactez nos experts ou trouvez des solutions rapides pour votre Chery.
             </p>
           </div>
 
           <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8A8D91]" />
             <input
               type="text"
               placeholder={t('assistance.searchInAssistance')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+              className="w-full rounded-lg bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-blue-500/10"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function ClientAssistancePage() {
         {filteredItems.map((item, idx) => {
           const colors: any = {
             blue: 'text-blue-600 bg-blue-50 border-blue-100',
-            red: 'text-red-600 bg-red-50 border-red-100',
+            red: 'text-blue-600 bg-blue-50 border-blue-100',
             purple: 'text-purple-600 bg-purple-50 border-purple-100',
             emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100'
           };
@@ -137,24 +137,24 @@ export default function ClientAssistancePage() {
               transition={{ delay: idx * 0.05 }}
             >
               <ClientCard 
-                className="group h-full flex flex-col p-8 border-none shadow-xl shadow-slate-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 cursor-pointer"
+                className="group h-full flex flex-col p-8 border-none shadow-sm hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 cursor-pointer"
               >
-                <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${colors[item.color]} shadow-inner group-hover:scale-110 transition-transform`}>
+                <div className={`mb-6 flex h-14 w-14 items-center justify-center rounded-lg ${colors[item.color]} shadow-inner group-hover:scale-110 transition-transform`}>
                   <Icon className="h-7 w-7" />
                 </div>
                 
                 <div className="flex-1 space-y-3 mb-8">
-                  <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none group-hover:text-red-600 transition-colors">
+                  <h3 className="text-xl font-bold text-[#050505] tracking-tight leading-none group-hover:text-blue-600 transition-colors">
                     {item.title}
                   </h3>
-                  <p className="text-slate-400 text-sm font-medium leading-relaxed">
+                  <p className="text-[#B0B3B8] text-sm font-medium leading-relaxed">
                     {item.description}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                   <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{item.type}</span>
-                   <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-red-600 group-hover:text-white transition-all">
+                   <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">{item.type}</span>
+                   <div className="h-10 w-10 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#B0B3B8] group-hover:bg-blue-600 group-hover:text-white transition-all">
                       <ChevronRight className="h-5 w-5" />
                    </div>
                 </div>
@@ -168,8 +168,8 @@ export default function ClientAssistancePage() {
       <div className="space-y-8 mt-12">
         <div className="flex items-center justify-between px-4">
           <div>
-            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{t('assistance.frequentQuestions')}</h2>
-            <p className="text-slate-400 text-sm font-medium mt-1">Réponses rapides aux questions courantes.</p>
+            <h2 className="text-3xl font-bold text-[#050505] tracking-tight">{t('assistance.frequentQuestions')}</h2>
+            <p className="text-[#B0B3B8] text-sm font-medium mt-1">Réponses rapides aux questions courantes.</p>
           </div>
           <ClientButton variant="secondary" className="hidden sm:flex rounded-full">Voir tout le centre d'aide</ClientButton>
         </div>
@@ -195,14 +195,14 @@ export default function ClientAssistancePage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
             >
-              <ClientCard className="p-6 border-none shadow-lg shadow-slate-100 hover:shadow-xl transition-all group">
+              <ClientCard className="p-6 border-none shadow-lg shadow-slate-100 hover:shadow-sm transition-all group">
                 <div className="flex items-start gap-4">
-                   <div className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 group-hover:bg-red-50 group-hover:text-red-500 transition-colors mt-0.5 font-black text-xs">
+                   <div className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg bg-[#E4E6EB] text-[#B0B3B8] group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors mt-0.5 font-bold text-xs">
                       Q
                    </div>
                    <div>
-                     <h3 className="font-bold text-slate-800 mb-2">{faq.question}</h3>
-                     <p className="text-sm text-slate-500 leading-relaxed">
+                     <h3 className="font-bold text-[#050505] mb-2">{faq.question}</h3>
+                     <p className="text-sm text-[#8A8D91] leading-relaxed">
                        {faq.answer}
                      </p>
                    </div>
@@ -218,20 +218,20 @@ export default function ClientAssistancePage() {
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="relative rounded-[3rem] bg-gradient-to-br from-blue-600 to-blue-800 p-12 text-white overflow-hidden shadow-2xl"
+        className="relative rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 p-12 text-white overflow-hidden shadow-md"
       >
         <div className="absolute top-0 right-0 h-64 w-64 bg-white/10 blur-3xl rounded-full -mr-20 -mt-20" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
            <div>
-              <h2 className="text-3xl font-black mb-4">Besoin d'une assistance immédiate ?</h2>
+              <h2 className="text-3xl font-bold mb-4">Besoin d'une assistance immédiate ?</h2>
               <p className="text-blue-100 font-medium max-w-lg">Nos conseillers sont à votre écoute du lundi au samedi de 8h00 à 18h00 pour répondre à toutes vos questions.</p>
            </div>
            <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-              <ClientButton variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50 border-none px-8 py-6 h-auto rounded-2xl shadow-xl">
+              <ClientButton variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50 border-none px-8 py-6 h-auto rounded-lg shadow-sm">
                  <Phone className="h-5 w-5 mr-3" />
                  71 111 222
               </ClientButton>
-              <ClientButton variant="primary" className="bg-red-600 hover:bg-red-700 border-none px-8 py-6 h-auto rounded-2xl shadow-xl">
+              <ClientButton variant="primary" className="bg-blue-600 hover:bg-blue-700 border-none px-8 py-6 h-auto rounded-lg shadow-sm">
                  Nous contacter
                  <ArrowRight className="h-5 w-5 ml-3" />
               </ClientButton>

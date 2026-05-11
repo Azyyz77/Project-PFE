@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<InvoiceStatus, { bg: string; text: string; icon: any
   EMISE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
   ENVOYEE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: Zap },
   PAYEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle },
-  ANNULEE: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -124,33 +124,33 @@ export default function ClientInvoicesPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-emerald-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-emerald-400 backdrop-blur-md border border-white/10">
               <Receipt className="h-3.5 w-3.5" />
               Espace Facturation Chery
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Vos <span className="text-red-500">Factures</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
+              Vos <span className="text-blue-500">Factures</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Gérez votre historique de paiement, téléchargez vos factures PDF et suivez vos dépenses d'entretien.
             </p>
           </div>
 
           <div className="relative w-full md:w-80">
-            <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <SearchIcon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8A8D91]" />
             <input
               type="text"
               placeholder="Rechercher une facture..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+              className="w-full rounded-lg bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-blue-500/10"
             />
           </div>
         </div>
@@ -163,38 +163,38 @@ export default function ClientInvoicesPage() {
           value={stats.total}
           icon={Receipt}
           iconColor="text-blue-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
+          className="bg-white border-none shadow-sm"
         />
         <ClientStatCard
           label="Factures Payées"
           value={stats.paid}
           icon={ShieldCheck}
           iconColor="text-emerald-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
+          className="bg-white border-none shadow-sm"
         />
         <ClientStatCard
           label="En Attente"
           value={stats.pending}
           icon={Clock}
           iconColor="text-amber-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
+          className="bg-white border-none shadow-sm"
         />
         <ClientStatCard
           label="Total Dépenses"
           value={`${stats.totalAmount.toFixed(2)}`}
           icon={TrendingUp}
-          iconColor="text-red-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
+          iconColor="text-blue-500"
+          className="bg-white border-none shadow-sm"
         />
       </div>
 
       {/* ─── Invoices List ─── */}
       <div className="space-y-6">
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Historique de facturation</h2>
+          <h2 className="text-2xl font-bold text-[#050505] tracking-tight">Historique de facturation</h2>
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stats.paidAmount.toFixed(3)} TND PAYÉS</span>
+            <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{stats.paidAmount.toFixed(3)} TND PAYÉS</span>
           </div>
         </div>
 
@@ -208,7 +208,7 @@ export default function ClientInvoicesPage() {
               className="grid gap-6"
             >
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 rounded-[2rem] bg-white animate-pulse shadow-sm" />
+                <div key={i} className="h-32 rounded-lg bg-white animate-pulse shadow-sm" />
               ))}
             </motion.div>
           ) : error ? (
@@ -216,10 +216,10 @@ export default function ClientInvoicesPage() {
               key="error"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-12 text-center bg-red-50 rounded-[3rem] border border-red-100"
+              className="p-12 text-center bg-blue-50 rounded-xl border border-blue-100"
             >
-              <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-600 font-bold">{error}</p>
+              <XCircle className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <p className="text-blue-600 font-bold">{error}</p>
               <ClientButton onClick={loadFactures} variant="secondary" className="mt-6">Réessayer</ClientButton>
             </motion.div>
           ) : filteredFactures.length === 0 ? (
@@ -232,7 +232,7 @@ export default function ClientInvoicesPage() {
                 icon={FileText}
                 title="Aucune facture"
                 description={searchTerm ? "Aucun résultat pour votre recherche." : "Vous n'avez pas encore de factures émises."}
-                className="bg-white border-none shadow-2xl shadow-slate-100"
+                className="bg-white border-none shadow-md shadow-slate-100"
               />
             </motion.div>
           ) : (
@@ -249,41 +249,41 @@ export default function ClientInvoicesPage() {
                     transition={{ delay: idx * 0.05 }}
                   >
                     <ClientCard 
-                      className="group cursor-pointer p-6 sm:p-8 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
+                      className="group cursor-pointer p-6 sm:p-8 hover:shadow-md hover:shadow-emerald-500/10 transition-all duration-500 border-none shadow-sm"
                     >
-                      <div className="flex flex-col lg:flex-row items-center gap-8">
+                      <div className="flex flex-col lg:flex-row items-center gap-4">
                         {/* Status Block */}
-                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors shrink-0">
+                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-colors shrink-0">
                           <StatusIcon className={`h-8 w-8 ${status.text} mb-1`} />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Facture</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-[#B0B3B8]">Facture</span>
                         </div>
 
                         {/* Invoice Info */}
                         <div className="flex-1 text-center lg:text-left">
                           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
-                            <span className="text-xl font-black text-slate-800 tracking-tight font-mono">
+                            <span className="text-xl font-bold text-[#050505] tracking-tight font-mono">
                               {facture.numero}
                             </span>
-                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-bold uppercase tracking-wide`}>
                               {STATUS_LABELS[facture.statut] || facture.statut}
                             </Badge>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Référence Commande</p>
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Référence Commande</p>
                               <p className="font-bold text-slate-700">{facture.commande_numero}</p>
-                              <p className="text-xs text-slate-400 font-medium">{facture.vehicule_immatriculation}</p>
+                              <p className="text-xs text-[#B0B3B8] font-medium">{facture.vehicule_immatriculation}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Date d'émission</p>
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Date d'émission</p>
                               <p className="font-bold text-slate-700">{new Date(facture.date_emission).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Montant TTC</p>
-                              <p className="text-2xl font-black text-slate-800 tracking-tight">
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Montant TTC</p>
+                              <p className="text-2xl font-bold text-[#050505] tracking-tight">
                                 {facture.montant_ttc.toFixed(3)}
-                                <span className="text-[10px] ml-1 text-slate-400 uppercase tracking-widest">TND</span>
+                                <span className="text-[10px] ml-1 text-[#B0B3B8] uppercase tracking-wide">TND</span>
                               </p>
                             </div>
                           </div>

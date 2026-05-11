@@ -36,11 +36,11 @@ import {
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon: any }> = {
-  BROUILLON: { bg: 'bg-slate-100', text: 'text-slate-700', icon: AlertCircle },
+  BROUILLON: { bg: 'bg-[#E4E6EB]', text: 'text-slate-700', icon: AlertCircle },
   EN_COURS: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
   TERMINEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
   FACTUREE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: CreditCard },
-  ANNULEE: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
 };
 
 const STATUS_LABELS: Record<RepairOrderStatus, string> = {
@@ -95,11 +95,11 @@ export default function ClientRepairOrderDetailsPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="p-12 text-center bg-red-50 rounded-[3rem] border border-red-100 max-w-xl w-full"
+          className="p-12 text-center bg-blue-50 rounded-xl border border-blue-100 max-w-xl w-full"
         >
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-black text-red-700 mb-2">Erreur</h2>
-          <p className="text-red-600 font-medium">{error || 'Commande non trouvée'}</p>
+          <AlertCircle className="h-16 w-16 text-blue-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-blue-700 mb-2">Erreur</h2>
+          <p className="text-blue-600 font-medium">{error || 'Commande non trouvée'}</p>
           <ClientButton onClick={() => router.back()} variant="secondary" className="mt-8" icon={ArrowLeft}>
             Retour
           </ClientButton>
@@ -117,12 +117,12 @@ export default function ClientRepairOrderDetailsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="max-w-2xl text-left">
             <ClientButton 
               variant="outline" 
@@ -135,32 +135,32 @@ export default function ClientRepairOrderDetailsPage() {
             </ClientButton>
             
             <div className="flex flex-wrap items-center gap-4 mb-4">
-              <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-none font-mono">
+              <h1 className="text-4xl sm:text-3xl font-bold tracking-tight leading-none font-mono">
                 #{commande.numero}
               </h1>
-              <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1.5 text-xs font-black uppercase tracking-widest`}>
+              <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1.5 text-xs font-bold uppercase tracking-wide`}>
                 {STATUS_LABELS[commande.statut] || commande.statut}
               </Badge>
             </div>
             
-            <p className="text-slate-400 font-medium text-lg leading-relaxed flex items-center gap-2">
-              <Car className="h-5 w-5 text-red-500" />
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed flex items-center gap-2">
+              <Car className="h-5 w-5 text-blue-500" />
               {commande.immatriculation} - {commande.marque_nom} {commande.modele_nom}
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center justify-center p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl w-full md:w-auto">
+          <div className="shrink-0 flex items-center justify-center p-8 rounded-lg bg-white/5 border border-white/10 backdrop-blur-xl w-full md:w-auto">
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Montant Total</p>
-              <p className="text-4xl font-black text-white">{commande.montant_total?.toFixed(2) || '0.00'}</p>
-              <p className="text-[10px] font-bold text-slate-500">TND</p>
+              <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mb-1">Montant Total</p>
+              <p className="text-4xl font-bold text-white">{commande.montant_total?.toFixed(2) || '0.00'}</p>
+              <p className="text-[10px] font-bold text-[#8A8D91]">TND</p>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* ─── Grid Layout ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column (Information) */}
         <div className="lg:col-span-1 space-y-8">
           <ClientCard>
@@ -168,21 +168,21 @@ export default function ClientRepairOrderDetailsPage() {
             <ClientCardContent>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
-                    <Car className="h-6 w-6 text-red-500" />
+                  <div className="h-12 w-12 rounded-lg bg-[#F0F2F5] flex items-center justify-center shrink-0">
+                    <Car className="h-6 w-6 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Plaque</p>
-                    <p className="text-lg font-black text-slate-800">{commande.immatriculation}</p>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Plaque</p>
+                    <p className="text-lg font-bold text-[#050505]">{commande.immatriculation}</p>
                   </div>
                 </div>
                 <div className="pl-16">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modèle</p>
+                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Modèle</p>
                   <p className="font-bold text-slate-700">{commande.marque_nom} {commande.modele_nom}</p>
                 </div>
                 <div className="pl-16">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Châssis</p>
-                  <p className="font-mono text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg inline-block border border-slate-100">{commande.numero_chassis}</p>
+                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Châssis</p>
+                  <p className="font-mono text-sm text-[#65676B] bg-[#F0F2F5] px-3 py-1.5 rounded-lg inline-block border border-[#E4E6EB]">{commande.numero_chassis}</p>
                 </div>
               </div>
             </ClientCardContent>
@@ -193,24 +193,24 @@ export default function ClientRepairOrderDetailsPage() {
             <ClientCardContent>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-lg bg-[#F0F2F5] flex items-center justify-center shrink-0">
                     <MapPin className="h-6 w-6 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Centre</p>
-                    <p className="text-base font-bold text-slate-800">{commande.agence_nom}</p>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Centre</p>
+                    <p className="text-base font-bold text-[#050505]">{commande.agence_nom}</p>
                   </div>
                 </div>
                 {commande.agence_adresse && (
                   <div className="pl-16">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adresse</p>
-                    <p className="font-medium text-slate-600 text-sm leading-relaxed">{commande.agence_adresse}</p>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Adresse</p>
+                    <p className="font-medium text-[#65676B] text-sm leading-relaxed">{commande.agence_adresse}</p>
                   </div>
                 )}
                 {commande.agence_telephone && (
                   <div className="pl-16">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Téléphone</p>
-                    <p className="font-medium text-slate-600">{commande.agence_telephone}</p>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Téléphone</p>
+                    <p className="font-medium text-[#65676B]">{commande.agence_telephone}</p>
                   </div>
                 )}
               </div>
@@ -224,20 +224,20 @@ export default function ClientRepairOrderDetailsPage() {
                 <div className="space-y-4">
                   {commande.date_creation && (
                     <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Création</p>
-                      <p className="font-bold text-slate-800">{new Date(commande.date_creation).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Création</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_creation).toLocaleDateString('fr-FR')}</p>
                     </div>
                   )}
                   {commande.date_debut && (
                     <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Démarrage</p>
-                      <p className="font-bold text-slate-800">{new Date(commande.date_debut).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Démarrage</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_debut).toLocaleDateString('fr-FR')}</p>
                     </div>
                   )}
                   {commande.date_fin && (
                     <div className="flex justify-between items-center">
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Clôture</p>
-                      <p className="font-bold text-slate-800">{new Date(commande.date_fin).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Clôture</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_fin).toLocaleDateString('fr-FR')}</p>
                     </div>
                   )}
                 </div>
@@ -252,12 +252,12 @@ export default function ClientRepairOrderDetailsPage() {
           <ClientCard className={`${status.bg} border-none`}>
             <ClientCardContent className="p-8">
               <div className="flex items-start gap-6">
-                <div className="h-16 w-16 rounded-[2rem] bg-white flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                <div className="h-16 w-16 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm border border-[#E4E6EB]">
                   <StatusIcon className={`h-8 w-8 ${status.text}`} />
                 </div>
                 <div>
-                  <h3 className={`text-xl font-black mb-1 ${status.text}`}>{STATUS_LABELS[commande.statut]}</h3>
-                  <p className="text-slate-600 font-medium">
+                  <h3 className={`text-xl font-bold mb-1 ${status.text}`}>{STATUS_LABELS[commande.statut]}</h3>
+                  <p className="text-[#65676B] font-medium">
                     {commande.statut === 'BROUILLON' && 'Votre ordre de réparation est en cours de préparation.'}
                     {commande.statut === 'EN_COURS' && 'Nos techniciens travaillent actuellement sur votre véhicule.'}
                     {commande.statut === 'TERMINEE' && 'Les travaux sur votre véhicule sont terminés.'}
@@ -278,7 +278,7 @@ export default function ClientRepairOrderDetailsPage() {
                   icon={Wrench} 
                   title="Aucun détail" 
                   description="Les détails de l'intervention ne sont pas encore disponibles." 
-                  className="bg-slate-50 border border-slate-100 rounded-3xl"
+                  className="bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg"
                 />
               ) : (
                 <div className="space-y-4">
@@ -288,7 +288,7 @@ export default function ClientRepairOrderDetailsPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl bg-white border border-slate-100 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-100 transition-all gap-4"
+                      className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-lg bg-white border border-[#E4E6EB] hover:border-[#E4E6EB] hover:shadow-sm hover:shadow-slate-100 transition-all gap-4"
                     >
                       <div className="flex items-start gap-4">
                         <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
@@ -297,14 +297,14 @@ export default function ClientRepairOrderDetailsPage() {
                           {ligne.type === 'INTERVENTION' ? <Wrench className="h-5 w-5" /> : <Package className="h-5 w-5" />}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-800 mb-1">{ligne.description}</p>
+                          <p className="font-bold text-[#050505] mb-1">{ligne.description}</p>
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className={`border-none px-2 py-0.5 text-[10px] uppercase font-black tracking-widest ${
+                            <Badge variant="outline" className={`border-none px-2 py-0.5 text-[10px] uppercase font-bold tracking-wide ${
                               ligne.type === 'INTERVENTION' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'
                             }`}>
                               {ligne.type === 'INTERVENTION' ? 'Main d\'œuvre' : 'Pièce'}
                             </Badge>
-                            <span className="text-xs font-bold text-slate-400">
+                            <span className="text-xs font-bold text-[#B0B3B8]">
                               Qté: {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)}
                             </span>
                           </div>
@@ -312,20 +312,20 @@ export default function ClientRepairOrderDetailsPage() {
                       </div>
                       
                       <div className="sm:text-right pt-4 sm:pt-0 border-t border-slate-50 sm:border-none">
-                        <p className="text-xl font-black text-slate-800">{ligne.prix_total.toFixed(2)}</p>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TND</p>
+                        <p className="text-xl font-bold text-[#050505]">{ligne.prix_total.toFixed(2)}</p>
+                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">TND</p>
                       </div>
                     </motion.div>
                   ))}
 
-                  <div className="mt-8 p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="mt-8 p-6 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-black text-slate-800">Total à payer</p>
-                      <p className="text-xs font-medium text-slate-500">Montant incluant la TVA</p>
+                      <p className="text-sm font-bold text-[#050505]">Total à payer</p>
+                      <p className="text-xs font-medium text-[#8A8D91]">Montant incluant la TVA</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-black text-red-600 tracking-tight">
-                        {commande.montant_total?.toFixed(2) || '0.00'} <span className="text-sm text-slate-400">TND</span>
+                      <p className="text-3xl font-bold text-blue-600 tracking-tight">
+                        {commande.montant_total?.toFixed(2) || '0.00'} <span className="text-sm text-[#B0B3B8]">TND</span>
                       </p>
                     </div>
                   </div>

@@ -66,16 +66,16 @@ export default function AppointmentFeedback({ appointmentId, onSuccess }: Props)
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800">
+        <DialogContent className="bg-white border-slate-800">
           <DialogTitle className="text-white">Évaluer votre rendez-vous</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-[#B0B3B8]">
             Votre avis nous aide à améliorer nos services
           </DialogDescription>
 
           <div className="space-y-6 mt-4">
             {/* Rating Stars */}
             <div>
-              <label className="text-sm text-slate-400 mb-3 block">
+              <label className="text-sm text-[#B0B3B8] mb-3 block">
                 Comment évaluez-vous votre expérience ?
               </label>
               <div className="flex gap-2 justify-center">
@@ -92,14 +92,14 @@ export default function AppointmentFeedback({ appointmentId, onSuccess }: Props)
                       className={`w-10 h-10 ${
                         star <= (hoverNote || note)
                           ? 'fill-orange-500 text-orange-500'
-                          : 'text-slate-600'
+                          : 'text-[#65676B]'
                       }`}
                     />
                   </button>
                 ))}
               </div>
               {note > 0 && (
-                <p className="text-center text-sm text-slate-400 mt-2">
+                <p className="text-center text-sm text-[#B0B3B8] mt-2">
                   {note === 5 && 'Excellent!'}
                   {note === 4 && 'Très bien'}
                   {note === 3 && 'Bien'}
@@ -111,7 +111,7 @@ export default function AppointmentFeedback({ appointmentId, onSuccess }: Props)
 
             {/* Comment */}
             <div>
-              <label className="text-sm text-slate-400 mb-2 block">
+              <label className="text-sm text-[#B0B3B8] mb-2 block">
                 Commentaire (optionnel)
               </label>
               <textarea
@@ -120,9 +120,9 @@ export default function AppointmentFeedback({ appointmentId, onSuccess }: Props)
                 placeholder="Partagez votre expérience..."
                 maxLength={500}
                 rows={4}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                className="w-full px-4 py-3 bg-[#F0F2F5] border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
               />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-[#8A8D91] mt-1">
                 {commentaire.length}/500 caractères
               </p>
             </div>

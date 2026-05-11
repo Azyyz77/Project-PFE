@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   ClientPageWrapper,
-  ClientButton,
   ClientCard,
   ClientCardHeader,
   ClientCardContent,
@@ -93,121 +92,217 @@ export default function ClientDashboardPage() {
     .slice(0, 2);
 
   return (
-    <ClientPageWrapper className="space-y-10 pb-20">
-      {/* ─── Modern Welcome Banner ─── */}
+    <ClientPageWrapper className="space-y-6 pb-12">
+      {/* ─── Facebook-Style Welcome Banner ─── */}
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-16 text-white shadow-2xl"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#1877F2] to-[#0C63D4] p-8 shadow-sm"
       >
-        {/* Abstract Background Design */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-red-600/10 blur-[100px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-96 w-96 rounded-full bg-blue-600/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <motion.div
+            animate={{
+              backgroundPosition: ['0% 0%', '100% 100%'],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              ease: 'linear',
+            }}
+            className="h-full w-full"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)',
+              backgroundSize: '50px 50px',
+            }}
+          />
+        </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="text-center md:text-left max-w-xl">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10"
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          {/* Left Content */}
+          <div className="flex-1">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+              className="mb-3"
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              {t('dashboard.hello')}, {user.prenom}
-            </motion.div>
-            <h1 className="mb-6 text-4xl sm:text-6xl font-black tracking-tight leading-[1.1]">
-              Votre <span className="text-red-500 underline decoration-red-500/30 underline-offset-8">Chery</span> mérite le meilleur service.
-            </h1>
-            <p className="mb-10 text-lg text-slate-400 font-medium leading-relaxed">
-              {t('dashboard.welcomeMessage') || 'Bienvenue sur votre espace client. Gérez vos véhicules, vos rendez-vous et vos documents en toute simplicité.'}
-            </p>
-            
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-              <Link href="/client/rendez-vous">
-                <ClientButton variant="primary" 
-                icon={Plus} 
-                size="large"
+              <div className="inline-flex items-center gap-2 text-white/80 text-sm font-medium">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  {t('dashboard.takeAppointment')}
-                </ClientButton>
+                  <Sparkles className="h-4 w-4" />
+                </motion.div>
+                <span>Bonjour, {user.prenom}</span>
+              </div>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+              className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight"
+            >
+              Bienvenue sur votre espace <span className="text-white/90">Chery</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
+              className="text-white/80 text-base mb-6 max-w-2xl"
+            >
+              Gérez vos véhicules, prenez rendez-vous et suivez l'historique de vos interventions en toute simplicité.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
+              className="flex flex-wrap gap-3"
+            >
+              <Link href="/client/rendez-vous">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 bg-white text-[#1877F2] px-5 py-2.5 rounded-md font-semibold text-sm shadow-sm hover:shadow-md transition-all"
+                >
+                  <Plus className="h-4 w-4" />
+                  Prendre un RDV
+                </motion.button>
               </Link>
               <Link href="/client/vehicles">
-                <ClientButton 
-                variant="outline" 
-                icon={Car} 
-                size="large" 
-                className="bg-white/5 border-white/10 text-white hover:bg-white/10">
-                  {t('dashboard.myVehicles')}
-                </ClientButton>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-md font-semibold text-sm border border-white/20 hover:bg-white/20 transition-all"
+                >
+                  <Car className="h-4 w-4" />
+                  Mes véhicules
+                </motion.button>
               </Link>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Decorative Element */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ delay: 0.4, type: "spring" }}
-            className="hidden lg:block relative"
+          {/* Right Stats Circle */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.4, type: "spring" }}
+            className="relative"
           >
-            <div className="absolute -inset-10 rounded-full bg-red-600/20 blur-[60px] animate-pulse" />
-            <div className="h-72 w-72 rounded-[4rem] border-2 border-white/10 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-2xl flex items-center justify-center p-8 shadow-inner">
-               <Car className="h-40 w-40 text-white opacity-20 absolute" />
-               <div className="text-center">
-                  <span className="block text-5xl font-black text-white">{vehicles.length}</span>
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">{t('dashboard.vehicles')}</span>
-               </div>
+            <div className="relative w-32 h-32 md:w-40 md:h-40">
+              {/* Animated Ring */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-full border-4 border-white/20 border-t-white/40"
+              />
+              
+              {/* Inner Circle */}
+              <div className="absolute inset-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex flex-col items-center justify-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+                  className="text-center"
+                >
+                  <div className="text-4xl md:text-5xl font-bold text-white mb-1">
+                    {vehicles.length}
+                  </div>
+                  <div className="text-xs font-medium text-white/70 uppercase tracking-wide">
+                    Véhicules
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* ─── Statistics Grid ─── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ClientStatCard
-          label={t('dashboard.upcomingAppointments')}
-          value={upcomingAppointments.length}
-          icon={Calendar}
-          iconColor="text-red-600"
-          subtitle="Prochainement"
-        />
-        <ClientStatCard
-          label={t('dashboard.vehicles')}
-          value={vehicles.length}
-          icon={Car}
-          iconColor="text-blue-600"
-          subtitle="Actifs"
-        />
-        <ClientStatCard
-          label={t('dashboard.complaints')}
-          value={complaintsCount}
-          icon={MessageSquare}
-          iconColor="text-amber-500"
-          subtitle="En attente"
-        />
-        <ClientStatCard
-          label={t('dashboard.completedAppointments')}
-          value={completedAppointments}
-          icon={CheckCircle2}
-          iconColor="text-emerald-500"
-          subtitle="Total"
-        />
+      {/* ─── Statistics Grid with Animations ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+        >
+          <ClientStatCard
+            label="Rendez-vous à venir"
+            value={upcomingAppointments.length}
+            icon={Calendar}
+            iconColor="text-[#1877F2]"
+            subtitle="Prochainement"
+          />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
+          <ClientStatCard
+            label="Véhicules"
+            value={vehicles.length}
+            icon={Car}
+            iconColor="text-[#42B72A]"
+            subtitle="Actifs"
+          />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+        >
+          <ClientStatCard
+            label="Réclamations"
+            value={complaintsCount}
+            icon={MessageSquare}
+            iconColor="text-[#F7B928]"
+            subtitle="En attente"
+          />
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.3 }}
+        >
+          <ClientStatCard
+            label="RDV terminés"
+            value={completedAppointments}
+            icon={CheckCircle2}
+            iconColor="text-[#42B72A]"
+            subtitle="Total"
+          />
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 bg-re">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ─── My Appointments Section ─── */}
-        <div className="lg:col-span-2">
+        <motion.div 
+          className="lg:col-span-2"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+        >
           <ClientCard>
             <ClientCardHeader
-              title={t('dashboard.myAppointments')}
+              title="Mes rendez-vous"
               subtitle="Consultez vos rendez-vous récents"
               action={
                 <Link href="/client/rendez-vous">
-                  <ClientButton variant="outline" size="small">
-                    {t('dashboard.viewAll')}
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </ClientButton>
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-[#1877F2] hover:underline"
+                  >
+                    Voir tout
+                    <ChevronRight className="h-4 w-4" />
+                  </motion.button>
                 </Link>
               }
             />
@@ -215,13 +310,13 @@ export default function ClientDashboardPage() {
               {recentAppointments.length === 0 ? (
                 <ClientEmptyState
                   icon={Calendar}
-                  title={t('dashboard.noUpcomingAppointments')}
-                  description={t('dashboard.bookAppointmentDescription')}
-                  actionLabel={t('dashboard.takeAppointment')}
+                  title="Aucun rendez-vous à venir"
+                  description="Réservez votre premier rendez-vous pour l'entretien de votre véhicule"
+                  actionLabel="Prendre un RDV"
                   onAction={() => router.push('/client/rendez-vous')}
                 />
               ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-3">
                   {recentAppointments.map((appointment, idx) => {
                     const date = new Date(appointment.date_heure);
                     const dayNumber = date.getDate();
@@ -234,43 +329,47 @@ export default function ClientDashboardPage() {
                     return (
                       <motion.div
                         key={appointment.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 * idx }}
-                        className="group flex items-center gap-6 rounded-3xl border border-slate-100 bg-slate-50/50 p-5 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-200/50"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 + (idx * 0.1), duration: 0.3 }}
+                        whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                        className="group flex items-center gap-4 rounded-lg border border-[#E4E6EB] bg-[#F0F2F5] p-4 transition-all cursor-pointer"
                       >
-                        <div className="flex flex-col items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100 px-5 py-4 min-w-[80px]">
-                          <span className="text-3xl font-black text-slate-800 tracking-tighter">
+                        <div className="flex flex-col items-center justify-center rounded-lg bg-white shadow-sm border border-[#E4E6EB] px-4 py-3 min-w-[70px]">
+                          <span className="text-2xl font-bold text-[#050505] leading-none">
                             {String(dayNumber).padStart(2, '0')}
                           </span>
-                          <span className="text-[10px] font-black uppercase text-red-600 tracking-widest">{monthLabel}</span>
+                          <span className="text-[10px] font-semibold uppercase text-[#1877F2] tracking-wide mt-1">{monthLabel}</span>
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-slate-800 text-lg truncate">
+                          <h3 className="font-semibold text-[#050505] text-base truncate mb-1">
                             {appointment.interventions?.[0]
                               ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
-                              : t('dashboard.serviceAppointment') || 'Rendez-vous service'}
+                              : 'Rendez-vous service'}
                           </h3>
-                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                            <span className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded-lg">
-                              <Car className="h-3.5 w-3.5" />
-                              {appointment.immatriculation || t('dashboard.vehicle')}
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-[#65676B]">
+                            <span className="inline-flex items-center gap-1">
+                              <Car className="h-3 w-3" />
+                              {appointment.immatriculation || 'Véhicule'}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {appointment.agence_nom || t('dashboard.agency')}
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {appointment.agence_nom || 'Agence'}
                             </span>
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5" />
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
                               {timeLabel}
                             </span>
                           </div>
                         </div>
 
-                        <div className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 transition-colors group-hover:bg-red-600 group-hover:border-red-600 group-hover:text-white">
-                          <ChevronRight className="h-5 w-5" />
-                        </div>
+                        <motion.div
+                          whileHover={{ x: 3 }}
+                          className="hidden sm:flex h-9 w-9 items-center justify-center rounded-full bg-[#E4E6EB] text-[#65676B] group-hover:bg-[#1877F2] group-hover:text-white transition-colors"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </motion.div>
                       </motion.div>
                     );
                   })}
@@ -278,81 +377,174 @@ export default function ClientDashboardPage() {
               )}
             </ClientCardContent>
           </ClientCard>
-        </div>
+        </motion.div>
 
         {/* ─── Quick Actions & Stats Sidebar ─── */}
-        <div className="space-y-6">
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6, duration: 0.4 }}
+        >
           <ClientCard>
-            <ClientCardHeader title={t('dashboard.quickActions')} />
+            <ClientCardHeader title="Actions rapides" />
             <ClientCardContent>
-              <div className="grid gap-4">
+              <div className="grid gap-3">
                 <Link href="/client/rendez-vous" className="group">
-                  <div className="flex items-center justify-between rounded-[1.5rem] bg-red-600 p-5 text-white shadow-lg shadow-red-200 transition-all hover:translate-x-1 hover:shadow-red-300">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md">
-                        <Calendar className="h-6 w-6" />
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-between rounded-lg bg-[#1877F2] p-4 text-white shadow-sm transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
+                        <Calendar className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-black uppercase tracking-wider">Prendre RDV</p>
-                        <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Réservez un créneau</p>
+                        <p className="text-sm font-semibold">Prendre RDV</p>
+                        <p className="text-xs text-white/70">Réservez un créneau</p>
                       </div>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white transition-colors" />
-                  </div>
+                    <ArrowRight className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
+                  </motion.div>
                 </Link>
 
                 <Link href="/client/complaints" className="group">
-                  <div className="flex items-center justify-between rounded-[1.5rem] bg-slate-800 p-5 text-white shadow-lg shadow-slate-200 transition-all hover:translate-x-1 hover:shadow-slate-300">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md">
-                        <MessageSquare className="h-6 w-6" />
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-between rounded-lg bg-[#E4E6EB] p-4 text-[#050505] shadow-sm transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
+                        <MessageSquare className="h-5 w-5 text-[#65676B]" />
                       </div>
                       <div>
-                        <p className="text-sm font-black uppercase tracking-wider">Réclamation</p>
-                        <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest">Signaler un problème</p>
+                        <p className="text-sm font-semibold">Réclamation</p>
+                        <p className="text-xs text-[#65676B]">Signaler un problème</p>
                       </div>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white transition-colors" />
-                  </div>
+                    <ArrowRight className="h-4 w-4 text-[#65676B] group-hover:text-[#050505] transition-colors" />
+                  </motion.div>
                 </Link>
               </div>
             </ClientCardContent>
           </ClientCard>
           
-          {/* My Vehicles Card */}
+          {/* My Vehicles List */}
           <ClientCard>
             <ClientCardHeader 
-              title={t('dashboard.myVehicles')} 
+              title="Mes véhicules" 
               action={
-                <Link href="/client/vehicles" className="text-xs font-bold text-red-600 hover:underline">
+                <Link href="/client/vehicles" className="text-xs font-semibold text-[#1877F2] hover:underline">
                   Voir tout
                 </Link>
               }
             />
             <ClientCardContent>
               {vehicles.length === 0 ? (
-                <div className="text-center py-6">
-                  <Car className="h-10 w-10 text-slate-200 mx-auto mb-2" />
-                  <p className="text-xs text-slate-400 font-bold uppercase">Aucun véhicule</p>
+                <div className="text-center py-8">
+                  <div className="h-16 w-16 rounded-full bg-[#E4E6EB] flex items-center justify-center mx-auto mb-3">
+                    <Car className="h-8 w-8 text-[#65676B]" />
+                  </div>
+                  <p className="text-sm font-semibold text-[#050505] mb-1">Aucun véhicule</p>
+                  <p className="text-xs text-[#65676B] mb-4">Ajoutez votre premier véhicule</p>
+                  <Link href="/client/vehicles/new">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="inline-flex items-center gap-2 bg-[#1877F2] text-white px-4 py-2 rounded-md text-sm font-semibold"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Ajouter un véhicule
+                    </motion.button>
+                  </Link>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {vehicles.slice(0, 3).map((vehicle) => (
-                    <div key={vehicle.id} className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                        <Car className="h-5 w-5 text-slate-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-800 truncate">{vehicle.marque_nom} {vehicle.modele_nom}</p>
-                        <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{vehicle.immatriculation}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {vehicles.slice(0, 4).map((vehicle, idx) => {
+                    const isValidated = vehicle.statut_validation === 'VALIDE';
+                    const isPending = vehicle.statut_validation === 'EN_ATTENTE';
+                    
+                    return (
+                      <Link key={vehicle.id} href={`/client/vehicles/${vehicle.id}/history`}>
+                        <motion.div 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.7 + (idx * 0.1), duration: 0.3 }}
+                          whileHover={{ backgroundColor: '#F0F2F5' }}
+                          className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer group"
+                        >
+                          <div className="relative">
+                            <div className="h-12 w-12 rounded-lg bg-[#E4E6EB] flex items-center justify-center shrink-0 group-hover:bg-[#D8DADF] transition-colors">
+                              <Car className="h-6 w-6 text-[#65676B]" />
+                            </div>
+                            {/* Status Badge */}
+                            {isValidated && (
+                              <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#42B72A] border-2 border-white flex items-center justify-center">
+                                <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                              </div>
+                            )}
+                            {isPending && (
+                              <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#F7B928] border-2 border-white flex items-center justify-center">
+                                <Clock className="h-2.5 w-2.5 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-[#050505] truncate group-hover:text-[#1877F2] transition-colors">
+                              {vehicle.marque_nom} {vehicle.modele_nom}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs text-[#65676B] font-medium">{vehicle.immatriculation}</p>
+                              {isValidated && (
+                                <span className="text-[10px] font-semibold text-[#42B72A]">• Validé</span>
+                              )}
+                              {isPending && (
+                                <span className="text-[10px] font-semibold text-[#F7B928]">• En attente</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <motion.div
+                            whileHover={{ x: 3 }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <ChevronRight className="h-5 w-5 text-[#65676B]" />
+                          </motion.div>
+                        </motion.div>
+                      </Link>
+                    );
+                  })}
+                  
+                  {/* Add Vehicle Button */}
+                  {vehicles.length < 10 && (
+                    <Link href="/client/vehicles/new">
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 + (vehicles.length * 0.1) }}
+                        whileHover={{ backgroundColor: '#F0F2F5' }}
+                        className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer group mt-2"
+                      >
+                        <div className="h-12 w-12 rounded-lg bg-[#E4E6EB] flex items-center justify-center shrink-0 group-hover:bg-[#1877F2] transition-colors">
+                          <Plus className="h-6 w-6 text-[#65676B] group-hover:text-white transition-colors" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-[#65676B] group-hover:text-[#1877F2] transition-colors">
+                            Ajouter un véhicule
+                          </p>
+                          <p className="text-xs text-[#8A8D91]">Enregistrer un nouveau véhicule</p>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  )}
                 </div>
               )}
             </ClientCardContent>
           </ClientCard>
-        </div>
+        </motion.div>
       </div>
     </ClientPageWrapper>
   );

@@ -123,33 +123,33 @@ function CatalogContent() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <Sparkles className="h-3.5 w-3.5" />
               {t('catalog.discoverServices')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-5xl font-black tracking-tight leading-none">
-              Catalogue <span className="text-red-500">Services</span>
+            <h1 className="mb-4 text-4xl sm:text-3xl font-bold tracking-tight leading-none">
+              Catalogue <span className="text-blue-500">Services</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Explorez notre gamme complète de services d'entretien et de forfaits exclusifs pour votre véhicule.
             </p>
           </div>
 
           <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8A8D91]" />
             <input
               type="text"
               placeholder={t('catalog.search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-red-500/10"
+              className="w-full rounded-lg bg-white/5 border border-white/10 py-4 pl-12 pr-4 text-sm font-medium text-white placeholder-slate-500 outline-none transition-all focus:bg-white/10 focus:ring-4 focus:ring-blue-500/10"
             />
           </div>
         </div>
@@ -162,7 +162,7 @@ function CatalogContent() {
             label={t('catalog.serviceTypes')}
             value={stats.total_types}
             icon={Wrench}
-            iconColor="text-red-600"
+            iconColor="text-blue-600"
           />
           <ClientStatCard
             label={t('catalog.servicesAvailable')}
@@ -188,14 +188,14 @@ function CatalogContent() {
       {/* ─── Catalog Tabs ─── */}
       <Tabs defaultValue="packages" className="space-y-8">
         <div className="flex justify-center">
-          <TabsList className="h-auto p-1.5 bg-white border border-slate-200 rounded-3xl shadow-sm">
-            <TabsTrigger value="packages" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+          <TabsList className="h-auto p-1.5 bg-white border border-[#E4E6EB] rounded-lg shadow-sm">
+            <TabsTrigger value="packages" className="rounded-lg px-8 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-wide text-[10px]">
               {t('catalog.packages')}
             </TabsTrigger>
-            <TabsTrigger value="types" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+            <TabsTrigger value="types" className="rounded-lg px-8 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-wide text-[10px]">
               {t('catalog.serviceTypes')}
             </TabsTrigger>
-            <TabsTrigger value="services" className="rounded-2xl px-8 py-2.5 data-[state=active]:bg-red-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-widest text-[10px]">
+            <TabsTrigger value="services" className="rounded-lg px-8 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-wide text-[10px]">
               {t('catalog.allServices')}
             </TabsTrigger>
           </TabsList>
@@ -203,7 +203,7 @@ function CatalogContent() {
 
         {/* Packages Tab */}
         <TabsContent value="packages">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredPackages.length === 0 ? (
               <div className="col-span-full">
                 <ClientEmptyState
@@ -220,45 +220,45 @@ function CatalogContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
                 >
-                  <ClientCard className="group h-full overflow-hidden border-none shadow-xl shadow-slate-200/50">
+                  <ClientCard className="group h-full overflow-hidden border-none shadow-sm shadow-slate-200/50">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                        <PackageIcon className="h-32 w-32 -mr-10 -mt-10 rotate-12" />
                     </div>
                     
                     <div className="flex flex-col h-full relative z-10">
                       <div className="mb-6 flex items-start justify-between">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-red-50 text-red-600 shadow-inner">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shadow-inner">
                           <PackageIcon className="h-8 w-8" />
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Prix Forfaitaire</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8] mb-1">Prix Forfaitaire</p>
                           <div className="flex items-baseline justify-end gap-1">
-                            <span className="text-4xl font-black text-slate-800 tracking-tighter">{pkg.prix.toFixed(3)}</span>
-                            <span className="text-xs font-bold text-slate-400 uppercase">TND</span>
+                            <span className="text-4xl font-bold text-[#050505] tracking-tighter">{pkg.prix.toFixed(3)}</span>
+                            <span className="text-xs font-bold text-[#B0B3B8] uppercase">TND</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex-1 space-y-4">
                         <div>
-                          <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-2">{pkg.nom}</h3>
-                          <p className="text-slate-500 font-medium leading-relaxed">{pkg.description}</p>
+                          <h3 className="text-2xl font-bold text-[#050505] tracking-tight leading-none mb-2">{pkg.nom}</h3>
+                          <p className="text-[#8A8D91] font-medium leading-relaxed">{pkg.description}</p>
                         </div>
 
                         <div className="flex flex-wrap gap-3">
-                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-wider">
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E4E6EB] text-[#65676B] text-[10px] font-bold uppercase tracking-wider">
                               <Wrench className="h-3.5 w-3.5" />
                               {pkg.nombre_interventions} Services
                            </span>
-                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
+                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">
                               <Tag className="h-3.5 w-3.5" />
                               Offre Spéciale
                            </span>
                         </div>
                       </div>
 
-                      <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-between">
-                         <div className="text-slate-400 text-xs font-bold">
+                      <div className="mt-8 pt-8 border-t border-[#E4E6EB] flex items-center justify-between">
+                         <div className="text-[#B0B3B8] text-xs font-bold">
                             TVA Incluse
                          </div>
                          <ClientButton 
@@ -288,19 +288,19 @@ function CatalogContent() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05 }}
               >
-                <ClientCard hover className="h-full border-slate-100/50">
+                <ClientCard hover className="h-full border-[#E4E6EB]/50">
                   <div className="flex items-start justify-between mb-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-red-50 group-hover:text-red-500 transition-colors">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#F0F2F5] text-[#B0B3B8] group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
                       <Wrench className="h-6 w-6" />
                     </div>
-                    <span className="px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    <span className="px-2 py-1 rounded-lg bg-[#E4E6EB] text-[10px] font-bold text-[#8A8D91] uppercase tracking-wide">
                        {type.nombre_sous_types} Services
                     </span>
                   </div>
                   
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">{type.nom}</h3>
+                  <h3 className="text-xl font-bold text-[#050505] mb-2">{type.nom}</h3>
                   
-                  <div className="mt-4 flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  <div className="mt-4 flex items-center gap-4 text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8]">
                     <span className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
                       {type.delai_moyen} Min
@@ -314,7 +314,7 @@ function CatalogContent() {
 
         {/* Services Tab */}
         <TabsContent value="services">
-          <ClientCard className="p-2 overflow-hidden border-slate-100 shadow-xl shadow-slate-200/40">
+          <ClientCard className="p-2 overflow-hidden border-[#E4E6EB] shadow-sm shadow-slate-200/40">
             <div className="divide-y divide-slate-50">
               {filteredSubTypes.map((subType, idx) => (
                 <motion.div
@@ -322,14 +322,14 @@ function CatalogContent() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors group"
+                  className="flex items-center justify-between p-5 hover:bg-[#F0F2F5]/50 transition-colors group"
                 >
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-red-600 transition-colors">{subType.nom}</h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{subType.type_nom}</p>
+                    <h3 className="text-sm font-bold text-[#050505] group-hover:text-blue-600 transition-colors">{subType.nom}</h3>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mt-1">{subType.type_nom}</p>
                   </div>
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#E4E6EB] text-[#8A8D91] text-[10px] font-bold uppercase tracking-wide">
                       <Clock className="h-3.5 w-3.5" />
                       {subType.duree_estimee} min
                     </div>
@@ -344,42 +344,42 @@ function CatalogContent() {
 
       {/* ─── Package Details Modal ─── */}
       <Dialog open={packageModalOpen} onOpenChange={setPackageModalOpen}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-lg border-none shadow-md">
           {selectedPackage && (
             <div className="relative">
                {/* Modal Header */}
-               <div className="bg-[#0b1221] p-10 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-red-600/20 blur-3xl" />
+               <div className="bg-white p-10 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
-                      <PackageIcon className="h-8 w-8 text-red-500" />
-                      <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Détails du Forfait</span>
+                      <PackageIcon className="h-8 w-8 text-blue-500" />
+                      <span className="text-xs font-bold uppercase tracking-wide text-[#B0B3B8]">Détails du Forfait</span>
                     </div>
-                    <h2 className="text-3xl font-black tracking-tight mb-2">{selectedPackage.package.nom}</h2>
-                    <p className="text-slate-400 font-medium leading-relaxed">{selectedPackage.package.description}</p>
+                    <h2 className="text-3xl font-bold tracking-tight mb-2">{selectedPackage.package.nom}</h2>
+                    <p className="text-[#B0B3B8] font-medium leading-relaxed">{selectedPackage.package.description}</p>
                   </div>
                </div>
 
                <div className="p-8 bg-white">
                   <div className="grid grid-cols-2 gap-6 mb-10">
-                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Prix Total</p>
+                     <div className="p-6 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB]">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8] mb-2">Prix Total</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-black text-slate-800">{selectedPackage.package.prix.toFixed(3)}</span>
-                          <span className="text-xs font-bold text-slate-400 uppercase">TND</span>
+                          <span className="text-3xl font-bold text-[#050505]">{selectedPackage.package.prix.toFixed(3)}</span>
+                          <span className="text-xs font-bold text-[#B0B3B8] uppercase">TND</span>
                         </div>
                      </div>
-                     <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Interventions</p>
+                     <div className="p-6 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB]">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8] mb-2">Interventions</p>
                         <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-black text-slate-800">{selectedPackage.interventions.length}</span>
-                          <span className="text-xs font-bold text-slate-400 uppercase">Incluses</span>
+                          <span className="text-3xl font-bold text-[#050505]">{selectedPackage.interventions.length}</span>
+                          <span className="text-xs font-bold text-[#B0B3B8] uppercase">Incluses</span>
                         </div>
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="px-1 text-xs font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-2">
+                    <h4 className="px-1 text-xs font-bold uppercase tracking-wide text-[#050505] flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-emerald-500" />
                       Services Inclus
                     </h4>
@@ -387,13 +387,13 @@ function CatalogContent() {
                       {selectedPackage.interventions.map((intervention) => (
                         <div
                           key={intervention.id}
-                          className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:border-red-100 group"
+                          className="flex items-center justify-between p-4 rounded-lg bg-[#F0F2F5]/50 border border-[#E4E6EB] transition-all hover:bg-white hover:border-blue-100 group"
                         >
                           <div>
-                            <p className="font-bold text-slate-800 text-sm group-hover:text-red-600 transition-colors">{intervention.nom}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{intervention.type_nom}</p>
+                            <p className="font-bold text-[#050505] text-sm group-hover:text-blue-600 transition-colors">{intervention.nom}</p>
+                            <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{intervention.type_nom}</p>
                           </div>
-                          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white shadow-sm text-slate-500 text-[10px] font-bold uppercase tracking-widest border border-slate-100">
+                          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white shadow-sm text-[#8A8D91] text-[10px] font-bold uppercase tracking-wide border border-[#E4E6EB]">
                             <Clock className="h-3 w-3" />
                             {intervention.duree_estimee} min
                           </div>
@@ -402,14 +402,14 @@ function CatalogContent() {
                     </div>
                   </div>
 
-                  <div className="mt-10 p-6 rounded-[2rem] bg-red-50/50 border border-red-100 text-center">
-                    <p className="text-sm font-bold text-red-600">
+                  <div className="mt-10 p-6 rounded-lg bg-blue-50/50 border border-blue-100 text-center">
+                    <p className="text-sm font-bold text-blue-600">
                       💡 {t('catalog.toBookPackage')}
                     </p>
                   </div>
                </div>
 
-               <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-4">
+               <div className="p-6 bg-[#F0F2F5] border-t border-[#E4E6EB] flex justify-end gap-4">
                   <ClientButton variant="secondary" onClick={() => setPackageModalOpen(false)}>
                     Fermer
                   </ClientButton>

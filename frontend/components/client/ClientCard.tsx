@@ -44,7 +44,7 @@ export function ClientCardHeader({ title, subtitle, action }: ClientCardHeaderPr
         <div>
           <h3 className={clientClasses.cardTitle}>{title}</h3>
           {subtitle && (
-            <p className="text-slate-500 text-sm mt-1 font-medium">{subtitle}</p>
+            <p className="text-[#8A8D91] text-sm mt-1 font-medium">{subtitle}</p>
           )}
         </div>
         {action && <div className="shrink-0">{action}</div>}

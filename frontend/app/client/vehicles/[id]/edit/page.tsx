@@ -271,11 +271,11 @@ export default function EditVehiclePage() {
       <ClientPageWrapper className="flex items-center justify-center min-h-[70vh]">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
           <ClientCard className="max-w-md w-full text-center p-12">
-            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-600/20">
+            <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-md shadow-blue-600/20">
                <CheckCircle className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-3xl font-black text-slate-800 mb-4">Modifications Enregistrées</h2>
-            <p className="text-slate-500 font-medium mb-8">
+            <h2 className="text-3xl font-bold text-[#050505] mb-4">Modifications Enregistrées</h2>
+            <p className="text-[#8A8D91] font-medium mb-8">
               Les informations de votre véhicule ont été mises à jour avec succès.
             </p>
             <ClientButton variant="primary" fullWidth onClick={() => router.push('/client/vehicles')}>
@@ -293,11 +293,11 @@ export default function EditVehiclePage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-2xl text-center md:text-left">
             <div className="mb-6 flex flex-wrap items-center justify-center md:justify-start gap-4">
               <button 
@@ -306,103 +306,103 @@ export default function EditVehiclePage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
                 <Settings className="h-3.5 w-3.5" />
                 Configuration Véhicule
               </div>
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
               Modifier <span className="text-blue-500">Véhicule</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Mettez à jour les informations de votre {form.marque} {form.modele}. Toute modification de document entraînera une nouvelle vérification.
             </p>
           </div>
         </div>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-8">
           <ClientCard className="p-10 space-y-10">
             <div className="flex items-center gap-4">
-               <div className="h-12 w-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+               <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
                   <RefreshCcw className="h-6 w-6 text-blue-600" />
                </div>
                <div>
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Données Actuelles</h2>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ajustez vos paramètres</p>
+                  <h2 className="text-2xl font-bold text-[#050505] tracking-tight">Données Actuelles</h2>
+                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Ajustez vos paramètres</p>
                </div>
             </div>
 
             <div className="space-y-4">
-               <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Type d'immatriculation *</label>
+               <label className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">Type d'immatriculation *</label>
                <div className="grid grid-cols-2 gap-4">
                   {['TUNIS', 'NT'].map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setPlateType(type as PlateType)}
-                      className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 ${
+                      className={`p-6 rounded-lg border-2 transition-all flex flex-col items-center gap-3 ${
                         plateType === type 
-                          ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-xl shadow-blue-500/10' 
-                          : 'border-slate-100 bg-slate-50 text-slate-400'
+                          ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm shadow-blue-500/10' 
+                          : 'border-[#E4E6EB] bg-[#F0F2F5] text-[#B0B3B8]'
                       }`}
                     >
                       <Zap className="h-6 w-6" />
-                      <span className="text-xs font-black uppercase tracking-widest">{type === 'TUNIS' ? 'Tunisie' : 'N.T'}</span>
+                      <span className="text-xs font-bold uppercase tracking-wide">{type === 'TUNIS' ? 'Tunisie' : 'N.T'}</span>
                     </button>
                   ))}
                </div>
 
-               <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl relative overflow-hidden group">
+               <div className="p-8 rounded-lg bg-white text-white shadow-md relative overflow-hidden group">
                   <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
                   <div className="relative z-10 flex items-center justify-center gap-6">
                     {plateType === 'TUNIS' ? (
                       <>
-                        <input value={tunisPlate.part1} onChange={(e) => setTunisPlate(p => ({ ...p, part1: e.target.value }))} className="bg-white/10 border-2 border-white/20 rounded-2xl w-24 p-5 text-2xl font-black text-center focus:border-blue-500 outline-none transition-all" />
-                        <span className="text-3xl font-black opacity-40">تونس</span>
-                        <input value={tunisPlate.part2} onChange={(e) => setTunisPlate(p => ({ ...p, part2: e.target.value }))} className="bg-white/10 border-2 border-white/20 rounded-2xl w-32 p-5 text-2xl font-black text-center focus:border-blue-500 outline-none transition-all" />
+                        <input value={tunisPlate.part1} onChange={(e) => setTunisPlate(p => ({ ...p, part1: e.target.value }))} className="bg-white/10 border-2 border-white/20 rounded-lg w-24 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all" />
+                        <span className="text-3xl font-bold opacity-40">تونس</span>
+                        <input value={tunisPlate.part2} onChange={(e) => setTunisPlate(p => ({ ...p, part2: e.target.value }))} className="bg-white/10 border-2 border-white/20 rounded-lg w-32 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all" />
                       </>
                     ) : (
                       <>
-                        <input value={ntPlate} onChange={(e) => setNtPlate(e.target.value)} className="bg-white/10 border-2 border-white/20 rounded-2xl w-48 p-5 text-2xl font-black text-center focus:border-blue-500 outline-none transition-all" />
-                        <span className="text-3xl font-black opacity-40">ن.ت</span>
+                        <input value={ntPlate} onChange={(e) => setNtPlate(e.target.value)} className="bg-white/10 border-2 border-white/20 rounded-lg w-48 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all" />
+                        <span className="text-3xl font-bold opacity-40">ن.ت</span>
                       </>
                     )}
                   </div>
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Numéro de Châssis *</label>
-                  <input name="numero_chassis" value={form.numero_chassis} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:border-blue-500 outline-none" />
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Numéro de Châssis *</label>
+                  <input name="numero_chassis" value={form.numero_chassis} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:border-blue-500 outline-none" />
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Année *</label>
-                  <input name="annee" type="number" value={form.annee} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold focus:border-blue-500 outline-none" />
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Année *</label>
+                  <input name="annee" type="number" value={form.annee} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:border-blue-500 outline-none" />
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Marque *</label>
-                  <select name="marque" value={form.marque} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold appearance-none">
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Marque *</label>
+                  <select name="marque" value={form.marque} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold appearance-none">
                     {marques.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modèle *</label>
-                  <select name="modele" value={form.modele} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold appearance-none">
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Modèle *</label>
+                  <select name="modele" value={form.modele} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold appearance-none">
                     {modeles.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                </div>
                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version *</label>
-                  <select name="version_id" value={form.version_id} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold appearance-none">
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Version *</label>
+                  <select name="version_id" value={form.version_id} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold appearance-none">
                     {versions.map(v => <option key={v.id} value={v.id}>{v.version_nom}</option>)}
                   </select>
                </div>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Couleur *</label>
-                  <select name="couleur" value={form.couleur} onChange={handleChange} className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm font-bold appearance-none">
+                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Couleur *</label>
+                  <select name="couleur" value={form.couleur} onChange={handleChange} className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold appearance-none">
                     {colors.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
                   </select>
                </div>
@@ -416,39 +416,39 @@ export default function EditVehiclePage() {
                  <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
                     <Camera className="h-5 w-5 text-blue-600" />
                  </div>
-                 <h3 className="text-xl font-black text-slate-800 tracking-tight">Documents</h3>
+                 <h3 className="text-xl font-bold text-[#050505] tracking-tight">Documents</h3>
               </div>
 
               {/* Photo Carte Grise */}
               <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Carte Grise *</label>
+                 <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Carte Grise *</label>
                  <div className="relative group">
                     {previewCarteGrise ? (
-                      <div className="relative rounded-[2rem] overflow-hidden aspect-video border-2 border-blue-100">
+                      <div className="relative rounded-lg overflow-hidden aspect-video border-2 border-blue-100">
                         <img src={previewCarteGrise} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <button type="button" onClick={() => removeImage('carte_grise')} className="p-3 bg-red-600 text-white rounded-full"><X className="h-5 w-5" /></button>
+                           <button type="button" onClick={() => removeImage('carte_grise')} className="p-3 bg-blue-600 text-white rounded-full"><X className="h-5 w-5" /></button>
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer"><Plus /><input type="file" onChange={(e) => handleImageChange(e, 'carte_grise')} className="hidden" /></label>
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-[#E4E6EB] bg-[#F0F2F5] cursor-pointer"><Plus /><input type="file" onChange={(e) => handleImageChange(e, 'carte_grise')} className="hidden" /></label>
                     )}
                  </div>
               </div>
 
               {/* Photo Vehicule */}
               <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Photo du Véhicule</label>
+                 <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Photo du Véhicule</label>
                  <div className="relative group">
                     {previewVehicule ? (
-                      <div className="relative rounded-[2rem] overflow-hidden aspect-video border-2 border-blue-100">
+                      <div className="relative rounded-lg overflow-hidden aspect-video border-2 border-blue-100">
                         <img src={previewVehicule} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <button type="button" onClick={() => removeImage('vehicule')} className="p-3 bg-red-600 text-white rounded-full"><X className="h-5 w-5" /></button>
+                           <button type="button" onClick={() => removeImage('vehicule')} className="p-3 bg-blue-600 text-white rounded-full"><X className="h-5 w-5" /></button>
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-slate-200 bg-slate-50 cursor-pointer"><Plus /><input type="file" onChange={(e) => handleImageChange(e, 'vehicule')} className="hidden" /></label>
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-[#E4E6EB] bg-[#F0F2F5] cursor-pointer"><Plus /><input type="file" onChange={(e) => handleImageChange(e, 'vehicule')} className="hidden" /></label>
                     )}
                  </div>
               </div>

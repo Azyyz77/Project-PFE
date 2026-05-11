@@ -44,7 +44,7 @@ export default function FileUploadDemoPage() {
         </div>
 
         {/* Demo Selector */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-[#F0F2F5] border-slate-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center space-x-2">
               <Upload className="w-5 h-5" />
@@ -86,7 +86,7 @@ export default function FileUploadDemoPage() {
         {/* Demo Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Demo */}
-          <Card className="bg-slate-800 border-slate-700">
+          <Card className="bg-[#F0F2F5] border-slate-700">
             <CardHeader>
               <CardTitle className="text-white">
                 {selectedDemo === 'basic' && 'Upload Basique'}
@@ -154,7 +154,7 @@ export default function FileUploadDemoPage() {
           </Card>
 
           {/* Right Column - Info */}
-          <Card className="bg-slate-800 border-slate-700">
+          <Card className="bg-[#F0F2F5] border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center space-x-2">
                 <Users className="w-5 h-5" />
@@ -194,7 +194,7 @@ export default function FileUploadDemoPage() {
 
               <div>
                 <h3 className="font-semibold text-white mb-2">API Endpoints:</h3>
-                <div className="text-xs space-y-1 font-mono bg-slate-900 p-3 rounded">
+                <div className="text-xs space-y-1 font-mono bg-white p-3 rounded">
                   <div>POST /api/attachments/upload</div>
                   <div>GET /api/attachments/:type/:id</div>
                   <div>DELETE /api/attachments/:id</div>
@@ -213,7 +213,7 @@ export default function FileUploadDemoPage() {
         </div>
 
         {/* Usage Examples */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-[#F0F2F5] border-slate-700">
           <CardHeader>
             <CardTitle className="text-white">Exemples d&apos;intégration</CardTitle>
           </CardHeader>
@@ -226,7 +226,7 @@ export default function FileUploadDemoPage() {
               </TabsList>
               
               <TabsContent value="basic" className="space-y-4">
-                <pre className="bg-slate-900 p-4 rounded text-sm text-slate-300 overflow-x-auto">
+                <pre className="bg-white p-4 rounded text-sm text-slate-300 overflow-x-auto">
 {`import FileUpload from '@/components/FileUpload';
 
 <FileUpload
@@ -239,7 +239,7 @@ export default function FileUploadDemoPage() {
               </TabsContent>
               
               <TabsContent value="appointment" className="space-y-4">
-                <pre className="bg-slate-900 p-4 rounded text-sm text-slate-300 overflow-x-auto">
+                <pre className="bg-white p-4 rounded text-sm text-slate-300 overflow-x-auto">
 {`import AppointmentAttachments from '@/components/client/AppointmentAttachments';
 
 <AppointmentAttachments 
@@ -250,7 +250,7 @@ export default function FileUploadDemoPage() {
               </TabsContent>
               
               <TabsContent value="complaint" className="space-y-4">
-                <pre className="bg-slate-900 p-4 rounded text-sm text-slate-300 overflow-x-auto">
+                <pre className="bg-white p-4 rounded text-sm text-slate-300 overflow-x-auto">
 {`import { ComplaintAttachments } from '@/components/examples/FileUploadExample';
 
 <ComplaintAttachments complaintId={complaintId} />`}

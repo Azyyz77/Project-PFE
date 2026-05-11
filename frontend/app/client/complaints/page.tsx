@@ -193,7 +193,7 @@ export default function ComplaintsPage() {
       CLOTUREE: {
         label: t('complaints.closed'),
         icon: <XCircle className="w-3.5 h-3.5" />,
-        className: 'bg-slate-50 text-slate-500 border-slate-100',
+        className: 'bg-[#F0F2F5] text-[#8A8D91] border-[#E4E6EB]',
       },
     };
 
@@ -210,21 +210,21 @@ export default function ComplaintsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <Sparkles className="h-3.5 w-3.5" />
               Service Client
             </div>
-            <h1 className="mb-4 text-4xl sm:text-5xl font-black tracking-tight leading-none">
-              Vos <span className="text-red-500">Réclamations</span>
+            <h1 className="mb-4 text-4xl sm:text-3xl font-bold tracking-tight leading-none">
+              Vos <span className="text-blue-500">Réclamations</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Nous sommes à votre écoute. Exprimez vos préoccupations et suivez le traitement de vos demandes en temps réel.
             </p>
           </div>
@@ -292,39 +292,39 @@ export default function ComplaintsPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <ClientCard className="overflow-hidden border-none shadow-xl shadow-slate-200/40">
-                    <div className="flex flex-col md:flex-row gap-8">
+                  <ClientCard className="overflow-hidden border-none shadow-sm shadow-slate-200/40">
+                    <div className="flex flex-col md:flex-row gap-4">
                       {/* Left Side: Info */}
                       <div className="flex-1 space-y-6">
                         <div className="flex items-start justify-between">
                           <div>
                             <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none">
+                              <h3 className="text-xl font-bold text-[#050505] tracking-tight leading-none">
                                 {complaint.sujet}
                               </h3>
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusInfo.className}`}>
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide ${statusInfo.className}`}>
                                 {statusInfo.icon}
                                 {statusInfo.label}
                               </span>
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">
                               {t('complaints.createdOn')} {createdDate} • ID: #{complaint.id}
                             </p>
                           </div>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 p-6 border border-slate-100">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2">
+                        <div className="rounded-lg bg-[#F0F2F5] p-6 border border-[#E4E6EB]">
+                          <h4 className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] mb-3 flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5" />
                             Description du problème
                           </h4>
-                          <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-wrap">
+                          <p className="text-[#65676B] font-medium leading-relaxed whitespace-pre-wrap">
                             {complaint.description}
                           </p>
                         </div>
 
                         {/* Attachments */}
-                        <div className="pt-4 border-t border-slate-100">
+                        <div className="pt-4 border-t border-[#E4E6EB]">
                           <ComplaintAttachments complaintId={complaint.id} />
                         </div>
                       </div>
@@ -335,9 +335,9 @@ export default function ComplaintsPage() {
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="h-full rounded-[2rem] bg-emerald-50/50 p-6 border border-emerald-100 flex flex-col"
+                            className="h-full rounded-lg bg-emerald-50/50 p-6 border border-emerald-100 flex flex-col"
                           >
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-4 flex items-center gap-2">
+                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 mb-4 flex items-center gap-2">
                               <MessageCircle className="h-4 w-4" />
                               Réponse Officielle
                             </h4>
@@ -346,7 +346,7 @@ export default function ComplaintsPage() {
                             </p>
                             {complaint.date_resolution && (
                               <div className="mt-6 pt-4 border-t border-emerald-100/50">
-                                <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">
+                                <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-wide">
                                   Résolu le {new Date(complaint.date_resolution).toLocaleDateString('fr-FR')}
                                 </p>
                               </div>
@@ -365,16 +365,16 @@ export default function ComplaintsPage() {
 
       {/* ─── New Complaint Dialog ─── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-[2.5rem] border-none shadow-2xl">
-          <div className="bg-[#0b1221] p-10 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-red-600/20 blur-3xl" />
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-lg border-none shadow-md">
+          <div className="bg-white p-10 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
-                <Plus className="h-8 w-8 text-red-500" />
-                <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Nouvelle Demande</span>
+                <Plus className="h-8 w-8 text-blue-500" />
+                <span className="text-xs font-bold uppercase tracking-wide text-[#B0B3B8]">Nouvelle Demande</span>
               </div>
-              <h2 className="text-3xl font-black tracking-tight mb-2">{t('complaints.createComplaint')}</h2>
-              <p className="text-slate-400 font-medium leading-relaxed">
+              <h2 className="text-3xl font-bold tracking-tight mb-2">{t('complaints.createComplaint')}</h2>
+              <p className="text-[#B0B3B8] font-medium leading-relaxed">
                 Remplissez le formulaire ci-dessous pour nous faire part de votre problème.
               </p>
             </div>
@@ -382,7 +382,7 @@ export default function ComplaintsPage() {
 
           <div className="p-10 bg-white">
             {apiError && (
-              <Alert className="mb-6 bg-red-50 border-red-100 text-red-600 rounded-2xl">
+              <Alert className="mb-6 bg-blue-50 border-blue-100 text-blue-600 rounded-lg">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="font-bold">{apiError}</AlertDescription>
               </Alert>
@@ -390,8 +390,8 @@ export default function ComplaintsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="sujet" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">
-                  {t('complaints.subject')} <span className="text-red-500">*</span>
+                <Label htmlFor="sujet" className="text-xs font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                  {t('complaints.subject')} <span className="text-blue-500">*</span>
                 </Label>
                 <Input
                   id="sujet"
@@ -400,14 +400,14 @@ export default function ComplaintsPage() {
                   onChange={handleChange}
                   placeholder="Ex: Problème technique, Retard..."
                   disabled={isSubmitting}
-                  className={`rounded-2xl bg-slate-50 border-slate-100 py-6 px-5 font-medium transition-all focus:bg-white focus:ring-4 focus:ring-red-500/10 ${errors.sujet ? 'border-red-500 ring-4 ring-red-500/10' : ''}`}
+                  className={`rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium transition-all focus:bg-white focus:ring-4 focus:ring-blue-500/10 ${errors.sujet ? 'border-blue-500 ring-4 ring-blue-500/10' : ''}`}
                 />
                 <AnimatePresence>
                   {errors.sujet && (
                     <motion.p 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-[10px] font-bold text-red-500 ml-1"
+                      className="text-[10px] font-bold text-blue-500 ml-1"
                     >
                       {errors.sujet}
                     </motion.p>
@@ -416,8 +416,8 @@ export default function ComplaintsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">
-                  {t('complaints.description')} <span className="text-red-500">*</span>
+                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                  {t('complaints.description')} <span className="text-blue-500">*</span>
                 </Label>
                 <Textarea
                   id="description"
@@ -427,14 +427,14 @@ export default function ComplaintsPage() {
                   placeholder="Décrivez votre problème avec le plus de précision possible..."
                   rows={5}
                   disabled={isSubmitting}
-                  className={`rounded-3xl bg-slate-50 border-slate-100 p-5 font-medium transition-all focus:bg-white focus:ring-4 focus:ring-red-500/10 ${errors.description ? 'border-red-500 ring-4 ring-red-500/10' : ''}`}
+                  className={`rounded-lg bg-[#F0F2F5] border-[#E4E6EB] p-5 font-medium transition-all focus:bg-white focus:ring-4 focus:ring-blue-500/10 ${errors.description ? 'border-blue-500 ring-4 ring-blue-500/10' : ''}`}
                 />
                 <AnimatePresence>
                   {errors.description && (
                     <motion.p 
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="text-[10px] font-bold text-red-500 ml-1"
+                      className="text-[10px] font-bold text-blue-500 ml-1"
                     >
                       {errors.description}
                     </motion.p>

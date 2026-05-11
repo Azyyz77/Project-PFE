@@ -137,39 +137,39 @@ export default function InformationsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <BookOpen className="h-3.5 w-3.5" />
               Centre de Connaissances Chery
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Informations <span className="text-red-500">Utiles</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
+              Informations <span className="text-blue-500">Utiles</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Tout ce que vous devez savoir sur votre véhicule, nos services, la garantie et l'assistance technique.
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-lg bg-white/5 border border-white/10 backdrop-blur-xl">
              <div className="text-center">
                 <Sparkles className="h-10 w-10 text-blue-400 mx-auto mb-2" />
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aide & Guide</p>
+                <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Aide & Guide</p>
              </div>
           </div>
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* ─── Sidebar - Sections ─── */}
         <div className="lg:col-span-1 space-y-6">
           <div className="px-4">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Catégories</h3>
+            <h3 className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide mb-4">Catégories</h3>
           </div>
           <div className="grid gap-2">
             {sections.map((section, idx) => {
@@ -185,12 +185,12 @@ export default function InformationsPage() {
                   onClick={() => setSelectedSection(section)}
                   className={`group relative flex items-center gap-4 p-4 rounded-[1.5rem] transition-all duration-300 text-left border-none ${
                     isSelected
-                      ? 'bg-red-600 text-white shadow-xl shadow-red-500/20 translate-x-2'
-                      : 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm hover:shadow-md'
+                      ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 translate-x-2'
+                      : 'bg-white text-[#65676B] hover:bg-[#F0F2F5] shadow-sm hover:shadow-md'
                   }`}
                 >
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-                    isSelected ? 'bg-white/20' : 'bg-slate-100 group-hover:bg-slate-200'
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                    isSelected ? 'bg-white/20' : 'bg-[#E4E6EB] group-hover:bg-slate-200'
                   }`}>
                     <Icon className="h-5 w-5" />
                   </div>
@@ -201,10 +201,10 @@ export default function InformationsPage() {
             })}
           </div>
 
-          <div className="p-6 rounded-[2rem] bg-blue-50 border border-blue-100 mt-8">
+          <div className="p-6 rounded-lg bg-blue-50 border border-blue-100 mt-8">
              <Phone className="h-6 w-6 text-blue-600 mb-3" />
-             <h4 className="font-black text-slate-800 text-sm mb-1 uppercase tracking-tight">Besoin d'aide ?</h4>
-             <p className="text-xs text-slate-500 font-medium mb-4 leading-relaxed">Notre équipe technique est disponible 24/7 pour vous accompagner.</p>
+             <h4 className="font-bold text-[#050505] text-sm mb-1 uppercase tracking-tight">Besoin d'aide ?</h4>
+             <p className="text-xs text-[#8A8D91] font-medium mb-4 leading-relaxed">Notre équipe technique est disponible 24/7 pour vous accompagner.</p>
              <ClientButton variant="primary" className="w-full text-xs py-2 h-auto" onClick={() => router.push('/client/assistance')}>
                 Contacter l'assistance
              </ClientButton>
@@ -223,7 +223,7 @@ export default function InformationsPage() {
                 className="grid gap-6"
               >
                 {[1, 2].map(i => (
-                  <div key={i} className="h-64 rounded-[2.5rem] bg-white animate-pulse" />
+                  <div key={i} className="h-64 rounded-lg bg-white animate-pulse" />
                 ))}
               </motion.div>
             ) : (
@@ -237,15 +237,15 @@ export default function InformationsPage() {
                 {selectedSection && (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4">
                     <div>
-                       <h2 className="text-3xl font-black text-slate-800 tracking-tight">{selectedSection.titre}</h2>
-                       <p className="text-slate-400 text-sm font-medium mt-1">
+                       <h2 className="text-3xl font-bold text-[#050505] tracking-tight">{selectedSection.titre}</h2>
+                       <p className="text-[#B0B3B8] text-sm font-medium mt-1">
                           {contents.length} Article{contents.length > 1 ? 's' : ''} • {documents.length} Document{documents.length > 1 ? 's' : ''}
                        </p>
                     </div>
-                    <div className="h-px flex-1 bg-slate-100 hidden sm:block mx-8" />
+                    <div className="h-px flex-1 bg-[#E4E6EB] hidden sm:block mx-8" />
                     <div className="flex items-center gap-2">
                        <Zap className="h-4 w-4 text-amber-500" />
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mis à jour</span>
+                       <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Mis à jour</span>
                     </div>
                   </div>
                 )}
@@ -260,12 +260,12 @@ export default function InformationsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                       >
-                        <ClientCard className="p-8 sm:p-10 border-none shadow-xl shadow-slate-100 group">
-                          <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-6 group-hover:text-red-600 transition-colors">
+                        <ClientCard className="p-8 sm:p-10 border-none shadow-sm group">
+                          <h3 className="text-2xl font-bold text-[#050505] tracking-tight mb-6 group-hover:text-blue-600 transition-colors">
                             {content.titre}
                           </h3>
                           <div
-                            className="prose prose-slate max-w-none prose-p:text-slate-500 prose-p:leading-relaxed prose-headings:text-slate-800 prose-strong:text-slate-800"
+                            className="prose prose-slate max-w-none prose-p:text-[#8A8D91] prose-p:leading-relaxed prose-headings:text-[#050505] prose-strong:text-[#050505]"
                             dangerouslySetInnerHTML={{ __html: content.contenu }}
                           />
                         </ClientCard>
@@ -277,7 +277,7 @@ export default function InformationsPage() {
                         icon={Info}
                         title="Aucun contenu"
                         description="Cette section ne contient pas encore d'articles."
-                        className="bg-white border-none shadow-xl shadow-slate-100"
+                        className="bg-white border-none shadow-sm"
                       />
                     )
                   )}
@@ -287,7 +287,7 @@ export default function InformationsPage() {
                 {documents.length > 0 && (
                   <div className="space-y-6">
                     <div className="px-4">
-                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Documents téléchargeables</h3>
+                       <h3 className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">Documents téléchargeables</h3>
                     </div>
                     <div className="grid gap-4">
                       {documents.map((doc, idx) => (
@@ -297,32 +297,32 @@ export default function InformationsPage() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.05 }}
                         >
-                          <ClientCard className="p-6 border-none shadow-lg shadow-slate-100 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 group">
+                          <ClientCard className="p-6 border-none shadow-lg shadow-slate-100 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 group">
                             <div className="flex flex-col sm:flex-row items-center gap-6">
-                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] bg-slate-50 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
+                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] bg-[#F0F2F5] text-[#B0B3B8] group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner">
                                 <FileIcon className="h-8 w-8" />
                               </div>
                               <div className="flex-1 text-center sm:text-left min-w-0">
-                                <h4 className="font-black text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors">
+                                <h4 className="font-bold text-[#050505] text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors">
                                   {doc.titre}
                                 </h4>
                                 {doc.description && (
-                                  <p className="text-sm text-slate-400 font-medium mt-1 line-clamp-1">
+                                  <p className="text-sm text-[#B0B3B8] font-medium mt-1 line-clamp-1">
                                     {doc.description}
                                   </p>
                                 )}
                                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3">
-                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                                      <History className="h-3 w-3" />
                                      {doc.nom_fichier?.split('.').pop()?.toUpperCase()}
                                   </span>
                                   <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
                                      <Zap className="h-3 w-3" />
                                      {doc.taille_octets ? formatFileSize(doc.taille_octets) : 'N/A'}
                                   </span>
                                   <span className="h-1 w-1 rounded-full bg-slate-200" />
-                                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5 text-blue-500/60">
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5 text-blue-500/60">
                                      <Download className="h-3 w-3" />
                                      {doc.nombre_telechargements} Téléchargements
                                   </span>
@@ -332,7 +332,7 @@ export default function InformationsPage() {
                                 variant="secondary"
                                 onClick={() => handleDownload(doc)}
                                 icon={Download}
-                                className="w-full sm:w-auto rounded-2xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
+                                className="w-full sm:w-auto rounded-lg group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
                               >
                                 {t('documents.download')}
                               </ClientButton>

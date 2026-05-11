@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
   EMISE: 'bg-blue-500',
   ENVOYEE: 'bg-purple-500',
   PAYEE: 'bg-green-500',
-  ANNULEE: 'bg-red-500',
+  ANNULEE: 'bg-blue-500',
 };
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
@@ -83,7 +83,7 @@ export default function ClientInvoiceDetailsPage() {
   if (isLoading || !user || !token) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
+        <div className="text-[#B0B3B8]">Chargement...</div>
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function ClientInvoiceDetailsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement de la facture...</div>
+        <div className="text-[#B0B3B8]">Chargement de la facture...</div>
       </div>
     );
   }
@@ -100,11 +100,11 @@ export default function ClientInvoiceDetailsPage() {
     return (
       <div className="min-h-screen bg-slate-950 p-6">
         <div className="max-w-7xl mx-auto">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-white border-slate-800">
             <CardContent className="p-6">
               <div className="text-center">
-                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-400">{error || 'Facture non trouvée'}</p>
+                <AlertCircle className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                <p className="text-blue-400">{error || 'Facture non trouvée'}</p>
                 <Button
                   onClick={() => router.back()}
                   className="mt-4"
@@ -141,7 +141,7 @@ export default function ClientInvoiceDetailsPage() {
                   {STATUS_LABELS[facture.statut]}
                 </span>
               </h1>
-              <p className="text-slate-400 mt-1">
+              <p className="text-[#B0B3B8] mt-1">
                 Commande: {facture.commande_numero}
               </p>
             </div>
@@ -176,9 +176,9 @@ export default function ClientInvoiceDetailsPage() {
           <Card className="bg-red-900/20 border-red-800">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <AlertCircle className="w-6 h-6 text-red-500" />
+                <AlertCircle className="w-6 h-6 text-blue-500" />
                 <div>
-                  <p className="text-red-400 font-semibold">Facture annulée</p>
+                  <p className="text-blue-400 font-semibold">Facture annulée</p>
                   {facture.notes && (
                     <p className="text-red-300 text-sm">{facture.notes}</p>
                   )}
@@ -203,7 +203,7 @@ export default function ClientInvoiceDetailsPage() {
         )}
 
         {/* Montant */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">Montant à payer</CardTitle>
           </CardHeader>
@@ -212,13 +212,13 @@ export default function ClientInvoiceDetailsPage() {
               <p className="text-4xl font-bold text-white">
                 {facture.montant_ttc.toFixed(2)} TND
               </p>
-              <p className="text-slate-400 mt-2">TTC</p>
+              <p className="text-[#B0B3B8] mt-2">TTC</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Détails */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">Détails de la facture</CardTitle>
           </CardHeader>
@@ -226,17 +226,17 @@ export default function ClientInvoiceDetailsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-400">Date d'émission</p>
+                  <p className="text-[#B0B3B8]">Date d'émission</p>
                   <p className="text-white font-medium">
                     {new Date(facture.date_emission).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Véhicule</p>
+                  <p className="text-[#B0B3B8]">Véhicule</p>
                   <p className="text-white font-medium">
                     {facture.vehicule_immatriculation}
                   </p>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-[#B0B3B8] text-xs">
                     {facture.vehicule_marque} {facture.vehicule_modele}
                   </p>
                 </div>
@@ -246,13 +246,13 @@ export default function ClientInvoiceDetailsPage() {
         </Card>
 
         {/* Lignes */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-slate-800">
           <CardHeader>
             <CardTitle className="text-white">Détail des prestations</CardTitle>
           </CardHeader>
           <CardContent>
             {!facture.lignes || facture.lignes.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-[#B0B3B8]">
                 Aucune ligne
               </div>
             ) : (
@@ -260,11 +260,11 @@ export default function ClientInvoiceDetailsPage() {
                 {facture.lignes.map((ligne) => (
                   <div
                     key={ligne.id}
-                    className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-[#F0F2F5] rounded-lg"
                   >
                     <div className="flex-1">
                       <p className="text-white font-medium">{ligne.description}</p>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-[#B0B3B8] text-sm">
                         {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)} TND
                       </p>
                     </div>
@@ -281,17 +281,17 @@ export default function ClientInvoiceDetailsPage() {
         </Card>
 
         {/* Agence */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-slate-800">
           <CardHeader>
             <CardTitle className="text-white text-sm">Agence</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-white font-semibold">{facture.agence_nom}</p>
             {facture.agence_adresse && (
-              <p className="text-slate-400 text-sm">{facture.agence_adresse}</p>
+              <p className="text-[#B0B3B8] text-sm">{facture.agence_adresse}</p>
             )}
             {facture.agence_telephone && (
-              <p className="text-slate-400 text-sm">Tél: {facture.agence_telephone}</p>
+              <p className="text-[#B0B3B8] text-sm">Tél: {facture.agence_telephone}</p>
             )}
           </CardContent>
         </Card>

@@ -1,13 +1,14 @@
 -- ================================================================
--- Script SIMPLIFIÉ: Ajouter des Données de Test pour les Graphiques Direction
--- Description: Version simplifiée sans réclamations
+-- Script: Ajouter des Données de Test pour les Statistiques Direction (CORRIGÉ)
+-- Description: Remplit les tables avec des données réalistes pour tester les graphiques
 -- Date: 11 mai 2026
+-- Version: 2.0 (Corrigée)
 -- ================================================================
 
 USE STA_SAV_DB;
 GO
 
-PRINT '🚀 Début de l''ajout des données de test (version simplifiée)...';
+PRINT '🚀 Début de l''ajout des données de test (version corrigée)...';
 PRINT '';
 
 -- ================================================================
@@ -41,7 +42,7 @@ DECLARE rdv_cursor CURSOR FOR
 SELECT TOP 100 id, date_heure
 FROM RendezVous 
 WHERE statut = 'TERMINE' 
-  AND id NOT IN (SELECT rendez_vous_id FROM Feedback WHERE rendez_vous_id IS NOT NULL)
+  AND id NOT IN (SELECT appointment_id FROM Feedback WHERE appointment_id IS NOT NULL)
 ORDER BY NEWID();
 
 OPEN rdv_cursor;
@@ -89,9 +90,9 @@ BEGIN
         END
     END;
     
-    -- Insérer le feedback (avec rendez_vous_id au lieu de appointment_id)
+    -- Insérer le feedback (SANS client_id car la colonne n'existe pas)
     INSERT INTO Feedback (
-        rendez_vous_id,
+        appointment_id,
         note,
         commentaire,
         date_feedback
@@ -188,9 +189,123 @@ END
 PRINT '';
 
 -- ================================================================
--- ÉTAPE 4: Vérification finale
+-- ÉTAPE 4: Créer quelques réclamations pour tester (OPTIONNEL)
 -- ================================================================
-PRINT '🔍 ÉTAPE 4: Vérification des données...';
+PRINT '📢 ÉTAPE 4: Création de réclamations de test (optionnel)...';
+
+-- Vérifier d'abord si la table Reclamation existe et sa structure
+IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Reclamation')
+BEGIN
+    -- Vérifier si la colonne 'type' existe
+    IF EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Reclamation' AND COLUMN_NAME = 'type')
+    BEGIN
+        DECLARE @existing_complaints INT;
+        SELECT @existing_complaints = COUNT(*) FROM Reclamation;
+
+        IF @existing_complaints < 10
+        BEGIN
+            DECLARE @rdv_for_complaint BIGINT;
+            DECLARE @complaint_count INT = 0;
+            DECLARE @max_complaints INT = 15;
+
+            DECLARE complaint_cursor CURSOR FOR
+            SELECT TOP 15 r.id
+            FROM RendezVous r
+            LEFT JOIN Reclamation rec ON rec.appointment_id = r.id
+            WHERE r.statut IN ('TERMINE', 'ANNULE')
+              AND rec.id IS NULL
+            ORDER BY NEWID();
+
+            OPEN complaint_cursor;
+            FETCH NEXT FROM complaint_cursor INTO @rdv_for_complaint;
+
+            WHILE @@FETCH_STATUS = 0 AND @complaint_count < @max_complaints
+            BEGIN
+                DECLARE @complaint_type NVARCHAR(50);
+                DECLARE @complaint_desc NVARCHAR(MAX);
+                DECLARE @complaint_status NVARCHAR(20);
+                DECLARE @rand_complaint FLOAT = RAND(CHECKSUM(NEWID()));
+
+                -- Type de réclamation
+                IF @rand_complaint < 0.3
+                    SET @complaint_type = 'DELAI';
+                ELSE IF @rand_complaint < 0.5
+                    SET @complaint_type = 'QUALITE';
+                ELSE IF @rand_complaint < 0.7
+                    SET @complaint_type = 'PRIX';
+                ELSE
+                    SET @complaint_type = 'AUTRE';
+
+                -- Description selon le type
+                SET @complaint_desc = CASE @complaint_type
+                    WHEN 'DELAI' THEN 'Délai d''attente trop long, rendez-vous non respecté.'
+                    WHEN 'QUALITE' THEN 'Qualité du service insatisfaisante, problème non résolu.'
+                    WHEN 'PRIX' THEN 'Facturation incorrecte, prix plus élevé que prévu.'
+                    ELSE 'Problème de communication avec l''agent.'
+                END;
+
+                -- Statut (70% résolues, 20% en cours, 10% nouvelles)
+                IF @rand_complaint < 0.7
+                    SET @complaint_status = 'RESOLU';
+                ELSE IF @rand_complaint < 0.9
+                    SET @complaint_status = 'EN_COURS';
+                ELSE
+                    SET @complaint_status = 'NOUVEAU';
+
+                -- Insérer la réclamation
+                INSERT INTO Reclamation (
+                    numero,
+                    appointment_id,
+                    type,
+                    description,
+                    statut,
+                    date_soumission,
+                    date_cloture
+                ) VALUES (
+                    'REC-' + RIGHT('00000' + CAST(@existing_complaints + @complaint_count + 1 AS VARCHAR), 5),
+                    @rdv_for_complaint,
+                    @complaint_type,
+                    @complaint_desc,
+                    @complaint_status,
+                    DATEADD(DAY, -FLOOR(RAND(CHECKSUM(NEWID())) * 30), GETDATE()),
+                    CASE WHEN @complaint_status = 'RESOLU' 
+                        THEN DATEADD(DAY, -FLOOR(RAND(CHECKSUM(NEWID())) * 10), GETDATE())
+                        ELSE NULL 
+                    END
+                );
+
+                SET @complaint_count = @complaint_count + 1;
+                FETCH NEXT FROM complaint_cursor INTO @rdv_for_complaint;
+            END;
+
+            CLOSE complaint_cursor;
+            DEALLOCATE complaint_cursor;
+
+            PRINT '   ✅ ' + CAST(@complaint_count AS VARCHAR) + ' réclamations créées';
+        END
+        ELSE
+        BEGIN
+            PRINT '   ℹ️  Réclamations déjà présentes (' + CAST(@existing_complaints AS VARCHAR) + ')';
+        END
+    END
+    ELSE
+    BEGIN
+        PRINT '   ⚠️  La colonne ''type'' n''existe pas dans la table Reclamation';
+        PRINT '   ℹ️  Création de réclamations ignorée';
+    END
+END
+ELSE
+BEGIN
+    PRINT '   ⚠️  La table Reclamation n''existe pas';
+    PRINT '   ℹ️  Création de réclamations ignorée';
+END
+
+PRINT '';
+
+-- ================================================================
+-- ÉTAPE 5: Vérification finale
+-- ================================================================
+PRINT '🔍 ÉTAPE 5: Vérification des données...';
 PRINT '';
 
 -- Statistiques finales
@@ -206,7 +321,7 @@ FROM RendezVous;
 
 SELECT 
     @total_feedbacks = COUNT(*),
-    @rdv_avec_feedback = COUNT(DISTINCT rendez_vous_id)
+    @rdv_avec_feedback = COUNT(DISTINCT appointment_id)
 FROM Feedback;
 
 SELECT 
@@ -217,7 +332,7 @@ FROM Facture;
 SELECT @agents_avec_feedbacks = COUNT(DISTINCT u.id)
 FROM Utilisateur u
 INNER JOIN RendezVous r ON r.agent_id = u.id
-INNER JOIN Feedback f ON f.rendez_vous_id = r.id
+INNER JOIN Feedback f ON f.appointment_id = r.id
 WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT');
 
 PRINT '📊 RÉSUMÉ DES DONNÉES:';
@@ -236,28 +351,24 @@ DECLARE @warnings INT = 0;
 IF @rdv_avec_duree < 20
 BEGIN
     PRINT '⚠️  AVERTISSEMENT: Peu de rendez-vous avec durée (' + CAST(@rdv_avec_duree AS VARCHAR) + ' < 20)';
-    PRINT '   💡 Conseil: Créez plus de rendez-vous terminés dans l''application';
     SET @warnings = @warnings + 1;
 END
 
 IF @total_feedbacks < 30
 BEGIN
     PRINT '⚠️  AVERTISSEMENT: Peu de feedbacks (' + CAST(@total_feedbacks AS VARCHAR) + ' < 30)';
-    PRINT '   💡 Conseil: Le script peut être réexécuté pour créer plus de feedbacks';
     SET @warnings = @warnings + 1;
 END
 
 IF @agents_avec_feedbacks < 5
 BEGIN
     PRINT '⚠️  AVERTISSEMENT: Peu d''agents avec feedbacks (' + CAST(@agents_avec_feedbacks AS VARCHAR) + ' < 5)';
-    PRINT '   💡 Conseil: Assurez-vous que plusieurs agents ont des rendez-vous terminés';
     SET @warnings = @warnings + 1;
 END
 
 IF @total_factures < 10
 BEGIN
     PRINT '⚠️  AVERTISSEMENT: Peu de factures (' + CAST(@total_factures AS VARCHAR) + ' < 10)';
-    PRINT '   💡 Conseil: Créez plus de commandes de réparation dans l''application';
     SET @warnings = @warnings + 1;
 END
 
@@ -265,43 +376,21 @@ PRINT '';
 
 IF @warnings = 0
 BEGIN
-    PRINT '✅ ✅ ✅ SUCCÈS COMPLET! ✅ ✅ ✅';
-    PRINT '';
-    PRINT '🎉 Toutes les données sont suffisantes pour les graphiques!';
-    PRINT '';
-    PRINT '📈 Les graphiques suivants devraient maintenant afficher des données:';
-    PRINT '   ✓ Durée Moyenne des RDV';
-    PRINT '   ✓ Top Agents - Satisfaction';
-    PRINT '   ✓ Satisfaction par Agence';
-    PRINT '   ✓ Revenus par Agence';
-    PRINT '   ✓ Évolution Mensuelle';
-    PRINT '   ✓ Tous les tableaux';
+    PRINT '✅ SUCCÈS: Toutes les données sont suffisantes pour les graphiques!';
 END
 ELSE
 BEGIN
-    PRINT '⚠️  ' + CAST(@warnings AS VARCHAR) + ' avertissement(s) détecté(s)';
-    PRINT '';
-    PRINT '📊 Certains graphiques peuvent encore être vides.';
-    PRINT '   Vous pouvez:';
-    PRINT '   1. Réexécuter ce script pour ajouter plus de données';
-    PRINT '   2. Créer manuellement des rendez-vous terminés dans l''application';
-    PRINT '   3. Continuer quand même - les graphiques se rempliront progressivement';
+    PRINT '⚠️  ' + CAST(@warnings AS VARCHAR) + ' avertissement(s) - Certains graphiques peuvent être vides';
+    PRINT '   💡 Conseil: Créez plus de rendez-vous terminés dans l''application';
 END
 
 PRINT '';
-PRINT '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 PRINT '🎉 Script terminé avec succès!';
-PRINT '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 PRINT '';
 PRINT '📝 PROCHAINES ÉTAPES:';
-PRINT '   1. ✅ Redémarrer le backend: cd backend && npm start';
-PRINT '   2. ✅ Ouvrir: http://localhost:3000/dashboard/direction';
-PRINT '   3. ✅ Rafraîchir chaque page (Ctrl+F5)';
-PRINT '   4. ✅ Vérifier que les graphiques affichent des données';
-PRINT '';
-PRINT '💡 Si certains graphiques sont encore vides:';
-PRINT '   • Réexécutez ce script (il ajoutera plus de données)';
-PRINT '   • Ou créez plus de rendez-vous terminés dans l''application';
+PRINT '   1. Redémarrer le backend (npm start)';
+PRINT '   2. Rafraîchir les pages Direction dans le navigateur';
+PRINT '   3. Vérifier que les graphiques affichent des données';
 PRINT '';
 
 GO

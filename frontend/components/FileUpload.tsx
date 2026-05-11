@@ -207,10 +207,10 @@ export default function FileUpload({
 
       {/* Liste des fichiers sélectionnés */}
       {files.length > 0 && (
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-2 overflow-hidden">
           <h4 className="font-medium text-gray-700">Fichiers sélectionnés:</h4>
           {files.map((file) => (
-            <div key={file.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <div key={file.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg max-w-full">
               {/* Preview ou icône */}
               <div className="flex-shrink-0">
                 {file.preview ? (
@@ -268,7 +268,7 @@ export default function FileUpload({
               onClick={handleUpload}
               disabled={isUploading || files.length === 0}
               className={`
-                px-4 py-2 rounded-lg font-medium transition-colors
+                px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap
                 ${isUploading || files.length === 0
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'

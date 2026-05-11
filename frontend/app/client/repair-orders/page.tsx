@@ -31,11 +31,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon: any }> = {
-  BROUILLON: { bg: 'bg-slate-100', text: 'text-slate-700', icon: AlertCircle },
+  BROUILLON: { bg: 'bg-[#E4E6EB]', text: 'text-slate-700', icon: AlertCircle },
   EN_COURS: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
   TERMINEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
   FACTUREE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: CreditCard },
-  ANNULEE: { bg: 'bg-red-100', text: 'text-red-700', icon: XCircle },
+  ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
 };
 
 const STATUS_LABELS: Record<RepairOrderStatus, string> = {
@@ -96,30 +96,30 @@ export default function ClientRepairOrdersPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <ShieldCheck className="h-3.5 w-3.5" />
               Historique des Réparations
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Vos <span className="text-red-500">Commandes</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
+              Vos <span className="text-blue-500">Commandes</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
               Consultez le détail de vos interventions SAV, l'état d'avancement de vos réparations et vos factures.
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-lg bg-white/5 border border-white/10 backdrop-blur-xl">
             <div className="text-center">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dépenses</p>
-              <p className="text-2xl font-black text-white">{stats.totalSpent.toFixed(2)}</p>
-              <p className="text-[10px] font-bold text-slate-500">TND</p>
+              <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mb-1">Dépenses</p>
+              <p className="text-2xl font-bold text-white">{stats.totalSpent.toFixed(2)}</p>
+              <p className="text-[10px] font-bold text-[#8A8D91]">TND</p>
             </div>
           </div>
         </div>
@@ -150,10 +150,10 @@ export default function ClientRepairOrdersPage() {
       {/* ─── Orders List ─── */}
       <div className="space-y-6">
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Historique des ordres</h2>
+          <h2 className="text-2xl font-bold text-[#050505] tracking-tight">Historique des ordres</h2>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-500" />
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{commandes.length} Interventions</span>
+            <span className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">{commandes.length} Interventions</span>
           </div>
         </div>
 
@@ -167,7 +167,7 @@ export default function ClientRepairOrdersPage() {
               className="grid gap-6"
             >
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 rounded-[2rem] bg-white animate-pulse shadow-sm" />
+                <div key={i} className="h-32 rounded-lg bg-white animate-pulse shadow-sm" />
               ))}
             </motion.div>
           ) : error ? (
@@ -175,10 +175,10 @@ export default function ClientRepairOrdersPage() {
               key="error"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-12 text-center bg-red-50 rounded-[3rem] border border-red-100"
+              className="p-12 text-center bg-blue-50 rounded-xl border border-blue-100"
             >
-              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-600 font-bold">{error}</p>
+              <AlertCircle className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+              <p className="text-blue-600 font-bold">{error}</p>
               <ClientButton onClick={loadCommandes} variant="secondary" className="mt-6">Réessayer</ClientButton>
             </motion.div>
           ) : commandes.length === 0 ? (
@@ -209,39 +209,39 @@ export default function ClientRepairOrdersPage() {
                     className="cursor-pointer"
                   >
                     <ClientCard 
-                      className="group p-6 sm:p-8 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
+                      className="group p-6 sm:p-8 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-sm"
                     >
-                      <div className="flex flex-col lg:flex-row items-center gap-8">
+                      <div className="flex flex-col lg:flex-row items-center gap-4">
                         {/* Status Block */}
-                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-[2rem] bg-slate-50 border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shrink-0">
+                        <div className="flex flex-col items-center justify-center h-24 w-24 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shrink-0">
                           <StatusIcon className={`h-8 w-8 ${status.text} mb-1`} />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Statut</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-[#B0B3B8]">Statut</span>
                         </div>
 
                         {/* Order Info */}
                         <div className="flex-1 text-center lg:text-left">
                           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
-                            <span className="text-xl font-black text-slate-800 tracking-tight font-mono">
+                            <span className="text-xl font-bold text-[#050505] tracking-tight font-mono">
                               #{commande.numero}
                             </span>
-                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-black uppercase tracking-widest`}>
+                            <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1 text-[10px] font-bold uppercase tracking-wide`}>
                               {STATUS_LABELS[commande.statut] || commande.statut}
                             </Badge>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Véhicule</p>
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Véhicule</p>
                               <p className="font-bold text-slate-700">{commande.immatriculation}</p>
-                              <p className="text-xs text-slate-400 font-medium">{commande.marque_nom} {commande.modele_nom}</p>
+                              <p className="text-xs text-[#B0B3B8] font-medium">{commande.marque_nom} {commande.modele_nom}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Localisation</p>
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Localisation</p>
                               <p className="font-bold text-slate-700">{commande.agence_nom}</p>
-                              <p className="text-xs text-slate-400 font-medium">Agence SAV</p>
+                              <p className="text-xs text-[#B0B3B8] font-medium">Agence SAV</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Date Intervention</p>
+                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Date Intervention</p>
                               <p className="font-bold text-slate-700">{new Date(commande.date_creation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
                           </div>
@@ -250,14 +250,14 @@ export default function ClientRepairOrdersPage() {
                         {/* Amount & Action */}
                         <div className="flex flex-col sm:flex-row items-center gap-6 shrink-0 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-50 w-full lg:w-auto">
                           <div className="text-center lg:text-right">
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Montant Total</p>
-                            <p className="text-2xl font-black text-slate-800 tracking-tight">
+                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide mb-1">Montant Total</p>
+                            <p className="text-2xl font-bold text-[#050505] tracking-tight">
                               {commande.montant_total?.toFixed(3)}
-                              <span className="text-[10px] ml-1 text-slate-400 uppercase tracking-widest">TND</span>
+                              <span className="text-[10px] ml-1 text-[#B0B3B8] uppercase tracking-wide">TND</span>
                             </p>
                           </div>
                           
-                          <div className="h-14 w-14 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm group-hover:shadow-blue-500/30">
+                          <div className="h-14 w-14 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#B0B3B8] group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm group-hover:shadow-blue-500/30">
                             <ChevronRight className="h-6 w-6" />
                           </div>
                         </div>

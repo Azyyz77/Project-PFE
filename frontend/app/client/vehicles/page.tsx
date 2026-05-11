@@ -22,11 +22,9 @@ import {
   CheckCircle2, 
   Clock3, 
   AlertTriangle,
-  Sparkles,
   ShieldCheck,
   Zap,
   ChevronRight,
-  Settings,
   Shield,
   Search,
   ArrowRight
@@ -103,21 +101,21 @@ export default function ClientVehiclesPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[3rem] bg-[#0b1221] p-10 sm:p-14 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-red-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-red-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <ShieldCheck className="h-3.5 w-3.5" />
               Garage Personnel
             </div>
-            <h1 className="mb-4 text-4xl sm:text-6xl font-black tracking-tight leading-none">
-              Vos <span className="text-red-500">Véhicules</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
+              Vos <span className="text-blue-500">Véhicules</span>
             </h1>
-            <p className="text-slate-400 font-medium text-lg leading-relaxed mb-8">
+            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed mb-8">
               Gérez votre parc automobile, suivez la validation de vos véhicules et accédez rapidement aux services d'entretien STA Chery.
             </p>
             
@@ -129,14 +127,14 @@ export default function ClientVehiclesPage() {
               </Link>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-slate-500 group-focus-within:text-red-500 transition-colors" />
+                  <Search className="h-4 w-4 text-[#8A8D91] group-focus-within:text-blue-500 transition-colors" />
                 </div>
                 <input 
                   type="text"
                   placeholder="Rechercher par immatriculation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-3 text-sm font-medium focus:ring-4 focus:ring-red-500/20 focus:bg-white/10 focus:border-red-500/50 outline-none transition-all w-full sm:w-64"
+                  className="bg-white/5 border border-white/10 rounded-lg pl-12 pr-6 py-3 text-sm font-medium focus:ring-4 focus:ring-blue-500/20 focus:bg-white/10 focus:border-blue-500/50 outline-none transition-all w-full sm:w-64"
                 />
               </div>
             </div>
@@ -144,19 +142,19 @@ export default function ClientVehiclesPage() {
 
           {/* Stats Summary In Header */}
           <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-            <div className="p-6 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Total</p>
-              <p className="text-3xl font-black text-white">{stats.total}</p>
+            <div className="p-6 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] mb-1">Total</p>
+              <p className="text-3xl font-bold text-white">{stats.total}</p>
             </div>
-            <div className="p-6 rounded-[2rem] bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Validés</p>
-              <p className="text-3xl font-black text-white">{stats.validated}</p>
+            <div className="p-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-center">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-500 mb-1">Validés</p>
+              <p className="text-3xl font-bold text-white">{stats.validated}</p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* ─── Vehicles Grid ─── */}
+      {/* ─── Vehicles List ─── */}
       <AnimatePresence mode="popLayout">
         {filteredVehicles.length === 0 ? (
           <motion.div
@@ -175,134 +173,208 @@ export default function ClientVehiclesPage() {
             />
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredVehicles.map((vehicle, idx) => {
-              const status = vehicle.statut_validation || 'EN_ATTENTE';
-              const isValide = status === 'VALIDE';
-              const isRefuse = status === 'REFUSE';
-              
-              const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
-                .filter(Boolean)
-                .join(' ');
+          <div className="space-y-3">
+            {/* Vehicles List */}
+            <div className="bg-white rounded-lg border border-[#E4E6EB] shadow-sm overflow-hidden">
+              {filteredVehicles.map((vehicle, idx) => {
+                const status = vehicle.statut_validation || 'EN_ATTENTE';
+                const isValide = status === 'VALIDE';
+                const isRefuse = status === 'REFUSE';
+                
+                const vehicleName = [vehicle.marque_nom, vehicle.modele_nom, vehicle.version_nom]
+                  .filter(Boolean)
+                  .join(' ');
 
-              const mileage = vehicle.kilometrage ?? vehicle.kilometrage_actuel ?? vehicle.kilometrage_km;
+                const mileage = vehicle.kilometrage ?? vehicle.kilometrage_actuel ?? vehicle.kilometrage_km;
 
-              return (
-                <motion.div
-                  key={vehicle.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  whileHover={{ y: -10 }}
-                  layout
-                >
-                  <ClientCard className="h-full flex flex-col p-0 overflow-hidden border-none shadow-xl shadow-slate-200/40 group">
-                    {/* Top Decorative Area */}
-                    <div className={`h-24 w-full relative overflow-hidden ${
-                      isValide ? 'bg-emerald-600' : isRefuse ? 'bg-red-600' : 'bg-[#0b1221]'
+                return (
+                  <motion.div
+                    key={vehicle.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="group"
+                  >
+                    <div className={`flex items-center gap-4 p-4 hover:bg-[#F0F2F5] transition-all duration-200 ${
+                      idx !== filteredVehicles.length - 1 ? 'border-b border-[#E4E6EB]' : ''
                     }`}>
-                      <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20" />
-                      <div className="absolute top-4 right-6 flex gap-2">
-                        <Link href={`/client/vehicles/${vehicle.id}/edit`}>
-                          <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10">
-                            <Settings className="h-4 w-4" />
-                          </button>
+                      {/* Vehicle Icon with Status */}
+                      <div className="relative shrink-0">
+                        <div className={`h-16 w-16 rounded-lg flex items-center justify-center ${
+                          isValide ? 'bg-[#E7F3FF]' : isRefuse ? 'bg-[#FFEBE9]' : 'bg-[#FFF3CD]'
+                        }`}>
+                          <Car className={`h-8 w-8 ${
+                            isValide ? 'text-[#1877F2]' : isRefuse ? 'text-[#F02849]' : 'text-[#F7B928]'
+                          }`} />
+                        </div>
+                        {/* Status Badge */}
+                        <div className={`absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-white flex items-center justify-center ${
+                          isValide ? 'bg-[#42B72A]' : isRefuse ? 'bg-[#F02849]' : 'bg-[#F7B928]'
+                        }`}>
+                          {isValide ? (
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          ) : isRefuse ? (
+                            <AlertTriangle className="h-3 w-3 text-white" />
+                          ) : (
+                            <Clock3 className="h-3 w-3 text-white" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Vehicle Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-bold text-[#050505] truncate group-hover:text-[#1877F2] transition-colors">
+                              {vehicleName || t('vehicles.vehicle')}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm font-semibold text-[#65676B]">
+                                {vehicle.immatriculation}
+                              </span>
+                              <span className="text-xs text-[#8A8D91]">•</span>
+                              <span className={`text-xs font-semibold ${
+                                isValide ? 'text-[#42B72A]' : isRefuse ? 'text-[#F02849]' : 'text-[#F7B928]'
+                              }`}>
+                                {isValide ? 'Validé' : isRefuse ? 'Refusé' : 'En attente'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Vehicle Details */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-[#65676B]">
+                          {mileage && (
+                            <div className="flex items-center gap-1.5">
+                              <Zap className="h-3.5 w-3.5 text-[#8A8D91]" />
+                              <span className="font-medium">{Number(mileage).toLocaleString('fr-FR')} km</span>
+                            </div>
+                          )}
+                          {vehicle.motorisation && (
+                            <div className="flex items-center gap-1.5">
+                              <Shield className="h-3.5 w-3.5 text-[#8A8D91]" />
+                              <span className="font-medium">{vehicle.motorisation}</span>
+                            </div>
+                          )}
+                          {vehicle.annee && (
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium">{vehicle.annee}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="hidden sm:flex items-center gap-2 shrink-0">
+                        <Link href={`/client/vehicles/${vehicle.id}/history`}>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-4 py-2 rounded-md bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#050505] text-sm font-semibold transition-colors"
+                          >
+                            Historique
+                          </motion.button>
                         </Link>
-                        <button 
+                        <Link href="/client/rendez-vous">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            disabled={!isValide}
+                            className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+                              isValide
+                                ? 'bg-[#1877F2] hover:bg-[#166FE5] text-white'
+                                : 'bg-[#E4E6EB] text-[#8A8D91] cursor-not-allowed'
+                            }`}
+                          >
+                            Réserver
+                          </motion.button>
+                        </Link>
+                        <Link href={`/client/vehicles/${vehicle.id}/edit`}>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="p-2 rounded-md bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#65676B] transition-colors"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </motion.button>
+                        </Link>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleDelete(vehicle.id)}
                           disabled={deletingId === vehicle.id}
-                          className="p-2 rounded-xl bg-red-500/20 hover:bg-red-500/40 text-white backdrop-blur-md transition-colors border border-white/10"
+                          className="p-2 rounded-md bg-[#FFEBE9] hover:bg-[#FFD6D1] text-[#F02849] transition-colors disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </motion.button>
+                      </div>
+
+                      {/* Mobile Chevron */}
+                      <motion.div
+                        whileHover={{ x: 3 }}
+                        className="sm:hidden text-[#65676B]"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </motion.div>
+                    </div>
+
+                    {/* Mobile Actions (Expandable) */}
+                    <div className="sm:hidden px-4 pb-4 pt-2 bg-[#F0F2F5]/50 border-b border-[#E4E6EB]">
+                      <div className="flex gap-2">
+                        <Link href={`/client/vehicles/${vehicle.id}/history`} className="flex-1">
+                          <button className="w-full px-3 py-2 rounded-md bg-white border border-[#E4E6EB] text-[#050505] text-sm font-semibold">
+                            Historique
+                          </button>
+                        </Link>
+                        <Link href="/client/rendez-vous" className="flex-1">
+                          <button
+                            disabled={!isValide}
+                            className={`w-full px-3 py-2 rounded-md text-sm font-semibold ${
+                              isValide
+                                ? 'bg-[#1877F2] text-white'
+                                : 'bg-[#E4E6EB] text-[#8A8D91]'
+                            }`}
+                          >
+                            Réserver
+                          </button>
+                        </Link>
+                        <Link href={`/client/vehicles/${vehicle.id}/edit`}>
+                          <button className="px-3 py-2 rounded-md bg-white border border-[#E4E6EB] text-[#65676B]">
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(vehicle.id)}
+                          disabled={deletingId === vehicle.id}
+                          className="px-3 py-2 rounded-md bg-[#FFEBE9] text-[#F02849] disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      
-                      <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-                      <div className="absolute top-6 left-8">
-                         <div className="h-12 w-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                            <Car className="h-6 w-6 text-white" />
-                         </div>
-                      </div>
                     </div>
-
-                    {/* Main Info */}
-                    <div className="p-8 flex flex-col flex-1">
-                      <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`h-2 w-2 rounded-full ${isValide ? 'bg-emerald-500' : isRefuse ? 'bg-red-500' : 'bg-amber-500'}`} />
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                            {isValide ? 'Véhicule Validé' : isRefuse ? 'Validation Refusée' : 'Validation en attente'}
-                          </span>
-                        </div>
-                        <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none mb-2 group-hover:text-red-600 transition-colors">
-                          {vehicleName || t('vehicles.vehicle')}
-                        </h3>
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{vehicle.immatriculation}</p>
-                      </div>
-
-                      <div className="space-y-4 mb-8">
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                              <Zap className="h-5 w-5 text-amber-500" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kilométrage</p>
-                              <p className="text-sm font-black text-slate-700">
-                                {mileage ? `${Number(mileage).toLocaleString('fr-FR')} km` : '—'}
-                              </p>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-slate-300" />
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                              <Shield className="h-5 w-5 text-blue-500" />
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Motorisation</p>
-                              <p className="text-sm font-black text-slate-700">{vehicle.motorisation || '—'}</p>
-                            </div>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-slate-300" />
-                        </div>
-                      </div>
-
-                      <div className="mt-auto grid grid-cols-2 gap-4">
-                        <Link href={`/client/vehicles/${vehicle.id}/history`} className="w-full">
-                          <ClientButton variant="outline" fullWidth size="small">
-                            Historique
-                          </ClientButton>
-                        </Link>
-                        <Link href="/client/rendez-vous" className="w-full">
-                          <ClientButton variant={isValide ? "primary" : "secondary"} fullWidth size="small" disabled={!isValide}>
-                            Réserver
-                          </ClientButton>
-                        </Link>
-                      </div>
-                    </div>
-                  </ClientCard>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </div>
             
-            {/* Add New Vehicle Card Placeholder */}
+            {/* Add New Vehicle Button */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: filteredVehicles.length * 0.1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: filteredVehicles.length * 0.05 + 0.2 }}
             >
-              <Link href="/client/vehicles/new" className="h-full block">
-                <div className="h-full min-h-[400px] rounded-[2.5rem] border-4 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center gap-6 group hover:border-red-500/30 hover:bg-red-50/20 transition-all duration-500">
-                  <div className="h-20 w-20 rounded-[2rem] bg-white border-2 border-slate-100 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                    <Plus className="h-10 w-10 text-slate-300 group-hover:text-red-500 transition-colors" />
+              <Link href="/client/vehicles/new">
+                <div className="bg-white rounded-lg border-2 border-dashed border-[#E4E6EB] hover:border-[#1877F2] hover:bg-[#F0F2F5] transition-all duration-200 p-6 flex items-center justify-center gap-3 group cursor-pointer">
+                  <div className="h-10 w-10 rounded-lg bg-[#E4E6EB] group-hover:bg-[#1877F2] flex items-center justify-center transition-colors">
+                    <Plus className="h-5 w-5 text-[#65676B] group-hover:text-white transition-colors" />
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-black text-slate-400 group-hover:text-red-600 transition-colors">{t('vehicles.addVehicle')}</p>
-                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-1">Agrandissez votre garage</p>
+                  <div>
+                    <p className="text-base font-bold text-[#050505] group-hover:text-[#1877F2] transition-colors">
+                      {t('vehicles.addVehicle')}
+                    </p>
+                    <p className="text-xs text-[#65676B]">Agrandissez votre garage</p>
                   </div>
+                  <ArrowRight className="h-5 w-5 text-[#8A8D91] group-hover:text-[#1877F2] transition-colors ml-auto" />
                 </div>
               </Link>
             </motion.div>
