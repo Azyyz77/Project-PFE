@@ -125,12 +125,19 @@ export default function ClientDashboardPage() {
             
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
               <Link href="/client/rendez-vous">
-                <ClientButton variant="primary" icon={Plus} size="large">
+                <ClientButton variant="primary" 
+                icon={Plus} 
+                size="large"
+                >
                   {t('dashboard.takeAppointment')}
                 </ClientButton>
               </Link>
               <Link href="/client/vehicles">
-                <ClientButton variant="outline" icon={Car} size="large" className="bg-white/5 border-white/10 text-white hover:bg-white/10">
+                <ClientButton 
+                variant="outline" 
+                icon={Car} 
+                size="large" 
+                className="bg-white/5 border-white/10 text-white hover:bg-white/10">
                   {t('dashboard.myVehicles')}
                 </ClientButton>
               </Link>
@@ -188,7 +195,7 @@ export default function ClientDashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 bg-re">
         {/* ─── My Appointments Section ─── */}
         <div className="lg:col-span-2">
           <ClientCard>

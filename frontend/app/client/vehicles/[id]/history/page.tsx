@@ -213,7 +213,7 @@ export default function VehicleHistoryPage() {
 
         <AnimatePresence mode="wait">
           {/* OVERVIEW CONTENT */}
-          <TabsContent value="overview" className="space-y-10 outline-none">
+          <TabsContent key="overview" value="overview" className="space-y-10 outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                {/* Detail Card */}
                <ClientCard className="lg:col-span-2">
@@ -298,7 +298,7 @@ export default function VehicleHistoryPage() {
           </TabsContent>
 
           {/* INTERVENTIONS CONTENT */}
-          <TabsContent value="interventions" className="outline-none">
+          <TabsContent key="interventions" value="interventions" className="outline-none">
             {interventions.length === 0 ? (
               <ClientEmptyState 
                 icon={Wrench} 
@@ -355,7 +355,7 @@ export default function VehicleHistoryPage() {
           </TabsContent>
 
           {/* APPOINTMENTS CONTENT */}
-          <TabsContent value="appointments" className="outline-none">
+          <TabsContent key="appointments" value="appointments" className="outline-none">
             {appointments.length === 0 ? (
               <ClientEmptyState 
                 icon={Calendar} 

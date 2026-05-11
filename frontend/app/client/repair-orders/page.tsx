@@ -132,21 +132,18 @@ export default function ClientRepairOrdersPage() {
           value={stats.total}
           icon={History}
           iconColor="text-blue-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
         />
         <ClientStatCard
           label="En Cours"
           value={stats.active}
           icon={Zap}
           iconColor="text-amber-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
         />
         <ClientStatCard
           label="Terminées"
           value={stats.completed}
           icon={CheckCircle2}
           iconColor="text-emerald-500"
-          className="bg-white border-none shadow-xl shadow-slate-100"
         />
       </div>
 
@@ -194,11 +191,10 @@ export default function ClientRepairOrdersPage() {
                 icon={FileText}
                 title="Aucune intervention"
                 description="Vous n'avez pas encore d'historique de réparation pour vos véhicules."
-                className="bg-white border-none shadow-2xl shadow-slate-100"
               />
             </motion.div>
           ) : (
-            <div className="grid gap-6">
+            <div key="orders-list" className="grid gap-6">
               {commandes.map((commande, idx) => {
                 const status = STATUS_COLORS[commande.statut] || STATUS_COLORS.BROUILLON;
                 const StatusIcon = status.icon;
@@ -209,10 +205,11 @@ export default function ClientRepairOrdersPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
+                    onClick={() => router.push(`/client/repair-orders/${commande.id}`)}
+                    className="cursor-pointer"
                   >
                     <ClientCard 
-                      className="group cursor-pointer p-6 sm:p-8 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
-                      onClick={() => router.push(`/client/repair-orders/${commande.id}`)}
+                      className="group p-6 sm:p-8 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-xl shadow-slate-100"
                     >
                       <div className="flex flex-col lg:flex-row items-center gap-8">
                         {/* Status Block */}

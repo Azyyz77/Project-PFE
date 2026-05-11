@@ -13,7 +13,11 @@ export const clientTheme = {
     secondary: 'bg-white',          // Paper White
     tertiary: 'bg-[#F4F1EA]',       // Soft Sand
     hover: 'hover:bg-[#F4F1EA]',    
-    dark: 'bg-[#1C1A16]',           // Warm Ink
+    dark: 'bg-[#1C1A16]', 
+    blue: 'bg-[#1E40AF]', 
+    green: 'bg-[#16A34A]', 
+    red: 'bg-[#DC2626]', 
+    yellow: 'bg-[#EA580C]' 
   },
 
   // Refined Borders
