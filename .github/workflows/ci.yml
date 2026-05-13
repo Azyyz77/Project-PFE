@@ -41,13 +41,15 @@ jobs:
           echo "DB_NAME=test_db" >> .env
           echo "DB_USER=sa" >> .env
           echo "DB_PASSWORD=Test@1234" >> .env
+          echo "PORT=5000" >> .env
 
       - name: Run unit tests with coverage
         working-directory: backend
-        run: npx jest --testPathPattern="tests/unit" --coverage --coverageDirectory=coverage/unit --forceExit
+        run: npm run test:unit
         env:
           JWT_SECRET: ci_test_secret_unit
           NODE_ENV: test
+        continue-on-error: false
 
       - name: Upload unit test coverage
         uses: actions/upload-artifact@v4
@@ -109,7 +111,7 @@ jobs:
 
       - name: Run integration & API tests with coverage
         working-directory: backend
-        run: npx jest --testPathPattern="tests/(api|integration|db)" --coverage --coverageDirectory=coverage/integration --forceExit --testTimeout=30000
+        run: npm run test:integration
         env:
           JWT_SECRET: ci_integration_secret
           NODE_ENV: test
@@ -145,7 +147,7 @@ jobs:
 
       - name: Run all backend tests with full coverage
         working-directory: backend
-        run: npx jest --testPathPattern="tests/unit" --coverage --coverageReporters=lcov --coverageReporters=text-summary --forceExit
+        run: npm run test:ci
         env:
           JWT_SECRET: ci_coverage_secret
           NODE_ENV: test
@@ -266,4 +268,53 @@ jobs:
       - name: Run ESLint
         working-directory: frontend
         run: npm run lint
+        continue-on-error: true  # Lint errors won't block CI while we fix them
+
+  # ── Job 7: Security Audit ──────────────────────────────────────────────
+  security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Audit backend dependencies
+        working-directory: backend
+        run: npm audit --audit-level=high
         continue-on-error: true
+
+      - name: Audit frontend dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  # ── Job 8: CI Summary ──────────────────────────────────────────────────
+  ci-summary:
+    name: ✅ CI Summary
+    runs-on: ubuntu-latest
+    needs: [backend-unit-tests, backend-coverage-report, frontend-build, lint]
+    if: always()
+
+    steps:
+      - name: Check job results
+        run: |
+          echo "Backend Unit Tests: ${{ needs.backend-unit-tests.result }}"
+          echo "Backend Coverage: ${{ needs.backend-coverage-report.result }}"
+          echo "Frontend Build: ${{ needs.frontend-build.result }}"
+          echo "Lint: ${{ needs.lint.result }}"
+          
+          if [ "${{ needs.backend-unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.backend-coverage-report.result }}" != "success" ] || \
+             [ "${{ needs.frontend-build.result }}" != "success" ] || \
+             [ "${{ needs.lint.result }}" != "success" ]; then
+            echo "❌ CI Pipeline Failed"
+            exit 1
+          else
+            echo "✅ CI Pipeline Passed"
+          fi

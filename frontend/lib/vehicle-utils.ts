@@ -12,34 +12,40 @@ export const VEHICLE_FIELD_LIMITS = {
   ntSerial: 5,
   numeroChassis: 17,
   couleur: 50,
+  sivFormat: 9, // XX-XXX-XX (9 chars)
+  customFormat: 10, // XXX-XX-XXX (10 chars)
 };
 
 export type PlateType = '' | 'TUNIS' | 'NT' | 'RS';
 
-export type VehicleFormState = {
-  plate_type: PlateType;
+export interface VehicleFormState {
+  plate_type: 'TUNIS' | 'NT' | 'SIV' | 'CUSTOM';
   tunis_left: string;
   tunis_right: string;
   nt_serial: string;
+  siv_format: string; // Pour XX-XXX-XX
+  custom_format: string; // Pour XXX-XX-XXX
   numero_chassis: string;
   marque_id: string;
   modele_id: string;
   version_id: string;
-  couleur: string;
   annee: string;
-};
+  couleur: string;
+}
 
 export const EMPTY_VEHICLE_FORM: VehicleFormState = {
-  plate_type: '',
+  plate_type: 'TUNIS',
   tunis_left: '',
   tunis_right: '',
   nt_serial: '',
+  siv_format: '',
+  custom_format: '',
   numero_chassis: '',
   marque_id: '',
   modele_id: '',
   version_id: '',
-  couleur: '',
   annee: '',
+  couleur: '',
 };
 
 export function validateVehicleForm(form: VehicleFormState): string | null {
@@ -115,6 +121,14 @@ export function buildImmatriculation(form: VehicleFormState): string {
     return `${form.nt_serial.trim()} ${NT_PLATE_LABEL}`;
   }
 
+  if (form.plate_type === 'SIV') {
+    return form.siv_format.trim().toUpperCase();
+  }
+
+  if (form.plate_type === 'CUSTOM') {
+    return form.custom_format.trim().toUpperCase();
+  }
+
   return '';
 }
 
@@ -135,6 +149,24 @@ export function parseImmatriculation(immatriculation: string): VehicleFormState 
       ...EMPTY_VEHICLE_FORM,
       plate_type: 'NT',
       nt_serial: ntMatch[1],
+    };
+  }
+
+  const sivMatch = immatriculation.match(/^[A-Z]{2}-\d{3}-[A-Z]{2}$/i);
+  if (sivMatch) {
+    return {
+      ...EMPTY_VEHICLE_FORM,
+      plate_type: 'SIV',
+      siv_format: immatriculation.toUpperCase(),
+    };
+  }
+
+  const customMatch = immatriculation.match(/^\d{3}-[A-Z]{2}-\d{3}$/i);
+  if (customMatch) {
+    return {
+      ...EMPTY_VEHICLE_FORM,
+      plate_type: 'CUSTOM',
+      custom_format: immatriculation.toUpperCase(),
     };
   }
 

@@ -147,11 +147,8 @@ export default function VehicleHistoryListPage() {
               icon={Car}
               title={t('vehicleHistory.noVehicles')}
               description={t('vehicleHistory.addVehicleToConsult')}
-              action={
-                <ClientButton variant="primary" onClick={() => router.push('/client/vehicles/new')}>
-                  {t('vehicleHistory.addVehicle')}
-                </ClientButton>
-              }
+              actionLabel={t('vehicleHistory.addVehicle')}
+              onAction={() => router.push('/client/vehicles/new')}
             />
           </motion.div>
         ) : (

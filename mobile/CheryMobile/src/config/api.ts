@@ -37,8 +37,16 @@ api.interceptors.response.use(
       console.error('Request timeout:', error.config?.url);
     } else if (error.response) {
       console.error(`API Error: ${error.response.status} - ${error.config?.url}`);
+      
+      // Handle 401 Unauthorized - token expired or invalid
       if (error.response.status === 401) {
+        console.log('Token expired or invalid - clearing auth data');
         await SecureStore.deleteItemAsync('authToken');
+        await SecureStore.deleteItemAsync('user');
+        
+        // You might want to emit an event here to trigger navigation to login
+        // For now, we'll just log it
+        console.log('User needs to re-authenticate');
       }
     } else if (error.request) {
       console.error('Network Error: No response received', error.config?.url);

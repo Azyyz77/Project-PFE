@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { colors, spacing, borderRadius, fontSize, shadows } from '../styles/theme';
+import { FacebookButton, FacebookInput } from '../components/facebook';
 
 export default function RegisterScreen({ navigation }: any) {
   const [nom, setNom] = useState('');
@@ -77,83 +76,63 @@ export default function RegisterScreen({ navigation }: any) {
         <View style={styles.formContainer}>
           <View style={styles.inputRow}>
             <View style={styles.inputHalf}>
-              <Text style={styles.label}>Nom *</Text>
-              <TextInput
-                style={styles.input}
+              <FacebookInput
+                label="Nom"
                 placeholder="Nom"
-                placeholderTextColor={colors.textMuted}
                 value={nom}
                 onChangeText={setNom}
-                autoCapitalize="words"
               />
             </View>
             <View style={styles.inputHalf}>
-              <Text style={styles.label}>Prénom *</Text>
-              <TextInput
-                style={styles.input}
+              <FacebookInput
+                label="Prénom"
                 placeholder="Prénom"
-                placeholderTextColor={colors.textMuted}
                 value={prenom}
                 onChangeText={setPrenom}
-                autoCapitalize="words"
               />
             </View>
           </View>
 
-          <Text style={styles.label}>Email *</Text>
-          <TextInput
-            style={styles.input}
+          <FacebookInput
+            label="Email"
             placeholder="exemple@email.com"
-            placeholderTextColor={colors.textMuted}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
-            autoCapitalize="none"
           />
 
-          <Text style={styles.label}>Téléphone *</Text>
-          <TextInput
-            style={styles.input}
+          <FacebookInput
+            label="Téléphone"
             placeholder="+216 XX XXX XXX"
-            placeholderTextColor={colors.textMuted}
             value={telephone}
             onChangeText={setTelephone}
             keyboardType="phone-pad"
           />
 
-          <Text style={styles.label}>Mot de passe *</Text>
-          <TextInput
-            style={styles.input}
+          <FacebookInput
+            label="Mot de passe"
             placeholder="Minimum 6 caractères"
-            placeholderTextColor={colors.textMuted}
             value={password}
             onChangeText={setPassword}
-            secureTextEntry={true}
-            autoCapitalize="none"
+            secureTextEntry
           />
 
-          <Text style={styles.label}>Confirmer le mot de passe *</Text>
-          <TextInput
-            style={styles.input}
+          <FacebookInput
+            label="Confirmer le mot de passe"
             placeholder="Retapez votre mot de passe"
-            placeholderTextColor={colors.textMuted}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            secureTextEntry={true}
-            autoCapitalize="none"
+            secureTextEntry
           />
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+          <FacebookButton
+            title="S'inscrire"
             onPress={handleRegister}
+            loading={loading}
             disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>S'inscrire</Text>
-            )}
-          </TouchableOpacity>
+            fullWidth
+            variant="primary"
+          />
 
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
@@ -223,39 +202,6 @@ const styles = StyleSheet.create({
   inputHalf: {
     flex: 1,
   },
-  label: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    padding: spacing.lg,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-    fontSize: fontSize.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.textPrimary,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    padding: spacing.lg,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-    ...shadows.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: colors.textWhite,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,6 +216,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     color: colors.textMuted,
     fontSize: fontSize.sm,
+    fontWeight: '600',
   },
   loginButton: {
     padding: spacing.md,

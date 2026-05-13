@@ -15,7 +15,9 @@ import HomeScreen from '../screens/HomeScreen';
 import VehiclesScreen from '../screens/VehiclesScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import BookAppointmentScreen from '../screens/BookAppointmentScreen';
+import BookAppointmentStep1Screen from '../screens/BookAppointmentStep1Screen';
+import BookAppointmentStep2Screen from '../screens/BookAppointmentStep2Screen';
+import BookAppointmentStep3Screen from '../screens/BookAppointmentStep3Screen';
 import AddVehicleScreen from '../screens/AddVehicleScreen';
 import ComplaintsScreen from '../screens/ComplaintsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
@@ -51,7 +53,21 @@ export default function AppNavigator() {
             <Stack.Screen name="Vehicles" component={VehiclesScreen} />
             <Stack.Screen name="Appointments" component={AppointmentsScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="BookAppointment" component={BookAppointmentScreen} />
+            <Stack.Screen 
+              name="BookAppointmentStep1" 
+              component={BookAppointmentStep1Screen}
+              options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen 
+              name="BookAppointmentStep2" 
+              component={BookAppointmentStep2Screen}
+              options={{ presentation: 'modal' }}
+            />
+            <Stack.Screen 
+              name="BookAppointmentStep3" 
+              component={BookAppointmentStep3Screen}
+              options={{ presentation: 'modal' }}
+            />
             <Stack.Screen name="AddVehicle" component={AddVehicleScreen} />
             <Stack.Screen name="Complaints" component={ComplaintsScreen} />
             <Stack.Screen name="Orders" component={OrdersScreen} />

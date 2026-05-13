@@ -14,6 +14,7 @@ interface DataContextType {
   interventions: any[];
   brands: any[];
   versionsCatalog: any[];
+  colors: any[];
   loadingData: boolean;
   loadingBooking: boolean;
   loadUserData: () => Promise<void>;
@@ -38,6 +39,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [interventions, setInterventions] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [versionsCatalog, setVersionsCatalog] = useState<any[]>([]);
+  const [colors, setColors] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
   const [loadingBooking, setLoadingBooking] = useState(false);
 
@@ -118,14 +120,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadBookingData = useCallback(async () => {
     setLoadingBooking(true);
     try {
-      const [agenciesRes, interventionsRes, versionsRes] = await Promise.all([
+      const [agenciesRes, interventionsRes, versionsRes, colorsRes] = await Promise.all([
         api.get('/appointments/agencies'),
         api.get('/appointments/interventions'),
         api.get('/vehicles/catalog/versions'),
+        api.get('/colors'),
       ]);
 
       setAgencies(agenciesRes.data.agencies || agenciesRes.data);
       setInterventions(interventionsRes.data.interventions || interventionsRes.data);
+      setColors((colorsRes.data.colors || colorsRes.data).filter((c: any) => c.actif));
 
       const versions = versionsRes.data.versions || versionsRes.data;
       const uniqueBrands = Array.from(
@@ -182,6 +186,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       interventions,
       brands,
       versionsCatalog,
+      colors,
       loadingData,
       loadingBooking,
       loadUserData,

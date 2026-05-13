@@ -139,7 +139,7 @@ export default function SimpleSidebar({ visible, onClose, navigation }: SimpleSi
               <Text style={styles.sectionTitle}>ACTIONS RAPIDES</Text>
               <TouchableOpacity
                 style={styles.quickActionButton}
-                onPress={() => navigateToScreen('BookAppointment')}
+                onPress={() => navigateToScreen('BookAppointmentStep1')}
                 activeOpacity={0.8}>
                 <Text style={styles.quickActionIcon}>📅</Text>
                 <Text style={styles.quickActionText}>Réserver un RDV</Text>

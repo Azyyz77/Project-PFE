@@ -8,6 +8,7 @@ interface ClientStatCardProps {
   icon: LucideIcon;
   iconColor?: string;
   subtitle?: string;
+  className?: string;
   trend?: {
     value: string;
     isPositive: boolean;
@@ -20,12 +21,13 @@ export function ClientStatCard({
   icon: Icon,
   iconColor = 'text-blue-500',
   subtitle,
+  className,
   trend,
 }: ClientStatCardProps) {
   return (
     <motion.div 
       whileHover={{ y: -4, scale: 1.02 }}
-      className={cn(clientClasses.statCard, "relative overflow-hidden group")}
+      className={cn(clientClasses.statCard, "relative overflow-hidden group", className)}
     >
       <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150 duration-700" />
       

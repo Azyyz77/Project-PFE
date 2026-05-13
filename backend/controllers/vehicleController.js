@@ -9,6 +9,8 @@ const VEHICLE_FIELD_LIMITS = {
 const TUNIS_LEFT_MAX = 260;
 const TUNIS_STANDARD_PLATE_REGEX = /^(\d{1,3})\s*تونس\s*(\d{3,4})$/u;
 const NT_PLATE_REGEX = /^(\d{1,5})\s*ن\.ت$/u;
+const SIV_PLATE_REGEX = /^[A-Z]{2}-\d{3}-[A-Z]{2}$/;
+const CUSTOM_PLATE_REGEX = /^\d{3}-[A-Z]{2}-\d{3}$/;
 
 const VEHICLE_WITH_RELATIONS_SELECT = `
   SELECT
@@ -72,13 +74,15 @@ const validateVehiclePayload = ({ immatriculation, numero_chassis, version_id, c
 
   const tunisMatch = normalizedImmatriculation.match(TUNIS_STANDARD_PLATE_REGEX);
   const isNtPlate = NT_PLATE_REGEX.test(normalizedImmatriculation);
+  const isSivPlate = SIV_PLATE_REGEX.test(normalizedImmatriculation);
+  const isCustomPlate = CUSTOM_PLATE_REGEX.test(normalizedImmatriculation);
 
-  if (!tunisMatch && !isNtPlate) {
+  if (!tunisMatch && !isNtPlate && !isSivPlate && !isCustomPlate) {
     return {
       status: 400,
       payload: {
         error: 'Immatriculation invalide',
-        message: 'Le format doit être soit "123 تونس 4567" (3 à 4 chiffres) soit "12345 ن.ت".'
+        message: 'Le format doit être soit "123 تونس 4567", "12345 ن.ت", "XX-123-XX", ou "123-XX-123".'
       }
     };
   }

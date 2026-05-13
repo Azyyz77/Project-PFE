@@ -12,6 +12,7 @@ interface ClientEmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  className?: string;
 }
 
 export function ClientEmptyState({
@@ -20,9 +21,10 @@ export function ClientEmptyState({
   description,
   actionLabel,
   onAction,
+  className,
 }: ClientEmptyStateProps) {
   return (
-    <div className={clientClasses.emptyState}>
+    <div className={`${clientClasses.emptyState} ${className || ''}`}>
       <Icon className={clientClasses.emptyIcon} />
       <p className={clientClasses.emptyText}>{title}</p>
       {description && (

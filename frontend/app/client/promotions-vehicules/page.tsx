@@ -27,6 +27,7 @@ import {
   ClientEmptyState,
   ClientLoadingState,
 } from '@/components/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PromotionsVehiculesPage() {

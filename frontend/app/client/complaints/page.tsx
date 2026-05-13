@@ -269,11 +269,8 @@ export default function ComplaintsPage() {
             icon={MessageCircle}
             title={t('complaints.noComplaints')}
             description={t('complaints.notCreatedYet')}
-            action={
-              <ClientButton variant="primary" onClick={() => setIsDialogOpen(true)} icon={Plus}>
-                {t('complaints.create')}
-              </ClientButton>
-            }
+            actionLabel={t('complaints.create')}
+            onAction={() => setIsDialogOpen(true)}
           />
         ) : (
           <div className="grid gap-6">

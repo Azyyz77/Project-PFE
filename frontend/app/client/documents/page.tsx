@@ -156,12 +156,12 @@ export default function ClientDocumentsPage() {
             key="empty"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
+            className="bg-white border-none shadow-md shadow-slate-100 rounded-lg"
           >
             <ClientEmptyState
               icon={FileText}
               title={t('documents.noDocuments')}
               description={searchTerm ? "Aucun document ne correspond à votre recherche." : "Vous n'avez pas encore de documents disponibles."}
-              className="bg-white border-none shadow-md shadow-slate-100"
             />
           </motion.div>
         ) : (

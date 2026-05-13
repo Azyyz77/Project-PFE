@@ -1,43 +1,48 @@
-// Theme colors and constants
+/**
+ * Facebook-Inspired Theme for Chery Mobile App
+ * Matching the web client design with Facebook Blue (#1877F2)
+ */
+
 export const colors = {
-  // Primary colors
-  primary: '#3B82F6',
-  primaryDark: '#2563EB',
-  primaryLight: '#60A5FA',
+  // Facebook Primary Colors
+  primary: '#1877F2',        // Facebook Blue
+  primaryDark: '#166FE5',    // Darker blue for pressed states
+  primaryLight: '#E7F3FF',   // Light blue for backgrounds
   
-  // Status colors
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  // Status colors (Facebook-style)
+  success: '#42B72A',        // Facebook Green
+  warning: '#F7B928',        // Facebook Yellow
+  error: '#F02849',          // Facebook Red
+  info: '#1877F2',           // Facebook Blue
   
-  // Neutral colors
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  border: '#E2E8F0',
-  borderLight: '#F1F5F9',
+  // Neutral colors (Facebook palette)
+  background: '#F0F2F5',     // Facebook Light Gray
+  surface: '#FFFFFF',        // Pure White
+  border: '#E4E6EB',         // Facebook Border Gray
+  borderLight: '#CED0D4',    // Lighter border
   
-  // Text colors
-  textPrimary: '#1E293B',
-  textSecondary: '#64748B',
-  textMuted: '#94A3B8',
-  textWhite: '#FFFFFF',
+  // Text colors (Facebook)
+  textPrimary: '#050505',    // Facebook Black
+  textSecondary: '#65676B',  // Facebook Gray
+  textMuted: '#8A8D91',      // Muted Gray
+  textLight: '#B0B3B8',      // Light Gray
+  textWhite: '#FFFFFF',      // White text
   
-  // Service card backgrounds
-  purple: '#EDE9FE',
-  blue: '#DBEAFE',
-  yellow: '#FEF3C7',
-  green: '#D1FAE5',
+  // Service card backgrounds (Facebook-inspired)
+  purple: '#F3E8FF',
+  blue: '#E7F3FF',
+  yellow: '#FFF3CD',
+  green: '#E5F5E0',
   teal: '#CCFBF1',
-  orange: '#FED7AA',
+  orange: '#FFE5D9',
   indigo: '#E0E7FF',
   pink: '#FCE7F3',
   
-  // Status badge colors
-  statusPlanned: { bg: '#DBEAFE', text: '#1E40AF' },
-  statusInProgress: { bg: '#FEF3C7', text: '#92400E' },
-  statusCompleted: { bg: '#D1FAE5', text: '#065F46' },
-  statusCancelled: { bg: '#FEE2E2', text: '#991B1B' },
+  // Status badge colors (Facebook-style)
+  statusPlanned: { bg: '#E7F3FF', text: '#1877F2' },
+  statusInProgress: { bg: '#FFF3CD', text: '#856404' },
+  statusCompleted: { bg: '#E5F5E0', text: '#42B72A' },
+  statusCancelled: { bg: '#FFEBE9', text: '#F02849' },
 };
 
 export const spacing = {
@@ -51,44 +56,52 @@ export const spacing = {
 };
 
 export const borderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  xl: 16,
   full: 9999,
 };
 
 export const fontSize = {
-  xs: 11,
+  xs: 10,
   sm: 12,
   base: 14,
   md: 16,
   lg: 18,
   xl: 20,
   xxl: 24,
-  xxxl: 32,
+  xxxl: 28,
+  huge: 32,
 };
 
 export const shadows = {
   sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
   },
-  md: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  xl: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
   },
 };
