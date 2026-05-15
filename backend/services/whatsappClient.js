@@ -148,8 +148,32 @@ const getWhatsAppStatus = () => ({
   ready: isReady,
 });
 
+/**
+ * Version non-bloquante de sendWhatsAppMessage.
+ * Ne lève jamais d'exception : log un avertissement et retourne false si
+ * le client n'est pas prêt ou si l'envoi échoue.
+ *
+ * @param {string} telephone
+ * @param {string} message
+ * @returns {Promise<boolean>} true si envoyé, false sinon
+ */
+const trySendWhatsAppMessage = async (telephone, message) => {
+  if (!clientInstance || !isReady) {
+    console.warn('⚠️  WhatsApp non prêt — message non envoyé (scannez le QR code pour activer).');
+    return false;
+  }
+  try {
+    await sendWhatsAppMessage(telephone, message);
+    return true;
+  } catch (err) {
+    console.warn('⚠️  Envoi WhatsApp échoué (non bloquant):', err.message);
+    return false;
+  }
+};
+
 module.exports = {
   initializeWhatsAppClient,
   sendWhatsAppMessage,
+  trySendWhatsAppMessage,
   getWhatsAppStatus,
 };

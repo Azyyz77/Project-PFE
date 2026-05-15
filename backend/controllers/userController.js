@@ -13,7 +13,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getConnection, sql } = require('../config/database');
-const { sendWhatsAppMessage } = require('../services/whatsappClient');
+const { sendWhatsAppMessage, trySendWhatsAppMessage } = require('../services/whatsappClient');
 
 /**
  * Stockage temporaire des codes OTP
@@ -212,16 +212,11 @@ const register = async (req, res) => {
       telephone: normalizedPhone,
     });
 
-    // Envoyer le code par WhatsApp
-    try {
-      await sendWhatsAppMessage(
-        normalizedPhone,
-        `STA Chery Tunisia\nBienvenue! Votre code de vérification est: ${otp}\nCe code expire dans 10 minutes.`
-      );
-    } catch (whatsappError) {
-      console.error('Erreur envoi WhatsApp:', whatsappError);
-      // On continue même si WhatsApp échoue
-    }
+    // Envoyer le code par WhatsApp (non bloquant — l'inscription réussit même si WhatsApp n'est pas prêt)
+    await trySendWhatsAppMessage(
+      normalizedPhone,
+      `STA Chery Tunisia\nBienvenue! Votre code de vérification est: ${otp}\nCe code expire dans 10 minutes.`
+    );
 
     res.status(201).json({
       message: 'Utilisateur créé avec succès. Un code de vérification a été envoyé par WhatsApp.',
@@ -881,8 +876,8 @@ const resendVerificationCode = async (req, res) => {
       telephone: user.telephone,
     });
 
-    // Envoyer par WhatsApp
-    await sendWhatsAppMessage(
+    // Envoyer par WhatsApp (non bloquant)
+    await trySendWhatsAppMessage(
       user.telephone,
       `STA Chery Tunisia\nVotre nouveau code de vérification est: ${otp}\nCe code expire dans 10 minutes.`
     );
