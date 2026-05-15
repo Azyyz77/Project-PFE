@@ -64,7 +64,6 @@ const getNavSections = (): NavSection[] => [
       { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-5 w-5" /> },
       { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-5 w-5" /> },
       { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-5 w-5" /> },
-      { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-5 w-5" /> },
     ],
   },
   {

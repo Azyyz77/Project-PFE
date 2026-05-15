@@ -34,7 +34,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/unread-count`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/notifications/unread-count`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -57,7 +57,7 @@ export default function NotificationBell() {
 
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -81,7 +81,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/${id}/read`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/notifications/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -100,7 +100,7 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/mark-all-read`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/notifications/mark-all-read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });

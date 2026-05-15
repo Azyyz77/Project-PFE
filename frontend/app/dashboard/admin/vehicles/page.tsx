@@ -53,22 +53,22 @@ export default function AdminVehiclesPage() {
       setLoading(true);
       const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/agent-dashboard/vehicles`;
       console.log('Fetching vehicles from:', url);
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error response:', errorData);
         throw new Error(errorData.error || 'Erreur lors du chargement des véhicules');
       }
-      
+
       const result = await response.json();
       console.log('Vehicles data:', result);
       setVehicles(result.data || []);

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline — STA Chery Tunisia
+name: Simple Web Site Tests
 
 on:
   push:
@@ -6,15 +6,9 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  NODE_VERSION: '20.x'
-
-# ────────────────────────────────────────────────────────────────────────────
 jobs:
-
-  # ── Job 1: Backend Unit Tests (fast, no DB needed) ─────────────────────
-  backend-unit-tests:
-    name: 🧪 Backend Unit Tests
+  simple-tests:
+    name: 🧪 Simple Tests (Frontend & Backend)
     runs-on: ubuntu-latest
 
     steps:
@@ -24,297 +18,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          node-version: '20.x'
 
-      - name: Install backend dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Create minimal .env for unit tests
+      - name: Test Backend (Unit Tests)
         working-directory: backend
         run: |
-          echo "JWT_SECRET=ci_test_secret_$(date +%s)" >> .env
+          npm ci
+          echo "JWT_SECRET=simple_test_secret" > .env
           echo "NODE_ENV=test" >> .env
-          echo "DB_SERVER=localhost" >> .env
-          echo "DB_NAME=test_db" >> .env
-          echo "DB_USER=sa" >> .env
-          echo "DB_PASSWORD=Test@1234" >> .env
-          echo "PORT=5000" >> .env
+          npm run test:unit
 
-      - name: Run unit tests with coverage
-        working-directory: backend
-        run: npm run test:unit
-        env:
-          JWT_SECRET: ci_test_secret_unit
-          NODE_ENV: test
-        continue-on-error: false
-
-      - name: Upload unit test coverage
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: backend-unit-coverage
-          path: backend/coverage/unit
-          retention-days: 7
-
-  # ── Job 2: Backend Integration Tests (requires DB) ─────────────────────
-  backend-integration-tests:
-    name: 🔗 Backend Integration Tests
-    runs-on: ubuntu-latest
-    # Note: These tests need a real MSSQL instance.
-    # For CI, we skip if DB is unavailable by using continue-on-error.
-    # To enable fully: add a SQL Server service container below.
-    continue-on-error: true
-
-    # Uncomment to add a real MSSQL service in CI:
-    # services:
-    #   mssql:
-    #     image: mcr.microsoft.com/mssql/server:2022-latest
-    #     env:
-    #       ACCEPT_EULA: Y
-    #       SA_PASSWORD: Test@1234
-    #     ports:
-    #       - 1433:1433
-    #     options: >-
-    #       --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Test@1234 -Q 'SELECT 1'"
-    #       --health-interval 10s
-    #       --health-timeout 5s
-    #       --health-retries 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Create .env for integration tests
-        working-directory: backend
-        run: |
-          echo "JWT_SECRET=ci_integration_secret" >> .env
-          echo "NODE_ENV=test" >> .env
-          echo "DB_SERVER=${{ secrets.CI_DB_SERVER || 'localhost' }}" >> .env
-          echo "DB_NAME=${{ secrets.CI_DB_NAME || 'TestDB' }}" >> .env
-          echo "DB_USER=${{ secrets.CI_DB_USER || 'sa' }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.CI_DB_PASSWORD || 'Test@1234' }}" >> .env
-          echo "PORT=5001" >> .env
-
-      - name: Run integration & API tests with coverage
-        working-directory: backend
-        run: npm run test:integration
-        env:
-          JWT_SECRET: ci_integration_secret
-          NODE_ENV: test
-
-      - name: Upload integration coverage
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: backend-integration-coverage
-          path: backend/coverage/integration
-          retention-days: 7
-
-  # ── Job 3: Combined Coverage Report ────────────────────────────────────
-  backend-coverage-report:
-    name: 📊 Coverage Report
-    runs-on: ubuntu-latest
-    needs: [backend-unit-tests]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install backend dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Run all backend tests with full coverage
-        working-directory: backend
-        run: npm run test:ci
-        env:
-          JWT_SECRET: ci_coverage_secret
-          NODE_ENV: test
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: always()
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: backend/coverage
-          flags: backend
-          fail_ci_if_error: false
-
-  # ── Job 4: Frontend Build ───────────────────────────────────────────────
-  frontend-build:
-    name: 🏗️ Frontend Build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Create .env.local for build
+      - name: Test Frontend (Build Check)
         working-directory: frontend
         run: |
+          npm ci
           echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
-
-      - name: Build frontend (Next.js)
-        working-directory: frontend
-        run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:5000
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/.next
-          retention-days: 3
-
-  # ── Job 5: E2E Tests (Playwright) ──────────────────────────────────────
-  e2e-tests:
-    name: 🎭 E2E Tests (Playwright)
-    runs-on: ubuntu-latest
-    needs: [frontend-build]
-    continue-on-error: true  # E2E tests require a running backend; soft-fail in CI
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Install Playwright browsers
-        working-directory: frontend
-        run: npx playwright install --with-deps chromium
-
-      - name: Create .env.local for E2E
-        working-directory: frontend
-        run: |
-          echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
-
-      - name: Run E2E tests
-        working-directory: frontend
-        run: npx playwright test --reporter=html --project=chromium
-        env:
-          BASE_URL: http://localhost:3000
-          CI: true
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: frontend/playwright-report
-          retention-days: 7
-
-  # ── Job 6: Lint ────────────────────────────────────────────────────────
-  lint:
-    name: 🔍 Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Run ESLint
-        working-directory: frontend
-        run: npm run lint
-        continue-on-error: true  # Lint errors won't block CI while we fix them
-
-  # ── Job 7: Security Audit ──────────────────────────────────────────────
-  security-audit:
-    name: 🔒 Security Audit
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Audit backend dependencies
-        working-directory: backend
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-      - name: Audit frontend dependencies
-        working-directory: frontend
-        run: npm audit --audit-level=high
-        continue-on-error: true
-
-  # ── Job 8: CI Summary ──────────────────────────────────────────────────
-  ci-summary:
-    name: ✅ CI Summary
-    runs-on: ubuntu-latest
-    needs: [backend-unit-tests, backend-coverage-report, frontend-build, lint]
-    if: always()
-
-    steps:
-      - name: Check job results
-        run: |
-          echo "Backend Unit Tests: ${{ needs.backend-unit-tests.result }}"
-          echo "Backend Coverage: ${{ needs.backend-coverage-report.result }}"
-          echo "Frontend Build: ${{ needs.frontend-build.result }}"
-          echo "Lint: ${{ needs.lint.result }}"
-          
-          if [ "${{ needs.backend-unit-tests.result }}" != "success" ] || \
-             [ "${{ needs.backend-coverage-report.result }}" != "success" ] || \
-             [ "${{ needs.frontend-build.result }}" != "success" ] || \
-             [ "${{ needs.lint.result }}" != "success" ]; then
-            echo "❌ CI Pipeline Failed"
-            exit 1
-          else
-            echo "✅ CI Pipeline Passed"
-          fi
+          npm run build

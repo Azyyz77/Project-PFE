@@ -14,7 +14,6 @@ import {
   Search,
   Users,
   Calendar,
-  CalendarDays,
   MessageSquare,
   BarChart3,
   Menu,
@@ -70,11 +69,6 @@ const AGENT_NAV_ITEMS: NavItem[] = [
     label: 'Rendez-vous',
     href: '/dashboard/agent/appointments',
     icon: <Calendar className="w-5 h-5" />,
-  },
-  {
-    label: 'Planning',
-    href: '/dashboard/agent/planning',
-    icon: <CalendarDays className="w-5 h-5" />,
   },
   {
     label: 'Catalogue',

@@ -43,7 +43,7 @@ export default function MessagesPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/messages/recent`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/admin/messages/recent`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -70,7 +70,7 @@ export default function MessagesPage() {
     try {
       setSending(true);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/messages/publish`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/admin/messages/publish`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

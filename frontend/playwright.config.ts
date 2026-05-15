@@ -29,7 +29,7 @@ export default defineConfig({
 
   use: {
     // Base URL for all page.goto() calls
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://localhost:3001',
 
     // Capture trace on first retry for debugging
     trace: 'on-first-retry',
@@ -71,8 +71,8 @@ export default defineConfig({
 
   // ── Dev Server ─────────────────────────────────────────────────────────
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev -- -p 3001',
+    url: 'http://localhost:3001',
     // Reuse running server in local dev; always start fresh in CI
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

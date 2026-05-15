@@ -27,6 +27,7 @@ import {
   Shield,
   AlertTriangle,
   Info,
+  CalendarDays,
 } from 'lucide-react';
 
 interface NavItem {
@@ -65,6 +66,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     label: 'Toutes les commandes',
     href: '/dashboard/admin/orders',
     icon: <Wrench className="w-5 h-5" />,
+  },
+  {
+    label: 'Planning',
+    href: '/dashboard/admin/planning',
+    icon: <CalendarDays className="w-5 h-5" />,
   },
   {
     label: 'Types d\'intervention',
@@ -121,11 +127,7 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     href: '/dashboard/admin/promotions',
     icon: <Sparkles className="w-5 h-5" />,
   },
-  {
-    label: 'Promotions Véhicules',
-    href: '/dashboard/admin/vehicle-promotions',
-    icon: <Sparkles className="w-5 h-5" />,
-  },
+
   {
     label: 'Messages d\'Accueil',
     href: '/dashboard/admin/welcome-messages',
@@ -171,15 +173,15 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 const ADMIN_NAV_GROUPS = [
   {
     label: 'Gestion operationnelle',
-    items: ADMIN_NAV_ITEMS.slice(0, 6),
+    items: ADMIN_NAV_ITEMS.slice(0, 7),
   },
   {
     label: 'Referentiel services',
-    items: ADMIN_NAV_ITEMS.slice(6, 17),
+    items: ADMIN_NAV_ITEMS.slice(7, 18),
   },
   {
     label: 'Suivi et parametres',
-    items: ADMIN_NAV_ITEMS.slice(17),
+    items: ADMIN_NAV_ITEMS.slice(18),
   },
 ];
 

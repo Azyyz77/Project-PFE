@@ -34,8 +34,8 @@ test.describe('Agent Dashboard & Planning', () => {
     expect(wasRedirected || hasAuthUI).toBeTruthy();
   });
 
-  test('E2E-A02: Unauthenticated user cannot access agent planning page', async ({ page }) => {
-    await page.goto('/dashboard/agent/planning');
+  test('E2E-A02: Unauthenticated user cannot access admin planning page', async ({ page }) => {
+    await page.goto('/dashboard/admin/planning');
 
     await page.waitForTimeout(2500);
     await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
@@ -46,7 +46,7 @@ test.describe('Agent Dashboard & Planning', () => {
     const wasRedirected =
       url.includes('login') ||
       url.includes('unauthorized') ||
-      !url.includes('/dashboard/agent/planning');
+      !url.includes('/dashboard/admin/planning');
 
     const hasAuthUI = await page.locator('input[type="password"]').count() > 0;
 

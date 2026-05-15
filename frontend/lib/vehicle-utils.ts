@@ -188,6 +188,8 @@ export function buildVehicleFormFromVehicle(
     tunis_left: parsedPlate.tunis_left,
     tunis_right: parsedPlate.tunis_right,
     nt_serial: parsedPlate.nt_serial,
+    siv_format: parsedPlate.siv_format,
+    custom_format: parsedPlate.custom_format,
     numero_chassis: vehicle.numero_chassis,
     marque_id: selectedVersion ? String(selectedVersion.marque_id) : '',
     modele_id: selectedVersion ? String(selectedVersion.modele_id) : '',

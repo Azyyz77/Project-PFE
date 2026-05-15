@@ -4,6 +4,8 @@ module.exports = {
   clearMocks: true,
   forceExit: true,
   testTimeout: 30000,
+  // Masquer les console.log et console.warn pendant les tests pour une sortie propre
+  silent: true,
 
   // ── Test Discovery ──────────────────────────────────────────────────────
   testMatch: [
