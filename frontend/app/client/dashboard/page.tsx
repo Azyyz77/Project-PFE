@@ -79,7 +79,7 @@ export default function ClientDashboardPage() {
   }
 
   if (loading) {
-    return <ClientLoadingState message={t('dashboard.loading') || 'Chargement du tableau de bord...'} />;
+    return <ClientLoadingState message={t('common.loading')} />;
   }
 
   const upcomingAppointments = appointments.filter(
@@ -136,7 +136,7 @@ export default function ClientDashboardPage() {
                 >
                   <Sparkles className="h-4 w-4" />
                 </motion.div>
-                <span>Bonjour, {user.prenom}</span>
+                <span>{t('dashboard.hello')}, {user.prenom}</span>
               </div>
             </motion.div>
 
@@ -146,7 +146,7 @@ export default function ClientDashboardPage() {
               transition={{ delay: 0.2, duration: 0.3 }}
               className="text-3xl md:text-4xl font-bold text-white mb-3 leading-tight"
             >
-              Bienvenue sur votre espace <span className="text-white/90">Chery</span>
+              {t('dashboard.welcomeMessage')}
             </motion.h1>
 
             <motion.p
@@ -155,7 +155,7 @@ export default function ClientDashboardPage() {
               transition={{ delay: 0.3, duration: 0.3 }}
               className="text-white/80 text-base mb-6 max-w-2xl"
             >
-              Gérez vos véhicules, prenez rendez-vous et suivez l'historique de vos interventions en toute simplicité.
+              {t('dashboard.manageAppointments')}
             </motion.p>
 
             <motion.div
@@ -171,7 +171,7 @@ export default function ClientDashboardPage() {
                   className="inline-flex items-center gap-2 bg-white text-[#1877F2] px-5 py-2.5 rounded-md font-semibold text-sm shadow-sm hover:shadow-md transition-all"
                 >
                   <Plus className="h-4 w-4" />
-                  Prendre un RDV
+                  {t('dashboard.takeAppointment')}
                 </motion.button>
               </Link>
               <Link href="/client/vehicles">
@@ -181,7 +181,7 @@ export default function ClientDashboardPage() {
                   className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white px-5 py-2.5 rounded-md font-semibold text-sm border border-white/20 hover:bg-white/20 transition-all"
                 >
                   <Car className="h-4 w-4" />
-                  Mes véhicules
+                  {t('dashboard.myVehicles')}
                 </motion.button>
               </Link>
             </motion.div>
@@ -214,7 +214,7 @@ export default function ClientDashboardPage() {
                     {vehicles.length}
                   </div>
                   <div className="text-xs font-medium text-white/70 uppercase tracking-wide">
-                    Véhicules
+                    {t('dashboard.vehicles')}
                   </div>
                 </motion.div>
               </div>
@@ -231,11 +231,11 @@ export default function ClientDashboardPage() {
           transition={{ delay: 0.1, duration: 0.3 }}
         >
           <ClientStatCard
-            label="Rendez-vous à venir"
+            label={t('dashboard.upcomingAppointments')}
             value={upcomingAppointments.length}
             icon={Calendar}
             iconColor="text-[#1877F2]"
-            subtitle="Prochainement"
+            subtitle={t('dashboard.pending')}
           />
         </motion.div>
         
@@ -245,11 +245,11 @@ export default function ClientDashboardPage() {
           transition={{ delay: 0.2, duration: 0.3 }}
         >
           <ClientStatCard
-            label="Véhicules"
+            label={t('dashboard.myVehicles')}
             value={vehicles.length}
             icon={Car}
             iconColor="text-[#42B72A]"
-            subtitle="Actifs"
+            subtitle={t('dashboard.validated')}
           />
         </motion.div>
         
@@ -259,11 +259,11 @@ export default function ClientDashboardPage() {
           transition={{ delay: 0.3, duration: 0.3 }}
         >
           <ClientStatCard
-            label="Réclamations"
+            label={t('dashboard.complaints')}
             value={complaintsCount}
             icon={MessageSquare}
             iconColor="text-[#F7B928]"
-            subtitle="En attente"
+            subtitle={t('dashboard.pending')}
           />
         </motion.div>
         
@@ -273,11 +273,11 @@ export default function ClientDashboardPage() {
           transition={{ delay: 0.4, duration: 0.3 }}
         >
           <ClientStatCard
-            label="RDV terminés"
+            label={t('dashboard.completedAppointments')}
             value={completedAppointments}
             icon={CheckCircle2}
             iconColor="text-[#42B72A]"
-            subtitle="Total"
+            subtitle={t('common.total')}
           />
         </motion.div>
       </div>
@@ -292,15 +292,15 @@ export default function ClientDashboardPage() {
         >
           <ClientCard>
             <ClientCardHeader
-              title="Mes rendez-vous"
-              subtitle="Consultez vos rendez-vous récents"
+              title={t('dashboard.myAppointments')}
+              subtitle={t('appointments.manageAppointments')}
               action={
                 <Link href="/client/rendez-vous">
                   <motion.button
                     whileHover={{ x: 3 }}
                     className="inline-flex items-center gap-1 text-sm font-semibold text-[#1877F2] hover:underline"
                   >
-                    Voir tout
+                    {t('dashboard.viewAll')}
                     <ChevronRight className="h-4 w-4" />
                   </motion.button>
                 </Link>
@@ -310,9 +310,9 @@ export default function ClientDashboardPage() {
               {recentAppointments.length === 0 ? (
                 <ClientEmptyState
                   icon={Calendar}
-                  title="Aucun rendez-vous à venir"
-                  description="Réservez votre premier rendez-vous pour l'entretien de votre véhicule"
-                  actionLabel="Prendre un RDV"
+                  title={t('dashboard.noUpcomingAppointments')}
+                  description={t('appointments.noSlotsAvailable')}
+                  actionLabel={t('dashboard.takeAppointment')}
                   onAction={() => router.push('/client/rendez-vous')}
                 />
               ) : (
@@ -346,16 +346,16 @@ export default function ClientDashboardPage() {
                           <h3 className="font-semibold text-[#050505] text-base truncate mb-1">
                             {appointment.interventions?.[0]
                               ? `${appointment.interventions[0].type_nom} + ${appointment.interventions[0].sous_type_nom}`
-                              : 'Rendez-vous service'}
+                              : t('dashboard.serviceAppointment')}
                           </h3>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-[#65676B]">
                             <span className="inline-flex items-center gap-1">
                               <Car className="h-3 w-3" />
-                              {appointment.immatriculation || 'Véhicule'}
+                              {appointment.immatriculation || t('dashboard.vehicle')}
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
-                              {appointment.agence_nom || 'Agence'}
+                              {appointment.agence_nom || t('dashboard.agency')}
                             </span>
                             <span className="inline-flex items-center gap-1">
                               <Clock className="h-3 w-3" />
@@ -387,7 +387,7 @@ export default function ClientDashboardPage() {
           transition={{ delay: 0.6, duration: 0.4 }}
         >
           <ClientCard>
-            <ClientCardHeader title="Actions rapides" />
+            <ClientCardHeader title={t('dashboard.quickActions')} />
             <ClientCardContent>
               <div className="grid gap-3">
                 <Link href="/client/rendez-vous" className="group">
@@ -401,8 +401,8 @@ export default function ClientDashboardPage() {
                         <Calendar className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold">Prendre RDV</p>
-                        <p className="text-xs text-white/70">Réservez un créneau</p>
+                        <p className="text-sm font-semibold">{t('dashboard.takeAppointment')}</p>
+                        <p className="text-xs text-white/70">{t('dashboard.bookAppointment')}</p>
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
@@ -420,8 +420,8 @@ export default function ClientDashboardPage() {
                         <MessageSquare className="h-5 w-5 text-[#65676B]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold">Réclamation</p>
-                        <p className="text-xs text-[#65676B]">Signaler un problème</p>
+                        <p className="text-sm font-semibold">{t('dashboard.submitComplaint')}</p>
+                        <p className="text-xs text-[#65676B]">{t('dashboard.reportProblem')}</p>
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-[#65676B] group-hover:text-[#050505] transition-colors" />
@@ -434,10 +434,10 @@ export default function ClientDashboardPage() {
           {/* My Vehicles List */}
           <ClientCard>
             <ClientCardHeader 
-              title="Mes véhicules" 
+              title={t('dashboard.myVehicles')} 
               action={
                 <Link href="/client/vehicles" className="text-xs font-semibold text-[#1877F2] hover:underline">
-                  Voir tout
+                  {t('dashboard.viewAll')}
                 </Link>
               }
             />
@@ -447,8 +447,8 @@ export default function ClientDashboardPage() {
                   <div className="h-16 w-16 rounded-full bg-[#E4E6EB] flex items-center justify-center mx-auto mb-3">
                     <Car className="h-8 w-8 text-[#65676B]" />
                   </div>
-                  <p className="text-sm font-semibold text-[#050505] mb-1">Aucun véhicule</p>
-                  <p className="text-xs text-[#65676B] mb-4">Ajoutez votre premier véhicule</p>
+                  <p className="text-sm font-semibold text-[#050505] mb-1">{t('dashboard.noVehicles')}</p>
+                  <p className="text-xs text-[#65676B] mb-4">{t('dashboard.addVehicle')}</p>
                   <Link href="/client/vehicles/new">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -456,7 +456,7 @@ export default function ClientDashboardPage() {
                       className="inline-flex items-center gap-2 bg-[#1877F2] text-white px-4 py-2 rounded-md text-sm font-semibold"
                     >
                       <Plus className="h-4 w-4" />
-                      Ajouter un véhicule
+                      {t('dashboard.addVehicle')}
                     </motion.button>
                   </Link>
                 </div>
@@ -499,10 +499,10 @@ export default function ClientDashboardPage() {
                             <div className="flex items-center gap-2 mt-0.5">
                               <p className="text-xs text-[#65676B] font-medium">{vehicle.immatriculation}</p>
                               {isValidated && (
-                                <span className="text-[10px] font-semibold text-[#42B72A]">• Validé</span>
+                                <span className="text-[10px] font-semibold text-[#42B72A]">• {t('dashboard.validated')}</span>
                               )}
                               {isPending && (
-                                <span className="text-[10px] font-semibold text-[#F7B928]">• En attente</span>
+                                <span className="text-[10px] font-semibold text-[#F7B928]">• {t('dashboard.pending')}</span>
                               )}
                             </div>
                           </div>
@@ -533,9 +533,9 @@ export default function ClientDashboardPage() {
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-[#65676B] group-hover:text-[#1877F2] transition-colors">
-                            Ajouter un véhicule
+                            {t('dashboard.addVehicle')}
                           </p>
-                          <p className="text-xs text-[#8A8D91]">Enregistrer un nouveau véhicule</p>
+                          <p className="text-xs text-[#8A8D91]">{t('dashboard.addVehicle')}</p>
                         </div>
                       </motion.div>
                     </Link>

@@ -7,7 +7,7 @@ export const colors = {
   // Facebook Primary Colors
   primary: '#1877F2',        // Facebook Blue
   primaryDark: '#166FE5',    // Darker blue for pressed states
-  primaryLight: '#E7F3FF',   // Light blue for backgrounds
+  primaryLight: '#ffffffff',   // Light blue for backgrounds
   
   // Status colors (Facebook-style)
   success: '#42B72A',        // Facebook Green
@@ -17,16 +17,16 @@ export const colors = {
   
   // Neutral colors (Facebook palette)
   background: '#F0F2F5',     // Facebook Light Gray
-  surface: '#FFFFFF',        // Pure White
+  surface: '#ffffffff',        // Pure White
   border: '#E4E6EB',         // Facebook Border Gray
   borderLight: '#CED0D4',    // Lighter border
   
   // Text colors (Facebook)
-  textPrimary: '#050505',    // Facebook Black
+  textPrimary: '#000000ff',    // Facebook Black
   textSecondary: '#65676B',  // Facebook Gray
   textMuted: '#8A8D91',      // Muted Gray
   textLight: '#B0B3B8',      // Light Gray
-  textWhite: '#FFFFFF',      // White text
+  textWhite: '#ffffffff',      // White text
   
   // Service card backgrounds (Facebook-inspired)
   purple: '#F3E8FF',

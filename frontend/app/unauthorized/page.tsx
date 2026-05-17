@@ -4,9 +4,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function UnauthorizedPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Clear any stale auth data
@@ -36,20 +38,20 @@ export default function UnauthorizedPage() {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Accès refusé</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('auth.unauthorizedTitle')}</h1>
         
         <p className="text-gray-600 mb-6">
-          Vous n'avez pas les droits pour accéder à cette page.
-          Veuillez vous connecter avec un compte autorisé.
+          {t('auth.unauthorizedDesc')}
         </p>
 
         <Button
           onClick={handleBackToLogin}
           className="w-full bg-red-600 hover:bg-red-700 text-white"
         >
-          Retour à la connexion
+          {t('auth.backToLogin')}
         </Button>
       </div>
     </div>
   );
 }
+

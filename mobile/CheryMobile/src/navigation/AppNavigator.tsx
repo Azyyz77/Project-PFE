@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
 import { colors } from '../styles/theme';
 
-// Auth screens
+import LandingScreen from '../screens/LandingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -81,6 +81,7 @@ export default function AppNavigator() {
           </>
         ) : (
           <>
+            <Stack.Screen name="Landing" component={LandingScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />

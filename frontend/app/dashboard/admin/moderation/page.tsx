@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
 import { 
   FileText, 
   CheckCircle, 
@@ -16,7 +17,10 @@ import {
   MessageSquare,
   Download,
   RefreshCw,
-  Filter
+  Filter,
+  ArrowLeft,
+  ShieldAlert,
+  Loader2
 } from 'lucide-react';
 import { 
   getPendingFiles, 
@@ -84,7 +88,7 @@ export default function ModerationPage() {
   // Rejeter un fichier
   const handleReject = async (fileId: number) => {
     if (!comments[fileId]?.trim()) {
-      setError('Un commentaire est requis pour le rejet');
+      setError('Un commentaire est requis pour le rejet du fichier');
       return;
     }
 
@@ -109,11 +113,9 @@ export default function ModerationPage() {
   const handleDownload = (fileId: number, fileName: string) => {
     const downloadUrl = downloadFileForModeration(fileId);
     
-    // Try direct window.open first
     try {
       window.open(downloadUrl, '_blank');
     } catch (error) {
-      // Fallback to programmatic link click
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = fileName;
@@ -134,7 +136,6 @@ export default function ModerationPage() {
   // Changer le filtre
   const handleFilterChange = (newFilter: 'ALL' | 'RDV' | 'RECLAMATION') => {
     setFilter(newFilter);
-    // Recharger avec le nouveau filtre
     setTimeout(() => loadPendingFiles(1), 0);
   };
 
@@ -150,7 +151,7 @@ export default function ModerationPage() {
   };
 
   const formatFileSize = (sizeInMB: number) => {
-    return `${sizeInMB.toFixed(2)} MB`;
+    return `${sizeInMB.toFixed(2)} Mo`;
   };
 
   const formatDate = (dateString: string) => {
@@ -164,43 +165,60 @@ export default function ModerationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header and Back Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Modération des Fichiers</h1>
-          <p className="text-gray-600">Vérifiez et approuvez les fichiers uploadés par les clients</p>
+          <Link href="/dashboard/admin">
+            <Button variant="ghost" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-xl gap-2 px-3 pl-2">
+              <ArrowLeft className="w-5 h-5" />
+              Retour au tableau de bord
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight mt-3">
+            <ShieldAlert className="w-7 h-7 text-orange-500" />
+            Modération des fichiers
+          </h1>
+          <p className="text-slate-500 text-xs mt-1">Vérifiez, validez ou rejetez les fichiers uploadés par les clients.</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={() => loadPendingFiles(pagination.page)}
             disabled={loading}
+            className="border-slate-200 hover:bg-slate-50 rounded-xl text-slate-700"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
-          <Badge variant="secondary" className="text-lg px-3 py-1">
+          <Badge className="bg-orange-50 text-orange-700 border border-orange-200/50 shadow-none text-sm px-3.5 py-1.5 rounded-full font-bold">
             {pagination.total} en attente
           </Badge>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center space-x-2">
-        <Filter className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-medium text-gray-700">Filtrer par type:</span>
-        <div className="flex space-x-2">
+      <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
+          <Filter className="w-4 h-4 text-slate-400" />
+          Filtrer par type :
+        </div>
+        <div className="flex gap-2">
           {[
-            { key: 'ALL', label: 'Tous' },
+            { key: 'ALL', label: 'Tous les fichiers' },
             { key: 'RDV', label: 'Rendez-vous' },
             { key: 'RECLAMATION', label: 'Réclamations' }
           ].map(({ key, label }) => (
             <Button
               key={key}
-              variant={filter === key ? 'default' : 'outline'}
+              variant="outline"
               size="sm"
               onClick={() => handleFilterChange(key as any)}
+              className={`rounded-xl px-4 py-1.5 text-xs font-semibold ${
+                filter === key 
+                  ? 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800' 
+                  : 'text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
             >
               {label}
             </Button>
@@ -210,145 +228,141 @@ export default function ModerationPage() {
 
       {/* Error Alert */}
       {error && (
-        <Alert variant="destructive">
-          <XCircle className="w-4 h-4" />
-          <AlertDescription>{error}</AlertDescription>
+        <Alert variant="destructive" className="rounded-2xl border-rose-200 bg-rose-50/50 text-rose-800">
+          <XCircle className="w-4 h-4 text-rose-500" />
+          <AlertDescription className="text-xs font-medium">{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Instructions */}
-      <Alert>
-        <MessageSquare className="w-4 h-4" />
-        <AlertDescription>
-          <strong>Instructions:</strong> Vérifiez chaque fichier pour vous assurer qu'il est approprié et conforme aux politiques. 
-          Approuvez les fichiers valides ou rejetez-les avec un commentaire explicatif.
+      {/* Instructions Alert */}
+      <Alert className="rounded-2xl border-orange-200 bg-orange-50/30 text-orange-950 flex items-start gap-3">
+        <MessageSquare className="w-5 h-5 text-orange-500 mt-0.5" />
+        <AlertDescription className="text-xs leading-relaxed">
+          <strong className="font-bold text-orange-950 block mb-0.5">Consignes de modération</strong> 
+          Vérifiez scrupuleusement la lisibilité et l'authenticité de chaque fichier. Un rejet requiert obligatoirement un motif clair qui sera communiqué au client pour correction.
         </AlertDescription>
       </Alert>
 
-      {/* Files List */}
+      {/* Files List Container */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="p-16 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto" />
         </div>
       ) : pendingFiles.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Aucun fichier en attente
-            </h3>
-            <p className="text-gray-600">
-              {filter === 'ALL' 
-                ? 'Tous les fichiers ont été modérés' 
-                : `Aucun fichier ${filter === 'RDV' ? 'de rendez-vous' : 'de réclamation'} en attente`
-              }
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-white border border-slate-200/80 rounded-3xl p-16 text-center shadow-sm">
+          <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-slate-900">Tout est en ordre !</h3>
+          <p className="text-slate-500 text-sm mt-1">
+            {filter === 'ALL' 
+              ? 'Aucun fichier en attente de modération.' 
+              : `Aucun fichier de type ${filter === 'RDV' ? 'Rendez-vous' : 'Réclamation'} n'attend de validation.`
+            }
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {pendingFiles.map((file) => (
-            <Card key={file.id} className="border-l-4 border-l-yellow-500">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-2xl">{getFileIcon(file.type_mime)}</div>
-                    <div>
-                      <CardTitle className="text-lg">{file.url}</CardTitle>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                        <span className="flex items-center">
-                          <FileText className="w-4 h-4 mr-1" />
-                          {formatFileSize(file.taille_mo)}
-                        </span>
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {formatDate(file.date_upload)}
-                        </span>
-                      </div>
+            <div key={file.id} className="bg-white border-l-4 border-l-orange-500 border-y border-r border-slate-200/80 rounded-2xl p-6 shadow-sm space-y-5">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-center">
+                    {getFileIcon(file.type_mime)}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-base break-all">{file.url}</h3>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1.5">
+                      <span className="flex items-center gap-1 font-medium">
+                        <FileText className="w-4 h-4 text-slate-400" />
+                        {formatFileSize(file.taille_mo)}
+                      </span>
+                      <span className="flex items-center gap-1 font-medium">
+                        <Calendar className="w-4 h-4 text-slate-400" />
+                        {formatDate(file.date_upload)}
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(file.id, file.url)}
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      Télécharger
-                    </Button>
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-                      <Clock className="w-3 h-3 mr-1" />
-                      En attente
-                    </Badge>
-                  </div>
                 </div>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                {/* Client Info */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium">{file.client_nom}</span>
-                    <span className="text-gray-500">({file.client_email})</span>
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    <Badge variant="outline" className="mr-2">
-                      {file.entite_type_label}
-                    </Badge>
-                    #{file.entite_id}
-                  </div>
-                </div>
-
-                {/* Comment */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Commentaire (optionnel pour approbation, requis pour rejet)
-                  </label>
-                  <Textarea
-                    value={comments[file.id] || ''}
-                    onChange={(e) => setComments(prev => ({ ...prev, [file.id]: e.target.value }))}
-                    placeholder="Ajoutez un commentaire sur ce fichier..."
-                    className="min-h-20"
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-end space-x-3">
+                <div className="flex items-center gap-2 self-start">
                   <Button
                     variant="outline"
-                    onClick={() => handleReject(file.id)}
-                    disabled={processingId === file.id}
-                    className="text-red-600 border-red-300 hover:bg-red-50"
+                    size="sm"
+                    onClick={() => handleDownload(file.id, file.url)}
+                    className="border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold px-3 py-1.5"
                   >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    {processingId === file.id ? 'Rejet...' : 'Rejeter'}
+                    <Download className="w-3.5 h-3.5 mr-1.5 text-slate-500" />
+                    Télécharger
                   </Button>
-                  <Button
-                    onClick={() => handleApprove(file.id)}
-                    disabled={processingId === file.id}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {processingId === file.id ? 'Approbation...' : 'Approuver'}
-                  </Button>
+                  <Badge className="bg-amber-50 text-amber-700 border border-amber-200/50 shadow-none rounded-xl text-xs font-semibold py-1 px-2.5 gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-500" />
+                    En attente
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Client Info Block */}
+              <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <span className="font-bold text-slate-800">{file.client_nom}</span>
+                  <span className="text-slate-500">({file.client_email})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-white border-slate-200 text-slate-600 font-semibold px-2 py-0.5 rounded-lg">
+                    {file.entite_type_label}
+                  </Badge>
+                  <span className="font-mono text-slate-400">ID #{file.entite_id}</span>
+                </div>
+              </div>
+
+              {/* Comment and Feedback Input */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  Commentaires internes ou motif de rejet
+                </label>
+                <Textarea
+                  value={comments[file.id] || ''}
+                  onChange={(e) => setComments(prev => ({ ...prev, [file.id]: e.target.value }))}
+                  placeholder="Écrivez un commentaire interne pour documenter votre décision ou spécifier le motif du rejet..."
+                  className="min-h-20 bg-slate-50/30 border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl placeholder:text-slate-400 text-sm focus:outline-none"
+                />
+              </div>
+
+              {/* Moderation Actions Button Block */}
+              <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+                <Button
+                  variant="outline"
+                  onClick={() => handleReject(file.id)}
+                  disabled={processingId === file.id}
+                  className="text-rose-600 border-rose-200 hover:bg-rose-50 rounded-xl font-bold text-xs"
+                >
+                  <XCircle className="w-4 h-4 mr-1.5" />
+                  {processingId === file.id ? 'Rejet en cours...' : 'Rejeter'}
+                </Button>
+                <Button
+                  onClick={() => handleApprove(file.id)}
+                  disabled={processingId === file.id}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm"
+                >
+                  <CheckCircle className="w-4 h-4 mr-1.5" />
+                  {processingId === file.id ? 'Approbation...' : 'Approuver'}
+                </Button>
+              </div>
+            </div>
           ))}
 
-          {/* Pagination */}
+          {/* Pagination Controls */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                Page {pagination.page} sur {pagination.totalPages} ({pagination.total} fichiers)
+            <div className="flex items-center justify-between pt-4">
+              <div className="text-xs font-semibold text-slate-500">
+                Page {pagination.page} sur {pagination.totalPages} ({pagination.total} fichiers en attente)
               </div>
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page <= 1 || loading}
+                  className="border-slate-200 hover:bg-slate-50 rounded-xl text-xs"
                 >
                   Précédent
                 </Button>
@@ -357,6 +371,7 @@ export default function ModerationPage() {
                   size="sm"
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages || loading}
+                  className="border-slate-200 hover:bg-slate-50 rounded-xl text-xs"
                 >
                   Suivant
                 </Button>

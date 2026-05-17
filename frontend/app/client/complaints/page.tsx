@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   MessageSquare, 
@@ -30,9 +29,7 @@ import {
   Send,
   MessageCircle,
   FileText,
-  ChevronRight,
-  Sparkles,
-  ArrowRight
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ComplaintAttachments } from '@/components/examples/FileUploadExample';
@@ -87,11 +84,11 @@ export default function ComplaintsPage() {
     } catch (err) {
       const error = err as Error;
       console.error('Error loading complaints:', error);
-      toast.error('Erreur', { description: error.message || 'Erreur lors du chargement des réclamations' });
+      toast.error(t('repairOrders.error'), { description: error.message || t('complaints.errorLoading') });
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     loadComplaints();
@@ -113,12 +110,12 @@ export default function ComplaintsPage() {
     const newErrors: Record<string, string> = {};
 
     if (!form.sujet.trim()) {
-      newErrors.sujet = 'Le sujet est obligatoire';
+      newErrors.sujet = t('complaints.subjectRequired');
     }
     if (!form.description.trim()) {
-      newErrors.description = 'La description est obligatoire';
+      newErrors.description = t('complaints.descriptionRequired');
     } else if (form.description.trim().length < 10) {
-      newErrors.description = 'La description doit contenir au moins 10 caractères';
+      newErrors.description = t('complaints.descriptionMinLength');
     }
 
     return newErrors;
@@ -136,7 +133,7 @@ export default function ComplaintsPage() {
     }
 
     if (!token) {
-      setApiError('Vous devez être connecté');
+      setApiError(t('complaints.mustBeLoggedIn'));
       return;
     }
 
@@ -156,18 +153,18 @@ export default function ComplaintsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la création de la réclamation');
+        throw new Error(data.error || t('complaints.errorCreating'));
       }
 
-      toast.success('Réclamation créée avec succès!');
+      toast.success(t('complaints.success'));
       setForm({ sujet: '', description: '' });
       setIsDialogOpen(false);
       loadComplaints();
     } catch (err) {
       const error = err as Error;
-      const msg = error.message || 'Erreur lors de la création';
+      const msg = error.message || t('complaints.errorCreating');
       setApiError(msg);
-      toast.error('Erreur', { description: msg });
+      toast.error(t('repairOrders.error'), { description: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -201,7 +198,7 @@ export default function ComplaintsPage() {
   };
 
   if (isLoading) {
-    return <ClientLoadingState message="Chargement de vos réclamations..." />;
+    return <ClientLoadingState message={t('complaints.loading')} />;
   }
 
   return (
@@ -210,22 +207,22 @@ export default function ComplaintsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-[#050505] shadow-md border border-[#E4E6EB]"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <Sparkles className="h-3.5 w-3.5" />
-              Service Client
+              {t('complaints.serviceClient')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-3xl font-bold tracking-tight leading-none">
-              Vos <span className="text-blue-500">Réclamations</span>
+            <h1 className="mb-4 text-4xl sm:text-3xl font-bold tracking-tight leading-none text-[#050505]">
+              {t('complaints.title')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
-              Nous sommes à votre écoute. Exprimez vos préoccupations et suivez le traitement de vos demandes en temps réel.
+            <p className="text-[#65676B] font-medium text-lg leading-relaxed">
+              {t('complaints.subtitle')}
             </p>
           </div>
 
@@ -243,19 +240,19 @@ export default function ComplaintsPage() {
       {/* ─── Stats Summary ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ClientStatCard
-          label="Total Réclamations"
+          label={t('complaints.totalComplaints')}
           value={complaints.length}
           icon={MessageSquare}
           iconColor="text-blue-600"
         />
         <ClientStatCard
-          label="En cours"
+          label={t('complaints.inProgress')}
           value={complaints.filter(c => c.statut === 'EN_COURS' || c.statut === 'SOUMISE').length}
           icon={Clock}
           iconColor="text-amber-500"
         />
         <ClientStatCard
-          label="Traitées"
+          label={t('complaints.processed')}
           value={complaints.filter(c => c.statut === 'TRAITEE' || c.statut === 'CLOTUREE').length}
           icon={CheckCircle}
           iconColor="text-emerald-500"
@@ -276,7 +273,7 @@ export default function ComplaintsPage() {
           <div className="grid gap-6">
             {complaints.map((complaint, idx) => {
               const statusInfo = getStatusInfo(complaint.statut);
-              const createdDate = new Date(complaint.date_creation).toLocaleDateString('fr-FR', {
+              const createdDate = new Date(complaint.date_creation).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',
@@ -289,7 +286,7 @@ export default function ComplaintsPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <ClientCard className="overflow-hidden border-none shadow-sm shadow-slate-200/40">
+                  <ClientCard className="overflow-hidden border-none shadow-sm shadow-slate-200/40 bg-white">
                     <div className="flex flex-col md:flex-row gap-4">
                       {/* Left Side: Info */}
                       <div className="flex-1 space-y-6">
@@ -304,16 +301,16 @@ export default function ComplaintsPage() {
                                 {statusInfo.label}
                               </span>
                             </div>
-                            <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">
+                            <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">
                               {t('complaints.createdOn')} {createdDate} • ID: #{complaint.id}
                             </p>
                           </div>
                         </div>
 
                         <div className="rounded-lg bg-[#F0F2F5] p-6 border border-[#E4E6EB]">
-                          <h4 className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] mb-3 flex items-center gap-2">
+                          <h4 className="text-[10px] font-bold uppercase tracking-wide text-[#65676B] mb-3 flex items-center gap-2">
                             <FileText className="h-3.5 w-3.5" />
-                            Description du problème
+                            {t('complaints.problemDescription')}
                           </h4>
                           <p className="text-[#65676B] font-medium leading-relaxed whitespace-pre-wrap">
                             {complaint.description}
@@ -336,7 +333,7 @@ export default function ComplaintsPage() {
                           >
                             <h4 className="text-[10px] font-bold uppercase tracking-wide text-emerald-600 mb-4 flex items-center gap-2">
                               <MessageCircle className="h-4 w-4" />
-                              Réponse Officielle
+                              {t('complaints.officialResponse')}
                             </h4>
                             <p className="text-emerald-800 font-medium leading-relaxed italic text-sm flex-1">
                               "{complaint.reponse}"
@@ -344,7 +341,7 @@ export default function ComplaintsPage() {
                             {complaint.date_resolution && (
                               <div className="mt-6 pt-4 border-t border-emerald-100/50">
                                 <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-wide">
-                                  Résolu le {new Date(complaint.date_resolution).toLocaleDateString('fr-FR')}
+                                  {t('complaints.resolvedOn')} {new Date(complaint.date_resolution).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}
                                 </p>
                               </div>
                             )}
@@ -363,16 +360,16 @@ export default function ComplaintsPage() {
       {/* ─── New Complaint Dialog ─── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-2xl p-0 overflow-hidden rounded-lg border-none shadow-md">
-          <div className="bg-white p-10 text-white relative overflow-hidden">
+          <div className="bg-slate-50 p-10 text-[#050505] relative overflow-hidden border-b border-[#E4E6EB]">
             <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <Plus className="h-8 w-8 text-blue-500" />
-                <span className="text-xs font-bold uppercase tracking-wide text-[#B0B3B8]">Nouvelle Demande</span>
+                <span className="text-xs font-bold uppercase tracking-wide text-[#65676B]">{t('complaints.newRequest')}</span>
               </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-2">{t('complaints.createComplaint')}</h2>
-              <p className="text-[#B0B3B8] font-medium leading-relaxed">
-                Remplissez le formulaire ci-dessous pour nous faire part de votre problème.
+              <h2 className="text-3xl font-bold tracking-tight mb-2 text-[#050505]">{t('complaints.createComplaint')}</h2>
+              <p className="text-[#65676B] font-medium leading-relaxed">
+                {t('complaints.formInstructions')}
               </p>
             </div>
           </div>
@@ -387,7 +384,7 @@ export default function ComplaintsPage() {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="sujet" className="text-xs font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label htmlFor="sujet" className="text-xs font-bold uppercase tracking-wide text-[#65676B] ml-1">
                   {t('complaints.subject')} <span className="text-blue-500">*</span>
                 </Label>
                 <Input
@@ -413,7 +410,7 @@ export default function ComplaintsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wide text-[#65676B] ml-1">
                   {t('complaints.description')} <span className="text-blue-500">*</span>
                 </Label>
                 <Textarea

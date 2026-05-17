@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { repairOrdersApi } from '@/lib/api/repairOrders';
 import type { RepairOrder, RepairOrderStatus } from '@/types/repairOrder';
 import {
@@ -19,13 +20,11 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   FileText,
-  Download,
   AlertCircle,
   CheckCircle2,
   Clock,
   Car,
   MapPin,
-  Calendar,
   Wrench,
   Package,
   ShieldCheck,
@@ -42,21 +41,30 @@ const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon:
   ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
 };
 
-const STATUS_LABELS: Record<RepairOrderStatus, string> = {
-  BROUILLON: 'En préparation',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  ANNULEE: 'Annulée',
-};
-
 export default function ClientRepairOrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user, token, isLoading } = useAuth();
+  const { t } = useLanguage();
   const [commande, setCommande] = useState<RepairOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const STATUS_LABELS: Record<RepairOrderStatus, string> = {
+    BROUILLON: t('repairOrders.status.brouillon'),
+    EN_COURS: t('repairOrders.status.enCours'),
+    TERMINEE: t('repairOrders.status.terminee'),
+    FACTUREE: t('repairOrders.status.facturee'),
+    ANNULEE: t('repairOrders.status.annulee'),
+  };
+
+  const STATUS_DESCS: Record<RepairOrderStatus, string> = {
+    BROUILLON: t('repairOrders.statusDesc.brouillon'),
+    EN_COURS: t('repairOrders.statusDesc.enCours'),
+    TERMINEE: t('repairOrders.statusDesc.terminee'),
+    FACTUREE: t('repairOrders.statusDesc.facturee'),
+    ANNULEE: t('repairOrders.statusDesc.annulee'),
+  };
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'CLIENT')) {
@@ -78,14 +86,14 @@ export default function ClientRepairOrderDetailsPage() {
       setCommande(data);
     } catch (err: any) {
       console.error('Erreur:', err);
-      setError(err.response?.data?.error || 'Erreur lors du chargement');
+      setError(err.response?.data?.error || t('repairOrders.errorLoading'));
     } finally {
       setLoading(false);
     }
   };
 
   if (isLoading || !user || !token || loading) {
-    return <ClientLoadingState message="Chargement des détails de la commande..." />;
+    return <ClientLoadingState message={t('repairOrders.detailsLoading')} />;
   }
 
   if (error || !commande) {
@@ -97,10 +105,10 @@ export default function ClientRepairOrderDetailsPage() {
           className="p-12 text-center bg-blue-50 rounded-xl border border-blue-100 max-w-xl w-full"
         >
           <AlertCircle className="h-16 w-16 text-blue-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-blue-700 mb-2">Erreur</h2>
-          <p className="text-blue-600 font-medium">{error || 'Commande non trouvée'}</p>
+          <h2 className="text-2xl font-bold text-blue-700 mb-2">{t('repairOrders.error')}</h2>
+          <p className="text-blue-600 font-medium">{error || t('repairOrders.notFound')}</p>
           <ClientButton onClick={() => router.back()} variant="secondary" className="mt-8" icon={ArrowLeft}>
-            Retour
+            {t('repairOrders.back')}
           </ClientButton>
         </motion.div>
       </ClientPageWrapper>
@@ -116,7 +124,7 @@ export default function ClientRepairOrderDetailsPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-[#050505] shadow-md border border-[#E4E6EB]"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
@@ -127,10 +135,10 @@ export default function ClientRepairOrderDetailsPage() {
               variant="outline" 
               onClick={() => router.back()} 
               icon={ArrowLeft}
-              className="mb-8 bg-white/5 border-white/10 text-white hover:bg-white/10"
+              className="mb-8 bg-slate-100 hover:bg-slate-200 border-none text-[#050505]"
               size="small"
             >
-              Retour
+              {t('repairOrders.back')}
             </ClientButton>
             
             <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -142,17 +150,17 @@ export default function ClientRepairOrderDetailsPage() {
               </Badge>
             </div>
             
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed flex items-center gap-2">
+            <p className="text-[#65676B] font-medium text-lg leading-relaxed flex items-center gap-2">
               <Car className="h-5 w-5 text-blue-500" />
               {commande.immatriculation} - {commande.marque_nom} {commande.modele_nom}
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center justify-center p-8 rounded-lg bg-white/5 border border-white/10 backdrop-blur-xl w-full md:w-auto">
+          <div className="shrink-0 flex items-center justify-center p-8 rounded-lg bg-slate-50 border border-slate-200 backdrop-blur-xl w-full md:w-auto">
             <div className="text-center">
-              <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mb-1">Montant Total</p>
-              <p className="text-4xl font-bold text-white">{commande.montant_total?.toFixed(2) || '0.00'}</p>
-              <p className="text-[10px] font-bold text-[#8A8D91]">TND</p>
+              <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide mb-1">{t('repairOrders.totalAmount')}</p>
+              <p className="text-4xl font-bold text-[#050505]">{commande.montant_total?.toFixed(2) || '0.00'}</p>
+              <p className="text-[10px] font-bold text-[#65676B]">TND</p>
             </div>
           </div>
         </div>
@@ -163,7 +171,7 @@ export default function ClientRepairOrderDetailsPage() {
         {/* Left Column (Information) */}
         <div className="lg:col-span-1 space-y-8">
           <ClientCard>
-            <ClientCardHeader title="Informations Véhicule" />
+            <ClientCardHeader title={t('repairOrders.vehicleInfo')} />
             <ClientCardContent>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -171,16 +179,16 @@ export default function ClientRepairOrderDetailsPage() {
                     <Car className="h-6 w-6 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Plaque</p>
+                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.plaque')}</p>
                     <p className="text-lg font-bold text-[#050505]">{commande.immatriculation}</p>
                   </div>
                 </div>
                 <div className="pl-16">
-                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Modèle</p>
+                  <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.model')}</p>
                   <p className="font-bold text-slate-700">{commande.marque_nom} {commande.modele_nom}</p>
                 </div>
                 <div className="pl-16">
-                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Châssis</p>
+                  <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.chassis')}</p>
                   <p className="font-mono text-sm text-[#65676B] bg-[#F0F2F5] px-3 py-1.5 rounded-lg inline-block border border-[#E4E6EB]">{commande.numero_chassis}</p>
                 </div>
               </div>
@@ -188,7 +196,7 @@ export default function ClientRepairOrderDetailsPage() {
           </ClientCard>
 
           <ClientCard>
-            <ClientCardHeader title="Agence SAV" />
+            <ClientCardHeader title={t('repairOrders.agency')} />
             <ClientCardContent>
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -196,19 +204,19 @@ export default function ClientRepairOrderDetailsPage() {
                     <MapPin className="h-6 w-6 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Centre</p>
+                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.center')}</p>
                     <p className="text-base font-bold text-[#050505]">{commande.agence_nom}</p>
                   </div>
                 </div>
                 {commande.agence_adresse && (
                   <div className="pl-16">
-                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Adresse</p>
+                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.address')}</p>
                     <p className="font-medium text-[#65676B] text-sm leading-relaxed">{commande.agence_adresse}</p>
                   </div>
                 )}
                 {commande.agence_telephone && (
                   <div className="pl-16">
-                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Téléphone</p>
+                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.phone')}</p>
                     <p className="font-medium text-[#65676B]">{commande.agence_telephone}</p>
                   </div>
                 )}
@@ -218,25 +226,25 @@ export default function ClientRepairOrderDetailsPage() {
 
           {(commande.date_creation || commande.date_debut || commande.date_fin) && (
             <ClientCard>
-              <ClientCardHeader title="Vérification Temporelle" />
+              <ClientCardHeader title={t('repairOrders.timeTracking')} />
               <ClientCardContent>
                 <div className="space-y-4">
                   {commande.date_creation && (
                     <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Création</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_creation).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.creation')}</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_creation).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
                     </div>
                   )}
                   {commande.date_debut && (
                     <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Démarrage</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_debut).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.start')}</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_debut).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
                     </div>
                   )}
                   {commande.date_fin && (
                     <div className="flex justify-between items-center">
-                      <p className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">Clôture</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_fin).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.close')}</p>
+                      <p className="font-bold text-[#050505]">{new Date(commande.date_fin).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
                     </div>
                   )}
                 </div>
@@ -257,11 +265,7 @@ export default function ClientRepairOrderDetailsPage() {
                 <div>
                   <h3 className={`text-xl font-bold mb-1 ${status.text}`}>{STATUS_LABELS[commande.statut]}</h3>
                   <p className="text-[#65676B] font-medium">
-                    {commande.statut === 'BROUILLON' && 'Votre ordre de réparation est en cours de préparation.'}
-                    {commande.statut === 'EN_COURS' && 'Nos techniciens travaillent actuellement sur votre véhicule.'}
-                    {commande.statut === 'TERMINEE' && 'Les travaux sur votre véhicule sont terminés.'}
-                    {commande.statut === 'FACTUREE' && 'L\'intervention est facturée et terminée.'}
-                    {commande.statut === 'ANNULEE' && 'Cette intervention a été annulée.'}
+                    {STATUS_DESCS[commande.statut] || commande.statut}
                   </p>
                 </div>
               </div>
@@ -270,13 +274,13 @@ export default function ClientRepairOrderDetailsPage() {
 
           {/* Travaux Overview */}
           <ClientCard>
-            <ClientCardHeader title="Détail des Travaux & Pièces" />
+            <ClientCardHeader title={t('repairOrders.worksAndParts')} />
             <ClientCardContent>
               {commande.lignes.length === 0 ? (
                 <ClientEmptyState 
                   icon={Wrench} 
-                  title="Aucun détail" 
-                  description="Les détails de l'intervention ne sont pas encore disponibles." 
+                  title={t('repairOrders.noDetails')} 
+                  description={t('repairOrders.noDetailsDesc')} 
                   className="bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg"
                 />
               ) : (
@@ -301,10 +305,10 @@ export default function ClientRepairOrderDetailsPage() {
                             <Badge variant="outline" className={`border-none px-2 py-0.5 text-[10px] uppercase font-bold tracking-wide ${
                               ligne.type === 'INTERVENTION' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'
                             }`}>
-                              {ligne.type === 'INTERVENTION' ? 'Main d\'œuvre' : 'Pièce'}
+                              {ligne.type === 'INTERVENTION' ? t('repairOrders.labor') : t('repairOrders.part')}
                             </Badge>
-                            <span className="text-xs font-bold text-[#B0B3B8]">
-                              Qté: {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)}
+                            <span className="text-xs font-bold text-[#65676B]">
+                              {t('repairOrders.qty')}: {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -312,19 +316,19 @@ export default function ClientRepairOrderDetailsPage() {
                       
                       <div className="sm:text-right pt-4 sm:pt-0 border-t border-slate-50 sm:border-none">
                         <p className="text-xl font-bold text-[#050505]">{ligne.prix_total.toFixed(2)}</p>
-                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">TND</p>
+                        <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">TND</p>
                       </div>
                     </motion.div>
                   ))}
 
                   <div className="mt-8 p-6 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-bold text-[#050505]">Total à payer</p>
-                      <p className="text-xs font-medium text-[#8A8D91]">Montant incluant la TVA</p>
+                      <p className="text-sm font-bold text-[#050505]">{t('repairOrders.totalToPay')}</p>
+                      <p className="text-xs font-medium text-[#65676B]">{t('repairOrders.includingVat')}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-3xl font-bold text-blue-600 tracking-tight">
-                        {commande.montant_total?.toFixed(2) || '0.00'} <span className="text-sm text-[#B0B3B8]">TND</span>
+                        {commande.montant_total?.toFixed(2) || '0.00'} <span className="text-sm text-[#65676B]">TND</span>
                       </p>
                     </div>
                   </div>
@@ -337,4 +341,3 @@ export default function ClientRepairOrderDetailsPage() {
     </ClientPageWrapper>
   );
 }
-

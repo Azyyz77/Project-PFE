@@ -5,8 +5,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { resetPassword } from '../../lib/api/auth';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function ResetPasswordContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') || '';
   const router = useRouter();
@@ -21,11 +23,11 @@ function ResetPasswordContent() {
     setError('');
 
     if (newPassword.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.');
+      setError(t('auth.passwordLengthError'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(t('auth.passwordMatchError'));
       return;
     }
 
@@ -34,7 +36,7 @@ function ResetPasswordContent() {
       await resetPassword(token, newPassword);
       router.push('/login?reset=true');
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la réinitialisation');
+      setError(err.message || t('auth.passwordResetError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -44,9 +46,9 @@ function ResetPasswordContent() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
         <div className="rounded-xl bg-white p-8 shadow-lg text-center">
-          <p className="text-red-600 font-semibold mb-4">Lien de réinitialisation invalide.</p>
+          <p className="text-red-600 font-semibold mb-4">{t('auth.invalidResetLink')}</p>
           <Link href="/forgot-password" className="text-blue-600 hover:underline">
-            Recommencer
+            {t('auth.restart')}
           </Link>
         </div>
       </div>
@@ -58,10 +60,10 @@ function ResetPasswordContent() {
       <div className="w-full max-w-md space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Nouveau mot de passe
+            {t('auth.newPassword')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Choisissez un mot de passe sécurisé (minimum 8 caractères).
+            {t('auth.newPasswordDesc')}
           </p>
         </div>
 
@@ -78,7 +80,7 @@ function ResetPasswordContent() {
           <div className="space-y-4">
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                Nouveau mot de passe
+                {t('auth.newPassword')}
               </label>
               <input
                 id="newPassword"
@@ -93,7 +95,7 @@ function ResetPasswordContent() {
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirmer le mot de passe
+                {t('auth.confirmPasswordLabel')}
               </label>
               <input
                 id="confirmPassword"
@@ -111,14 +113,14 @@ function ResetPasswordContent() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="flex w-full justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            {isSubmitting ? 'Enregistrement...' : 'Enregistrer le nouveau mot de passe'}
+            {isSubmitting ? t('auth.savingPassword') : t('auth.savePassword')}
           </button>
 
           <div className="text-center text-sm">
             <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Retour à la connexion
+              {t('auth.backToLogin')}
             </Link>
           </div>
         </form>
@@ -134,3 +136,4 @@ export default function ResetPasswordPage() {
     </Suspense>
   );
 }
+

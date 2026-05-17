@@ -5,14 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Star } from 'lucide-react';
 import { toast } from 'sonner';
-import axios from 'axios';
+import api from '@/lib/api/axios';
 
 interface Props {
   appointmentId: number;
   onSuccess?: () => void;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function AppointmentFeedback({ appointmentId, onSuccess }: Props) {
   const [open, setOpen] = useState(false);
@@ -29,12 +28,9 @@ export default function AppointmentFeedback({ appointmentId, onSuccess }: Props)
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      await axios.post(
-        `${API_BASE}/api/appointments/${appointmentId}/feedback`,
-        { note, commentaire },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.post(
+        `/appointments/${appointmentId}/feedback`,
+        { note, commentaire }
       );
 
       toast.success('Merci pour votre feedback!');

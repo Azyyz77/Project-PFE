@@ -104,9 +104,10 @@ const isDateInPast = (dateString: string): boolean => {
 };
 
 export default function RendezVousPage() {
+  const { t } = useLanguage();
   return (
     <ProtectedRoute>
-      <PhoneVerificationRequired message="Vous devez vérifier votre numéro de téléphone pour pouvoir prendre des rendez-vous.">
+      <PhoneVerificationRequired message={t('phone.verificationRequired') || "Vous devez vérifier votre numéro de téléphone pour pouvoir prendre des rendez-vous."}>
         <RendezVousContent />
       </PhoneVerificationRequired>
     </ProtectedRoute>
@@ -116,7 +117,7 @@ export default function RendezVousPage() {
 
 function RendezVousContent() {
   const { user, token } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
@@ -220,6 +221,14 @@ function RendezVousContent() {
     return appointments.filter((appointment) => statusMap[activeFilter].includes(appointment.statut));
   }, [appointments, activeFilter]);
 
+  const weekDays = useMemo(() => {
+    const locale = language === 'ar' ? 'ar-TN' : language === 'en' ? 'en-US' : 'fr-FR';
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = new Date(2026, 4, 10 + i); // May 10, 2026 is Sunday
+      return day.toLocaleDateString(locale, { weekday: 'short' });
+    });
+  }, [language]);
+
   useEffect(() => {
     const bootstrap = async () => {
       if (!user || !token) return;
@@ -247,7 +256,7 @@ function RendezVousContent() {
           setSelectedAgencyId(String(allAgencies[0].id));
         }
       } catch (err: unknown) {
-        const msg = getErrorMessage(err, 'Impossible de charger les données de rendez-vous.');
+        const msg = getErrorMessage(err, t('appointments.errorLoading') || 'Impossible de charger les données de rendez-vous.');
         setGlobalError(msg);
       } finally {
         setIsBootLoading(false);
@@ -255,7 +264,7 @@ function RendezVousContent() {
     };
 
     bootstrap();
-  }, [token, user]);
+  }, [token, user, t]);
 
   useEffect(() => {
     const loadSlots = async () => {
@@ -319,11 +328,12 @@ function RendezVousContent() {
       cells.push({ dateISO: null, day: null });
     }
 
+    const locale = language === 'ar' ? 'ar-TN' : language === 'en' ? 'en-US' : 'fr-FR';
     return {
-      title: monthCursor.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+      title: monthCursor.toLocaleDateString(locale, { month: 'long', year: 'numeric' }),
       cells,
     };
-  }, [monthCursor]);
+  }, [monthCursor, language]);
 
   const goNextStep = () => {
     if (step === 1) {
@@ -342,7 +352,7 @@ function RendezVousContent() {
         return;
       }
       if (isDateInPast(selectedDate)) {
-        setGlobalError('Impossible de réserver pour des dates passées.');
+        setGlobalError(t('appointments.errorPastDate') || 'Impossible de réserver pour des dates passées.');
         return;
       }
       setGlobalError('');
@@ -369,9 +379,9 @@ function RendezVousContent() {
 
   const openModal = (presetDate?: string) => {
     if (validatedVehicles.length === 0) {
-      const msg = 'Vous devez attendre la validation de votre véhicule par un agent SAV avant de réserver un rendez-vous.';
+      const msg = t('appointments.vehicleValidationRequired');
       setGlobalError(msg);
-      toast.warning('Attention', { description: msg });
+      toast.warning(t('appointments.warning') || 'Attention', { description: msg });
       return;
     }
 
@@ -403,7 +413,7 @@ function RendezVousContent() {
       setIsDetailModalOpen(true);
       setCancelReason('');
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, 'Impossible de charger les détails du rendez-vous.');
+      const msg = getErrorMessage(err, t('appointments.errorDetails') || 'Impossible de charger les détails du rendez-vous.');
       setGlobalError(msg);
     }
   };
@@ -428,7 +438,7 @@ function RendezVousContent() {
 
   const submitAppointment = async () => {
     if (!token || !selectedVehicleId || !selectedAgencyId || !selectedDate || !selectedHour || !selectedServiceSubtypeId) {
-      setGlobalError('Champs obligatoires manquants pour la réservation.');
+      setGlobalError(t('appointments.errorSelectAll') || 'Champs obligatoires manquants pour la réservation.');
       return;
     }
 
@@ -450,19 +460,23 @@ function RendezVousContent() {
         token
       );
 
+      const labelTND = language === 'ar' ? 'د.ت' : 'TND';
+      const labelEstimatedPrice = t('appointments.estimatedPrice') || 'Prix estimatif';
+      const labelSuccess = t('appointments.successBooked') || 'Rendez-vous réservé avec succès';
+
       if (result.prix_total && result.prix_total > 0) {
-        toast.success('Rendez-vous réservé avec succès', {
-          description: `Prix estimatif: ${result.prix_total.toFixed(3)} TND`
+        toast.success(labelSuccess, {
+          description: `${labelEstimatedPrice}: ${result.prix_total.toFixed(3)} ${labelTND}`
         });
       } else {
-        toast.success('Rendez-vous réservé avec succès.');
+        toast.success(labelSuccess);
       }
 
       const list = await getMyAppointments(token);
       setAppointments(list);
       closeModal();
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, 'Ce créneau n\'est pas disponible. Veuillez choisir une autre heure.');
+      const msg = getErrorMessage(err, t('appointments.errorSlotTaken') || 'Ce créneau n\'est pas disponible. Veuillez choisir une autre heure.');
       setGlobalError(msg);
     } finally {
       setIsSubmitting(false);
@@ -478,12 +492,12 @@ function RendezVousContent() {
 
       await cancelAppointment(selectedAppointmentId, { raison: cancelReason || undefined }, token);
 
-      toast.success('Rendez-vous annulé avec succès.');
+      toast.success(t('appointments.successCancelled') || 'Rendez-vous annulé avec succès.');
       const list = await getMyAppointments(token);
       setAppointments(list);
       closeDetailModal();
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, 'Impossible d\'annuler le rendez-vous.');
+      const msg = getErrorMessage(err, t('appointments.errorCancel') || 'Impossible d\'annuler le rendez-vous.');
       setGlobalError(msg);
     } finally {
       setIsCancelling(false);
@@ -493,7 +507,7 @@ function RendezVousContent() {
   const statusInfo = (status: string) => {
     if (status === 'EN_COURS') return { label: t('appointments.inProgress'), badge: 'bg-amber-100 text-amber-700' };
     if (status === 'TERMINE') return { label: t('appointments.completed'), badge: 'bg-emerald-100 text-emerald-700' };
-    if (status === 'ANNULE') return { label: t('dashboard.refused'), badge: 'bg-blue-100 text-blue-700' };
+    if (status === 'ANNULE') return { label: t('appointments.cancelled') || t('dashboard.refused'), badge: 'bg-blue-100 text-blue-700' };
     if (status === 'CONFIRME' || status === 'PLANIFIE') {
       return { label: t('appointments.planned'), badge: 'bg-blue-100 text-blue-700' };
     }
@@ -544,7 +558,7 @@ function RendezVousContent() {
     setSelectedHour(slot.label);
   }, []);
 
-  if (isBootLoading) return <ClientLoadingState message="Préparation de l'agenda..." />;
+  if (isBootLoading) return <ClientLoadingState message={t('appointments.loading') || "Préparation de l'agenda..."} />;
 
   const stats = {
     total: appointments.length,
@@ -552,32 +566,38 @@ function RendezVousContent() {
     completed: appointments.filter(a => a.statut === 'TERMINE').length
   };
 
+  const locale = language === 'ar' ? 'ar-TN' : language === 'en' ? 'en-US' : 'fr-FR';
+
   return (
     <ClientPageWrapper className="space-y-12 pb-20">
       {/* ─── Premium Header ─── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-[#050505] shadow-md border border-slate-200"
       >
         <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 border border-blue-100">
               <CalendarIcon className="h-3.5 w-3.5" />
-              Service Client Chery
+              {t('appointments.serviceClient') || "Service Client Chery"}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
-              Vos <span className="text-blue-500">Rendez-vous</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none text-[#050505]">
+              {language === 'ar' ? (
+                <>مواعيدك <span className="text-blue-500">الخاصة</span></>
+              ) : (
+                <>Vos <span className="text-blue-500">Rendez-vous</span></>
+              )}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
-              Planifiez vos interventions en quelques clics. Choisissez votre agence, votre véhicule et votre créneau préféré.
+            <p className="text-slate-500 font-medium text-lg leading-relaxed">
+              {t('appointments.manageAppointments') || "Planifiez vos interventions en quelques clics. Choisissez votre agence, votre véhicule et votre créneau préféré."}
             </p>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 shrink-0">
             <ClientButton
               onClick={() => openModal()}
               disabled={validatedVehicles.length === 0}
@@ -586,7 +606,7 @@ function RendezVousContent() {
               icon={Zap}
               className="px-8"
             >
-              Réserver maintenant
+              {t('appointments.bookNow')}
             </ClientButton>
           </div>
         </div>
@@ -595,19 +615,19 @@ function RendezVousContent() {
       {/* ─── Stats Grid ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ClientStatCard
-          label="Total"
+          label={t('appointments.all') || "Total"}
           value={stats.total}
           icon={History}
           iconColor="text-blue-500"
         />
         <ClientStatCard
-          label="À venir"
+          label={t('appointments.planned') || "À venir"}
           value={stats.upcoming}
           icon={CalendarIcon}
           iconColor="text-blue-500"
         />
         <ClientStatCard
-          label="Terminés"
+          label={t('appointments.completed') || "Terminés"}
           value={stats.completed}
           icon={ShieldCheck}
           iconColor="text-emerald-500"
@@ -617,9 +637,9 @@ function RendezVousContent() {
       <div className="grid gap-4 lg:grid-cols-[380px_1fr]">
         {/* ─── Sidebar Calendar ─── */}
         <div className="space-y-6">
-          <ClientCard className="p-8 border-none shadow-md shadow-slate-200/50">
+          <ClientCard className="p-8 border-none shadow-md shadow-slate-200/50 bg-white">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-bold text-[#050505] tracking-tight">Calendrier</h2>
+              <h2 className="text-xl font-bold text-[#050505] tracking-tight">{t('appointments.calendar') || "Calendrier"}</h2>
               <div className="flex gap-1">
                 <button 
                   onClick={() => setMonthCursor(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
@@ -636,12 +656,12 @@ function RendezVousContent() {
               </div>
             </div>
 
-            <p className="text-center font-bold text-[#B0B3B8] uppercase tracking-wide text-[10px] mb-6">
+            <p className="text-center font-bold text-slate-400 uppercase tracking-wide text-xs mb-6">
               {monthMeta.title}
             </p>
 
             <div className="grid grid-cols-7 gap-2 mb-4">
-              {WEEK_DAYS.map(day => (
+              {weekDays.map(day => (
                 <span key={day} className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-wide">
                   {day}
                 </span>
@@ -674,21 +694,21 @@ function RendezVousContent() {
                   >
                     {cell.day}
                     {hasAppointment && !isDisabled && (
-                      <span className={`absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500'}`} />
+                      <span className={`absolute bottom-2 left-1/2 -translate-x-1/2 h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-blue-500'}`} />
                     )}
                   </button>
                 );
               })}
             </div>
 
-            <div className="mt-8 pt-8 border-t border-slate-50 space-y-4">
+            <div className="mt-8 pt-8 border-t border-slate-100 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full bg-blue-500" />
-                <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Vos rendez-vous</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t('appointments.dayWithAppointment')}</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-2 w-2 rounded-full ring-2 ring-blue-500 ring-offset-2" />
-                <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Aujourd'hui</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t('appointments.today')}</span>
               </div>
             </div>
           </ClientCard>
@@ -706,7 +726,7 @@ function RendezVousContent() {
         {/* ─── Appointments List ─── */}
         <div className="space-y-6">
           <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as AppointmentFilter)} className="w-full">
-            <TabsList className="bg-white p-2 rounded-lg shadow-sm h-auto gap-2 border border-slate-50 flex-wrap">
+            <TabsList className="bg-white p-2 rounded-lg shadow-sm h-auto gap-2 border border-slate-100 flex flex-wrap">
               <TabsTrigger value="all" className="rounded-lg px-6 py-3 font-bold uppercase tracking-wide text-[10px] data-[state=active]:bg-blue-600 data-[state=active]:text-white">
                 {t('appointments.all')}
               </TabsTrigger>
@@ -732,15 +752,15 @@ function RendezVousContent() {
                     <ClientEmptyState
                       icon={CalendarIcon}
                       title={t('appointments.noAppointmentsFound')}
-                      description="Vous n'avez pas de rendez-vous correspondant à ce filtre."
+                      description={t('appointments.noAppointmentsFilter') || "Vous n'avez pas de rendez-vous correspondant à ce filtre."}
                     />
                   </motion.div>
                 ) : (
                   filteredAppointments.map((appointment, idx) => {
                     const when = new Date(appointment.date_heure);
                     const day = when.getDate();
-                    const month = when.toLocaleDateString('fr-FR', { month: 'short' });
-                    const time = when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    const month = when.toLocaleDateString(locale, { month: 'short' });
+                    const time = when.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
                     const status = statusInfo(appointment.statut);
 
                     return (
@@ -754,7 +774,7 @@ function RendezVousContent() {
                         className="cursor-pointer"
                       >
                         <ClientCard 
-                          className="group p-6 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-sm"
+                          className="group p-6 hover:shadow-md hover:shadow-blue-500/10 transition-all duration-500 border-none shadow-sm bg-white"
                         >
                           <div className="flex flex-col sm:flex-row items-center gap-6">
                             <div className="flex flex-col items-center justify-center h-20 w-20 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shrink-0">
@@ -765,7 +785,7 @@ function RendezVousContent() {
                             <div className="flex-1 text-center sm:text-left">
                               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
                                 <h3 className="text-lg font-bold text-[#050505] tracking-tight group-hover:text-blue-600 transition-colors">
-                                  {appointment.interventions?.[0]?.sous_type_nom || 'Rendez-vous de service'}
+                                  {appointment.interventions?.[0]?.sous_type_nom || t('appointments.defaultService') || 'Rendez-vous de service'}
                                 </h3>
                                 <Badge className={`${status.badge} rounded-full border-none px-3 py-0.5 text-[10px] font-bold uppercase tracking-wide`}>
                                   {status.label}
@@ -795,7 +815,7 @@ function RendezVousContent() {
                             </div>
 
                             <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-red-500/30">
+                              <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/30">
                                 <ChevronRight className="h-6 w-6" />
                               </div>
                             </div>
@@ -819,7 +839,7 @@ function RendezVousContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg sm:text-xl font-bold text-white mb-1">{t('appointments.bookAppointment')}</h2>
-                <p className="text-sm text-white/90 font-medium">Étape {step} sur 3</p>
+                <p className="text-sm text-white/90 font-medium">{t('appointments.step')} {step} {t('appointments.of')} 3</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -906,7 +926,7 @@ function RendezVousContent() {
                         <label className="text-xs font-semibold text-[#050505]">{t('appointments.packagesAvailable')}</label>
                         {selectedPackageIds.length > 0 && (
                           <Badge className="bg-[#E7F3FF] text-[#1877F2] rounded-full border-none font-bold text-xs px-3">
-                            {selectedPackageIds.length} SÉLECTIONNÉS
+                            {selectedPackageIds.length} {language === 'ar' ? 'محددة' : 'SÉLECTIONNÉS'}
                           </Badge>
                         )}
                       </div>
@@ -934,7 +954,7 @@ function RendezVousContent() {
                                 </div>
                                 <div className="text-right">
                                   <p className="text-lg font-bold text-[#1877F2]">{pkg.prix.toFixed(3)}</p>
-                                  <p className="text-[10px] font-semibold text-[#8A8D91] uppercase">TND</p>
+                                  <p className="text-[10px] font-semibold text-[#8A8D91] uppercase">{language === 'ar' ? 'د.ت' : 'TND'}</p>
                                 </div>
                               </div>
                             </div>
@@ -976,8 +996,8 @@ function RendezVousContent() {
                     ) : slots.length === 0 ? (
                       <div className="text-center py-8 px-4 bg-[#F0F2F5] rounded-lg">
                         <Clock className="h-8 w-8 text-[#8A8D91] mx-auto mb-2" />
-                        <p className="text-sm font-semibold text-[#65676B]">Aucun créneau disponible</p>
-                        <p className="text-xs text-[#8A8D91] mt-1">Veuillez sélectionner une autre date</p>
+                        <p className="text-sm font-semibold text-[#65676B]">{t('appointments.noSlotsAvailable')}</p>
+                        <p className="text-xs text-[#8A8D91] mt-1">{t('appointments.noSlotsForDate')}</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -1003,12 +1023,12 @@ function RendezVousContent() {
                                   selectedHour === slot.label ? 'text-white/80' : 
                                   isAlmostFull ? 'text-[#F7B928]' : 'text-[#42B72A]'
                                 }`}>
-                                  {availableSpots} {availableSpots === 1 ? 'place' : 'places'}
+                                  {availableSpots} {language === 'ar' ? 'شاغر' : availableSpots === 1 ? 'place' : 'places'}
                                 </span>
                               )}
                               {slot.is_full && (
                                 <span className="text-[10px] font-semibold mt-0.5 text-[#B0B3B8]">
-                                  Complet
+                                  {t('appointments.full')}
                                 </span>
                               )}
                             </button>
@@ -1023,7 +1043,7 @@ function RendezVousContent() {
                     <Textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Indiquez ici toute information utile..."
+                      placeholder={t('appointments.specialRequest') || "Indiquez ici toute information utile..."}
                       className="rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] p-4 font-medium text-[#050505] focus:ring-2 focus:ring-[#1877F2] focus:bg-white transition-all outline-none min-h-[100px]"
                     />
                   </div>
@@ -1039,14 +1059,23 @@ function RendezVousContent() {
                   className="space-y-5 pt-4"
                 >
                   <div className="bg-[#F0F2F5] rounded-lg border border-[#E4E6EB] p-6 space-y-6">
+                    {isBookingWith24h && (
+                      <Alert className="bg-[#FFF8E6] border-[#F7B928] text-[#805B00] rounded-lg p-4">
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
+                        <AlertDescription className="font-bold text-xs leading-normal">
+                          {t('appointments.within24h')}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-[#65676B] uppercase">Véhicule</p>
+                        <p className="text-xs font-semibold text-[#65676B] uppercase">{t('appointments.vehicle')}</p>
                         <p className="font-bold text-[#050505]">{selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}</p>
                         <p className="text-xs font-semibold text-[#1877F2]">{selectedVehicle?.immatriculation}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-[#65676B] uppercase">Agence</p>
+                        <p className="text-xs font-semibold text-[#65676B] uppercase">{t('appointments.agency')}</p>
                         <p className="font-bold text-[#050505]">{selectedAgency?.nom}</p>
                         <p className="text-xs font-semibold text-[#65676B]">{selectedAgency?.ville}</p>
                       </div>
@@ -1056,12 +1085,12 @@ function RendezVousContent() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-[#65676B] uppercase">Date & Heure</p>
+                        <p className="text-xs font-semibold text-[#65676B] uppercase">{t('appointments.dateAndTime')}</p>
                         <p className="font-bold text-[#050505]">{selectedDate}</p>
                         <p className="text-xs font-semibold text-[#1877F2]">{selectedHour}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-[#65676B] uppercase">Intervention</p>
+                        <p className="text-xs font-semibold text-[#65676B] uppercase">{t('appointments.service')}</p>
                         <p className="font-bold text-[#050505]">{selectedService?.label}</p>
                       </div>
                     </div>
@@ -1070,19 +1099,19 @@ function RendezVousContent() {
                       <>
                         <Separator className="bg-[#E4E6EB]" />
                         <div className="space-y-3">
-                          <p className="text-xs font-semibold text-[#65676B] uppercase">Forfaits inclus</p>
+                          <p className="text-xs font-semibold text-[#65676B] uppercase">{t('appointments.selectedPackages')}</p>
                           {selectedPackageIds.map(id => {
                             const pkg = packages.find(p => p.id === id);
                             return (
                               <div key={id} className="flex items-center justify-between">
                                 <span className="font-semibold text-sm text-[#050505]">{pkg?.nom}</span>
-                                <span className="font-bold text-[#1877F2]">{pkg?.prix.toFixed(3)} TND</span>
+                                <span className="font-bold text-[#1877F2]">{pkg?.prix.toFixed(3)} {language === 'ar' ? 'د.ت' : 'TND'}</span>
                               </div>
                             );
                           })}
                           <div className="flex items-center justify-between pt-3 border-t border-[#E4E6EB]">
-                            <span className="font-bold text-base text-[#050505]">Total estimé</span>
-                            <span className="text-xl font-bold text-[#1877F2]">{totalPrice.toFixed(3)} TND</span>
+                            <span className="font-bold text-base text-[#050505]">{t('appointments.estimatedTotalPrice')}</span>
+                            <span className="text-xl font-bold text-[#1877F2]">{totalPrice.toFixed(3)} {language === 'ar' ? 'د.ت' : 'TND'}</span>
                           </div>
                         </div>
                       </>
@@ -1112,7 +1141,7 @@ function RendezVousContent() {
                   onClick={goBackStep}
                   icon={ChevronLeft}
                 >
-                  Précédent
+                  {t('appointments.back')}
                 </ClientButton>
               )}
               <ClientButton
@@ -1124,7 +1153,7 @@ function RendezVousContent() {
                 icon={step === 3 ? (isSubmitting ? undefined : CheckCircle) : ArrowRight}
                 iconPosition={step === 3 ? 'left' : 'right'}
               >
-                {isSubmitting ? 'Réservation...' : (step === 3 ? 'Confirmer' : 'Continuer')}
+                {isSubmitting ? (t('appointments.processing') || 'Réservation...') : (step === 3 ? t('appointments.confirmAppointment') : t('appointments.next'))}
               </ClientButton>
             </div>
           </div>
@@ -1136,7 +1165,7 @@ function RendezVousContent() {
         <DialogContent showCloseButton={false} className="max-w-3xl rounded-xl p-0 border-none bg-white overflow-hidden">
           <div className="relative bg-gradient-to-br from-[#1877F2] to-[#0C63D4] p-8 flex items-center justify-between">
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Détails du Rendez-vous</h2>
+              <h2 className="text-2xl font-bold text-white tracking-tight mb-2">{t('appointments.detailsTitle')}</h2>
               <div className="flex gap-2">
                 <Badge className={`${statusInfo(selectedAppointmentDetail?.statut || '').badge} rounded-full border-none font-bold text-xs px-3`}>
                   {statusInfo(selectedAppointmentDetail?.statut || '').label}
@@ -1161,7 +1190,7 @@ function RendezVousContent() {
                         <Car className="h-7 w-7" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Véhicule</p>
+                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.vehicle')}</p>
                         <p className="font-bold text-[#050505] tracking-tight">{selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}</p>
                         <p className="text-xs font-bold text-blue-500">{selectedAppointmentDetail.immatriculation}</p>
                       </div>
@@ -1174,7 +1203,7 @@ function RendezVousContent() {
                         <MapPin className="h-7 w-7" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Agence</p>
+                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.agency')}</p>
                         <p className="font-bold text-[#050505] tracking-tight">{selectedAppointmentDetail.agence_nom}</p>
                         <p className="text-xs font-bold text-[#B0B3B8]">{selectedAppointmentDetail.agence_ville}</p>
                       </div>
@@ -1189,9 +1218,9 @@ function RendezVousContent() {
                         <Clock className="h-7 w-7" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Date & Heure</p>
+                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.dateAndTime')}</p>
                         <p className="font-bold text-[#050505] tracking-tight">
-                          {new Date(selectedAppointmentDetail.date_heure).toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          {new Date(selectedAppointmentDetail.date_heure).toLocaleString(locale, { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
@@ -1203,9 +1232,9 @@ function RendezVousContent() {
                         <Wrench className="h-7 w-7" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Intervention</p>
+                        <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.service')}</p>
                         <p className="font-bold text-[#050505] tracking-tight">
-                          {appointmentInterventions[0]?.sous_type_nom || 'Service général'}
+                          {appointmentInterventions[0]?.sous_type_nom || t('appointments.noServiceSpecified')}
                         </p>
                       </div>
                     </div>
@@ -1213,7 +1242,7 @@ function RendezVousContent() {
                 </div>
 
                 <div className="bg-white rounded-lg p-8 border border-[#E4E6EB] shadow-sm space-y-4">
-                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Documents & Pièces Jointes</p>
+                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('orders.attachments') || "Documents & Pièces Jointes"}</p>
                   <AppointmentAttachments 
                     appointmentId={selectedAppointmentDetail.id}
                     isReadOnly={selectedAppointmentDetail.statut === 'TERMINE' || selectedAppointmentDetail.statut === 'ANNULE'}
@@ -1222,7 +1251,7 @@ function RendezVousContent() {
 
                 {selectedAppointmentDetail.description && (
                   <div className="bg-[#E4E6EB] rounded-lg p-8 space-y-2">
-                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Notes du client</p>
+                    <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.notes')}</p>
                     <p className="text-sm font-bold text-slate-700 leading-relaxed italic">"{selectedAppointmentDetail.description}"</p>
                   </div>
                 )}
@@ -1232,12 +1261,12 @@ function RendezVousContent() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 text-blue-600">
                         <AlertTriangle className="h-4 w-4" />
-                        <p className="text-sm font-bold uppercase tracking-wide">Annulation du rendez-vous</p>
+                        <p className="text-sm font-bold uppercase tracking-wide">{t('appointments.cancelAppointment')}</p>
                       </div>
                       <Textarea
                         value={cancelReason}
                         onChange={(e) => setCancelReason(e.target.value)}
-                        placeholder="Veuillez indiquer la raison de l'annulation..."
+                        placeholder={t('appointments.cancelReason') || "Veuillez indiquer la raison de l'annulation..."}
                         className="rounded-lg bg-white border border-[#E4E6EB] p-6 font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-blue-500/10 transition-all outline-none min-h-[100px]"
                       />
                     </div>
@@ -1249,7 +1278,7 @@ function RendezVousContent() {
                       disabled={isCancelling}
                       icon={Trash2}
                     >
-                      {isCancelling ? 'Annulation en cours...' : 'Annuler le rendez-vous'}
+                      {isCancelling ? (t('appointments.cancelling') || 'Annulation en cours...') : t('appointments.cancelButton')}
                     </ClientButton>
                   </div>
                 )}

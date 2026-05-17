@@ -11,6 +11,7 @@ interface FacebookButtonProps {
   disabled?: boolean;
   fullWidth?: boolean;
   size?: 'small' | 'medium' | 'large';
+  style?: any;
 }
 
 export const FacebookButton: React.FC<FacebookButtonProps> = ({
@@ -22,9 +23,10 @@ export const FacebookButton: React.FC<FacebookButtonProps> = ({
   disabled = false,
   fullWidth = false,
   size = 'medium',
+  style,
 }) => {
   const getButtonStyle = () => {
-    const baseStyle = [styles.button];
+    const baseStyle: any[] = [styles.button];
     
     if (fullWidth) baseStyle.push(styles.fullWidth);
     
@@ -45,11 +47,15 @@ export const FacebookButton: React.FC<FacebookButtonProps> = ({
       baseStyle.push(styles.buttonDisabled);
     }
     
+    if (style) {
+      baseStyle.push(style);
+    }
+    
     return baseStyle;
   };
 
   const getTextStyle = () => {
-    const baseStyle = [styles.buttonText];
+    const baseStyle: any[] = [styles.buttonText];
     
     // Size styles
     if (size === 'small') baseStyle.push(styles.textSmall);

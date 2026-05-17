@@ -71,7 +71,7 @@ export default function ClientVehiclesPage() {
       toast.success(t('vehicles.deleteSuccess'));
     } catch (error: any) {
       console.error('Failed to delete vehicle:', error);
-      toast.error(t('common.error'), { description: error.message || t('vehicles.deleteError') });
+      toast.error(t('common.error') || 'Erreur', { description: error.message || t('vehicles.deleteError') });
     } finally {
       setDeletingId(null);
     }
@@ -93,30 +93,30 @@ export default function ClientVehiclesPage() {
     pending: vehicles.filter(v => v.statut_validation === 'EN_ATTENTE').length,
   }), [vehicles]);
 
-  if (isLoading) return <ClientLoadingState message="Recherche de votre garage personnel..." />;
+  if (isLoading) return <ClientLoadingState message={t('vehicles.loadingPersonalGarage')} />;
 
   return (
-    <ClientPageWrapper className="space-y-12 pb-20">
+    <ClientPageWrapper className="space-y-10 pb-20">
       {/* ─── Premium Header ─── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8 text-slate-800 border border-slate-200/80 shadow-sm"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Garage Personnel
+              {t('vehicles.personalGarage')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
-              Vos <span className="text-blue-500">Véhicules</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-extrabold tracking-tight leading-none text-slate-900">
+              {t('vehicles.title')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed mb-8">
-              Gérez votre parc automobile, suivez la validation de vos véhicules et accédez rapidement aux services d'entretien STA Chery.
+            <p className="text-slate-500 font-semibold text-base leading-relaxed mb-8">
+              {t('vehicles.manageFleet')}
             </p>
             
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
@@ -127,14 +127,14 @@ export default function ClientVehiclesPage() {
               </Link>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-[#8A8D91] group-focus-within:text-blue-500 transition-colors" />
+                  <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                 </div>
                 <input 
                   type="text"
-                  placeholder="Rechercher par immatriculation..."
+                  placeholder={t('vehicles.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg pl-12 pr-6 py-3 text-sm font-medium focus:ring-4 focus:ring-blue-500/20 focus:bg-white/10 focus:border-blue-500/50 outline-none transition-all w-full sm:w-64"
+                  className="bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-6 py-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500/50 outline-none transition-all w-full sm:w-64"
                 />
               </div>
             </div>
@@ -142,13 +142,13 @@ export default function ClientVehiclesPage() {
 
           {/* Stats Summary In Header */}
           <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
-            <div className="p-6 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] mb-1">Total</p>
-              <p className="text-3xl font-bold text-white">{stats.total}</p>
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center min-w-[120px] shadow-sm">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">{t('vehicles.total')}</p>
+              <p className="text-3xl font-extrabold text-slate-800 leading-none">{stats.total}</p>
             </div>
-            <div className="p-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md text-center">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-500 mb-1">Validés</p>
-              <p className="text-3xl font-bold text-white">{stats.validated}</p>
+            <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 text-center min-w-[120px] shadow-sm">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 mb-1">{t('vehicles.validated')}</p>
+              <p className="text-3xl font-extrabold text-emerald-600 leading-none">{stats.validated}</p>
             </div>
           </div>
         </div>
@@ -164,18 +164,19 @@ export default function ClientVehiclesPage() {
           >
             <ClientEmptyState
               icon={Car}
-              title={searchQuery ? "Aucun véhicule trouvé" : t('vehicles.noVehicles')}
-              description={searchQuery ? "Essayez une autre recherche." : "Vous n'avez pas encore enregistré de véhicule dans votre garage."}
+              title={searchQuery ? t('vehicles.noVehiclesFound') : t('vehicles.noVehicles')}
+              description={searchQuery ? t('vehicles.tryAnotherSearch') : t('vehicles.noVehiclesRegistered')}
               {...(!searchQuery ? {
                 actionLabel: t('vehicles.addVehicle'),
                 onAction: () => router.push('/client/vehicles/new')
               } : {})}
+              className="bg-white border border-slate-200 shadow-sm"
             />
           </motion.div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {/* Vehicles List */}
-            <div className="bg-white rounded-lg border border-[#E4E6EB] shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               {filteredVehicles.map((vehicle, idx) => {
                 const status = vehicle.statut_validation || 'EN_ATTENTE';
                 const isValide = status === 'VALIDE';
@@ -195,21 +196,21 @@ export default function ClientVehiclesPage() {
                     transition={{ delay: idx * 0.05 }}
                     className="group"
                   >
-                    <div className={`flex items-center gap-4 p-4 hover:bg-[#F0F2F5] transition-all duration-200 ${
-                      idx !== filteredVehicles.length - 1 ? 'border-b border-[#E4E6EB]' : ''
+                    <div className={`flex items-center gap-4 p-5 hover:bg-slate-50 transition-all duration-200 ${
+                      idx !== filteredVehicles.length - 1 ? 'border-b border-slate-100' : ''
                     }`}>
                       {/* Vehicle Icon with Status */}
                       <div className="relative shrink-0">
-                        <div className={`h-16 w-16 rounded-lg flex items-center justify-center ${
-                          isValide ? 'bg-[#E7F3FF]' : isRefuse ? 'bg-[#FFEBE9]' : 'bg-[#FFF3CD]'
+                        <div className={`h-16 w-16 rounded-xl flex items-center justify-center border ${
+                          isValide ? 'bg-blue-50 border-blue-100' : isRefuse ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'
                         }`}>
                           <Car className={`h-8 w-8 ${
-                            isValide ? 'text-[#1877F2]' : isRefuse ? 'text-[#F02849]' : 'text-[#F7B928]'
+                            isValide ? 'text-blue-600' : isRefuse ? 'text-red-500' : 'text-amber-500'
                           }`} />
                         </div>
                         {/* Status Badge */}
                         <div className={`absolute -top-1 -right-1 h-5 w-5 rounded-full border-2 border-white flex items-center justify-center ${
-                          isValide ? 'bg-[#42B72A]' : isRefuse ? 'bg-[#F02849]' : 'bg-[#F7B928]'
+                          isValide ? 'bg-emerald-500' : isRefuse ? 'bg-red-500' : 'bg-amber-500'
                         }`}>
                           {isValide ? (
                             <CheckCircle2 className="h-3 w-3 text-white" />
@@ -225,40 +226,40 @@ export default function ClientVehiclesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3 mb-1">
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-bold text-[#050505] truncate group-hover:text-[#1877F2] transition-colors">
+                            <h3 className="text-base font-extrabold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
                               {vehicleName || t('vehicles.vehicle')}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-sm font-semibold text-[#65676B]">
+                              <span className="text-sm font-bold text-slate-500 font-mono">
                                 {vehicle.immatriculation}
                               </span>
-                              <span className="text-xs text-[#8A8D91]">•</span>
-                              <span className={`text-xs font-semibold ${
-                                isValide ? 'text-[#42B72A]' : isRefuse ? 'text-[#F02849]' : 'text-[#F7B928]'
+                              <span className="text-xs text-slate-300">•</span>
+                              <span className={`text-xs font-extrabold uppercase tracking-wide ${
+                                isValide ? 'text-emerald-600' : isRefuse ? 'text-red-500' : 'text-amber-500'
                               }`}>
-                                {isValide ? 'Validé' : isRefuse ? 'Refusé' : 'En attente'}
+                                {isValide ? t('vehicles.statusValide') : isRefuse ? t('vehicles.statusRefuse') : t('vehicles.statusEnAttente')}
                               </span>
                             </div>
                           </div>
                         </div>
 
                         {/* Vehicle Details */}
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-[#65676B]">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
                           {mileage && (
                             <div className="flex items-center gap-1.5">
-                              <Zap className="h-3.5 w-3.5 text-[#8A8D91]" />
-                              <span className="font-medium">{Number(mileage).toLocaleString('fr-FR')} km</span>
+                              <Zap className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">{Number(mileage).toLocaleString('fr-FR')} km</span>
                             </div>
                           )}
                           {vehicle.motorisation && (
                             <div className="flex items-center gap-1.5">
-                              <Shield className="h-3.5 w-3.5 text-[#8A8D91]" />
-                              <span className="font-medium">{vehicle.motorisation}</span>
+                              <Shield className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">{vehicle.motorisation}</span>
                             </div>
                           )}
                           {vehicle.annee && (
                             <div className="flex items-center gap-1.5">
-                              <span className="font-medium">{vehicle.annee}</span>
+                              <span className="font-semibold text-slate-500">{vehicle.annee}</span>
                             </div>
                           )}
                         </div>
@@ -268,42 +269,42 @@ export default function ClientVehiclesPage() {
                       <div className="hidden sm:flex items-center gap-2 shrink-0">
                         <Link href={`/client/vehicles/${vehicle.id}/history`}>
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-4 py-2 rounded-md bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#050505] text-sm font-semibold transition-colors"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-extrabold uppercase tracking-wide transition-colors"
                           >
-                            Historique
+                            {t('vehicles.history')}
                           </motion.button>
                         </Link>
                         <Link href="/client/rendez-vous">
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={isValide ? { scale: 1.02 } : {}}
+                            whileTap={isValide ? { scale: 0.98 } : {}}
                             disabled={!isValide}
-                            className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+                            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wide border transition-all ${
                               isValide
-                                ? 'bg-[#1877F2] hover:bg-[#166FE5] text-white'
-                                : 'bg-[#E4E6EB] text-[#8A8D91] cursor-not-allowed'
+                                ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
+                                : 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed'
                             }`}
                           >
-                            Réserver
+                            {t('vehicles.bookService')}
                           </motion.button>
                         </Link>
                         <Link href={`/client/vehicles/${vehicle.id}/edit`}>
                           <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="p-2 rounded-md bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#65676B] transition-colors"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-800 transition-colors"
                           >
                             <Edit2 className="h-4 w-4" />
                           </motion.button>
                         </Link>
                         <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => handleDelete(vehicle.id)}
                           disabled={deletingId === vehicle.id}
-                          className="p-2 rounded-md bg-[#FFEBE9] hover:bg-[#FFD6D1] text-[#F02849] transition-colors disabled:opacity-50"
+                          className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 transition-colors disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </motion.button>
@@ -312,41 +313,41 @@ export default function ClientVehiclesPage() {
                       {/* Mobile Chevron */}
                       <motion.div
                         whileHover={{ x: 3 }}
-                        className="sm:hidden text-[#65676B]"
+                        className="sm:hidden text-slate-400"
                       >
                         <ChevronRight className="h-5 w-5" />
                       </motion.div>
                     </div>
 
                     {/* Mobile Actions (Expandable) */}
-                    <div className="sm:hidden px-4 pb-4 pt-2 bg-[#F0F2F5]/50 border-b border-[#E4E6EB]">
+                    <div className="sm:hidden px-4 pb-4 pt-2 bg-[#F0F2F5]/50 border-b border-slate-200">
                       <div className="flex gap-2">
                         <Link href={`/client/vehicles/${vehicle.id}/history`} className="flex-1">
-                          <button className="w-full px-3 py-2 rounded-md bg-white border border-[#E4E6EB] text-[#050505] text-sm font-semibold">
-                            Historique
+                          <button className="w-full px-3 py-2 rounded-md bg-white border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wide">
+                            {t('vehicles.history')}
                           </button>
                         </Link>
                         <Link href="/client/rendez-vous" className="flex-1">
                           <button
                             disabled={!isValide}
-                            className={`w-full px-3 py-2 rounded-md text-sm font-semibold ${
+                            className={`w-full px-3 py-2 rounded-md text-xs font-bold uppercase tracking-wide ${
                               isValide
-                                ? 'bg-[#1877F2] text-white'
-                                : 'bg-[#E4E6EB] text-[#8A8D91]'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-slate-50 border border-slate-200 text-slate-300'
                             }`}
                           >
-                            Réserver
+                            {t('vehicles.bookService')}
                           </button>
                         </Link>
                         <Link href={`/client/vehicles/${vehicle.id}/edit`}>
-                          <button className="px-3 py-2 rounded-md bg-white border border-[#E4E6EB] text-[#65676B]">
+                          <button className="px-3 py-2 rounded-md bg-white border border-slate-200 text-slate-500">
                             <Edit2 className="h-4 w-4" />
                           </button>
                         </Link>
                         <button
                           onClick={() => handleDelete(vehicle.id)}
                           disabled={deletingId === vehicle.id}
-                          className="px-3 py-2 rounded-md bg-[#FFEBE9] text-[#F02849] disabled:opacity-50"
+                          className="px-3 py-2 rounded-md bg-red-50 border border-red-100 text-red-500 disabled:opacity-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -364,17 +365,17 @@ export default function ClientVehiclesPage() {
               transition={{ delay: filteredVehicles.length * 0.05 + 0.2 }}
             >
               <Link href="/client/vehicles/new">
-                <div className="bg-white rounded-lg border-2 border-dashed border-[#E4E6EB] hover:border-[#1877F2] hover:bg-[#F0F2F5] transition-all duration-200 p-6 flex items-center justify-center gap-3 group cursor-pointer">
-                  <div className="h-10 w-10 rounded-lg bg-[#E4E6EB] group-hover:bg-[#1877F2] flex items-center justify-center transition-colors">
-                    <Plus className="h-5 w-5 text-[#65676B] group-hover:text-white transition-colors" />
+                <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 hover:border-blue-500 hover:bg-slate-50/50 transition-all duration-300 p-6 flex items-center justify-center gap-3 group cursor-pointer shadow-sm">
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 group-hover:bg-blue-600 border border-slate-200 flex items-center justify-center transition-colors">
+                    <Plus className="h-5 w-5 text-slate-500 group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-base font-bold text-[#050505] group-hover:text-[#1877F2] transition-colors">
+                    <p className="text-base font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors">
                       {t('vehicles.addVehicle')}
                     </p>
-                    <p className="text-xs text-[#65676B]">Agrandissez votre garage</p>
+                    <p className="text-xs font-semibold text-slate-400">{t('vehicles.expandGarage')}</p>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-[#8A8D91] group-hover:text-[#1877F2] transition-colors ml-auto" />
+                  <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 transition-colors ml-auto" />
                 </div>
               </Link>
             </motion.div>

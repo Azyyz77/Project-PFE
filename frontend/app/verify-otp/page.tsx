@@ -1,12 +1,14 @@
-﻿'use client';
+'use client';
 
 import { FormEvent, Suspense, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyOtp } from '../../lib/api/auth';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function VerifyOtpContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const router = useRouter();
@@ -49,7 +51,7 @@ function VerifyOtpContent() {
 
     const code = otp.join('');
     if (code.length !== 6) {
-      setError('Veuillez entrer le code a 6 chiffres.');
+      setError(t('auth.enterSixDigits'));
       return;
     }
 
@@ -58,7 +60,7 @@ function VerifyOtpContent() {
       const result = await verifyOtp(email, code);
       router.push(`/reset-password?token=${encodeURIComponent(result.resetToken)}`);
     } catch (err: any) {
-      setError(err.message || 'Code incorrect ou expire');
+      setError(err.message || t('auth.incorrectCode'));
     } finally {
       setIsSubmitting(false);
     }
@@ -70,10 +72,10 @@ function VerifyOtpContent() {
         <div className="w-full max-w-md space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-              Verification WhatsApp
+              {t('auth.verifyWhatsappTitle')}
             </h2>
             <p className="mt-2 text-center text-sm text-slate-300">
-              Entrez le code a 6 chiffres envoye par WhatsApp au numero associe a{' '}
+              {t('auth.verifyWhatsappDesc')}{' '}
               <span className="font-medium text-slate-100">{email}</span>.
             </p>
           </div>
@@ -87,7 +89,7 @@ function VerifyOtpContent() {
           <form onSubmit={handleSubmit} className="chery-auth-panel mt-8 space-y-6 rounded-2xl p-8">
             <div>
               <label className="mb-3 block text-center text-sm font-medium text-slate-300">
-                Code OTP
+                {t('auth.otpCode')}
               </label>
               <div className="flex justify-center gap-3" onPaste={handlePaste}>
                 {otp.map((digit, index) => (
@@ -113,20 +115,20 @@ function VerifyOtpContent() {
             <button
               type="submit"
               disabled={isSubmitting || otp.join('').length !== 6}
-              className="flex w-full justify-center rounded-lg border border-[#ff6a72]/30 bg-gradient-to-r from-[#ff9a9f] to-[#f23f48] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(242,63,72,0.35)] hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+              className="flex w-full justify-center rounded-lg border border-[#ff6a72]/30 bg-gradient-to-r from-[#ff9a9f] to-[#f23f48] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(242,63,72,0.35)] hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 transition-colors cursor-pointer"
             >
-              {isSubmitting ? 'Verification...' : 'Verifier le code'}
+              {isSubmitting ? t('auth.verifying') : t('auth.verifyCode')}
             </button>
 
             <div className="space-y-2 text-center text-sm">
               <p className="text-slate-300">
-                Vous n&apos;avez pas recu le code ?{' '}
+                {t('auth.didNotReceiveCode')}{' '}
                 <Link href="/forgot-password" className="font-medium text-slate-100 hover:text-white">
-                  Renvoyer
+                  {t('auth.resend')}
                 </Link>
               </p>
               <Link href="/login" className="font-medium text-slate-200 hover:text-white">
-                Retour a la connexion
+                {t('auth.backToLogin')}
               </Link>
             </div>
           </form>
@@ -143,3 +145,4 @@ export default function VerifyOtpPage() {
     </Suspense>
   );
 }
+

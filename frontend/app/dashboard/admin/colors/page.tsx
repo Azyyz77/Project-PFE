@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, Palette } from 'lucide-react';
+import { Plus, Pencil, Trash2, Palette, ArrowLeft, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { getAllColors, createColor, updateColor, deleteColor } from '@/lib/api/colors';
 
@@ -112,176 +113,180 @@ export default function ColorsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Palette className="w-6 h-6 text-blue-600" />
-            <CardTitle>Gestion des Couleurs</CardTitle>
+    <div className="p-8 max-w-7xl mx-auto space-y-6">
+      {/* Header section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <Link href="/dashboard/admin">
+            <Button variant="ghost" className="text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-xl gap-2 px-3 pl-2">
+              <ArrowLeft className="w-5 h-5" />
+              Retour au tableau de bord
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight mt-3">
+            <Palette className="w-7 h-7 text-orange-500" />
+            Nuancier & Couleurs
+          </h1>
+          <p className="text-slate-500 text-xs mt-1">Gérez le catalogue des teintes de carrosserie et des intérieurs configurables.</p>
+        </div>
+        <Button
+          onClick={() => handleOpenModal()}
+          className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold px-4 py-2 shadow-sm transition-all"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle couleur
+        </Button>
+      </div>
+
+      {/* Colors Table */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+        {colors.length === 0 ? (
+          <div className="p-16 text-center">
+            <Palette className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 text-sm font-medium">Aucune couleur enregistrée dans le nuancier</p>
           </div>
-          <Button onClick={() => handleOpenModal()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter une couleur
-          </Button>
-        </CardHeader>
-        <CardContent>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4">Nom</th>
-                  <th className="text-left py-3 px-4">Aperçu</th>
-                  <th className="text-left py-3 px-4">Code Hex</th>
-                  <th className="text-center py-3 px-4">Statut</th>
-                  <th className="text-right py-3 px-4">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Couleur</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Aperçu</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Code Hexadécimal</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Visibilité</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {colors.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-500">
-                      Aucune couleur disponible
+              <tbody className="divide-y divide-slate-100">
+                {colors.map((color) => (
+                  <tr key={color.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{color.nom}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div
+                        className="w-9 h-9 rounded-full border border-slate-200 shadow-sm"
+                        style={{ backgroundColor: color.code_hex || '#FFFFFF' }}
+                        title={color.code_hex || 'Non défini'}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-xs font-bold text-slate-500">
+                      {color.code_hex || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          color.actif
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {color.actif ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenModal(color)}
+                          className="text-slate-500 hover:bg-slate-100 hover:text-slate-800 rounded-xl"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(color.id, color.nom)}
+                          className="text-rose-500 hover:bg-rose-50 hover:text-rose-700 rounded-xl"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  colors.map((color) => (
-                    <tr key={color.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium">{color.nom}</td>
-                      <td className="py-3 px-4">
-                        <div
-                          className="w-12 h-12 rounded border-2 border-gray-300 shadow-sm"
-                          style={{ backgroundColor: color.code_hex || '#FFFFFF' }}
-                          title={color.code_hex || 'Aucune couleur'}
-                        />
-                      </td>
-                      <td className="py-3 px-4 font-mono text-sm">
-                        {color.code_hex || '-'}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                            color.actif
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {color.actif ? 'Actif' : 'Inactif'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenModal(color)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(color.id, color.nom)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      {/* Modal */}
+      {/* Modal Dialog Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">
-                {editingColor ? 'Modifier la couleur' : 'Ajouter une couleur'}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Nom de la couleur *
-                  </label>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md border border-slate-100 shadow-xl">
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight mb-4">
+              {editingColor ? 'Modifier la couleur' : 'Ajouter une nouvelle couleur'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-slate-600 text-xs font-bold uppercase tracking-wider">Nom de la couleur</label>
+                <input
+                  type="text"
+                  value={formData.nom}
+                  onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl text-slate-900 text-sm focus:outline-none"
+                  placeholder="Ex: Gris Shark, Noir Nacré..."
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-slate-600 text-xs font-bold uppercase tracking-wider">Code couleur (Hexadécimal)</label>
+                <div className="flex gap-2.5">
+                  <input
+                    type="color"
+                    value={formData.code_hex}
+                    onChange={(e) => setFormData({ ...formData, code_hex: e.target.value })}
+                    className="w-12 h-10 border border-slate-200 rounded-xl cursor-pointer bg-slate-50 p-1"
+                  />
                   <input
                     type="text"
-                    value={formData.nom}
-                    onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="Ex: Blanc, Noir, Rouge..."
-                    required
+                    value={formData.code_hex}
+                    onChange={(e) => setFormData({ ...formData, code_hex: e.target.value })}
+                    className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl text-slate-900 text-sm focus:outline-none font-mono font-bold"
+                    placeholder="#FFFFFF"
+                    pattern="^#[0-9A-Fa-f]{6}$"
                   />
                 </div>
+                <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">
+                  Format standard : #RRGGBB (par exemple, #E15E26 pour le orange Chery)
+                </p>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Code couleur (Hex)
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={formData.code_hex}
-                      onChange={(e) => setFormData({ ...formData, code_hex: e.target.value })}
-                      className="w-16 h-10 border rounded cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={formData.code_hex}
-                      onChange={(e) => setFormData({ ...formData, code_hex: e.target.value })}
-                      className="flex-1 border rounded px-3 py-2 font-mono"
-                      placeholder="#FFFFFF"
-                      pattern="^#[0-9A-Fa-f]{6}$"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Format: #RRGGBB (ex: #FF0000 pour rouge)
-                  </p>
-                </div>
+              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <input
+                  type="checkbox"
+                  id="actif"
+                  checked={formData.actif}
+                  onChange={(e) => setFormData({ ...formData, actif: e.target.checked })}
+                  className="w-4 h-4 text-orange-500 border-slate-300 rounded focus:ring-orange-500"
+                />
+                <label htmlFor="actif" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                  Activer la visibilité pour les clients
+                </label>
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="actif"
-                    checked={formData.actif}
-                    onChange={(e) => setFormData({ ...formData, actif: e.target.checked })}
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="actif" className="text-sm font-medium">
-                    Couleur active (visible pour les clients)
-                  </label>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCloseModal}
-                    className="flex-1"
-                  >
-                    Annuler
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    {editingColor ? 'Modifier' : 'Créer'}
-                  </Button>
-                </div>
-              </form>
-            </div>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 text-slate-700 border-slate-200 hover:bg-slate-50 rounded-xl font-bold"
+                  onClick={handleCloseModal}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-sm">
+                  Sauvegarder
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}

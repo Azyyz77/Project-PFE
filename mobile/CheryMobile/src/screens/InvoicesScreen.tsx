@@ -171,7 +171,12 @@ export default function InvoicesScreen() {
   };
 
   const renderInvoiceCard = ({ item }: { item: Invoice }) => {
-    const statusConfig = STATUS_CONFIG[item.statut_paiement];
+    const statusConfig = STATUS_CONFIG[item.statut_paiement] || { 
+      label: item.statut_paiement || 'Inconnu', 
+      color: '#616161', 
+      bg: '#EEEEEE', 
+      icon: '📄' 
+    };
     const isDownloading = downloadingId === item.id;
 
     return (

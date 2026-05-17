@@ -186,12 +186,12 @@ export default function NewVehiclePage() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner une image valide.');
+      toast.error(t('vehicles.invalidImage'));
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('L\'image est trop lourde (max 5Mo).');
+      toast.error(t('vehicles.imageTooHeavy'));
       return;
     }
 
@@ -229,14 +229,14 @@ export default function NewVehiclePage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const immatriculation = buildImmatriculation();
-    if (!immatriculation) newErrors.immatriculation = 'Requis';
-    if (!form.numero_chassis.trim()) newErrors.numero_chassis = 'Requis';
-    if (!form.marque) newErrors.marque = 'Requis';
-    if (!form.modele) newErrors.modele = 'Requis';
-    if (!form.version_id) newErrors.version_id = 'Requis';
-    if (!form.annee) newErrors.annee = 'Requis';
-    if (!form.couleur) newErrors.couleur = 'Requis';
-    if (!imageCarteGrise) newErrors.image_carte_grise = 'Requis';
+    if (!immatriculation) newErrors.immatriculation = t('vehicles.requiredField');
+    if (!form.numero_chassis.trim()) newErrors.numero_chassis = t('vehicles.requiredField');
+    if (!form.marque) newErrors.marque = t('vehicles.requiredField');
+    if (!form.modele) newErrors.modele = t('vehicles.requiredField');
+    if (!form.version_id) newErrors.version_id = t('vehicles.requiredField');
+    if (!form.annee) newErrors.annee = t('vehicles.requiredField');
+    if (!form.couleur) newErrors.couleur = t('vehicles.requiredField');
+    if (!imageCarteGrise) newErrors.image_carte_grise = t('vehicles.requiredField');
     return newErrors;
   };
 
@@ -248,12 +248,12 @@ export default function NewVehiclePage() {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error('Veuillez remplir tous les champs obligatoires.');
+      toast.error(t('vehicles.fillRequired'));
       return;
     }
 
     if (!user || !token) {
-      setApiError('Session expirée');
+      setApiError(t('vehicles.sessionExpired'));
       return;
     }
 
@@ -285,11 +285,11 @@ export default function NewVehiclePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'ajout');
+        throw new Error(data.error || t('vehicles.addError'));
       }
 
       setSuccess(true);
-      toast.success('Véhicule ajouté avec succès !');
+      toast.success(t('vehicles.addSuccess'));
 
       setTimeout(() => {
         router.push('/client/vehicles');
@@ -306,16 +306,16 @@ export default function NewVehiclePage() {
     return (
       <ClientPageWrapper className="flex items-center justify-center min-h-[70vh]">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          <ClientCard className="max-w-md w-full text-center p-12">
+          <ClientCard className="max-w-md w-full text-center p-12 bg-white border border-slate-200 shadow-sm rounded-2xl">
             <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-md shadow-emerald-500/20">
                <CheckCircle className="w-12 h-12 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-[#050505] mb-4">Véhicule Enregistré</h2>
-            <p className="text-[#8A8D91] font-medium mb-8">
-              Votre véhicule a été ajouté à votre garage. Un agent STA Chery vérifiera vos documents sous peu.
+            <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-4">{t('vehicles.successTitle')}</h2>
+            <p className="text-slate-500 font-semibold mb-8">
+              {t('vehicles.successDesc')}
             </p>
-            <ClientButton variant="primary" fullWidth onClick={() => router.push('/client/vehicles')}>
-              Voir mon garage
+            <ClientButton variant="primary" fullWidth size="large" onClick={() => router.push('/client/vehicles')} className="rounded-xl font-bold uppercase tracking-wide">
+              {t('vehicles.viewGarage')}
             </ClientButton>
           </ClientCard>
         </motion.div>
@@ -324,34 +324,35 @@ export default function NewVehiclePage() {
   }
 
   return (
-    <ClientPageWrapper className="space-y-12 pb-20">
+    <ClientPageWrapper className="space-y-10 pb-20">
       {/* ─── Premium Header ─── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8 text-slate-800 border border-slate-200/80 shadow-sm"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-2xl text-center md:text-left">
             <div className="mb-6 flex flex-wrap items-center justify-center md:justify-start gap-4">
               <button 
+                type="button"
                 onClick={() => router.back()}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-colors border border-white/10"
+                className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors border border-slate-200/60 shadow-sm"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
                 <Car className="h-3.5 w-3.5" />
-                Nouveau Véhicule
+                {t('vehicles.newVehicle')}
               </div>
             </div>
-            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
-              Ajoutez un <span className="text-blue-500">Moteur</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-extrabold tracking-tight leading-none text-slate-900">
+              {t('vehicles.addMotor')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
-              Enregistrez votre véhicule STA Chery pour accéder à l'historique complet des entretiens et réserver vos prochains rendez-vous en un clic.
+            <p className="text-slate-500 font-semibold text-base leading-relaxed">
+              {t('vehicles.registerDesc')}
             </p>
           </div>
         </div>
@@ -360,33 +361,33 @@ export default function NewVehiclePage() {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form Fields */}
         <div className="lg:col-span-2 space-y-8">
-          <ClientCard className="p-10 space-y-10">
+          <ClientCard className="p-8 sm:p-10 space-y-10 bg-white border border-slate-200/85 rounded-2xl shadow-sm">
             <div className="flex items-center gap-4">
-               <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center">
+               <div className="h-12 w-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                   <FileText className="h-6 w-6 text-blue-600" />
                </div>
                <div>
-                  <h2 className="text-2xl font-bold text-[#050505] tracking-tight">Spécifications Techniques</h2>
-                  <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Détails de votre véhicule</p>
+                  <h2 className="text-2xl font-extrabold text-slate-800 tracking-tight leading-none">{t('vehicles.techSpecs')}</h2>
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">{t('vehicles.detailsDesc')}</p>
                </div>
             </div>
 
             {/* Plate Selection */}
             <div className="space-y-4">
-               <label className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">Type d'immatriculation *</label>
+               <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('vehicles.plateType')} *</label>
                <div className="grid grid-cols-2 gap-4">
                   {[
-                    { id: 'TUNIS', label: 'Tunisie (123 تونس 456)', icon: Zap },
-                    { id: 'NT', label: 'N.T (12345 ن.ت)', icon: ShieldCheck }
+                    { id: 'TUNIS', label: t('vehicles.tunisFormat'), icon: Zap },
+                    { id: 'NT', label: t('vehicles.ntFormat'), icon: ShieldCheck }
                   ].map((type) => (
                     <button
                       key={type.id}
                       type="button"
                       onClick={() => setPlateType(type.id as PlateType)}
-                      className={`p-6 rounded-lg border-2 transition-all flex flex-col items-center gap-3 ${
+                      className={`p-5 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
                         plateType === type.id 
-                          ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm shadow-blue-500/10' 
-                          : 'border-[#E4E6EB] bg-[#F0F2F5] text-[#B0B3B8] hover:border-[#E4E6EB]'
+                          ? 'border-blue-600 bg-blue-50/50 text-blue-600 shadow-sm' 
+                          : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300'
                       }`}
                     >
                       <type.icon className="h-6 w-6" />
@@ -395,7 +396,7 @@ export default function NewVehiclePage() {
                   ))}
                </div>
 
-               <div className="p-8 rounded-lg bg-white text-white shadow-md relative overflow-hidden group">
+               <div className="p-8 rounded-2xl bg-slate-900 text-white shadow-sm relative overflow-hidden group border border-slate-800">
                   <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
                   <div className="relative z-10">
                     {plateType === 'TUNIS' ? (
@@ -405,15 +406,15 @@ export default function NewVehiclePage() {
                           placeholder="123"
                           value={tunisPlate.part1}
                           onChange={(e) => setTunisPlate(prev => ({ ...prev, part1: e.target.value.replace(/\D/g, '').slice(0, 3) }))}
-                          className="bg-white/10 border-2 border-white/20 rounded-lg w-24 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all"
+                          className="bg-white/10 border-2 border-white/20 rounded-xl w-24 p-4 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all font-mono placeholder:text-white/20"
                         />
-                        <span className="text-3xl font-bold opacity-40">تونس</span>
+                        <span className="text-3xl font-extrabold opacity-40">تونس</span>
                         <input 
                           type="text" 
                           placeholder="4567"
                           value={tunisPlate.part2}
                           onChange={(e) => setTunisPlate(prev => ({ ...prev, part2: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
-                          className="bg-white/10 border-2 border-white/20 rounded-lg w-32 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all"
+                          className="bg-white/10 border-2 border-white/20 rounded-xl w-32 p-4 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all font-mono placeholder:text-white/20"
                         />
                       </div>
                     ) : (
@@ -423,80 +424,80 @@ export default function NewVehiclePage() {
                           placeholder="12345"
                           value={ntPlate}
                           onChange={(e) => setNtPlate(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                          className="bg-white/10 border-2 border-white/20 rounded-lg w-48 p-5 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all"
+                          className="bg-white/10 border-2 border-white/20 rounded-xl w-48 p-4 text-2xl font-bold text-center focus:border-blue-500 outline-none transition-all font-mono placeholder:text-white/20"
                         />
-                        <span className="text-3xl font-bold opacity-40">ن.ت</span>
+                        <span className="text-3xl font-extrabold opacity-40">ن.ت</span>
                       </div>
                     )}
                   </div>
-                  {errors.immatriculation && <p className="text-center text-blue-400 text-[10px] font-bold mt-4 uppercase tracking-wide">Immatriculation requise</p>}
+                  {errors.immatriculation && <p className="text-center text-red-400 text-[10px] font-bold mt-4 uppercase tracking-wide">Immatriculation requise</p>}
                </div>
             </div>
 
             {/* Technical Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Numéro de Châssis *</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('vehicles.chassisNumber')} *</label>
                   <input 
                     name="numero_chassis"
                     value={form.numero_chassis}
                     onChange={handleChange}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
                     placeholder="VF1..."
                   />
-                  {errors.numero_chassis && <p className="text-blue-500 text-[10px] font-bold uppercase tracking-wide">Requis</p>}
+                  {errors.numero_chassis && <p className="text-red-500 text-[10px] font-bold uppercase tracking-wider">{t('vehicles.requiredField')}</p>}
                </div>
 
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Année *</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('vehicles.yearInput')} *</label>
                   <input 
                     name="annee"
                     type="number"
                     value={form.annee}
                     onChange={handleChange}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
                     placeholder="2023"
                   />
-                  {errors.annee && <p className="text-blue-500 text-[10px] font-bold uppercase tracking-wide">Requis</p>}
+                  {errors.annee && <p className="text-red-500 text-[10px] font-bold uppercase tracking-wider">{t('vehicles.requiredField')}</p>}
                </div>
 
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Marque *</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Marque *</label>
                   <select 
                     name="marque"
                     value={form.marque}
                     onChange={handleChange}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none"
                   >
-                    <option value="">Sélectionnez une marque</option>
+                    <option value="">{t('vehicles.selectMarque')}</option>
                     {marques.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                </div>
 
                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Modèle *</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Modèle *</label>
                   <select 
                     name="modele"
                     value={form.modele}
                     onChange={handleChange}
                     disabled={!form.marque}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none disabled:opacity-50"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none disabled:opacity-50"
                   >
-                    <option value="">Sélectionnez un modèle</option>
+                    <option value="">{t('vehicles.selectModele')}</option>
                     {modeles.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                </div>
 
                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Version *</label>
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Version *</label>
                   <select 
                     name="version_id"
                     value={form.version_id}
                     onChange={handleChange}
                     disabled={!form.modele}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none disabled:opacity-50"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none disabled:opacity-50"
                   >
-                    <option value="">Sélectionnez une version</option>
+                    <option value="">{t('vehicles.selectVersion')}</option>
                     {versions.map(v => (
                       <option key={v.id} value={v.id}>
                         {v.version_nom} {v.motorisation ? `(${v.motorisation})` : ''}
@@ -505,15 +506,15 @@ export default function NewVehiclePage() {
                   </select>
                </div>
 
-               <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Couleur *</label>
+               <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Couleur *</label>
                   <select 
                     name="couleur"
                     value={form.couleur}
                     onChange={handleChange}
-                    className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg p-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-semibold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none"
                   >
-                    <option value="">Couleur</option>
+                    <option value="">{t('vehicles.colorSelect')}</option>
                     {colors.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
                   </select>
                </div>
@@ -523,61 +524,61 @@ export default function NewVehiclePage() {
 
         {/* Sidebar: Documents & Photos */}
         <div className="space-y-8">
-           <ClientCard className="p-8 space-y-8">
+           <ClientCard className="p-8 space-y-8 bg-white border border-slate-200/85 rounded-2xl shadow-sm">
               <div className="flex items-center gap-4">
-                 <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                 <div className="h-10 w-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                     <Camera className="h-5 w-5 text-blue-600" />
                  </div>
-                 <h3 className="text-xl font-bold text-[#050505] tracking-tight">Documents</h3>
+                 <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">{t('vehicles.documents')}</h3>
               </div>
 
               {/* Photo Carte Grise */}
               <div className="space-y-4">
-                 <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide flex items-center justify-between">
-                    Carte Grise *
-                    {previewCarteGrise && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Reçue</span>}
+                 <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    {t('vehicles.carteGrise')} *
+                    {previewCarteGrise && <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> {t('vehicles.received')}</span>}
                  </label>
-                 <div className={`relative group ${errors.image_carte_grise ? 'border-blue-500' : ''}`}>
+                 <div className={`relative group ${errors.image_carte_grise ? 'border-red-400 border-2 rounded-xl' : ''}`}>
                     {previewCarteGrise ? (
-                      <div className="relative rounded-lg overflow-hidden aspect-video border-2 border-emerald-100 shadow-sm">
+                      <div className="relative rounded-xl overflow-hidden aspect-video border border-slate-200 shadow-sm">
                         <img src={previewCarteGrise} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <button type="button" onClick={() => removeImage('carte_grise')} className="p-3 bg-blue-600 text-white rounded-full">
+                           <button type="button" onClick={() => removeImage('carte_grise')} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-lg">
                               <X className="h-5 w-5" />
                            </button>
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-[#E4E6EB] bg-[#F0F2F5] hover:bg-[#E4E6EB] hover:border-blue-500/30 transition-all cursor-pointer">
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-blue-500/50 transition-all cursor-pointer">
                         <Plus className="h-8 w-8 text-slate-300 mb-2" />
-                        <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Ajouter la photo</span>
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('vehicles.addPhoto')}</span>
                         <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'carte_grise')} className="hidden" />
                       </label>
                     )}
                  </div>
-                 {errors.image_carte_grise && <p className="text-blue-500 text-[10px] font-bold uppercase tracking-wide text-center">La carte grise est obligatoire</p>}
+                 {errors.image_carte_grise && <p className="text-red-500 text-[10px] font-bold uppercase tracking-wider text-center">{t('vehicles.photoRequired')}</p>}
               </div>
 
               {/* Photo Vehicule */}
               <div className="space-y-4">
-                 <label className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide flex items-center justify-between">
-                    Photo du Véhicule
-                    {previewVehicule && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Reçue</span>}
+                 <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    {t('vehicles.photoVehicule')}
+                    {previewVehicule && <span className="text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> {t('vehicles.received')}</span>}
                  </label>
                  <div className="relative group">
                     {previewVehicule ? (
-                      <div className="relative rounded-lg overflow-hidden aspect-video border-2 border-blue-100 shadow-sm">
+                      <div className="relative rounded-xl overflow-hidden aspect-video border border-slate-200 shadow-sm">
                         <img src={previewVehicule} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                           <button type="button" onClick={() => removeImage('vehicule')} className="p-3 bg-blue-600 text-white rounded-full">
+                           <button type="button" onClick={() => removeImage('vehicule')} className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors shadow-lg">
                               <X className="h-5 w-5" />
                            </button>
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-[#E4E6EB] bg-[#F0F2F5] hover:bg-[#E4E6EB] hover:border-blue-500/30 transition-all cursor-pointer">
+                      <label className="flex flex-col items-center justify-center aspect-video rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-blue-500/50 transition-all cursor-pointer">
                         <Plus className="h-8 w-8 text-slate-300 mb-2" />
-                        <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">Ajouter la photo</span>
+                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t('vehicles.addPhoto')}</span>
                         <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 'vehicule')} className="hidden" />
                       </label>
                     )}
@@ -585,11 +586,11 @@ export default function NewVehiclePage() {
               </div>
            </ClientCard>
 
-           <div className="p-8 rounded-lg bg-blue-50 border border-blue-100">
+           <div className="p-6 rounded-2xl bg-blue-50/50 border border-blue-100">
               <div className="flex gap-4">
                  <Info className="h-5 w-5 text-blue-600 shrink-0" />
-                 <p className="text-xs font-medium text-blue-800 leading-relaxed">
-                    Vos documents seront cryptés et transmis de manière sécurisée à nos agents pour validation.
+                 <p className="text-xs font-semibold text-blue-800 leading-relaxed">
+                    {t('vehicles.securityNotice')}
                  </p>
               </div>
            </div>
@@ -602,8 +603,9 @@ export default function NewVehiclePage() {
                 size="large" 
                 disabled={isSubmitting}
                 icon={isSubmitting ? undefined : Plus}
+                className="rounded-xl font-bold uppercase tracking-wide py-3.5"
               >
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer le Véhicule'}
+                {isSubmitting ? t('vehicles.saving') : t('vehicles.saveVehicle')}
               </ClientButton>
               <ClientButton 
                 type="button" 
@@ -612,8 +614,9 @@ export default function NewVehiclePage() {
                 size="large"
                 onClick={() => router.back()}
                 disabled={isSubmitting}
+                className="rounded-xl font-bold uppercase tracking-wide py-3.5 border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800"
               >
-                Annuler
+                {t('vehicles.cancel')}
               </ClientButton>
            </div>
         </div>

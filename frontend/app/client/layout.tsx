@@ -317,7 +317,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             {/* Search Bar */}
             <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-full bg-[#F0F2F5] text-[#65676B] focus-within:bg-white focus-within:shadow-sm transition-all duration-200">
               <Search className="h-4 w-4" />
-              <input type="text" placeholder="Rechercher..." className="bg-transparent border-none outline-none text-sm w-40 font-normal placeholder-[#65676B]" />
+              <input type="text" placeholder={t('catalog.search')} className="bg-transparent border-none outline-none text-sm w-40 font-normal placeholder-[#65676B]" />
             </div>
 
             <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@
 
 export const ENV = {
   API_URL: __DEV__ 
-    ? 'http://192.168.100.121:3000/api'  // Your computer's IP with backend port 3000
+    ? 'http://192.168.100.103:3000/api'  // Your computer's IP with backend port 3000
     : 'https://your-production-api.com/api',
   
   TIMEOUT: 10000,
@@ -12,7 +12,7 @@ export const ENV = {
 // Helper to get the correct API URL
 export const getApiUrl = () => {
   if (__DEV__) {
-    return 'http://192.168.100.121:3000/api';  // Backend runs on port 3000
+    return 'http://192.168.100.103:3000/api';  // Backend runs on port 3000
   }
   return ENV.API_URL;
 };

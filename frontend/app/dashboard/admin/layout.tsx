@@ -127,12 +127,6 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     href: '/dashboard/admin/promotions',
     icon: <Sparkles className="w-5 h-5" />,
   },
-
-  {
-    label: 'Messages d\'Accueil',
-    href: '/dashboard/admin/welcome-messages',
-    icon: <MessageSquare className="w-5 h-5" />,
-  },
   {
     label: 'Informations',
     href: '/dashboard/admin/information',
@@ -172,15 +166,15 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
 
 const ADMIN_NAV_GROUPS = [
   {
-    label: 'Gestion operationnelle',
+    label: 'Gestion opérationnelle',
     items: ADMIN_NAV_ITEMS.slice(0, 7),
   },
   {
-    label: 'Referentiel services',
+    label: 'Référentiel services',
     items: ADMIN_NAV_ITEMS.slice(7, 18),
   },
   {
-    label: 'Suivi et parametres',
+    label: 'Suivi et paramètres',
     items: ADMIN_NAV_ITEMS.slice(18),
   },
 ];
@@ -191,64 +185,56 @@ function AdminSidebar() {
 
   const handleLogout = () => {
     logout();
-    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
-    <div className="relative hidden lg:flex flex-col w-72 bg-slate-950/95 text-white p-6 min-h-screen border-r border-slate-800 overflow-hidden">
-      <div className="pointer-events-none absolute -top-28 -right-20 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-10 -left-20 h-52 w-52 rounded-full bg-indigo-500/10 blur-3xl" />
-
-      {/* Logo */}
-      <div className="mb-8 relative z-10">
-        <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Control Center</p>
-        <h1 className="text-2xl font-bold text-slate-100 mt-2">STA Chery</h1>
-        <p className="text-sm text-slate-400">Administrateur</p>
+    <div className="relative hidden lg:flex flex-col w-72 bg-white text-slate-800 p-6 min-h-screen border-r border-slate-200/80 overflow-y-auto">
+      {/* Brand Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-extrabold text-sm tracking-tighter">
+            C
+          </div>
+          <div>
+            <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-orange-600">STA CHERY</p>
+            <h1 className="text-lg font-extrabold text-slate-900 tracking-tight leading-none mt-0.5">Espace Admin</h1>
+          </div>
+        </div>
+        <p className="text-xs text-slate-400 mt-2">Gestion concession & SAV Tunisie</p>
       </div>
 
-      <Separator className="mb-6 bg-slate-800" />
+      <Separator className="mb-6 bg-slate-100" />
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-5 relative z-10">
+      <nav className="flex-1 space-y-6">
         {ADMIN_NAV_GROUPS.map((group, groupIndex) => (
-          <div key={group.label}>
-            <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
-            <div className="space-y-2">
+          <div key={group.label} className="space-y-2">
+            <p className="px-3 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400">{group.label}</p>
+            <div className="space-y-1">
               {group.items.map((item, index) => {
                 const isActive = pathname === item.href;
 
                 return (
                   <motion.div
                     key={item.href}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, delay: (groupIndex * 0.06) + (index * 0.03) }}
+                    transition={{ duration: 0.15, delay: (groupIndex * 0.04) + (index * 0.02) }}
                   >
                     <Link
                       href={item.href}
-                      className={`relative flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 overflow-hidden ${
+                      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group ${
                         isActive
-                          ? 'text-cyan-100 border border-cyan-300/20 shadow-[0_0_0_1px_rgba(34,211,238,0.1)]'
-                          : 'text-slate-300 hover:bg-slate-900/90 hover:translate-x-1'
+                          ? 'bg-orange-50 text-orange-600 font-semibold border border-orange-200/30'
+                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
+                      <span className={`transition-colors duration-150 ${isActive ? 'text-orange-600' : 'text-slate-400 group-hover:text-slate-600'}`}>
+                        {item.icon}
+                      </span>
+                      <span className="text-sm">{item.label}</span>
                       {isActive && (
-                        <motion.span
-                          layoutId="admin-active-bg-desktop"
-                          className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-indigo-500/20"
-                          transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-                        />
-                      )}
-                      <span className="relative z-10">{item.icon}</span>
-                      <span className="relative z-10 font-medium">{item.label}</span>
-                      {isActive && (
-                        <motion.div
-                          layoutId="admin-active-indicator-desktop"
-                          className="relative z-10 ml-auto"
-                          transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </motion.div>
+                        <ChevronRight className="w-4 h-4 ml-auto text-orange-500" />
                       )}
                     </Link>
                   </motion.div>
@@ -258,29 +244,27 @@ function AdminSidebar() {
           </div>
         ))}
 
-        <div className="pt-2">
-          <Separator className="bg-slate-800" />
-
+        <div className="pt-4 border-t border-slate-100 space-y-4">
           {user && (
-            <div className="mt-4 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
-              <p className="text-sm text-slate-400">Compte administrateur</p>
-              <p className="font-semibold text-white truncate">
+            <div className="px-4 py-3.5 bg-slate-50 rounded-2xl border border-slate-200/60">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Session Active</p>
+              <p className="font-semibold text-slate-800 truncate mt-1 text-sm">
                 {user.prenom} {user.nom}
               </p>
-              <p className="text-xs text-slate-500 truncate">{user.email}</p>
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
-                <Sparkles className="w-3 h-3" />
-                Session admin active
+              <p className="text-xs text-slate-400 truncate mt-0.5">{user.email}</p>
+              <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] text-orange-700 font-medium">
+                <Sparkles className="w-3 h-3 text-orange-500" />
+                Administrateur
               </div>
             </div>
           )}
 
           <Button
             onClick={handleLogout}
-            variant="destructive"
-            className="mt-4 w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-500"
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2 border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-700 hover:border-rose-200 rounded-xl"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
             Déconnexion
           </Button>
         </div>
@@ -296,71 +280,63 @@ function AdminMobileMenu() {
 
   const handleLogout = () => {
     logout();
-    // No need to call router.replace - logout() handles the redirect
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger
-        className="lg:hidden inline-flex items-center justify-center rounded-md border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-100 hover:text-slate-900"
+        className="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-700 hover:bg-slate-50"
         aria-label="Ouvrir le menu administrateur"
         title="Ouvrir le menu"
       >
         <Menu className="w-5 h-5" />
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-72 p-0 bg-slate-950 text-slate-100 border-slate-800">
-        <div className="flex flex-col h-full">
-          <div className="p-6">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Control Center</p>
-            <h1 className="text-2xl font-bold text-slate-100 mt-2">STA Chery</h1>
-            <p className="text-sm text-slate-400">Administrateur</p>
+      <SheetContent side="left" className="w-72 p-0 bg-white text-slate-800 border-slate-200 overflow-y-auto">
+        <div className="flex flex-col h-full p-6">
+          <div className="mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-extrabold text-sm tracking-tighter">
+                C
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-orange-600">STA CHERY</p>
+                <h1 className="text-lg font-extrabold text-slate-900 tracking-tight leading-none mt-0.5">Espace Admin</h1>
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">Gestion concession & SAV</p>
           </div>
 
-          <Separator />
+          <Separator className="mb-4 bg-slate-100" />
 
-          <nav className="flex-1 space-y-5 p-4">
+          <nav className="flex-1 space-y-6">
             {ADMIN_NAV_GROUPS.map((group, groupIndex) => (
-              <div key={group.label}>
-                <p className="px-2 mb-2 text-[11px] uppercase tracking-[0.16em] text-slate-500">{group.label}</p>
-                <div className="space-y-2">
+              <div key={group.label} className="space-y-2">
+                <p className="px-3 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400">{group.label}</p>
+                <div className="space-y-1">
                   {group.items.map((item, index) => {
                     const isActive = pathname === item.href;
 
                     return (
                       <motion.div
                         key={item.href}
-                        initial={{ opacity: 0, x: -8 }}
+                        initial={{ opacity: 0, x: -4 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.18, delay: (groupIndex * 0.05) + (index * 0.02) }}
+                        transition={{ duration: 0.15, delay: (groupIndex * 0.04) + (index * 0.02) }}
                       >
                         <Link
                           href={item.href}
                           onClick={() => setIsOpen(false)}
-                          className={`relative flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 overflow-hidden ${
+                          className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 ${
                             isActive
-                              ? 'text-cyan-200 border border-cyan-300/20'
-                              : 'text-slate-300 hover:bg-slate-900 hover:translate-x-1'
+                              ? 'bg-orange-50 text-orange-600 font-semibold border border-orange-200/30'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                           }`}
                         >
-                          {isActive && (
-                            <motion.span
-                              layoutId="admin-active-bg-mobile"
-                              className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-indigo-500/20"
-                              transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-                            />
-                          )}
-                          <span className="relative z-10">{item.icon}</span>
-                          <span className="relative z-10 font-medium">{item.label}</span>
-                          {isActive && (
-                            <motion.div
-                              layoutId="admin-active-indicator-mobile"
-                              className="relative z-10 ml-auto"
-                              transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                            >
-                              <ChevronRight className="w-4 h-4" />
-                            </motion.div>
-                          )}
+                          <span className={`transition-colors duration-150 ${isActive ? 'text-orange-600' : 'text-slate-400'}`}>
+                            {item.icon}
+                          </span>
+                          <span className="text-sm">{item.label}</span>
                         </Link>
                       </motion.div>
                     );
@@ -369,24 +345,22 @@ function AdminMobileMenu() {
               </div>
             ))}
 
-            <div className="pt-2">
-              <Separator className="bg-slate-800" />
-
+            <div className="pt-4 border-t border-slate-100 space-y-4">
               {user && (
-                <div className="mt-4 px-4 py-3 bg-slate-900 rounded-lg border border-slate-800">
-                  <p className="text-sm text-slate-400">Compte administrateur</p>
-                  <p className="font-semibold text-slate-100">
+                <div className="px-4 py-3.5 bg-slate-50 rounded-2xl border border-slate-200/60">
+                  <p className="font-semibold text-slate-800 truncate text-sm">
                     {user.prenom} {user.nom}
                   </p>
+                  <p className="text-xs text-slate-400 truncate mt-0.5">{user.email}</p>
                 </div>
               )}
 
               <Button
                 onClick={handleLogout}
-                variant="destructive"
-                className="mt-4 w-full bg-rose-600 hover:bg-rose-500"
+                variant="outline"
+                className="w-full bg-slate-50 hover:bg-rose-50 hover:text-rose-600 text-slate-700 hover:border-rose-200 rounded-xl"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4 mr-2 text-slate-400" />
                 Déconnexion
               </Button>
             </div>
@@ -417,8 +391,8 @@ export default function AdminLayout({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-orange-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -428,36 +402,36 @@ export default function AdminLayout({
   }
 
   const hour = new Date().getHours();
-  const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir';
+  const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-[#F8FAFC]">
       <AdminSidebar />
 
-      <div className="flex-1 flex flex-col">
-        {/* Desktop Header with Notifications */}
-        <div className="hidden lg:flex bg-slate-950/95 border-b border-slate-800 px-6 py-4 items-center justify-between">
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Desktop Header */}
+        <div className="hidden lg:flex bg-white border-b border-slate-200/80 px-8 py-5 items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Administration</p>
-            <h2 className="text-lg font-semibold text-slate-100">Pilotage du système</h2>
-            <p className="text-sm text-cyan-300/90 mt-1">{salutation}, {user.prenom}. Ravi de vous revoir.</p>
+            <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Espace d'administration</p>
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight mt-0.5">Pilotage du système</h2>
+            <p className="text-xs text-slate-500 mt-1">{salutation}, {user.prenom}. Ravi de vous revoir.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <ModerationNotification />
             <NotificationBell />
             <Link
               href="/dashboard/admin/settings"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-700 bg-slate-900/70 text-slate-200 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
-              aria-label="Compte administrateur"
-              title="Compte administrateur"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+              aria-label="Paramètres administrateur"
+              title="Paramètres administrateur"
             >
-              <User className="h-4 w-4" />
+              <User className="h-5 w-5" />
             </Link>
             <button
               type="button"
               onClick={handleQuickLogout}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-rose-500/35 bg-rose-500/10 text-rose-200 transition-colors hover:border-rose-400 hover:bg-rose-500/20"
-              aria-label="Déconnexion rapide"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors"
+              aria-label="Déconnexion"
               title="Déconnexion"
             >
               <LogOut className="h-4 w-4" />
@@ -466,27 +440,27 @@ export default function AdminLayout({
         </div>
 
         {/* Mobile Header */}
-        <div className="lg:hidden bg-slate-950 border-b border-slate-800 p-4 flex items-center justify-between">
+        <div className="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-100">STA Chery - Admin</h1>
-            <p className="text-xs text-cyan-300/90">{salutation}, {user.prenom}</p>
+            <h1 className="text-lg font-extrabold text-slate-900">STA Chery</h1>
+            <p className="text-xs text-slate-500">{salutation}, {user.prenom}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <ModerationNotification />
             <NotificationBell />
             <AdminMobileMenu />
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content Area */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={pathname}
             className="flex-1 overflow-auto"
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
           >
             {children}
           </motion.main>

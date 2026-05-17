@@ -7,8 +7,11 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Phone, X } from 'lucide-react';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export function PhoneVerificationBanner() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Ne pas afficher si l'utilisateur n'est pas connecté, n'est pas un client, ou a déjà vérifié son téléphone
@@ -21,16 +24,16 @@ export function PhoneVerificationBanner() {
       <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
       <div className="flex items-center justify-between w-full">
         <div className="flex-1">
-          <h4 className="font-semibold">Vérification téléphonique requise</h4>
+          <h4 className="font-semibold">{t('phone.verificationRequired')}</h4>
           <p className="text-sm mt-1">
-            Vous devez vérifier votre numéro de téléphone pour pouvoir prendre des rendez-vous et accéder à tous les services.
+            {t('phone.bannerDescription')}
           </p>
         </div>
         <div className="flex items-center gap-2 ml-4">
           <Link href="/verify-phone">
             <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
               <Phone className="mr-2 h-4 w-4" />
-              Vérifier maintenant
+              {t('phone.verifyNow')}
             </Button>
           </Link>
           <Button

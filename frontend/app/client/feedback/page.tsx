@@ -48,7 +48,7 @@ interface AppointmentWithFeedback {
 
 export default function FeedbackPage() {
   const { token } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [appointments, setAppointments] = useState<AppointmentWithFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<number | null>(null);
@@ -69,7 +69,7 @@ export default function FeedbackPage() {
       const completed = data.filter((apt: any) => apt.statut === 'TERMINE') as AppointmentWithFeedback[];
       setAppointments(completed);
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors du chargement des rendez-vous');
+      toast.error(error.message || t('orders.loadingError') || 'Erreur lors du chargement des rendez-vous');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function FeedbackPage() {
     
     const note = selectedRating[rdv_id];
     if (!note) {
-      toast.error('Veuillez sélectionner une note');
+      toast.error(t('feedback.selectRatingError'));
       return;
     }
 
@@ -93,14 +93,14 @@ export default function FeedbackPage() {
       };
       
       await feedbackApi.submitFeedback(data, token);
-      toast.success('Merci pour votre avis !');
+      toast.success(t('feedback.thankYou'));
       
       await loadAppointments();
       
       setSelectedRating(prev => ({ ...prev, [rdv_id]: 0 }));
       setComments(prev => ({ ...prev, [rdv_id]: '' }));
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de l\'envoi de l\'avis');
+      toast.error(error.message || t('feedback.sendingError') || 'Erreur lors de l\'envoi');
     } finally {
       setSubmitting(null);
     }
@@ -135,7 +135,8 @@ export default function FeedbackPage() {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
+    const localeMap: any = { fr: 'fr-FR', ar: 'ar-TN', en: 'en-US' };
+    return new Date(dateStr).toLocaleDateString(localeMap[language] || 'fr-FR', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
@@ -143,11 +144,10 @@ export default function FeedbackPage() {
   };
 
   if (loading) {
-    return <ClientLoadingState message="Chargement de vos rendez-vous..." />;
+    return <ClientLoadingState message={t('feedback.loadingAppointments')} />;
   }
 
   const pendingFeedbackCount = appointments.filter(a => !a.feedback_note).length;
-  const completedFeedbackCount = appointments.filter(a => a.feedback_note).length;
 
   return (
     <ClientPageWrapper className="space-y-10 pb-20">
@@ -155,37 +155,37 @@ export default function FeedbackPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-slate-800 border border-slate-200/80 shadow-sm"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <Award className="h-3.5 w-3.5" />
-              Satisfaction Client
+              {t('feedback.title')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-3xl font-bold tracking-tight leading-none">
-              Votre <span className="text-blue-500">Avis</span> Compte
+            <h1 className="mb-4 text-4xl sm:text-3xl font-extrabold tracking-tight leading-none text-slate-900">
+              {t('feedback.title')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
-              Partagez votre expérience avec nous. Vos retours nous permettent d’améliorer continuellement la qualité de nos services STA Chery.
+            <p className="text-slate-500 font-semibold text-lg leading-relaxed">
+              {t('feedback.shareExperience')}
             </p>
           </div>
 
           <div className="flex gap-4">
             <ClientStatCard
-              label="À évaluer"
+              label={t('feedback.toEvaluate')}
               value={pendingFeedbackCount}
               icon={MessageSquare}
               iconColor="text-blue-500"
-              className="bg-white/5 border-white/10 text-white min-w-[140px]"
+              className="bg-slate-50 border-slate-200/80 text-slate-800 min-w-[140px]"
             />
           </div>
         </div>
       </motion.div>
-
+ 
       {/* ─── Main Content ─── */}
       {appointments.length === 0 ? (
         <ClientEmptyState
@@ -203,21 +203,21 @@ export default function FeedbackPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <ClientCard className="overflow-hidden border-none shadow-sm shadow-slate-200/40">
+                <ClientCard className="overflow-hidden border border-slate-200/80 bg-white shadow-sm hover:border-slate-300 transition-all">
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left: Info */}
                     <div className="flex-1 space-y-6">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h3 className="text-2xl font-bold text-[#050505] tracking-tight mb-2">
-                            Rendez-vous #{appointment.id}
+                          <h3 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+                            {t('feedback.appointment')} #{appointment.id}
                           </h3>
                           <div className="flex flex-wrap gap-4">
-                            <div className="flex items-center gap-2 text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
                               <Calendar className="w-3.5 h-3.5 text-blue-500" />
                               {formatDate(appointment.date_heure)}
                             </div>
-                            <div className="flex items-center gap-2 text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
                               <MapPin className="w-3.5 h-3.5 text-blue-500" />
                               {appointment.agence_nom}
                             </div>
@@ -232,16 +232,16 @@ export default function FeedbackPage() {
                         )}
                       </div>
 
-                      <div className="rounded-lg bg-[#F0F2F5] p-6 border border-[#E4E6EB] flex items-center gap-6">
-                        <div className="h-16 w-16 rounded-lg bg-white border border-[#E4E6EB] flex items-center justify-center shadow-sm">
-                          <Wrench className="h-8 w-8 text-[#B0B3B8]" />
+                      <div className="rounded-lg bg-slate-50 p-6 border border-slate-200/60 flex items-center gap-6">
+                        <div className="h-16 w-16 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center shadow-sm">
+                          <Wrench className="h-8 w-8 text-slate-400" />
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mb-1">Véhicule concerné</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">{t('feedback.vehicleConcerned')}</p>
                           <p className="text-lg font-bold text-slate-700">
                             {appointment.marque_nom} {appointment.modele_nom}
                           </p>
-                          <p className="text-sm font-bold text-[#8A8D91]">{appointment.immatriculation}</p>
+                          <p className="text-sm font-bold text-slate-400">{appointment.immatriculation}</p>
                         </div>
                       </div>
                     </div>
@@ -249,9 +249,9 @@ export default function FeedbackPage() {
                     {/* Right: Feedback Form or Display */}
                     <div className="w-full lg:w-[450px] shrink-0">
                       {appointment.feedback_note ? (
-                        <div className="h-full rounded-lg bg-[#F0F2F5]/50 p-8 border border-[#E4E6EB] flex flex-col justify-center items-center text-center space-y-6">
+                        <div className="h-full rounded-lg bg-slate-50 p-8 border border-slate-200/60 flex flex-col justify-center items-center text-center space-y-6">
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8] mb-4">{t('feedback.yourRating')}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-4">{t('feedback.yourRating')}</p>
                             <div className="flex justify-center">
                               {renderStars(appointment.id, appointment.feedback_note, false)}
                             </div>
@@ -259,21 +259,21 @@ export default function FeedbackPage() {
                           
                           {appointment.feedback_commentaire && (
                             <div className="w-full">
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8] mb-3">{t('feedback.yourComment')}</p>
-                              <div className="bg-white p-5 rounded-lg border border-[#E4E6EB] shadow-sm italic text-[#65676B] font-medium">
+                              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-3">{t('feedback.yourComment')}</p>
+                              <div className="bg-white p-5 rounded-lg border border-slate-200/60 shadow-sm italic text-slate-600 font-semibold">
                                 "{appointment.feedback_commentaire}"
                               </div>
                             </div>
                           )}
                           
-                          <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide pt-4">
-                            Posté le {formatDate(appointment.date_feedback!)}
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide pt-4">
+                            {t('feedback.postedOn')} {formatDate(appointment.date_feedback!)}
                           </p>
                         </div>
                       ) : (
-                        <div className="h-full rounded-lg bg-white p-8 border-2 border-blue-50 shadow-md shadow-red-500/5 space-y-6">
+                        <div className="h-full rounded-lg bg-white p-8 border border-slate-200/80 shadow-sm space-y-6">
                           <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] mb-4">
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-4">
                               {t('feedback.howRateService')}
                             </label>
                             <div className="flex justify-center lg:justify-start">
@@ -282,7 +282,7 @@ export default function FeedbackPage() {
                           </div>
 
                           <div className="space-y-3">
-                            <label className="block text-[10px] font-bold uppercase tracking-wide text-[#8A8D91]">
+                            <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400">
                               {t('feedback.commentOptional')}
                             </label>
                             <Textarea
@@ -291,10 +291,10 @@ export default function FeedbackPage() {
                               placeholder={t('feedback.shareYourExperience')}
                               rows={3}
                               maxLength={500}
-                              className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] p-4 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all resize-none"
+                              className="rounded-lg bg-slate-50 border-slate-200/60 p-4 font-semibold text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all resize-none"
                             />
                             <div className="flex justify-end">
-                              <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                                 {(comments[appointment.id] || '').length}/500
                               </span>
                             </div>

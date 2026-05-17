@@ -168,7 +168,7 @@ function ProfileContent() {
     setIsSavingProfile(true);
     try {
       const result = await updateProfile(user.id, profileForm, token);
-      toast.success('Profil mis à jour avec succès.');
+      toast.success(t('profile.updateSuccess'));
       const stored = localStorage.getItem('user');
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -176,9 +176,9 @@ function ProfileContent() {
         localStorage.setItem('user', JSON.stringify(updated));
       }
     } catch (err: any) {
-      const msg = err.message || 'Erreur lors de la mise à jour';
+      const msg = err.message || t('profile.updateError');
       setProfileError(msg);
-      toast.error('Erreur', { description: msg });
+      toast.error(t('common.error') || 'Erreur', { description: msg });
     } finally {
       setIsSavingProfile(false);
     }
@@ -204,15 +204,15 @@ function ProfileContent() {
     const newErrors: Record<string, string> = {};
 
     if (!passwordForm.currentPassword) {
-      newErrors.currentPassword = 'Le mot de passe actuel est obligatoire';
+      newErrors.currentPassword = t('profile.currentPasswordRequired');
     }
     if (!passwordForm.newPassword) {
-      newErrors.newPassword = 'Le nouveau mot de passe est obligatoire';
+      newErrors.newPassword = t('profile.newPasswordRequired');
     } else if (passwordForm.newPassword.length < 6) {
-      newErrors.newPassword = 'Le nouveau mot de passe doit contenir au moins 6 caractères';
+      newErrors.newPassword = t('profile.newPasswordLength');
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      newErrors.confirmPassword = t('profile.passwordsDoNotMatch');
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -223,13 +223,13 @@ function ProfileContent() {
     setIsSavingPassword(true);
     try {
       await changePassword(user.id, passwordForm.currentPassword, passwordForm.newPassword, token);
-      toast.success('Mot de passe modifié avec succès.');
+      toast.success(t('profile.passwordChangeSuccess'));
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowPassword({ current: false, new: false, confirm: false });
     } catch (err: any) {
-      const msg = err.message || 'Erreur lors du changement de mot de passe';
+      const msg = err.message || t('profile.passwordChangeError');
       setPasswordError(msg);
-      toast.error('Erreur', { description: msg });
+      toast.error(t('common.error') || 'Erreur', { description: msg });
     } finally {
       setIsSavingPassword(false);
     }
@@ -241,48 +241,48 @@ function ProfileContent() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-slate-800 border border-slate-200/80 shadow-sm"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
           {/* Profile Picture / Initials */}
           <div className="relative group">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="h-32 w-32 sm:h-40 sm:w-40 rounded-lg bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-md shadow-blue-500/20 border-4 border-white/10"
+              className="h-32 w-32 sm:h-40 sm:w-40 rounded-lg bg-gradient-to-tr from-blue-600 to-blue-500 flex items-center justify-center text-3xl sm:text-4xl font-bold text-white shadow-md shadow-blue-500/20 border-4 border-white"
             >
               {initials}
             </motion.div>
-            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-lg bg-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-[#F0F2F5] transition-colors">
-              <Camera className="h-5 w-5 text-[#050505]" />
+            <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-lg cursor-pointer hover:bg-[#F0F2F5] transition-colors">
+              <Camera className="h-5 w-5 text-slate-500" />
             </div>
           </div>
 
           <div className="flex-1 text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <Shield className="h-3.5 w-3.5" />
-              Compte Sécurisé
+              {t('profile.secureAccount')}
             </div>
-            <h1 className="mb-2 text-4xl sm:text-3xl font-bold tracking-tight leading-none">
+            <h1 className="mb-2 text-4xl sm:text-3xl font-extrabold tracking-tight leading-none text-slate-900">
               {user.prenom} <span className="text-blue-500">{user.nom}</span>
             </h1>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start items-center mb-6">
-              <span className="text-xs font-bold uppercase tracking-wide text-[#B0B3B8] border border-slate-700 rounded-full px-4 py-1.5">
+              <span className="text-xs font-bold uppercase tracking-wide text-slate-500 border border-slate-200 rounded-full px-4 py-1.5">
                 {getRoleLabel(user.role, t)}
               </span>
-              <span className="text-xs font-bold text-[#8A8D91] uppercase tracking-wide">ID: #{user.id}</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">ID: #{user.id}</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto md:mx-0">
-              <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-white/5 border border-white/10">
-                <Mail className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-bold text-slate-300 truncate">{user.email}</span>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-slate-50 border border-slate-200">
+                <Mail className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-bold text-slate-600 truncate">{user.email}</span>
               </div>
-              <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-white/5 border border-white/10">
-                <Phone className="h-4 w-4 text-blue-500" />
-                <span className="text-sm font-bold text-slate-300">{user.telephone || 'Non renseigné'}</span>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-lg bg-slate-50 border border-slate-200">
+                <Phone className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="text-sm font-bold text-slate-600">{user.telephone || t('profile.notSpecified')}</span>
               </div>
             </div>
           </div>
@@ -297,14 +297,14 @@ function ProfileContent() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <ClientCard className="h-full">
+          <ClientCard className="h-full border border-slate-200/80 bg-white">
             <div className="flex items-center gap-4 mb-10">
-              <div className="h-14 w-14 rounded-lg bg-blue-50 flex items-center justify-center">
+              <div className="h-14 w-14 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
                 <User2 className="h-7 w-7 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#050505] tracking-tight">{t('profile.modifyInfo')}</h2>
-                <p className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">{t('profile.updatePersonalInfo')}</p>
+                <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none mb-2">{t('profile.modifyInfo')}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('profile.updatePersonalInfo')}</p>
               </div>
             </div>
 
@@ -318,7 +318,7 @@ function ProfileContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                     {t('profile.firstName')} <span className="text-blue-500">*</span>
                   </Label>
                   <Input
@@ -326,11 +326,11 @@ function ProfileContent() {
                     value={profileForm.prenom}
                     onChange={handleProfileInputChange}
                     disabled={isSavingProfile}
-                    className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
+                    className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                     {t('profile.lastName')} <span className="text-blue-500">*</span>
                   </Label>
                   <Input
@@ -338,13 +338,13 @@ function ProfileContent() {
                     value={profileForm.nom}
                     onChange={handleProfileInputChange}
                     disabled={isSavingProfile}
-                    className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
+                    className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                   {t('common.phone')}
                 </Label>
                 <Input
@@ -353,23 +353,23 @@ function ProfileContent() {
                   onChange={handleProfileInputChange}
                   disabled={isSavingProfile}
                   placeholder="+216 XX XXX XXX"
-                  className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"
+                  className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                   Email
                 </Label>
                 <div className="relative">
                   <Input
                     value={user.email}
                     disabled
-                    className="rounded-lg bg-[#E4E6EB] border-[#E4E6EB] py-6 px-5 font-bold text-[#B0B3B8] opacity-70 cursor-not-allowed"
+                    className="rounded-lg bg-slate-100 border-slate-200 py-6 px-5 font-bold text-slate-400 opacity-70 cursor-not-allowed"
                   />
-                  <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                  <Lock className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
-                <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide ml-1 italic">L'adresse email ne peut pas être modifiée.</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide ml-1 italic">{t('profile.emailCannotBeChanged')}</p>
               </div>
 
               <div className="pt-4">
@@ -401,14 +401,14 @@ function ProfileContent() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <ClientCard className="h-full border-2 border-blue-50">
+          <ClientCard className="h-full border border-slate-200/80 bg-white">
             <div className="flex items-center gap-4 mb-10">
-              <div className="h-14 w-14 rounded-lg bg-blue-50 flex items-center justify-center">
+              <div className="h-14 w-14 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
                 <Key className="h-7 w-7 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#050505] tracking-tight">{t('profile.accountSecurity')}</h2>
-                <p className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">{t('profile.changePasswordRegularly')}</p>
+                <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-none mb-2">{t('profile.accountSecurity')}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('profile.changePasswordRegularly')}</p>
               </div>
             </div>
 
@@ -421,7 +421,7 @@ function ProfileContent() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                   {t('profile.currentPassword')} <span className="text-blue-500">*</span>
                 </Label>
                 <div className="relative">
@@ -431,22 +431,22 @@ function ProfileContent() {
                     value={passwordForm.currentPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all pr-12"
+                    className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(p => ({ ...p, current: !p.current }))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B0B3B8] hover:text-blue-500 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 transition-colors"
                   >
                     {showPassword.current ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
 
-              <Separator className="my-2 bg-[#E4E6EB]" />
+              <Separator className="my-2 bg-slate-100" />
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                   {t('profile.newPassword')} <span className="text-blue-500">*</span>
                 </Label>
                 <div className="relative">
@@ -456,12 +456,12 @@ function ProfileContent() {
                     value={passwordForm.newPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all pr-12"
+                    className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(p => ({ ...p, new: !p.new }))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B0B3B8] hover:text-blue-500 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 transition-colors"
                   >
                     {showPassword.new ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -472,7 +472,7 @@ function ProfileContent() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase tracking-wide text-[#8A8D91] ml-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wide text-slate-500 ml-1">
                   {t('profile.confirmNewPassword')} <span className="text-blue-500">*</span>
                 </Label>
                 <div className="relative">
@@ -482,12 +482,12 @@ function ProfileContent() {
                     value={passwordForm.confirmPassword}
                     onChange={handlePasswordInputChange}
                     disabled={isSavingPassword}
-                    className="rounded-lg bg-[#F0F2F5] border-[#E4E6EB] py-6 px-5 font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all pr-12"
+                    className="rounded-lg bg-slate-50 border-slate-200 py-6 px-5 font-semibold text-slate-700 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(p => ({ ...p, confirm: !p.confirm }))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B0B3B8] hover:text-blue-500 transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 transition-colors"
                   >
                     {showPassword.confirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>

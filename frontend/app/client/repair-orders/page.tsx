@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { repairOrdersApi } from '@/lib/api/repairOrders';
 import type { RepairOrderSummary, RepairOrderStatus } from '@/types/repairOrder';
 import {
@@ -16,7 +17,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { 
   FileText, 
-  Eye,
   Clock,
   CheckCircle2,
   XCircle,
@@ -38,20 +38,21 @@ const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon:
   ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
 };
 
-const STATUS_LABELS: Record<RepairOrderStatus, string> = {
-  BROUILLON: 'En préparation',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  FACTUREE: 'Facturée',
-  ANNULEE: 'Annulée',
-};
-
 export default function ClientRepairOrdersPage() {
   const router = useRouter();
   const { user, token, isLoading } = useAuth();
+  const { t } = useLanguage();
   const [commandes, setCommandes] = useState<RepairOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const STATUS_LABELS: Record<RepairOrderStatus, string> = {
+    BROUILLON: t('repairOrders.status.brouillon'),
+    EN_COURS: t('repairOrders.status.enCours'),
+    TERMINEE: t('repairOrders.status.terminee'),
+    FACTUREE: t('repairOrders.status.facturee'),
+    ANNULEE: t('repairOrders.status.annulee'),
+  };
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'CLIENT')) {
@@ -73,14 +74,14 @@ export default function ClientRepairOrdersPage() {
       setCommandes(data);
     } catch (err: any) {
       console.error('Erreur chargement commandes:', err);
-      setError(err.response?.data?.error || 'Erreur lors du chargement des commandes');
+      setError(err.response?.data?.error || t('repairOrders.errorLoading'));
     } finally {
       setLoading(false);
     }
   };
 
   if (isLoading || !user || !token) {
-    return <ClientLoadingState message="Chargement de vos commandes..." />;
+    return <ClientLoadingState message={t('repairOrders.loading')} />;
   }
 
   const stats = {
@@ -105,21 +106,21 @@ export default function ClientRepairOrdersPage() {
           <div className="max-w-2xl text-center md:text-left">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Historique des Réparations
+              {t('repairOrders.historyTitle')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
-              Vos <span className="text-blue-500">Commandes</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none text-[#050505] dark:text-white">
+              {t('repairOrders.title')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed">
-              Consultez le détail de vos interventions SAV, l'état d'avancement de vos réparations et vos factures.
+            <p className="text-[#65676B] font-medium text-lg leading-relaxed">
+              {t('repairOrders.subtitle')}
             </p>
           </div>
 
-          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-lg bg-white/5 border border-white/10 backdrop-blur-xl">
+          <div className="shrink-0 flex items-center justify-center h-40 w-40 rounded-lg bg-slate-50 border border-slate-200 backdrop-blur-xl">
             <div className="text-center">
-              <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide mb-1">Dépenses</p>
-              <p className="text-2xl font-bold text-white">{stats.totalSpent.toFixed(2)}</p>
-              <p className="text-[10px] font-bold text-[#8A8D91]">TND</p>
+              <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide mb-1">{t('repairOrders.expenses')}</p>
+              <p className="text-2xl font-bold text-[#050505]">{stats.totalSpent.toFixed(2)}</p>
+              <p className="text-[10px] font-bold text-[#65676B]">TND</p>
             </div>
           </div>
         </div>
@@ -128,19 +129,19 @@ export default function ClientRepairOrdersPage() {
       {/* ─── Stats Grid ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <ClientStatCard
-          label="Total Interventions"
+          label={t('repairOrders.totalInterventions')}
           value={stats.total}
           icon={History}
           iconColor="text-blue-500"
         />
         <ClientStatCard
-          label="En Cours"
+          label={t('repairOrders.inProgress')}
           value={stats.active}
           icon={Zap}
           iconColor="text-amber-500"
         />
         <ClientStatCard
-          label="Terminées"
+          label={t('repairOrders.completed')}
           value={stats.completed}
           icon={CheckCircle2}
           iconColor="text-emerald-500"
@@ -150,10 +151,12 @@ export default function ClientRepairOrdersPage() {
       {/* ─── Orders List ─── */}
       <div className="space-y-6">
         <div className="flex items-center justify-between px-4">
-          <h2 className="text-2xl font-bold text-[#050505] tracking-tight">Historique des ordres</h2>
+          <h2 className="text-2xl font-bold text-[#050505] tracking-tight">{t('repairOrders.historyOfOrders')}</h2>
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-500" />
-            <span className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">{commandes.length} Interventions</span>
+            <span className="text-xs font-bold text-[#65676B] uppercase tracking-wide">
+              {t('repairOrders.interventionsCount', { count: commandes.length })}
+            </span>
           </div>
         </div>
 
@@ -179,7 +182,7 @@ export default function ClientRepairOrdersPage() {
             >
               <AlertCircle className="h-12 w-12 text-blue-500 mx-auto mb-4" />
               <p className="text-blue-600 font-bold">{error}</p>
-              <ClientButton onClick={loadCommandes} variant="secondary" className="mt-6">Réessayer</ClientButton>
+              <ClientButton onClick={loadCommandes} variant="secondary" className="mt-6">{t('repairOrders.retry')}</ClientButton>
             </motion.div>
           ) : commandes.length === 0 ? (
             <motion.div
@@ -189,8 +192,8 @@ export default function ClientRepairOrdersPage() {
             >
               <ClientEmptyState
                 icon={FileText}
-                title="Aucune intervention"
-                description="Vous n'avez pas encore d'historique de réparation pour vos véhicules."
+                title={t('repairOrders.noInterventions')}
+                description={t('repairOrders.noInterventionsDesc')}
               />
             </motion.div>
           ) : (
@@ -215,7 +218,7 @@ export default function ClientRepairOrdersPage() {
                         {/* Status Block */}
                         <div className="flex flex-col items-center justify-center h-24 w-24 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors shrink-0">
                           <StatusIcon className={`h-8 w-8 ${status.text} mb-1`} />
-                          <span className="text-[9px] font-bold uppercase tracking-wide text-[#B0B3B8]">Statut</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-[#65676B]">{t('repairOrders.status')}</span>
                         </div>
 
                         {/* Order Info */}
@@ -231,18 +234,18 @@ export default function ClientRepairOrdersPage() {
 
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             <div className="space-y-1">
-                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Véhicule</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t('repairOrders.vehicle')}</p>
                               <p className="font-bold text-slate-700">{commande.immatriculation}</p>
-                              <p className="text-xs text-[#B0B3B8] font-medium">{commande.marque_nom} {commande.modele_nom}</p>
+                              <p className="text-xs text-[#65676B] font-medium">{commande.marque_nom} {commande.modele_nom}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Localisation</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t('repairOrders.location')}</p>
                               <p className="font-bold text-slate-700">{commande.agence_nom}</p>
-                              <p className="text-xs text-[#B0B3B8] font-medium">Agence SAV</p>
+                              <p className="text-xs text-[#65676B] font-medium">{t('repairOrders.agency')}</p>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Date Intervention</p>
-                              <p className="font-bold text-slate-700">{new Date(commande.date_creation).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{t('repairOrders.date')}</p>
+                              <p className="font-bold text-slate-700">{new Date(commande.date_creation).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                             </div>
                           </div>
                         </div>
@@ -250,14 +253,14 @@ export default function ClientRepairOrdersPage() {
                         {/* Amount & Action */}
                         <div className="flex flex-col sm:flex-row items-center gap-6 shrink-0 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-50 w-full lg:w-auto">
                           <div className="text-center lg:text-right">
-                            <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wide mb-1">Montant Total</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">{t('repairOrders.totalAmount')}</p>
                             <p className="text-2xl font-bold text-[#050505] tracking-tight">
                               {commande.montant_total?.toFixed(3)}
-                              <span className="text-[10px] ml-1 text-[#B0B3B8] uppercase tracking-wide">TND</span>
+                              <span className="text-[10px] ml-1 text-[#65676B] uppercase tracking-wide">TND</span>
                             </p>
                           </div>
                           
-                          <div className="h-14 w-14 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#B0B3B8] group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm group-hover:shadow-blue-500/30">
+                          <div className="h-14 w-14 rounded-full bg-[#F0F2F5] flex items-center justify-center text-[#65676B] group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm group-hover:shadow-blue-500/30">
                             <ChevronRight className="h-6 w-6" />
                           </div>
                         </div>

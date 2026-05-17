@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { AlertCircle, CheckCircle2, UserPlus, Users, Mail, Lock, Phone } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   RegisterFormState,
   EMPTY_REGISTER_FORM,
@@ -21,6 +22,7 @@ import {
 } from '@/lib/auth-utils';
 
 export default function RegisterPage() {
+  const { t } = useLanguage();
   const [form, setForm] = useState<RegisterFormState>(EMPTY_REGISTER_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
@@ -40,7 +42,7 @@ export default function RegisterPage() {
     return (
       <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
         <div className="relative z-10 flex min-h-screen items-center justify-center text-white">
-          Redirection vers votre espace...
+          {t('auth.loginRedirecting')}
         </div>
       </AuthThemeShell>
     );
@@ -94,19 +96,19 @@ export default function RegisterPage() {
               CHERY SERVICE
             </p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-[2.55rem]">
-              Creez votre
+              {t('auth.registerTitle').split(' ').slice(0, 2).join(' ')}
               <br />
-              garage digital
+              {t('auth.registerTitle').split(' ').slice(2).join(' ')}
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Rejoignez l&apos;univers du service precision et creez votre profil SAV.
+              {t('auth.registerDesc')}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-4.5">
               {success && (
                 <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <p className="text-sm">Inscription reussie. Redirection vers la connexion.</p>
+                  <p className="text-sm">{t('auth.successRegisterRedirect')}</p>
                 </Alert>
               )}
 
@@ -138,7 +140,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      Prenom
+                      {t('auth.firstName')}
                     </Label>
                   </div>
                   {errors.prenom && <p className="text-xs text-red-400">{errors.prenom}</p>}
@@ -163,7 +165,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      Nom
+                      {t('auth.lastName')}
                     </Label>
                   </div>
                   {errors.nom && <p className="text-xs text-red-400">{errors.nom}</p>}
@@ -190,7 +192,7 @@ export default function RegisterPage() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    Telephone
+                    {t('auth.phone')}
                   </Label>
                 </div>
                 {errors.telephone && <p className="text-xs text-red-400">{errors.telephone}</p>}
@@ -216,7 +218,7 @@ export default function RegisterPage() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    Adresse email
+                    {t('auth.emailLabel')}
                   </Label>
                 </div>
                 {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
@@ -243,7 +245,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      Mot de passe
+                      {t('auth.passwordLabel')}
                     </Label>
                   </div>
                   {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
@@ -268,7 +270,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      Confirmation
+                      {t('auth.confirmPassword')}
                     </Label>
                   </div>
                   {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
@@ -277,19 +279,19 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="mt-2 h-12 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 text-[0.8rem] uppercase tracking-[0.2em]"
+                className="mt-2 h-12 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 text-[0.8rem] uppercase tracking-[0.2em] cursor-pointer"
                 disabled={isSubmitting || success}
                 size="lg"
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                {isSubmitting ? 'Inscription en cours...' : 'S\'inscrire a Chery Service'}
+                {isSubmitting ? t('auth.registering') : t('auth.signUpToChery')}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-zinc-400">
-              Vous avez deja un compte ?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <Link href="/login" className="font-semibold text-red-400 hover:text-red-300 transition-colors underline underline-offset-4">
-                Se connecter
+                {t('auth.loginBtn')}
               </Link>
             </p>
           </div>

@@ -90,7 +90,7 @@ export default function VehicleHistoryListPage() {
     v.modele?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (loading) return <ClientLoadingState message="Récupération de l'historique de vos véhicules..." />;
+  if (loading) return <ClientLoadingState message={t('common.loading')} />;
 
   return (
     <ClientPageWrapper className="space-y-12 pb-20">
@@ -98,41 +98,41 @@ export default function VehicleHistoryListPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-white shadow-md"
+        className="relative overflow-hidden rounded-2xl bg-white p-6 sm:p-8 text-slate-800 shadow-sm border border-slate-200/80"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-400 backdrop-blur-md border border-white/10">
-              <History className="h-3.5 w-3.5" />
-              Archives Maintenance
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
+              <History className="h-3.5 w-3.5 text-blue-500" />
+              {t('vehicleHistory.detailTitle')}
             </div>
-            <h1 className="mb-4 text-4xl sm:text-4xl font-bold tracking-tight leading-none">
-              Historique <span className="text-blue-500">Véhicules</span>
+            <h1 className="mb-4 text-4xl sm:text-4xl font-extrabold tracking-tight leading-none text-slate-900">
+              {t('vehicleHistory.title')}
             </h1>
-            <p className="text-[#B0B3B8] font-medium text-lg leading-relaxed mb-8">
-              Consultez le passé de vos véhicules STA Chery. Suivez chaque intervention, chaque entretien et gardez une trace précise de la vie de votre moteur.
+            <p className="text-slate-500 font-semibold text-base leading-relaxed mb-8">
+              {t('vehicleHistory.consultHistory')}
             </p>
             
             <div className="relative group max-w-md mx-auto md:mx-0">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-[#8A8D91] group-focus-within:text-blue-500 transition-colors" />
+                <Search className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               </div>
               <input 
                 type="text"
-                placeholder="Chercher par immatriculation ou modèle..."
+                placeholder={t('catalog.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg pl-12 pr-6 py-4 text-sm font-medium focus:ring-4 focus:ring-blue-500/20 focus:bg-white/10 focus:border-blue-500/50 outline-none transition-all w-full"
+                className="bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 rounded-xl pl-12 pr-6 py-3.5 text-sm font-semibold focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500/50 outline-none transition-all w-full"
               />
             </div>
           </div>
 
           <div className="hidden lg:block">
-            <div className="h-48 w-48 rounded-xl bg-gradient-to-br from-red-600 to-red-400 p-8 shadow-md shadow-blue-500/20 rotate-3 border-4 border-white/10 flex items-center justify-center">
-               <History className="h-24 w-24 text-white opacity-40 absolute" />
+            <div className="h-48 w-48 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 p-8 shadow-md rotate-3 border border-orange-300 flex items-center justify-center relative overflow-hidden">
+               <History className="h-24 w-24 text-white opacity-20 absolute" />
                <Car className="h-16 w-16 text-white relative z-10" />
             </div>
           </div>
@@ -152,60 +152,59 @@ export default function VehicleHistoryListPage() {
             />
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVehicles.map((vehicle, idx) => (
               <motion.div
                 key={vehicle.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.1 }}
-                whileHover={{ y: -10 }}
+                whileHover={{ y: -6 }}
                 layout
               >
-                <ClientCard className="h-full flex flex-col p-0 overflow-hidden border-none shadow-sm shadow-slate-200/40 group">
+                <ClientCard className="h-full flex flex-col p-0 overflow-hidden bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-all group">
                   {/* Vehicle Header Card */}
-                  <div className="relative h-40 w-full overflow-hidden bg-white">
-                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent" />
+                  <div className="relative h-36 w-full overflow-hidden bg-slate-50 border-b border-slate-100 flex flex-col justify-center px-6">
+                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
                     
-                    <div className="absolute top-6 left-8 flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center">
-                        <Car className="h-7 w-7 text-white" />
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                        <Car className="h-6 w-6 text-blue-500" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-blue-400 mb-1">Année {vehicle.annee}</p>
-                        <h3 className="text-xl font-bold text-white tracking-tight leading-none">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wide text-blue-500 mb-0.5">{t('vehicles.vehicle')} {vehicle.annee}</p>
+                        <h3 className="text-lg font-extrabold text-slate-900 tracking-tight leading-none">
                           {vehicle.marque} {vehicle.modele}
                         </h3>
                       </div>
                     </div>
                     
-                    <div className="absolute bottom-6 left-8">
-                      <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-[10px] font-bold text-slate-300 uppercase tracking-wide">
+                    <div className="mt-4">
+                      <span className="px-3 py-1 rounded-full bg-slate-200/60 border border-slate-300/40 text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">
                         {vehicle.immatriculation}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-8 space-y-6">
+                  <div className="p-6 space-y-6">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="h-3.5 w-3.5 text-blue-500" />
-                          <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('vehicleHistory.mileage')}</span>
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-1.5 mb-1 text-slate-400">
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-wide">{t('vehicleHistory.mileage')}</span>
                         </div>
-                        <p className="text-sm font-bold text-[#050505]">{vehicle.kilometrage?.toLocaleString() || 0} km</p>
+                        <p className="text-sm font-extrabold text-slate-800">{vehicle.kilometrage?.toLocaleString() || 0} km</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB]">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap className="h-3.5 w-3.5 text-amber-500" />
-                          <span className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">État</span>
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-1.5 mb-1 text-slate-400">
+                          <Zap className="h-3.5 w-3.5" />
+                          <span className="text-[10px] font-extrabold uppercase tracking-wide">{t('vehicleHistory.status')}</span>
                         </div>
-                        <p className="text-sm font-bold text-[#050505]">{vehicle.statut_validation || '—'}</p>
+                        <p className="text-sm font-extrabold text-slate-800">{vehicle.statut_validation || '—'}</p>
                       </div>
                     </div>
 
-                    <div className="space-y-4 pt-4">
+                    <div className="space-y-4">
                       <ClientButton
                         onClick={() => router.push(`/client/vehicles/${vehicle.id}/history`)}
                         variant="primary"
@@ -228,27 +227,27 @@ export default function VehicleHistoryListPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        className="rounded-xl bg-[#F0F2F5] p-10 border border-[#E4E6EB] relative overflow-hidden"
+        className="rounded-2xl bg-white p-8 border border-slate-200/80 shadow-sm relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 bg-blue-500/5 rounded-full blur-3xl" />
         <div className="flex flex-col md:flex-row gap-6 items-center">
-          <div className="h-24 w-24 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-[#E4E6EB]">
-            <Info className="h-10 w-10 text-blue-600" />
+          <div className="h-20 w-20 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+            <Info className="h-9 w-9 text-blue-500" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-2xl font-bold text-[#050505] mb-2 tracking-tight">Que contient votre historique ?</h3>
-            <p className="text-[#8A8D91] font-medium mb-6">Un dossier complet pour la valeur de revente et la sécurité de votre véhicule.</p>
+            <h3 className="text-xl font-extrabold text-slate-900 mb-1.5 tracking-tight">{t('vehicleHistory.whatContainsTitle')}</h3>
+            <p className="text-slate-500 font-semibold text-sm mb-6">{t('vehicleHistory.consultHistory')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                {[
-                 { icon: Wrench, label: "Interventions" },
-                 { icon: Clock, label: "Rendez-vous" },
-                 { icon: TrendingUp, label: "Statistiques" },
-                 { icon: History, label: "Archives" }
+                 { icon: Wrench, label: t('vehicleHistory.interventions') },
+                 { icon: Clock, label: t('vehicleHistory.appointments') },
+                 { icon: TrendingUp, label: t('vehicleHistory.rdvStats') },
+                 { icon: History, label: t('nav.clientHistory') }
                ].map((item, i) => (
-                 <div key={i} className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl shadow-sm border border-[#E4E6EB]">
-                   <item.icon className="h-4 w-4 text-blue-500" />
-                   <span className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{item.label}</span>
-                 </div>
+                  <div key={i} className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100 hover:bg-slate-100/50 transition-colors">
+                    <item.icon className="h-4.5 w-4.5 text-blue-500" />
+                    <span className="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">{item.label}</span>
+                  </div>
                ))}
             </div>
           </div>

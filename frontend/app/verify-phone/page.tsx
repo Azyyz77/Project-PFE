@@ -9,8 +9,10 @@ import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, Phone, RefreshCw } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function VerifyPhoneContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, logout, refreshUser, isLoading } = useAuth();
@@ -82,14 +84,14 @@ function VerifyPhoneContent() {
 
     const code = otp.join('');
     if (code.length !== 6) {
-      setError('Veuillez entrer le code à 6 chiffres.');
+      setError(t('auth.enterSixDigits'));
       return;
     }
 
     setIsSubmitting(true);
     try {
       const result = await verifyPhoneNumber(user?.email || email, code);
-      setSuccess(result.message + ' Redirection en cours...');
+      setSuccess((result.message || '') + ' ' + t('auth.loginRedirecting'));
       
       // Forcer une reconnexion pour obtenir un nouveau token avec telephone_verifie = true
       setTimeout(() => {
@@ -103,7 +105,7 @@ function VerifyPhoneContent() {
         window.location.href = '/login?phone_verified=true';
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Code incorrect ou expiré');
+      setError(err.message || t('auth.incorrectCode'));
     } finally {
       setIsSubmitting(false);
     }
@@ -116,11 +118,11 @@ function VerifyPhoneContent() {
 
     try {
       const result = await resendVerificationCode(user?.email || email);
-      setSuccess('Code de vérification renvoyé par WhatsApp');
+      setSuccess(t('auth.codeResentSuccess'));
       setTelephoneHint(result.telephone_hint || '');
       setOtp(['', '', '', '', '', '']); // Reset OTP fields
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du renvoi du code');
+      setError(err.message || t('auth.codeResendError'));
     } finally {
       setIsResending(false);
     }
@@ -139,12 +141,12 @@ function VerifyPhoneContent() {
               <Phone className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             </div>
             <h2 className="mt-6 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Vérification du téléphone
+              {t('auth.verifyPhoneTitle')}
             </h2>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Entrez le code à 6 chiffres envoyé par WhatsApp au numéro{' '}
+              {t('auth.verifyPhoneDesc')}{' '}
               <span className="font-medium text-slate-900 dark:text-white">
-                {telephoneHint || (user?.telephone ? `***${user.telephone.slice(-3)}` : 'associé à votre compte')}
+                {telephoneHint || (user?.telephone ? `***${user.telephone.slice(-3)}` : t('auth.associatedWithAccount'))}
               </span>
             </p>
           </div>
@@ -167,7 +169,7 @@ function VerifyPhoneContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="mb-3 block text-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Code de vérification
+                  {t('auth.verificationCode')}
                 </label>
                 <div className="flex justify-center gap-3" onPaste={handlePaste}>
                   {otp.map((digit, index) => (
@@ -179,7 +181,7 @@ function VerifyPhoneContent() {
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
-                      aria-label={`Chiffre ${index + 1}`}
+                      aria-label={`${t('auth.otpCode')} ${index + 1}`}
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(index, e)}
@@ -192,35 +194,35 @@ function VerifyPhoneContent() {
               <Button
                 type="submit"
                 disabled={isSubmitting || otp.join('').length !== 6}
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
                 size="lg"
               >
-                {isSubmitting ? 'Vérification...' : 'Vérifier le code'}
+                {isSubmitting ? t('auth.verifying') : t('auth.verifyCode')}
               </Button>
             </form>
 
             <div className="mt-6 space-y-3 text-center text-sm">
               <p className="text-slate-600 dark:text-slate-400">
-                Vous n&apos;avez pas reçu le code ?
+                {t('auth.didNotReceiveCode')}
               </p>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleResendCode}
                 disabled={isResending}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${isResending ? 'animate-spin' : ''}`} />
-                {isResending ? 'Envoi en cours...' : 'Renvoyer le code'}
+                {isResending ? t('auth.sending') : t('auth.resendCode')}
               </Button>
               
               <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={logout}
-                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-sm font-medium"
+                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 text-sm font-medium cursor-pointer"
                 >
-                  Se déconnecter
+                  {t('auth.logout')}
                 </button>
               </div>
             </div>
@@ -241,4 +243,4 @@ export default function VerifyPhonePage() {
       <VerifyPhoneContent />
     </Suspense>
   );
-}
+}
