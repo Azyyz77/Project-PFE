@@ -67,7 +67,7 @@ function Sidebar() {
 
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto p-3 space-y-2 my-4">
-        {navItems.map((item) => {
+        {navItems.map((item: any) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
@@ -123,7 +123,7 @@ function Topbar() {
 
   const getPageTitle = () => {
     const navItems = getSidebarLinks(user?.role || 'CLIENT');
-    const item = navItems.find((i) => pathname === i.href || pathname.startsWith(i.href + '/'));
+    const item = navItems.find((i: any) => pathname === i.href || pathname.startsWith(i.href + '/'));
     return item?.label || 'Dashboard';
   };
 
