@@ -128,6 +128,11 @@ function LoginPageContent() {
         <section className="hidden flex-1 lg:flex flex-col justify-center pr-12">
           <div className="space-y-6">
             <div>
+              {/* Chery Logo - directly above Bienvenue, aligned to the left */}
+              <div className="-mb-6">
+                <img src="/chery-logo-clean.png" alt="Chery" className="h-28 w-80 object-contain object-left" />
+              </div>
+              
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
                 Bienvenue sur votre <br />
                 <span className="text-red-500">plateforme SAV</span>
@@ -189,10 +194,10 @@ function LoginPageContent() {
           </div>
         </section>
 
-        <section className="w-full max-w-md mx-auto lg:mx-0">
+        <section className="w-full max-w-md mx-auto lg:mx-0 mt-16">
           <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-8 shadow-2xl shadow-red-500/20 sm:p-10">
-            <h2 className="text-2xl font-bold text-white">Connexion</h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <h2 className="text-2xl font-bold text-white text-center">Connexion</h2>
+            <p className="mt-2 text-sm text-zinc-400 text-center">
               Entrez vos identifiants pour accéder à votre espace.
             </p>
 
