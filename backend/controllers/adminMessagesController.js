@@ -31,9 +31,9 @@ const publishMessage = async (req, res) => {
     let query = 'SELECT id FROM Utilisateur WHERE actif = 1';
     
     if (target === 'clients') {
-      query += ' AND role_id = (SELECT id FROM Role WHERE nom = \'CLIENT\')';
+      query += " AND role = 'CLIENT'";
     } else if (target === 'agents') {
-      query += ' AND role_id = (SELECT id FROM Role WHERE nom = \'AGENT\')';
+      query += " AND role = 'AGENT'";
     }
     // Si target === 'all', on prend tous les utilisateurs actifs
 

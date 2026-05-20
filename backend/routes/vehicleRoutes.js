@@ -3,6 +3,7 @@ const router = express.Router();
 const vehicleController = require('../controllers/vehicleController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/authorizeRoles');
+const cache = require('../middleware/cache');
 
 // Toutes les routes véhicules nécessitent une authentification
 router.use(authMiddleware);
@@ -40,6 +41,7 @@ router.use(authMiddleware);
  */
 // Any authenticated user can add vehicles for themselves
 router.post('/', vehicleController.addVehicle);
+router.get('/', cache(300), vehicleController.getMyVehicles);
 
 /**
  * @swagger
@@ -55,7 +57,7 @@ router.post('/', vehicleController.addVehicle);
  *       401:
  *         description: Token manquant ou invalide
  */
-router.get('/catalog/versions', vehicleController.getVersionCatalog);
+router.get('/catalog/versions', cache(300), vehicleController.getVersionCatalog);
 
 /**
  * @swagger
@@ -73,7 +75,7 @@ router.get('/catalog/versions', vehicleController.getVersionCatalog);
  *       404:
  *         description: Aucun véhicule trouvé
  */
-router.get('/my', vehicleController.getMyVehicles);
+router.get('/my', cache(300), vehicleController.getMyVehicles);
 
 /**
  * @swagger
@@ -97,7 +99,7 @@ router.get('/my', vehicleController.getMyVehicles);
  *       403:
  *         description: Accès non autorisé
  */
-router.get('/user/:userId', vehicleController.getVehiclesByUser);
+router.get('/user/:userId', cache(300), vehicleController.getVehiclesByUser);
 
 /**
  * @swagger
@@ -121,7 +123,7 @@ router.get('/user/:userId', vehicleController.getVehiclesByUser);
  *       404:
  *         description: Véhicule non trouvé
  */
-router.get('/:id', vehicleController.getVehicleById);
+router.get('/:id', cache(300), vehicleController.getVehicleById);
 
 /**
  * @swagger

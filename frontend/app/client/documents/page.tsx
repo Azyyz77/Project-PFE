@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { documentsApi } from '@/lib/api/documents';
+import { documentsApi, Document, getDocumentDownloadUrl } from '@/lib/api/documents';
 import { 
   FileText, 
   Download, 
@@ -27,17 +27,6 @@ import {
 } from '@/components/client';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Document {
-  id: number;
-  titre: string;
-  description?: string;
-  url: string;
-  categorie: string;
-  type_mime?: string;
-  taille_mo?: number;
-  date_creation: string;
-}
 
 export default function ClientDocumentsPage() {
   const { t, language } = useLanguage();
@@ -178,6 +167,7 @@ export default function ClientDocumentsPage() {
             {filteredDocuments.map((doc, idx) => {
               const category = getCategoryColor(doc.categorie);
               const CategoryIcon = category.icon;
+              const downloadUrl = getDocumentDownloadUrl(doc);
 
               return (
                 <motion.div
@@ -229,7 +219,7 @@ export default function ClientDocumentsPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <ClientButton
                           variant="secondary"
-                          onClick={() => window.open(doc.url, '_blank')}
+                          onClick={() => downloadUrl && window.open(downloadUrl, '_blank')}
                           icon={Eye}
                           className="w-full text-xs rounded-xl"
                         >
@@ -238,8 +228,9 @@ export default function ClientDocumentsPage() {
                         <ClientButton
                           variant="primary"
                           onClick={() => {
+                            if (!downloadUrl) return;
                             const link = document.createElement('a');
-                            link.href = doc.url;
+                            link.href = downloadUrl;
                             link.download = doc.titre;
                             link.click();
                           }}

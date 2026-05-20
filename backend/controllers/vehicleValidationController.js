@@ -1,5 +1,21 @@
 const { getConnection, sql } = require('../config/database');
 const { sendWhatsAppMessage } = require('../services/whatsappClient');
+const redis = require('../config/redis');
+
+const invalidateVehicleCache = async () => {
+  try {
+    const keys = await redis.keys('cache:/api/vehicles*');
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+    const agentKeys = await redis.keys('cache:/api/agent/vehicles*');
+    if (agentKeys && agentKeys.length > 0) {
+      await redis.del(agentKeys);
+    }
+  } catch (err) {
+    console.error('Error invalidating vehicle cache:', err);
+  }
+};
 
 /**
  * Obtenir tous les véhicules en attente de validation
@@ -196,6 +212,8 @@ const validateVehicle = async (req, res) => {
       }
     }
 
+    await invalidateVehicleCache();
+
     res.json({ 
       message: 'Véhicule validé avec succès',
       vehicle: {
@@ -298,6 +316,8 @@ const rejectVehicle = async (req, res) => {
         console.warn('Erreur envoi WhatsApp:', whatsappError);
       }
     }
+
+    await invalidateVehicleCache();
 
     res.json({ 
       message: 'Véhicule refusé',

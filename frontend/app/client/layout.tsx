@@ -74,6 +74,7 @@ const getNavSections = (): NavSection[] => [
       { labelKey: 'nav.clientComplaints', href: '/client/complaints', icon: <AlertCircle className="h-5 w-5" />, badgeKey: 'complaints' },
       { labelKey: 'nav.clientChatbot', href: '/client/chatbot', icon: <MessageCircle className="h-5 w-5" /> },
       { labelKey: 'nav.clientProfile', href: '/client/profile', icon: <User className="h-5 w-5" /> },
+      { labelKey: 'nav.clientInspection', href: '/client/vehicle-inspection', icon: <Receipt className="h-5 w-5" /> },
     ],
   },
 ];

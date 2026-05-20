@@ -5,8 +5,8 @@ const historyController = require('../controllers/appointmentHistoryController')
 const { authMiddleware } = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/authorizeRoles');
 
-// Toutes les routes nécessitent une authentification
-router.use(authMiddleware);
+// Toutes les routes de feedback/historique nécessitent une authentification
+router.use(['/appointments', '/feedbacks'], authMiddleware);
 
 // ── Feedback ───────────────────────────────────────────────
 // Client peut soumettre un feedback

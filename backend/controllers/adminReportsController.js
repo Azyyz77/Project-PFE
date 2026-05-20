@@ -14,8 +14,8 @@ const getGlobalReport = async (req, res) => {
       SELECT 
         COUNT(*) AS total_users,
         COUNT(CASE WHEN actif = 1 THEN 1 END) AS active_users,
-        (SELECT COUNT(*) FROM Utilisateur u JOIN Role r ON r.id = u.role_id WHERE r.nom = 'CLIENT') AS total_clients,
-        (SELECT COUNT(*) FROM Utilisateur u JOIN Role r ON r.id = u.role_id WHERE r.nom = 'AGENT') AS total_agents
+        (SELECT COUNT(*) FROM Utilisateur u WHERE u.role = 'CLIENT') AS total_clients,
+        (SELECT COUNT(*) FROM Utilisateur u WHERE u.role = 'AGENT') AS total_agents
       FROM Utilisateur
     `);
 

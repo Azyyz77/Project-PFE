@@ -386,7 +386,7 @@ const getPerformanceStats = async (req, res) => {
       LEFT JOIN Agence ag ON u.agence_id = ag.id
       LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
       LEFT JOIN Feedback f ON f.appointment_id = r.id
-      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+      WHERE u.role = 'AGENT'
       GROUP BY u.id, u.prenom, u.nom, ag.nom
       HAVING COUNT(DISTINCT r.id) > 0
       ORDER BY rdv_termines DESC
@@ -404,7 +404,7 @@ const getPerformanceStats = async (req, res) => {
       LEFT JOIN Agence ag ON u.agence_id = ag.id
       LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
       LEFT JOIN Feedback f ON f.appointment_id = r.id
-      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+      WHERE u.role = 'AGENT'
       GROUP BY u.id, u.prenom, u.nom, ag.nom
       HAVING COUNT(f.id) >= 5
       ORDER BY note_moyenne DESC
@@ -420,7 +420,7 @@ const getPerformanceStats = async (req, res) => {
         AVG(DATEDIFF(MINUTE, r.heure_reelle_debut, r.heure_reelle_fin)) AS duree_moyenne_min
       FROM Utilisateur u
       LEFT JOIN RendezVous r ON r.agent_id = u.id ${filters.length > 0 ? 'AND ' + filters.join(' AND ') : ''}
-      WHERE u.role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+      WHERE u.role = 'AGENT'
         AND r.heure_reelle_debut IS NOT NULL 
         AND r.heure_reelle_fin IS NOT NULL
       GROUP BY u.id, u.prenom, u.nom

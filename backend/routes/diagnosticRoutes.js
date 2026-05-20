@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const diagnosticController = require('../controllers/diagnosticController');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { requirePermission } = require('../middleware/permissionMiddleware');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -13,37 +13,37 @@ router.use(authMiddleware);
 
 // Obtenir tous les diagnostics (avec filtres)
 router.get('/',
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN', 'DIRECTION'),
   diagnosticController.getAllDiagnostics
 );
 
 // Obtenir un diagnostic par RDV ID
 router.get('/rdv/:rdvId',
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN', 'DIRECTION'),
   diagnosticController.getDiagnosticByRDV
 );
 
 // Créer un diagnostic
 router.post('/',
-  requirePermission('DIAGNOSTICS', 'CREATE'),
+  authorizeRoles('AGENT', 'ADMIN'),
   diagnosticController.createDiagnostic
 );
 
 // Mettre à jour un diagnostic
 router.put('/:id',
-  requirePermission('DIAGNOSTICS', 'UPDATE'),
+  authorizeRoles('AGENT', 'ADMIN'),
   diagnosticController.updateDiagnostic
 );
 
 // Ajouter un problème à un diagnostic
 router.post('/:id/problemes',
-  requirePermission('DIAGNOSTICS', 'UPDATE'),
+  authorizeRoles('AGENT', 'ADMIN'),
   diagnosticController.addProbleme
 );
 
 // Retirer un problème d'un diagnostic
 router.delete('/:id/problemes/:problemeId',
-  requirePermission('DIAGNOSTICS', 'UPDATE'),
+  authorizeRoles('AGENT', 'ADMIN'),
   diagnosticController.removeProbleme
 );
 

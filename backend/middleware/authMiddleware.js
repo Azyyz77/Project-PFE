@@ -1,26 +1,55 @@
 const jwt = require('jsonwebtoken');
+const redis = require('../config/redis');
 const { getConnection, sql } = require('../config/database');
 
-const authMiddleware = (req, res, next) => {
+const AUTH_CACHE_PREFIX = 'auth:token:';
+const AUTH_CACHE_FALLBACK_TTL = 300;
+
+const getAuthCacheTtlSeconds = (decoded) => {
+  const now = Math.floor(Date.now() / 1000);
+  if (decoded && typeof decoded.exp === 'number') {
+    return Math.max(decoded.exp - now, 1);
+  }
+
+  const fallback = Number.parseInt(process.env.AUTH_CACHE_TTL || AUTH_CACHE_FALLBACK_TTL, 10);
+  return Number.isFinite(fallback) && fallback > 0 ? fallback : AUTH_CACHE_FALLBACK_TTL;
+};
+
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
     console.log(`[AuthMiddleware] ${req.method} ${req.path} - Auth header:`, authHeader ? 'Present' : 'Missing');
 
-    if (!authHeader) {
+    const queryToken = typeof req.query?.token === 'string' ? req.query.token : null;
+
+    if (!authHeader && !queryToken) {
       return res.status(401).json({
         error: 'Token non fourni',
         message: 'Veuillez inclure le header Authorization avec le format: Bearer <token>'
       });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader ? authHeader.split(' ')[1] : queryToken;
 
     if (!token) {
       return res.status(401).json({
         error: 'Format de token invalide',
         message: 'Le format doit être: Bearer <token>'
       });
+    }
+
+    const cacheKey = `${AUTH_CACHE_PREFIX}${token}`;
+
+    try {
+      const cachedUser = await redis.get(cacheKey);
+      if (cachedUser) {
+        req.user = JSON.parse(cachedUser);
+        console.log(`[AuthMiddleware] Cache hit for user:`, req.user.id, req.user.role);
+        return next();
+      }
+    } catch (cacheError) {
+      console.warn('[AuthMiddleware] Redis cache read failed:', cacheError.message);
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -33,6 +62,13 @@ const authMiddleware = (req, res, next) => {
     };
 
     console.log(`[AuthMiddleware] User authenticated:`, req.user.id, req.user.role, `agence_id: ${req.user.agence_id || 'N/A'}`);
+
+    try {
+      const ttlSeconds = getAuthCacheTtlSeconds(decoded);
+      await redis.setex(cacheKey, ttlSeconds, JSON.stringify(req.user));
+    } catch (cacheError) {
+      console.warn('[AuthMiddleware] Redis cache write failed:', cacheError.message);
+    }
 
     next();
   } catch (error) {
@@ -69,21 +105,19 @@ const validateUserRole = async (req, res, next) => {
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .query(`
-        SELECT u.id, u.actif, u.role_id,
-               r.nom AS role_nom
+        SELECT u.id, u.actif, u.role
         FROM Utilisateur u
-        LEFT JOIN Role r ON r.id = u.role_id
         WHERE u.id = @id
       `);
 
     if (result.recordset.length > 0) {
       const user = result.recordset[0];
 
-      // Use role_nom from the Role table join as the authoritative role
-      if (user.role_nom && user.role_nom !== req.user.role) {
-        console.warn(`Role mismatch for user ${user.id}: token has ${req.user.role}, DB has ${user.role_nom}`);
+      // Use role from the Utilisateur table as the authoritative role
+      if (user.role && user.role !== req.user.role) {
+        console.warn(`Role mismatch for user ${user.id}: token has ${req.user.role}, DB has ${user.role}`);
         // Update the token role with the DB version
-        req.user.role = user.role_nom;
+        req.user.role = user.role;
       }
 
       // Stocker les informations complètes de l'utilisateur dans la requête

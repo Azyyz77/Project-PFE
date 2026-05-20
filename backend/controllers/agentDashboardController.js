@@ -4,6 +4,22 @@
  */
 
 const AgentDashboardService = require('../services/agentDashboardService');
+const redis = require('../config/redis');
+
+const invalidateVehicleCache = async () => {
+  try {
+    const keys = await redis.keys('cache:/api/vehicles*');
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+    const agentKeys = await redis.keys('cache:/api/agent/vehicles*');
+    if (agentKeys && agentKeys.length > 0) {
+      await redis.del(agentKeys);
+    }
+  } catch (err) {
+    console.error('Error invalidating vehicle cache:', err);
+  }
+};
 
 class AgentDashboardController {
 
@@ -137,6 +153,7 @@ class AgentDashboardController {
       const data = await AgentDashboardService.validateVehicle(
         parseInt(req.params.vehicleId), req.user.id
       );
+      await invalidateVehicleCache();
       res.json({ success: true, message: 'Véhicule validé', data });
     } catch (err) {
       res.status(err.message.includes('non trouvé') ? 404 : 500).json({ error: err.message });
@@ -148,6 +165,7 @@ class AgentDashboardController {
       const data = await AgentDashboardService.rejectVehicle(
         parseInt(req.params.vehicleId), req.user.id, req.body.reason
       );
+      await invalidateVehicleCache();
       res.json({ success: true, message: 'Véhicule refusé', data });
     } catch (err) {
       res.status(err.message.includes('non trouvé') ? 404 : 500).json({ error: err.message });

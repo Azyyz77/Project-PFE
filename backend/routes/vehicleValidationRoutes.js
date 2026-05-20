@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const vehicleValidationController = require('../controllers/vehicleValidationController');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { requirePermission } = require('../middleware/permissionMiddleware');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
+router.use(authorizeRoles('AGENT', 'ADMIN'));
 
 /**
  * @swagger
@@ -23,7 +24,7 @@ router.use(authMiddleware);
  *       403:
  *         description: Accès refusé
  */
-router.get('/pending', requirePermission('VEHICLES', 'READ'), vehicleValidationController.getPendingVehicles);
+router.get('/pending', vehicleValidationController.getPendingVehicles);
 
 /**
  * @swagger
@@ -47,7 +48,7 @@ router.get('/pending', requirePermission('VEHICLES', 'READ'), vehicleValidationC
  *       200:
  *         description: Liste des véhicules
  */
-router.get('/', requirePermission('VEHICLES', 'READ'), vehicleValidationController.getAllVehicles);
+router.get('/', vehicleValidationController.getAllVehicles);
 
 /**
  * @swagger
@@ -61,7 +62,7 @@ router.get('/', requirePermission('VEHICLES', 'READ'), vehicleValidationControll
  *       200:
  *         description: Statistiques de validation
  */
-router.get('/stats', requirePermission('VEHICLES', 'READ'), vehicleValidationController.getValidationStats);
+router.get('/stats', vehicleValidationController.getValidationStats);
 
 /**
  * @swagger
@@ -93,7 +94,7 @@ router.get('/stats', requirePermission('VEHICLES', 'READ'), vehicleValidationCon
  *       404:
  *         description: Véhicule non trouvé
  */
-router.post('/:id/validate', requirePermission('VEHICLES', 'VALIDATE'), vehicleValidationController.validateVehicle);
+router.post('/:id/validate', vehicleValidationController.validateVehicle);
 
 /**
  * @swagger
@@ -129,6 +130,6 @@ router.post('/:id/validate', requirePermission('VEHICLES', 'VALIDATE'), vehicleV
  *       404:
  *         description: Véhicule non trouvé
  */
-router.post('/:id/reject', requirePermission('VEHICLES', 'VALIDATE'), vehicleValidationController.rejectVehicle);
+router.post('/:id/reject', vehicleValidationController.rejectVehicle);
 
 module.exports = router;

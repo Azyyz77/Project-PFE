@@ -21,10 +21,9 @@ exports.getAppointmentHistory = async (req, res) => {
           h.date_changement,
           h.utilisateur_id,
           u.nom + ' ' + u.prenom AS utilisateur_nom,
-          r.nom AS role_nom
+          ISNULL(u.role, 'CLIENT') AS role_nom
         FROM HistoriqueRDV h
         LEFT JOIN Utilisateur u ON h.utilisateur_id = u.id
-        LEFT JOIN Role r ON u.role_id = r.id
         WHERE h.rdv_id = @rdvId
         ORDER BY h.date_changement DESC
       `);
@@ -106,12 +105,11 @@ exports.getRecentHistory = async (req, res) => {
           h.date_changement,
           h.utilisateur_id,
           u.nom + ' ' + u.prenom AS utilisateur_nom,
-          r.nom AS role_nom,
+          ISNULL(u.role, 'CLIENT') AS role_nom,
           rdv.date_heure AS rdv_date,
           c.nom + ' ' + c.prenom AS client_nom
         FROM HistoriqueRDV h
         LEFT JOIN Utilisateur u ON h.utilisateur_id = u.id
-        LEFT JOIN Role r ON u.role_id = r.id
         LEFT JOIN RendezVous rdv ON h.rdv_id = rdv.id
         LEFT JOIN Utilisateur c ON rdv.client_id = c.id
         ORDER BY h.date_changement DESC

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const predefinedProblemController = require('../controllers/predefinedProblemController');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { requirePermission } = require('../middleware/permissionMiddleware');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
@@ -13,19 +13,19 @@ router.use(authMiddleware);
 
 // Obtenir tous les problèmes (avec filtres)
 router.get('/', 
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN'),
   predefinedProblemController.getProblems
 );
 
 // Obtenir les catégories
 router.get('/categories',
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN'),
   predefinedProblemController.getCategories
 );
 
 // Obtenir un problème par ID
 router.get('/:id',
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN'),
   predefinedProblemController.getProblemById
 );
 
@@ -35,25 +35,25 @@ router.get('/:id',
 
 // Créer un nouveau problème
 router.post('/',
-  requirePermission('DIAGNOSTICS', 'CREATE'),
+  authorizeRoles('ADMIN'),
   predefinedProblemController.createProblem
 );
 
 // Mettre à jour un problème
 router.put('/:id',
-  requirePermission('DIAGNOSTICS', 'UPDATE'),
+  authorizeRoles('ADMIN'),
   predefinedProblemController.updateProblem
 );
 
 // Supprimer un problème (soft delete)
 router.delete('/:id',
-  requirePermission('DIAGNOSTICS', 'DELETE'),
+  authorizeRoles('ADMIN'),
   predefinedProblemController.deleteProblem
 );
 
 // Obtenir les statistiques d'utilisation
 router.get('/stats/usage',
-  requirePermission('DIAGNOSTICS', 'READ'),
+  authorizeRoles('AGENT', 'ADMIN'),
   predefinedProblemController.getProblemStats
 );
 

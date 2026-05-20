@@ -25,7 +25,6 @@ const agentDashboardRoutes = require('./routes/agentDashboardRoutes');
 const clientDashboardRoutes = require('./routes/clientDashboardRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const adminUserRoutes = require('./routes/adminUserRoutes');
-const permissionRoutes = require('./routes/permissionRoutes');
 const adminOrdersRoutes = require('./routes/adminOrdersRoutes');
 const adminReportsRoutes = require('./routes/adminReportsRoutes');
 const adminCatalogRoutes = require('./routes/adminCatalogRoutes');
@@ -42,7 +41,6 @@ const feedbackRoutes = require('./routes/feedbackRoutes');
 const colorRoutes = require('./routes/colorRoutes');
 const planningRoutes = require('./routes/planningRoutes');
 const agencyRoutes = require('./routes/agencyRoutes');
-const auditRoutes = require('./routes/auditRoutes');
 const diagnosticRoutes = require('./routes/diagnosticRoutes');
 const predefinedProblemRoutes = require('./routes/predefinedProblemRoutes');
 const directionStatsRoutes = require('./routes/directionStatsRoutes');
@@ -54,16 +52,19 @@ const appointmentHistoryRoutes = require('./routes/appointmentHistoryRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const repairOrderRoutes = require('./routes/repairOrderRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
-const { auditMiddleware } = require('./middleware/auditMiddleware');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 const { startReminderService } = require('./services/reminderService');
 const chatbotRoute = require('./routes/chatbot');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+const axios = require("axios");
 
 // Security Middlewares (Section 8 QA Report)
 // 1. Helmet for HTTP header security (XSS protection, etc.)
@@ -110,8 +111,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Audit middleware - Enregistre toutes les modifications
-app.use(auditMiddleware);
 
 // PUBLIC ROUTES (No authentication required)
 // These must be registered BEFORE any auth middleware
@@ -126,16 +125,17 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/vehicules', vehicleRoutes);
 app.use('/api/vehicles', vehicleHistoryRoutes);
 app.use('/api/agent/vehicles', vehicleValidationRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api', appointmentFeedbackRoutes); // Reverted back to '/api' so routes like /appointments/:id/feedback work correctly
 app.use('/api/catalog', interventionCatalogRoutes);
+app.use('/api/catalogue', interventionCatalogRoutes);
 app.use('/api/agent-dashboard', agentDashboardRoutes);
 app.use('/api/client-dashboard', clientDashboardRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/admin/users', adminUserRoutes);
-app.use('/api/admin/permissions', permissionRoutes);
 app.use('/api/admin/orders', adminOrdersRoutes);
 app.use('/api/admin/reports', adminReportsRoutes);
 app.use('/api/admin/catalog', adminCatalogRoutes);
@@ -152,7 +152,6 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/colors', colorRoutes);
 app.use('/api/agent/planning', planningRoutes);
 app.use('/api/admin/agencies', agencyRoutes);
-app.use('/api/admin/audit', auditRoutes);
 app.use('/api/agent/diagnostics', diagnosticRoutes);
 app.use('/api/admin/problems', predefinedProblemRoutes);
 app.use('/api/direction/stats', directionStatsRoutes);
@@ -164,8 +163,11 @@ app.use('/api/appointments', appointmentHistoryRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/repair-orders', repairOrderRoutes);
 app.use('/api/invoices', invoiceRoutes);
+// En haut avec les autres require
+const detectRoutes = require('./routes/detectRoutes');
 
-// Route d'accueil
+// Avec les autres app.use
+app.use('/api/detect', detectRoutes);// Route d'accueil
 app.get('/', (req, res) => {
   res.json({
     service: 'Backend Monolithique - STA Chery Tunisia',
@@ -214,6 +216,9 @@ app.use((err, req, res, next) => {
     message: err.message
   });
 });
+
+
+
 
 // Démarrage du serveur
 if (require.main === module) {

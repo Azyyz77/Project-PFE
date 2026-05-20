@@ -3,7 +3,7 @@
  * Usage: router.post('/', authorizeRoles('client', 'admin'), controller.action)
  * 
  * Supports checking against either:
- * - JWT role field (from JWTpayload, usually from Role table)
+ * - JWT role field (from JWT payload or Utilisateur.role)
  * - Request user type (fallback if role is missing)
  */
 const authorizeRoles = (...allowedRoles) => {

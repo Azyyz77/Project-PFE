@@ -1,4 +1,16 @@
 const { getConnection, sql } = require('../config/database');
+const redis = require('../config/redis');
+
+const invalidateCatalogCache = async () => {
+  try {
+    const keys = await redis.keys('cache:/api/catalog*');
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+  } catch (err) {
+    console.error('Error invalidating catalog cache:', err);
+  }
+};
 
 /**
  * Controller pour la gestion du catalogue (admin uniquement)
@@ -50,6 +62,8 @@ const createInterventionType = async (req, res) => {
         SELECT SCOPE_IDENTITY() AS id;
       `);
 
+    await invalidateCatalogCache();
+
     return res.status(201).json({ 
       message: 'Type créé avec succès',
       typeId: result.recordset[0].id 
@@ -81,6 +95,8 @@ const updateInterventionType = async (req, res) => {
         SET nom = @nom, delai_moyen = @delai_moyen
         WHERE id = @id
       `);
+
+    await invalidateCatalogCache();
 
     return res.json({ message: 'Type modifié avec succès' });
   } catch (error) {
@@ -114,6 +130,8 @@ const deleteInterventionType = async (req, res) => {
     await pool.request()
       .input('id', sql.BigInt, id)
       .query(`DELETE FROM TypeIntervention WHERE id = @id`);
+
+    await invalidateCatalogCache();
 
     return res.json({ message: 'Type supprimé avec succès' });
   } catch (error) {
@@ -172,6 +190,8 @@ const createSubType = async (req, res) => {
         SELECT SCOPE_IDENTITY() AS id;
       `);
 
+    await invalidateCatalogCache();
+
     return res.status(201).json({ 
       message: 'Sous-type créé avec succès',
       subTypeId: result.recordset[0].id 
@@ -203,6 +223,8 @@ const updateSubType = async (req, res) => {
         SET nom = @nom, duree_estimee = @duree_estimee
         WHERE id = @id
       `);
+
+    await invalidateCatalogCache();
 
     return res.json({ message: 'Sous-type modifié avec succès' });
   } catch (error) {
@@ -236,6 +258,8 @@ const deleteSubType = async (req, res) => {
     await pool.request()
       .input('id', sql.BigInt, id)
       .query(`DELETE FROM SousTypeIntervention WHERE id = @id`);
+
+    await invalidateCatalogCache();
 
     return res.json({ message: 'Sous-type supprimé avec succès' });
   } catch (error) {
@@ -288,6 +312,8 @@ const createBrand = async (req, res) => {
         SELECT SCOPE_IDENTITY() AS id;
       `);
 
+    await invalidateCatalogCache();
+
     return res.status(201).json({ 
       message: 'Marque créée avec succès',
       brandId: result.recordset[0].id 
@@ -295,6 +321,82 @@ const createBrand = async (req, res) => {
   } catch (error) {
     console.error('Erreur création marque:', error);
     return res.status(500).json({ error: 'Erreur lors de la création de la marque' });
+  }
+};
+
+// Modifier une marque
+const updateBrand = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nom } = req.body;
+
+    if (!nom) {
+      return res.status(400).json({ error: 'Le nom est requis' });
+    }
+
+    const pool = await getConnection();
+
+    const result = await pool.request()
+      .input('id', sql.BigInt, id)
+      .input('nom', sql.NVarChar(50), nom)
+      .query(`
+        UPDATE Marque
+        SET nom = @nom
+        WHERE id = @id;
+        SELECT @@ROWCOUNT AS count;
+      `);
+
+    if (result.recordset[0].count === 0) {
+      return res.status(404).json({ error: 'Marque introuvable' });
+    }
+
+    await invalidateCatalogCache();
+
+    return res.json({ message: 'Marque modifiée avec succès' });
+  } catch (error) {
+    console.error('Erreur modification marque:', error);
+    return res.status(500).json({ error: 'Erreur lors de la modification de la marque' });
+  }
+};
+
+// Supprimer une marque
+const deleteBrand = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pool = await getConnection();
+
+    const check = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query(`
+        SELECT COUNT(*) AS count
+        FROM Modele
+        WHERE marque_id = @id
+      `);
+
+    if (check.recordset[0].count > 0) {
+      return res.status(400).json({
+        error: 'Impossible de supprimer cette marque car elle contient des modèles'
+      });
+    }
+
+    const result = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query(`
+        DELETE FROM Marque WHERE id = @id;
+        SELECT @@ROWCOUNT AS count;
+      `);
+
+    if (result.recordset[0].count === 0) {
+      return res.status(404).json({ error: 'Marque introuvable' });
+    }
+
+    await invalidateCatalogCache();
+
+    return res.json({ message: 'Marque supprimée avec succès' });
+  } catch (error) {
+    console.error('Erreur suppression marque:', error);
+    return res.status(500).json({ error: 'Erreur lors de la suppression de la marque' });
   }
 };
 
@@ -347,6 +449,8 @@ const createModel = async (req, res) => {
         SELECT SCOPE_IDENTITY() AS id;
       `);
 
+    await invalidateCatalogCache();
+
     return res.status(201).json({ 
       message: 'Modèle créé avec succès',
       modelId: result.recordset[0].id 
@@ -354,6 +458,83 @@ const createModel = async (req, res) => {
   } catch (error) {
     console.error('Erreur création modèle:', error);
     return res.status(500).json({ error: 'Erreur lors de la création du modèle' });
+  }
+};
+
+// Modifier un modèle
+const updateModel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nom, marque_id } = req.body;
+
+    if (!nom || !marque_id) {
+      return res.status(400).json({ error: 'Le nom et la marque sont requis' });
+    }
+
+    const pool = await getConnection();
+
+    const result = await pool.request()
+      .input('id', sql.BigInt, id)
+      .input('nom', sql.NVarChar(50), nom)
+      .input('marque_id', sql.BigInt, marque_id)
+      .query(`
+        UPDATE Modele
+        SET nom = @nom, marque_id = @marque_id
+        WHERE id = @id;
+        SELECT @@ROWCOUNT AS count;
+      `);
+
+    if (result.recordset[0].count === 0) {
+      return res.status(404).json({ error: 'Modèle introuvable' });
+    }
+
+    await invalidateCatalogCache();
+
+    return res.json({ message: 'Modèle modifié avec succès' });
+  } catch (error) {
+    console.error('Erreur modification modèle:', error);
+    return res.status(500).json({ error: 'Erreur lors de la modification du modèle' });
+  }
+};
+
+// Supprimer un modèle
+const deleteModel = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const pool = await getConnection();
+
+    const check = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query(`
+        SELECT COUNT(*) AS count
+        FROM Version
+        WHERE modele_id = @id
+      `);
+
+    if (check.recordset[0].count > 0) {
+      return res.status(400).json({
+        error: 'Impossible de supprimer ce modèle car il contient des versions'
+      });
+    }
+
+    const result = await pool.request()
+      .input('id', sql.BigInt, id)
+      .query(`
+        DELETE FROM Modele WHERE id = @id;
+        SELECT @@ROWCOUNT AS count;
+      `);
+
+    if (result.recordset[0].count === 0) {
+      return res.status(404).json({ error: 'Modèle introuvable' });
+    }
+
+    await invalidateCatalogCache();
+
+    return res.json({ message: 'Modèle supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur suppression modèle:', error);
+    return res.status(500).json({ error: 'Erreur lors de la suppression du modèle' });
   }
 };
 
@@ -368,6 +549,10 @@ module.exports = {
   deleteSubType,
   getBrands,
   createBrand,
+  updateBrand,
+  deleteBrand,
   getBrandModels,
   createModel,
+  updateModel,
+  deleteModel,
 };

@@ -23,7 +23,11 @@ router.delete('/sub-types/:id', adminCatalogController.deleteSubType);
 // Marques
 router.get('/brands', adminCatalogController.getBrands);
 router.post('/brands', adminCatalogController.createBrand);
+router.put('/brands/:id', adminCatalogController.updateBrand);
+router.delete('/brands/:id', adminCatalogController.deleteBrand);
 router.get('/brands/:brandId/models', adminCatalogController.getBrandModels);
 router.post('/models', adminCatalogController.createModel);
+router.put('/models/:id', adminCatalogController.updateModel);
+router.delete('/models/:id', adminCatalogController.deleteModel);
 
 module.exports = router;

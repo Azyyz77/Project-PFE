@@ -306,7 +306,7 @@ class AgencyController {
         .query(`
           SELECT COUNT(*) as total_agents
           FROM Utilisateur
-          WHERE agence_id = @id AND role_id = (SELECT id FROM Role WHERE nom = 'AGENT')
+          WHERE agence_id = @id AND role = 'AGENT'
         `);
 
       // Rendez-vous du mois en cours

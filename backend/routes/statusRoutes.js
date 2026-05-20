@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const statusController = require('../controllers/statusController');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { requirePermission } = require('../middleware/permissionMiddleware');
+const authorizeRoles = require('../middleware/authorizeRoles');
 
 // Toutes les routes nécessitent authentification
 router.use(authMiddleware);
+router.use(authorizeRoles('ADMIN'));
 
 /**
  * @swagger
@@ -19,7 +20,7 @@ router.use(authMiddleware);
  *       200:
  *         description: Tous les statuts groupés par type
  */
-router.get('/', requirePermission('SETTINGS', 'READ'), statusController.getAllStatuses);
+router.get('/', statusController.getAllStatuses);
 
 /**
  * @swagger
@@ -42,7 +43,7 @@ router.get('/', requirePermission('SETTINGS', 'READ'), statusController.getAllSt
  *       400:
  *         description: Type invalide
  */
-router.get('/:type', requirePermission('SETTINGS', 'READ'), statusController.getStatuses);
+router.get('/:type', statusController.getStatuses);
 
 /**
  * @swagger
@@ -63,7 +64,7 @@ router.get('/:type', requirePermission('SETTINGS', 'READ'), statusController.get
  *       200:
  *         description: Statistiques d'utilisation
  */
-router.get('/:type/stats', requirePermission('SETTINGS', 'READ'), statusController.getStatusUsageStats);
+router.get('/:type/stats', statusController.getStatusUsageStats);
 
 /**
  * @swagger
@@ -106,7 +107,7 @@ router.get('/:type/stats', requirePermission('SETTINGS', 'READ'), statusControll
  *       409:
  *         description: Code déjà existant
  */
-router.post('/:type', requirePermission('SETTINGS', 'UPDATE'), statusController.createStatus);
+router.post('/:type', statusController.createStatus);
 
 /**
  * @swagger
@@ -145,7 +146,7 @@ router.post('/:type', requirePermission('SETTINGS', 'UPDATE'), statusController.
  *       404:
  *         description: Statut non trouvé
  */
-router.put('/:type/:code', requirePermission('SETTINGS', 'UPDATE'), statusController.updateStatus);
+router.put('/:type/:code', statusController.updateStatus);
 
 /**
  * @swagger
@@ -175,6 +176,6 @@ router.put('/:type/:code', requirePermission('SETTINGS', 'UPDATE'), statusContro
  *       409:
  *         description: Statut utilisé, impossible de supprimer
  */
-router.delete('/:type/:code', requirePermission('SETTINGS', 'UPDATE'), statusController.deleteStatus);
+router.delete('/:type/:code', statusController.deleteStatus);
 
 module.exports = router;

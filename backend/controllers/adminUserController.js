@@ -20,10 +20,8 @@ const getAllUsers = async (req, res) => {
         u.telephone,
         u.actif,
         u.date_creation,
-        r.nom AS role_nom,
-        r.id AS role_id
+        ISNULL(u.role, 'CLIENT') AS role_nom
       FROM Utilisateur u
-      JOIN Role r ON r.id = u.role_id
       WHERE 1=1
     `;
 
@@ -31,7 +29,7 @@ const getAllUsers = async (req, res) => {
 
     // Filtrer par rôle
     if (role) {
-      query += ` AND r.nom = @role`;
+      query += ` AND u.role = @role`;
       request.input('role', sql.VarChar, role);
     }
 
@@ -68,9 +66,9 @@ const getUserStats = async (req, res) => {
         COUNT(*) AS total_users,
         COUNT(CASE WHEN actif = 1 THEN 1 END) AS active_users,
         COUNT(CASE WHEN actif = 0 THEN 1 END) AS inactive_users,
-        (SELECT COUNT(*) FROM Utilisateur u JOIN Role r ON r.id = u.role_id WHERE r.nom = 'CLIENT') AS total_clients,
-        (SELECT COUNT(*) FROM Utilisateur u JOIN Role r ON r.id = u.role_id WHERE r.nom = 'AGENT') AS total_agents,
-        (SELECT COUNT(*) FROM Utilisateur u JOIN Role r ON r.id = u.role_id WHERE r.nom = 'ADMIN') AS total_admins
+        (SELECT COUNT(*) FROM Utilisateur u WHERE u.role = 'CLIENT') AS total_clients,
+        (SELECT COUNT(*) FROM Utilisateur u WHERE u.role = 'AGENT') AS total_agents,
+        (SELECT COUNT(*) FROM Utilisateur u WHERE u.role = 'ADMIN') AS total_admins
       FROM Utilisateur
     `);
 
@@ -102,16 +100,11 @@ const createUser = async (req, res) => {
       return res.status(400).json({ error: 'Cet email est déjà utilisé' });
     }
 
-    // Récupérer l'ID du rôle
-    const roleResult = await pool.request()
-      .input('role_nom', sql.VarChar, role_nom)
-      .query('SELECT id FROM Role WHERE nom = @role_nom');
-
-    if (roleResult.recordset.length === 0) {
-      return res.status(400).json({ error: 'Rôle invalide' });
+    const normalizedRole = String(role_nom || '').toUpperCase();
+    const validRoles = ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'];
+    if (!validRoles.includes(normalizedRole)) {
+      return res.status(400).json({ error: 'Rôle invalide', validRoles });
     }
-
-    const role_id = roleResult.recordset[0].id;
 
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -123,12 +116,12 @@ const createUser = async (req, res) => {
       .input('email', sql.VarChar, email)
       .input('telephone', sql.VarChar, telephone || null)
       .input('mot_de_passe', sql.VarChar, hashedPassword)
-      .input('role_id', sql.BigInt, role_id)
+      .input('role', sql.VarChar, normalizedRole)
       .input('actif', sql.Bit, true)
       .query(`
-        INSERT INTO Utilisateur (nom, prenom, email, telephone, mot_de_passe, role_id, actif, date_creation)
+        INSERT INTO Utilisateur (nom, prenom, email, telephone, mot_de_passe, role, actif, date_creation)
         OUTPUT INSERTED.id
-        VALUES (@nom, @prenom, @email, @telephone, @mot_de_passe, @role_id, @actif, GETDATE())
+        VALUES (@nom, @prenom, @email, @telephone, @mot_de_passe, @role, @actif, GETDATE())
       `);
 
     const userId = result.recordset[0].id;
@@ -185,15 +178,13 @@ const updateUser = async (req, res) => {
       request.input('actif', sql.Bit, actif);
     }
     if (role_nom !== undefined) {
-      // Récupérer l'ID du rôle
-      const roleResult = await pool.request()
-        .input('role_nom', sql.VarChar, role_nom)
-        .query('SELECT id FROM Role WHERE nom = @role_nom');
-
-      if (roleResult.recordset.length > 0) {
-        updates.push('role_id = @role_id');
-        request.input('role_id', sql.BigInt, roleResult.recordset[0].id);
+      const normalizedRole = String(role_nom || '').toUpperCase();
+      const validRoles = ['CLIENT', 'AGENT', 'ADMIN', 'DIRECTION'];
+      if (!validRoles.includes(normalizedRole)) {
+        return res.status(400).json({ error: 'Rôle invalide', validRoles });
       }
+      updates.push('role = @role');
+      request.input('role', sql.VarChar, normalizedRole);
     }
 
     // Si aucune mise à jour n'est fournie
@@ -269,10 +260,14 @@ const resetUserPassword = async (req, res) => {
 // Récupérer tous les rôles disponibles
 const getRoles = async (req, res) => {
   try {
-    const pool = await getConnection();
-    const result = await pool.request().query('SELECT id, nom, description FROM Role ORDER BY nom');
-    
-    return res.json({ roles: result.recordset });
+    const roles = [
+      { id: 1, nom: 'CLIENT', description: 'Client' },
+      { id: 2, nom: 'AGENT', description: 'Agent SAV' },
+      { id: 3, nom: 'ADMIN', description: 'Administrateur' },
+      { id: 4, nom: 'DIRECTION', description: 'Direction' }
+    ];
+
+    return res.json({ roles });
   } catch (error) {
     console.error('Erreur récupération rôles:', error);
     return res.status(500).json({ error: 'Erreur lors de la récupération des rôles' });

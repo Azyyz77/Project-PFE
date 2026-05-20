@@ -20,6 +20,11 @@ export default function TimeSlotsAdminPage() {
     capacite: 1,
   });
 
+  const toSafeInt = (value: string, fallback: number) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  };
+
   useEffect(() => {
     loadTimeSlots();
   }, []);
@@ -215,8 +220,8 @@ export default function TimeSlotsAdminPage() {
                 <input
                   type="number"
                   required
-                  value={formData.agence_id}
-                  onChange={(e) => setFormData({ ...formData, agence_id: parseInt(e.target.value) })}
+                  value={Number.isFinite(formData.agence_id) ? formData.agence_id : 0}
+                  onChange={(e) => setFormData({ ...formData, agence_id: toSafeInt(e.target.value, 0) })}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl text-slate-900 text-sm focus:outline-none"
                   placeholder="Ex: 1"
                 />
@@ -269,8 +274,8 @@ export default function TimeSlotsAdminPage() {
                   type="number"
                   required
                   min="1"
-                  value={formData.capacite}
-                  onChange={(e) => setFormData({ ...formData, capacite: parseInt(e.target.value) })}
+                  value={Number.isFinite(formData.capacite) ? formData.capacite : 1}
+                  onChange={(e) => setFormData({ ...formData, capacite: toSafeInt(e.target.value, 1) })}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-xl text-slate-900 text-sm focus:outline-none"
                   placeholder="Ex: 5"
                 />

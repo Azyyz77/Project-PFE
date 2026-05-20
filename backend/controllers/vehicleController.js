@@ -1,4 +1,20 @@
 const { getConnection, sql } = require('../config/database');
+const redis = require('../config/redis');
+
+const invalidateVehicleCache = async () => {
+  try {
+    const keys = await redis.keys('cache:/api/vehicles*');
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+    const agentKeys = await redis.keys('cache:/api/agent/vehicles*');
+    if (agentKeys && agentKeys.length > 0) {
+      await redis.del(agentKeys);
+    }
+  } catch (err) {
+    console.error('Error invalidating vehicle cache:', err);
+  }
+};
 
 const ALLOWED_STAFF_ROLES = ['ADMIN', 'AGENT', 'DIRECTION'];
 const VEHICLE_FIELD_LIMITS = {
@@ -192,6 +208,8 @@ const addVehicle = async (req, res) => {
       .input('image_carte_grise', sql.NVarChar(sql.MAX), image_carte_grise || null)
       .query(insertQuery);
 
+    await invalidateVehicleCache();
+
     res.status(201).json({
       message: 'Véhicule ajouté avec succès',
       vehicle: result.recordset[0]
@@ -382,6 +400,8 @@ const updateVehicle = async (req, res) => {
       .input('id', sql.BigInt, id)
       .query(`${VEHICLE_WITH_RELATIONS_SELECT} WHERE vh.id = @id`);
 
+    await invalidateVehicleCache();
+
     res.json({
       message: 'Véhicule mis à jour avec succès',
       vehicle: updatedResult.recordset[0]
@@ -419,6 +439,8 @@ const deleteVehicle = async (req, res) => {
     await pool.request()
       .input('id', sql.BigInt, id)
       .query('DELETE FROM Vehicule WHERE id = @id');
+
+    await invalidateVehicleCache();
 
     res.json({ message: 'Véhicule supprimé avec succès' });
   } catch (error) {

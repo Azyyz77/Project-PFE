@@ -167,35 +167,24 @@ const register = async (req, res) => {
       return res.status(409).json({ error: 'Ce numéro de téléphone est déjà utilisé' });
     }
 
-    // SQL (SELECT): récupérer l'identifiant du rôle depuis la table Role.
-    // Paramètre: @rolenom. Résultat attendu: une ligne contenant l'id du rôle.
-    const roleResult = await pool.request()
-      .input('rolenom', sql.NVarChar, typeUtilisateur)
-      .query('SELECT id FROM Role WHERE nom = @rolenom');
-
-    if (roleResult.recordset.length === 0) {
-      return res.status(500).json({ error: 'Rôle introuvable en base' });
-    }
-    const role_id = roleResult.recordset[0].id;
-
     const mot_de_passe = await bcrypt.hash(password, 10);
 
     const insertQuery = `
-      INSERT INTO Utilisateur (nom, prenom, telephone, email, mot_de_passe, actif, date_creation, role_id)
+            INSERT INTO Utilisateur (nom, prenom, telephone, email, mot_de_passe, actif, date_creation, role)
       OUTPUT INSERTED.id, INSERTED.nom, INSERTED.prenom, INSERTED.email,
-             INSERTED.telephone, INSERTED.actif, INSERTED.date_creation
-      VALUES (@nom, @prenom, @telephone, @email, @mot_de_passe, 1, GETDATE(), @role_id)
+              INSERTED.telephone, INSERTED.actif, INSERTED.date_creation, INSERTED.role
+            VALUES (@nom, @prenom, @telephone, @email, @mot_de_passe, 1, GETDATE(), @role)
     `;
 
     // SQL (INSERT ... OUTPUT): créer l'utilisateur puis retourner la ligne insérée.
-    // Paramètres: @nom, @prenom, @telephone, @email, @mot_de_passe, @role_id.
+    // Paramètres: @nom, @prenom, @telephone, @email, @mot_de_passe, @role.
     const result = await pool.request()
       .input('nom', sql.NVarChar, nom)
       .input('prenom', sql.NVarChar, prenom)
       .input('telephone', sql.NVarChar, normalizedPhone)
       .input('email', sql.NVarChar, email)
       .input('mot_de_passe', sql.NVarChar, mot_de_passe)
-      .input('role_id', sql.BigInt, role_id)
+      .input('role', sql.NVarChar, typeUtilisateur)
       .query(insertQuery);
 
     const newUser = result.recordset[0];
@@ -226,7 +215,7 @@ const register = async (req, res) => {
         nom: newUser.nom,
         email: newUser.email,
         telephone: newUser.telephone,
-        role: typeUtilisateur,
+        role: newUser.role || typeUtilisateur,
         actif: newUser.actif,
         telephone_verifie: false,
         date_creation: newUser.date_creation
@@ -281,11 +270,10 @@ const login = async (req, res) => {
     const result = await pool.request()
       .input('email', sql.NVarChar, email)
       .query(`
-        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
-               u.actif, u.date_creation, u.role_id, u.telephone_verifie, u.agence_id,
-               ISNULL(r.nom, 'CLIENT') AS role_nom
-        FROM Utilisateur u
-        LEFT JOIN Role r ON r.id = u.role_id
+         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.mot_de_passe,
+           u.actif, u.date_creation, u.telephone_verifie, u.agence_id,
+           ISNULL(u.role, 'CLIENT') AS role_nom
+         FROM Utilisateur u
         WHERE u.email = @email
       `);
 
@@ -381,11 +369,10 @@ const getUserById = async (req, res) => {
     const result = await pool.request()
       .input('id', sql.BigInt, id)
       .query(`
-        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation,
-               u.agence_id, u.telephone_verifie,
-               r.nom AS role_nom
-        FROM Utilisateur u
-        JOIN Role r ON r.id = u.role_id
+         SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation,
+           u.agence_id, u.telephone_verifie,
+           ISNULL(u.role, 'CLIENT') AS role_nom
+         FROM Utilisateur u
         WHERE u.id = @id
       `);
 
@@ -738,9 +725,8 @@ const updateProfile = async (req, res) => {
       .input('telephone', sql.NVarChar, normalizedPhone)
       .query(`
         UPDATE Utilisateur SET prenom = @prenom, nom = @nom, telephone = @telephone WHERE id = @id;
-        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation, r.nom AS role_nom
+        SELECT u.id, u.prenom, u.nom, u.email, u.telephone, u.actif, u.date_creation, ISNULL(u.role, 'CLIENT') AS role_nom
         FROM Utilisateur u
-        LEFT JOIN Role r ON r.id = u.role_id
         WHERE u.id = @id
       `);
 

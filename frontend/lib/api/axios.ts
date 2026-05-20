@@ -157,10 +157,14 @@ const api = {
 
   put: async (url: string, data?: any, config?: RequestInit) => {
     const token = getAuthToken();
+    const isFormData = data instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
     };
+
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Merge with config headers if provided
     if (config?.headers) {
@@ -172,7 +176,7 @@ const api = {
       const response = await fetch(fullUrl, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(data),
+        body: isFormData ? data : JSON.stringify(data),
         ...config,
       });
 

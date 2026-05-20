@@ -5,14 +5,24 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 let clientInstance = null;
 let isReady = false;
 
+/**
+ * Convertit un numéro au format WhatsApp
+ * Exemple:
+ * +21624770580 -> 21624770580@c.us
+ */
 const formatWhatsAppChatId = (telephone) => {
   const normalized = String(telephone || '').replace(/[^\d]/g, '');
+
   if (!normalized) {
     throw new Error('Numéro de téléphone manquant pour WhatsApp');
   }
+
   return `${normalized}@c.us`;
 };
 
+/**
+ * Initialisation du client WhatsApp
+ */
 const initializeWhatsAppClient = () => {
   if (clientInstance) {
     return clientInstance;
@@ -23,153 +33,277 @@ const initializeWhatsAppClient = () => {
       clientId: 'sta-chery-otp',
       dataPath: path.join(__dirname, '..', '.wwebjs_auth'),
     }),
+
     puppeteer: {
       headless: true,
+
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage', // Reduces memory usage
-        '--disable-gpu', // Disable GPU acceleration
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-extensions',
       ],
     },
+
     webVersionCache: {
-      type: 'remote',
-      remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-web/main/html/index.html',
+      type: 'local',
     },
   });
 
+  /**
+   * QR CODE
+   */
   clientInstance.on('qr', (qr) => {
     isReady = false;
-    console.log('\n⚠️  WhatsApp QR code requis. Scannez ce QR dans WhatsApp:');
+
+    console.log('\n⚠️ WhatsApp QR code requis');
+    console.log('Scannez ce QR code dans WhatsApp:\n');
+
     qrcode.generate(qr, { small: true });
-    console.log('En attente de scan du QR code...\n');
+
+    console.log('\nEn attente du scan...\n');
   });
 
+  /**
+   * AUTHENTIFICATION
+   */
   clientInstance.on('authenticated', () => {
-    console.log('✅ WhatsApp authentifié.');
+    console.log('✅ WhatsApp authentifié');
   });
 
+  /**
+   * READY
+   */
+  clientInstance.on('ready', () => {
+    isReady = true;
+
+    console.log('✅ WhatsApp client prêt');
+    console.log('📨 Prêt à envoyer des messages');
+  });
+
+  /**
+   * AUTH FAILURE
+   */
   clientInstance.on('auth_failure', (message) => {
     isReady = false;
+
     console.error('❌ Echec authentification WhatsApp:', message);
   });
 
-  clientInstance.on('ready', () => {
-    isReady = true;
-    console.log('✅ WhatsApp client prêt - Prêt à envoyer des messages');
-  });
-
-  clientInstance.on('disconnected', (reason) => {
+  /**
+   * DECONNEXION
+   */
+  clientInstance.on('disconnected', async (reason) => {
     isReady = false;
-    console.warn('⚠️  WhatsApp déconnecté:', reason);
-    console.log('Tentative de reconnexion...');
-    // Attempt to reinitialize after a delay
-    setTimeout(() => {
-      if (!isReady && clientInstance) {
-        clientInstance.initialize().catch((error) => {
-          console.error('Erreur lors de la reconnexion:', error.message);
-        });
-      }
-    }, 5000);
+
+    console.warn('⚠️ WhatsApp déconnecté:', reason);
+
+    console.log('🔄 Tentative de reconnexion...');
+
+    try {
+      setTimeout(async () => {
+        try {
+          await clientInstance.initialize();
+        } catch (err) {
+          console.error('❌ Erreur reconnexion:', err.message);
+        }
+      }, 5000);
+    } catch (err) {
+      console.error('❌ Reconnexion impossible:', err.message);
+    }
   });
 
-  clientInstance.on('message', (msg) => {
-    // Only log messages from known clients or business contacts
-    // You can add logic here to filter/process business-related messages
-    // For now, we'll just silently ignore incoming messages
-    // Uncomment the line below if you need to debug incoming messages:
-    // console.log(`Message reçu de ${msg.from}: ${msg.body}`);
+  /**
+   * MESSAGES ENTRANTS
+   */
+  clientInstance.on('message', async (msg) => {
+    // debug optionnel
+    // console.log(`Message reçu: ${msg.body}`);
   });
 
+  /**
+   * INITIALISATION
+   */
   clientInstance.initialize().catch((error) => {
     isReady = false;
-    console.error('❌ Erreur initialisation WhatsApp:', error.message);
+
+    console.error(
+      '❌ Erreur initialisation WhatsApp:',
+      error.message
+    );
   });
 
   return clientInstance;
 };
 
+/**
+ * Envoi message WhatsApp
+ */
 const sendWhatsAppMessage = async (telephone, message) => {
   if (!clientInstance) {
     throw new Error('WhatsApp client non initialisé');
   }
 
   if (!isReady) {
-    throw new Error('WhatsApp client non prêt. Scannez le QR code dans le terminal backend.');
+    throw new Error(
+      'WhatsApp client non prêt. Scannez le QR code.'
+    );
   }
 
   const chatId = formatWhatsAppChatId(telephone);
-  
+
   let lastError = null;
+
   const maxRetries = 3;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Add a small delay before each attempt
+      /**
+       * délai avant retry
+       */
       if (attempt > 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        await new Promise((resolve) =>
+          setTimeout(resolve, attempt * 1000)
+        );
       }
-      
-      // Get the contact first to ensure it exists
+
+      /**
+       * vérifier readiness
+       */
+      if (!isReady) {
+        throw new Error('WhatsApp client non prêt');
+      }
+
+      /**
+       * vérifier contact
+       */
       const contact = await clientInstance.getContactById(chatId);
+
       if (!contact) {
         throw new Error(`Contact ${chatId} non trouvé`);
       }
-      
-      // Send the message
-      const msg = await clientInstance.sendMessage(chatId, message);
-      console.log(`Message envoyé avec succès à ${telephone} (tentative ${attempt})`);
-      return msg;
+
+      /**
+       * envoyer message
+       */
+      const response = await clientInstance.sendMessage(
+        chatId,
+        message
+      );
+
+      console.log(
+        `✅ Message envoyé à ${telephone} (tentative ${attempt})`
+      );
+
+      return response;
+
     } catch (error) {
       lastError = error;
-      console.error(`Tentative ${attempt} échouée:`, error.message);
-      
+
+      console.error(
+        `❌ Tentative ${attempt} échouée:`,
+        error.message
+      );
+
+      /**
+       * dernière tentative
+       */
       if (attempt === maxRetries) {
-        // If this is the last attempt, throw the error
-        throw new Error(`Impossible d'envoyer le message après ${maxRetries} tentatives: ${error.message}`);
+        throw new Error(
+          `Impossible d'envoyer le message après ${maxRetries} tentatives: ${error.message}`
+        );
       }
-      
-      // Check if this is a frame error that might be recoverable
-      if (error.message && error.message.includes('detached Frame')) {
-        console.log('Frame détachée, nouvelle tentative...');
+
+      /**
+       * erreurs Puppeteer récupérables
+       */
+      if (
+        error.message &&
+        (
+          error.message.includes('detached Frame') ||
+          error.message.includes('Execution context was destroyed') ||
+          error.message.includes('Protocol error') ||
+          error.message.includes('Session closed')
+        )
+      ) {
+        console.log(
+          '⚠️ Session WhatsApp instable, attente avant retry...'
+        );
+
         isReady = false;
-        // Wait a bit longer before next attempt
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        isReady = true;
+
+        /**
+         * attendre reconnexion
+         */
+        await new Promise((resolve) =>
+          setTimeout(resolve, 3000)
+        );
+
+        /**
+         * NE PAS remettre isReady = true ici
+         * seul client.on("ready") doit le faire
+         */
       }
     }
   }
-  
-  throw lastError || new Error('Erreur inconnue lors de l\'envoi du message');
+
+  throw (
+    lastError ||
+    new Error('Erreur inconnue lors de l’envoi')
+  );
 };
 
+/**
+ * Version non bloquante
+ */
+const trySendWhatsAppMessage = async (
+  telephone,
+  message
+) => {
+  if (!clientInstance || !isReady) {
+    console.warn(
+      '⚠️ WhatsApp non prêt — message non envoyé'
+    );
+
+    return false;
+  }
+
+  try {
+    await sendWhatsAppMessage(
+      telephone,
+      message
+    );
+
+    return true;
+
+  } catch (err) {
+    console.warn(
+      '⚠️ Envoi WhatsApp échoué:',
+      err.message
+    );
+
+    return false;
+  }
+};
+
+/**
+ * Status WhatsApp
+ */
 const getWhatsAppStatus = () => ({
   initialized: Boolean(clientInstance),
   ready: isReady,
 });
 
 /**
- * Version non-bloquante de sendWhatsAppMessage.
- * Ne lève jamais d'exception : log un avertissement et retourne false si
- * le client n'est pas prêt ou si l'envoi échoue.
- *
- * @param {string} telephone
- * @param {string} message
- * @returns {Promise<boolean>} true si envoyé, false sinon
+ * Debug status toutes les 10 sec
  */
-const trySendWhatsAppMessage = async (telephone, message) => {
-  if (!clientInstance || !isReady) {
-    console.warn('⚠️  WhatsApp non prêt — message non envoyé (scannez le QR code pour activer).');
-    return false;
-  }
-  try {
-    await sendWhatsAppMessage(telephone, message);
-    return true;
-  } catch (err) {
-    console.warn('⚠️  Envoi WhatsApp échoué (non bloquant):', err.message);
-    return false;
-  }
-};
+setInterval(() => {
+  console.log('📡 WhatsApp status:', {
+    initialized: Boolean(clientInstance),
+    ready: isReady,
+  });
+}, 10000);
 
 module.exports = {
   initializeWhatsAppClient,
