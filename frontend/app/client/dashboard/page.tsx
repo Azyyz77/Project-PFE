@@ -117,8 +117,7 @@ export default function ClientDashboardPage() {
               backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 80%, white 1px, transparent 1px)',
               backgroundSize: '50px 50px',
             }}
-          />
-        </div>
+          />        </div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           {/* Left Content */}
@@ -184,8 +183,7 @@ export default function ClientDashboardPage() {
                   {t('dashboard.myVehicles')}
                 </motion.button>
               </Link>
-            </motion.div>
-          </div>
+            </motion.div>          </div>
 
           {/* Right Stats Circle */}
           <motion.div
@@ -294,8 +292,7 @@ export default function ClientDashboardPage() {
             <ClientCardHeader
               title={t('dashboard.myAppointments')}
               subtitle={t('appointments.manageAppointments')}
-              action={
-                <Link href="/client/rendez-vous">
+              action={                <Link href="/client/rendez-vous">
                   <motion.button
                     whileHover={{ x: 3 }}
                     className="inline-flex items-center gap-1 text-sm font-semibold text-[#1877F2] hover:underline"
@@ -333,8 +330,7 @@ export default function ClientDashboardPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.6 + (idx * 0.1), duration: 0.3 }}
                         whileHover={{ y: -2, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                        className="group flex items-center gap-4 rounded-lg border border-[#E4E6EB] bg-[#F0F2F5] p-4 transition-all cursor-pointer"
-                      >
+                        className="group flex items-center gap-4 rounded-lg border border-[#E4E6EB] bg-[#F0F2F5] p-4 transition-all cursor-pointer"                      >
                         <div className="flex flex-col items-center justify-center rounded-lg bg-white shadow-sm border border-[#E4E6EB] px-4 py-3 min-w-[70px]">
                           <span className="text-2xl font-bold text-[#050505] leading-none">
                             {String(dayNumber).padStart(2, '0')}
@@ -395,8 +391,7 @@ export default function ClientDashboardPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex items-center justify-between rounded-lg bg-[#1877F2] p-4 text-white shadow-sm transition-all"
-                  >
-                    <div className="flex items-center gap-3">
+                  >                    <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
                         <Calendar className="h-5 w-5" />
                       </div>
@@ -414,8 +409,7 @@ export default function ClientDashboardPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="flex items-center justify-between rounded-lg bg-[#E4E6EB] p-4 text-[#050505] shadow-sm transition-all"
-                  >
-                    <div className="flex items-center gap-3">
+                  >                    <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white">
                         <MessageSquare className="h-5 w-5 text-[#65676B]" />
                       </div>
@@ -529,8 +523,7 @@ export default function ClientDashboardPage() {
                         className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer group mt-2"
                       >
                         <div className="h-12 w-12 rounded-lg bg-[#E4E6EB] flex items-center justify-center shrink-0 group-hover:bg-[#1877F2] transition-colors">
-                          <Plus className="h-6 w-6 text-[#65676B] group-hover:text-white transition-colors" />
-                        </div>
+                          <Plus className="h-6 w-6 text-[#65676B] group-hover:text-white transition-colors" />                        </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-[#65676B] group-hover:text-[#1877F2] transition-colors">
                             {t('dashboard.addVehicle')}
@@ -549,3 +542,4 @@ export default function ClientDashboardPage() {
     </ClientPageWrapper>
   );
 }
+

@@ -26,8 +26,7 @@ import {
   ClientStatCard,
   ClientEmptyState,
   ClientLoadingState,
-} from '@/components/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@/components/client';import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Wrench, 
@@ -134,8 +133,7 @@ function CatalogContent() {
           <div className="max-w-xl text-center md:text-left">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <Sparkles className="h-3.5 w-3.5" />
-              {t('catalog.discoverServices')}
-            </div>
+              {t('catalog.discoverServices')}            </div>
             <h1 className="mb-4 text-4xl sm:text-3xl font-extrabold tracking-tight leading-none text-slate-900">
               {t('catalog.title')}
             </h1>
@@ -153,6 +151,18 @@ function CatalogContent() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 py-3.5 pl-12 pr-4 text-sm font-semibold outline-none transition-all focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50"
             />
+          </div>
+          
+          {/* Search */}
+          <div className="relative mt-4">
+            <input
+              type="text"
+              placeholder={t('catalog.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-3 pl-11 bg-white border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f2543] w-full shadow-sm"
+            />
+            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
           </div>
         </div>
       </motion.div>
@@ -199,8 +209,7 @@ function CatalogContent() {
             </TabsTrigger>
             <TabsTrigger value="services" className="rounded-lg px-8 py-2.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white font-bold transition-all uppercase tracking-wide text-[10px]">
               {t('catalog.allServices')}
-            </TabsTrigger>
-          </TabsList>
+            </TabsTrigger>          </TabsList>
         </div>
 
         {/* Packages Tab */}
@@ -212,8 +221,7 @@ function CatalogContent() {
                   icon={PackageIcon}
                   title={t('catalog.noPackagesFound')}
                   description={t('catalog.noPackagesFound')}
-                />
-              </div>
+                />              </div>
             ) : (
               filteredPackages.map((pkg, idx) => (
                 <motion.div
@@ -438,3 +446,4 @@ export default function CatalogPage() {
     </ProtectedRoute>
   );
 }
+

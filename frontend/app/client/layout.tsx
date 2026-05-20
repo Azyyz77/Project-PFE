@@ -27,12 +27,11 @@ import {
   Clock,
   Settings,
   LifeBuoy,
+  ShoppingBag,
   Tag,
   Receipt,
   LayoutGrid,
   Info,
-  ChevronRight,
-  Bell,
   Search,
 } from 'lucide-react';
 
@@ -61,9 +60,12 @@ const getNavSections = (): NavSection[] => [
   {
     titleKey: 'SUIVI',
     items: [
-      { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-5 w-5" /> },
-      { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-5 w-5" /> },
-      { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-5 w-5" /> },
+    { labelKey: 'nav.clientHistory', href: '/client/vehicle-history', icon: <Clock className="h-5 w-5" /> },
+    { labelKey: 'nav.clientRepairOrders', href: '/client/repair-orders', icon: <FileText className="h-5 w-5" /> },
+    { labelKey: 'nav.clientOrders', href: '/client/orders', icon: <ShoppingBag className="h-5 w-5" /> },
+    { labelKey: 'nav.clientCatalog', href: '/client/catalog', icon: <LayoutGrid className="h-5 w-5" /> },
+    { labelKey: 'nav.clientPromotions', href: '/client/promotions-vehicules', icon: <Tag className="h-5 w-5" /> },
+    { labelKey: 'invoices.title', href: '/client/invoices', icon: <Receipt className="h-5 w-5" /> },
     ],
   },
   {
@@ -84,39 +86,28 @@ function SidebarLink({ item, isActive, badgeCount }: { item: NavItem; isActive: 
   const shouldShowBadge = typeof badgeCount === 'number' && badgeCount > 0;
 
   return (
-    <Link href={item.href} className="relative block group">
-      <motion.div
-        whileHover={{ x: 2 }}
-        whileTap={{ scale: 0.98 }}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 ${
-          isActive
-            ? 'bg-[#E7F3FF] text-[#1877F2]'
-            : 'text-[#050505] hover:bg-[#F2F3F5]'
+    <Link
+      href={item.href}
+      className={`group relative flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-sm transition-all duration-300 transform hover:scale-[1.02] ${
+        isActive
+          ? 'bg-gradient-to-r from-[#1b355d] to-[#1f3d6b] text-white font-medium shadow-[0_10px_20px_rgba(12,28,52,0.35)] scale-[1.02]'
+          : 'text-slate-300 hover:bg-[#17325a] hover:text-white hover:shadow-lg'
+      }`}
+    >
+      <span
+        className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-red-500 to-red-600 transition-all duration-300 ${
+          isActive ? 'opacity-100 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'opacity-0 group-hover:opacity-60'
         }`}
-      >
-        <span className={`${isActive ? 'text-[#1877F2]' : 'text-[#65676B] group-hover:text-[#050505]'} transition-colors`}>
-          {item.icon}
-        </span>
-        <span className="flex-1 text-[15px] font-medium">
-          {t(item.labelKey)}
-        </span>
-        
-        {shouldShowBadge && (
-          <Badge className="h-5 min-w-[20px] rounded-full bg-[#F02849] text-white px-2 text-[11px] font-semibold border-none">
-            {badgeCount}
-          </Badge>
-        )}
-
-        {isActive && (
-          <motion.div
-            layoutId="activeTab"
-            className="absolute left-0 w-1 h-8 bg-[#1877F2] rounded-r"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          />
-        )}
-      </motion.div>
+      />
+      <span className={`transition-all duration-300 ${isActive ? 'text-white scale-110' : 'text-slate-400 group-hover:scale-110 group-hover:text-white'}`}>
+        {item.icon}
+      </span>
+      <span className="flex-1 whitespace-nowrap">{t(item.labelKey)}</span>
+      {shouldShowBadge && (
+        <Badge className="h-5 min-w-[20px] rounded-full bg-gradient-to-r from-red-500 to-red-600 px-1.5 text-[10px] font-bold text-white shadow-lg animate-pulse">
+          {badgeCount}
+        </Badge>
+      )}
     </Link>
   );
 }
@@ -134,39 +125,50 @@ function SidebarContent({
   const navSections = getNavSections();
 
   return (
-    <div className="flex h-full flex-col bg-white text-[#050505] border-r border-[#E4E6EB]">
-      {/* Logo Section */}
-      <div className="px-4 py-4 border-b border-[#E4E6EB]">
-        <Link href="/client/dashboard" className="flex items-center gap-3 group">
-          <div className="relative">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1877F2]">
-              <Car className="h-5 w-5 text-white" />
-            </div>
+    <div className="client-sidebar flex h-full flex-col bg-[#0f2543] text-slate-100">
+      <div className="border-b border-[#1a3559]">
+        <Link
+          href="/client/dashboard"
+          className="flex items-center gap-3 px-4 py-5 transition-all duration-300 hover:bg-[#132a4a]"
+        >
+          <div className="flex h-14 w-24 items-center justify-center shrink-0">
+            <img src="/chery-logo-clean.png" alt="Chery" className="h-full w-full object-contain" />
           </div>
-          <div>
-            <h2 className="text-base font-bold tracking-tight text-[#050505]">
-              STA Chery
-            </h2>
-            <p className="text-[10px] font-medium text-[#65676B]">
+          <div className="flex flex-col min-w-0">
+            <p className="text-base font-bold text-white whitespace-nowrap">STA Chery</p>
+            <p className="text-[11px] uppercase tracking-wide text-slate-400 whitespace-nowrap">
               {t('nav.clientSpace')}
             </p>
           </div>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+      {user && (
+        <div className="px-4 py-4 border-b border-[#1a3559] transition-all duration-300 hover:bg-[#132a4a]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-sm font-bold text-white shadow-lg">
+              {user.prenom?.[0]}{user.nom?.[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">{user.prenom} {user.nom}</p>
+              <p className="text-xs text-slate-400">{t('common.client')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <nav className="client-sidebar-scroll flex-1 overflow-y-auto px-2 py-3 space-y-4">
         {navSections.map((section, idx) => (
-          <motion.div 
+          <motion.div
             key={section.titleKey}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
           >
-            <h3 className="mb-2 px-3 text-[11px] font-semibold text-[#65676B]">
+            <h3 className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
               {t(section.titleKey)}
             </h3>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 const badgeCount = item.badgeKey ? badgeCounts?.[item.badgeKey] : item.badge;
@@ -181,26 +183,14 @@ function SidebarContent({
         ))}
       </nav>
 
-      {/* Footer / Logout */}
-      <div className="p-3 border-t border-[#E4E6EB]">
-        <div className="rounded-lg bg-[#F0F2F5] p-3">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-9 w-9 rounded-full bg-[#1877F2] flex items-center justify-center text-white font-semibold text-sm">
-              {user?.prenom?.[0]}{user?.nom?.[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#050505] truncate">{user?.prenom} {user?.nom}</p>
-              <p className="text-xs text-[#65676B] truncate">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded-md bg-[#E4E6EB] hover:bg-[#D8DADF] py-2 text-sm font-semibold text-[#050505] transition-all"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>{t('nav.logout')}</span>
-          </button>
-        </div>
+      <div className="p-4 border-t border-[#1a3559]">
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition-all duration-300 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/10 hover:text-white hover:shadow-lg"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>{t('nav.logout')}</span>
+        </button>
       </div>
     </div>
   );
@@ -232,10 +222,10 @@ function ClientMobileMenu() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#E4E6EB] text-[#050505] transition-all hover:bg-[#D8DADF] lg:hidden focus:outline-none">
+      <SheetTrigger className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1a3559] text-white transition-all hover:bg-[#17325a] lg:hidden focus:outline-none">
         <Menu className="h-5 w-5" />
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] border-0 bg-white p-0">
+      <SheetContent side="left" className="w-[280px] border-0 bg-[#0f2543] p-0">
         <SidebarContent onLinkClick={() => setIsOpen(false)} badgeCounts={badgeCounts} />
       </SheetContent>
     </Sheet>
@@ -297,6 +287,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const currentItem = allNavItems.find(item => pathname === item.href || pathname.startsWith(item.href + '/'));
   const pageTitle = currentItem ? t(currentItem.labelKey) : t('nav.dashboard');
 
+<<<<<<< HEAD
   return (
     <div className="flex h-screen overflow-hidden bg-[#F0F2F5]">
       {/* Desktop Sidebar */}
@@ -307,6 +298,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="flex min-w-0 flex-1 flex-col relative">
         {/* Modern Top Header */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b border-[#E4E6EB] shadow-sm">
+=======
+      <div className="flex min-w-0 flex-1 flex-col min-h-0">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 backdrop-blur-sm px-6 py-3.5 shadow-sm">
+>>>>>>> b126f468d46a18e615b47bac0ad2fb52ab5d9b44
           <div className="flex items-center gap-4">
             <ClientMobileMenu />
             <div className="hidden sm:block">
@@ -326,6 +322,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               <NotificationBell />
             </div>
 
+<<<<<<< HEAD
             <div className="h-6 w-px bg-[#E4E6EB]" />
 
             <Link href="/client/profile" className="relative group">
@@ -333,6 +330,21 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 <span className="text-sm font-semibold text-white uppercase">
                   {user.prenom?.[0]}{user.nom?.[0]}
                 </span>
+=======
+            {/* Settings Icon */}
+            <button 
+              type="button" 
+              className="rounded-full p-2 text-slate-600 hover:bg-slate-100 transition-all duration-300 hover:scale-110 hover:rotate-90"
+              aria-label="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+
+            {/* User Avatar */}
+            <Link href="/client/profile">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-bold text-white cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12">
+                {user?.prenom?.[0]}{user?.nom?.[0]}
+>>>>>>> b126f468d46a18e615b47bac0ad2fb52ab5d9b44
               </div>
             </Link>
           </div>

@@ -46,6 +46,50 @@ export default function ChatbotPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Add CSS for animations
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+      .animate-slide-down {
+        animation: slideDown 0.3s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     setMessages((prev) => {
       if (prev.length === 0) return prev;
@@ -185,8 +229,7 @@ export default function ChatbotPage() {
             </button>
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Groq Powered</span>
-            </div>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Groq Powered</span>            </div>
           </div>
         </div>
       </div>
@@ -326,6 +369,6 @@ export default function ChatbotPage() {
           border-radius: 10px;
         }
       `}</style>
-    </ClientPageWrapper>
-  );
+    </ClientPageWrapper>  );
 }
+

@@ -89,20 +89,70 @@ export default function RegisterPage() {
   };
   return (
     <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-10">
-        <section className="w-full max-w-xl lg:max-w-lg">
-          <div className="rounded-[1.8rem] border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-7 shadow-2xl shadow-red-500/20 sm:p-9">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-red-400">
-              CHERY SERVICE
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-[2.55rem]">
-              {t('auth.registerTitle').split(' ').slice(0, 2).join(' ')}
-              <br />
-              {t('auth.registerTitle').split(' ').slice(2).join(' ')}
-            </h1>
-            <p className="mt-2 text-sm text-zinc-400">
-              {t('auth.registerDesc')}
-            </p>
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 sm:px-6 lg:px-8">
+        {/* Left Section - Outside Form */}
+        <section className="hidden flex-1 lg:flex flex-col justify-center pr-12">
+          <div className="space-y-6">
+            <div>
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-red-400">
+                CHERY SERVICE
+              </p>
+              <h1 className="mt-4 text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
+                {t('auth.registerTitle').split(' ').slice(0, 2).join(' ')}
+                <br />
+                <span className="text-red-500">{t('auth.registerTitle').split(' ').slice(2).join(' ')}</span>
+              </h1>
+              <p className="mt-4 text-base text-white/90 max-w-lg leading-relaxed drop-shadow-md">
+                {t('auth.registerDesc')}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">{t('auth.featureAppointments')}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">{t('auth.featureTracking')}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">{t('auth.featureHistory')}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white/90 text-sm">{t('auth.featureDiagnostics')}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Right Section - Form Box */}
+        <section className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-8 shadow-2xl shadow-red-500/20 sm:p-10">
+            <div className="flex items-center justify-center gap-4 -mb-2">
+              <img src="/chery-logo-clean.png" alt="Chery" className="h-16 w-auto object-contain" />
+              <p className="text-sm font-semibold uppercase tracking-[0.32em] text-red-400">
+                CHERY SERVICE
+              </p>
+            </div>
 
             <form onSubmit={handleSubmit} className="mt-7 space-y-4.5">
               {success && (

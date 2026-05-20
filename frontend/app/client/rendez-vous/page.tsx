@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PhoneVerificationRequired } from '@/components/PhoneVerificationRequired';
 import { useAuth } from '@/contexts/AuthContext';
@@ -101,6 +102,33 @@ const isDateInPast = (dateString: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return date < today;
+};
+
+const formatImmatriculation = (immat: string): string => {
+  // Format: 123 تونس 4567 (3 numbers + تونس + 4 numbers)
+  if (!immat) return '';
+  
+  // Extract all digits from the string
+  const digits = immat.replace(/\D/g, '');
+  
+  // Check if we have at least 7 digits (3 + 4)
+  if (digits.length >= 7) {
+    // Take first 3 digits and last 4 digits
+    const firstPart = digits.slice(0, 3);
+    const lastPart = digits.slice(-4);
+    return `${firstPart} تونس ${lastPart}`;
+  }
+  
+  // If less than 7 digits, try to split what we have
+  if (digits.length >= 4) {
+    const splitPoint = digits.length - 4;
+    const firstPart = digits.slice(0, splitPoint);
+    const lastPart = digits.slice(splitPoint);
+    return `${firstPart} تونس ${lastPart}`;
+  }
+  
+  // If pattern doesn't match, return original
+  return immat;
 };
 
 export default function RendezVousPage() {
@@ -718,8 +746,7 @@ function RendezVousContent() {
               <AlertTriangle className="h-6 w-6 shrink-0" />
               <AlertDescription className="font-bold text-sm leading-relaxed">
                 {t('appointments.vehicleValidationRequired')}
-              </AlertDescription>
-            </Alert>
+              </AlertDescription>            </Alert>
           )}
         </div>
 
@@ -810,8 +837,7 @@ function RendezVousContent() {
                                     <Clock className="h-4 w-4 text-[#B0B3B8]" />
                                   </div>
                                   <span className="text-xs font-bold text-[#65676B] tracking-tight">{time}</span>
-                                </div>
-                              </div>
+                                </div>                              </div>
                             </div>
 
                             <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -846,8 +872,7 @@ function RendezVousContent() {
                 className="h-9 w-9 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors shrink-0"
               >
                 <X className="h-5 w-5" />
-              </button>
-            </div>
+              </button>            </div>
           </div>
 
           {/* Scrollable Content */}
@@ -1105,8 +1130,7 @@ function RendezVousContent() {
                             return (
                               <div key={id} className="flex items-center justify-between">
                                 <span className="font-semibold text-sm text-[#050505]">{pkg?.nom}</span>
-                                <span className="font-bold text-[#1877F2]">{pkg?.prix.toFixed(3)} {language === 'ar' ? 'د.ت' : 'TND'}</span>
-                              </div>
+                                <span className="font-bold text-[#1877F2]">{pkg?.prix.toFixed(3)} {language === 'ar' ? 'د.ت' : 'TND'}</span>                              </div>
                             );
                           })}
                           <div className="flex items-center justify-between pt-3 border-t border-[#E4E6EB]">
@@ -1159,7 +1183,6 @@ function RendezVousContent() {
           </div>
         </DialogContent>
       </Dialog>
-
       {/* ─── Detail Dialog ─── */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent showCloseButton={false} className="max-w-3xl rounded-xl p-0 border-none bg-white overflow-hidden">
@@ -1220,8 +1243,7 @@ function RendezVousContent() {
                       <div>
                         <p className="text-[10px] font-bold text-[#B0B3B8] uppercase tracking-wide">{t('appointments.dateAndTime')}</p>
                         <p className="font-bold text-[#050505] tracking-tight">
-                          {new Date(selectedAppointmentDetail.date_heure).toLocaleString(locale, { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                          {new Date(selectedAppointmentDetail.date_heure).toLocaleString(locale, { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}                        </p>
                       </div>
                     </div>
                   </ClientCard>
@@ -1302,4 +1324,5 @@ function RendezVousContent() {
     </ClientPageWrapper>
   );
 }
+
 

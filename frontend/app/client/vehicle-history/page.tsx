@@ -31,8 +31,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface Vehicle {
   id: number;
   immatriculation: string;
-  marque: string;
-  modele: string;
+  marque_nom: string;
+  modele_nom: string;
+  version_nom: string;
   annee: number;
   kilometrage: number;
   couleur?: string;
@@ -133,8 +134,7 @@ export default function VehicleHistoryListPage() {
           <div className="hidden lg:block">
             <div className="h-48 w-48 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 p-8 shadow-md rotate-3 border border-orange-300 flex items-center justify-center relative overflow-hidden">
                <History className="h-24 w-24 text-white opacity-20 absolute" />
-               <Car className="h-16 w-16 text-white relative z-10" />
-            </div>
+               <Car className="h-16 w-16 text-white relative z-10" />            </div>
           </div>
         </div>
       </motion.div>
@@ -256,3 +256,4 @@ export default function VehicleHistoryListPage() {
     </ClientPageWrapper>
   );
 }
+

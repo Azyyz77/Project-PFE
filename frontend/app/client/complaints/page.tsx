@@ -223,8 +223,7 @@ export default function ComplaintsPage() {
             </h1>
             <p className="text-[#65676B] font-medium text-lg leading-relaxed">
               {t('complaints.subtitle')}
-            </p>
-          </div>
+            </p>          </div>
 
           <ClientButton 
             variant="primary" 
@@ -271,8 +270,7 @@ export default function ComplaintsPage() {
           />
         ) : (
           <div className="grid gap-6">
-            {complaints.map((complaint, idx) => {
-              const statusInfo = getStatusInfo(complaint.statut);
+            {complaints.map((complaint, idx) => {              const statusInfo = getStatusInfo(complaint.statut);
               const createdDate = new Date(complaint.date_creation).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR', {
                 day: 'numeric',
                 month: 'long',
@@ -313,8 +311,7 @@ export default function ComplaintsPage() {
                             {t('complaints.problemDescription')}
                           </h4>
                           <p className="text-[#65676B] font-medium leading-relaxed whitespace-pre-wrap">
-                            {complaint.description}
-                          </p>
+                            {complaint.description}                          </p>
                         </div>
 
                         {/* Attachments */}
@@ -347,8 +344,7 @@ export default function ComplaintsPage() {
                             )}
                           </motion.div>
                         </div>
-                      )}
-                    </div>
+                      )}                    </div>
                   </ClientCard>
                 </motion.div>
               );
@@ -469,3 +465,4 @@ export default function ComplaintsPage() {
     </ClientPageWrapper>
   );
 }
+

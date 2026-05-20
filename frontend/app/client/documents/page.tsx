@@ -68,8 +68,7 @@ export default function ClientDocumentsPage() {
       'SAV': { bg: 'bg-blue-50 border-blue-100', text: 'text-blue-600', icon: Layers },
       'Manuel': { bg: 'bg-purple-50 border-purple-100', text: 'text-purple-600', icon: FileText },
     };
-    return colors[category] || { bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600', icon: FileText };
-  };
+    return colors[category] || { bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600', icon: FileText };  };
 
   const formatDate = (dateStr: string) => {
     const localeMap: any = { fr: 'fr-FR', ar: 'ar-TN', en: 'en-US' };
@@ -99,8 +98,7 @@ export default function ClientDocumentsPage() {
           <div className="max-w-2xl text-center md:text-left">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
               <Layers className="h-3.5 w-3.5" />
-              {t('documents.library')}
-            </div>
+              {t('documents.library')}            </div>
             <h1 className="mb-4 text-4xl sm:text-4xl font-extrabold tracking-tight leading-none text-slate-900">
               {t('documents.title')}
             </h1>
@@ -251,3 +249,4 @@ export default function ClientDocumentsPage() {
     </ClientPageWrapper>
   );
 }
+

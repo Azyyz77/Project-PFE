@@ -221,8 +221,7 @@ export default function FeedbackPage() {
                               <MapPin className="w-3.5 h-3.5 text-blue-500" />
                               {appointment.agence_nom}
                             </div>
-                          </div>
-                        </div>
+                          </div>                        </div>
 
                         {appointment.feedback_note && (
                           <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full border border-emerald-100">
@@ -269,8 +268,7 @@ export default function FeedbackPage() {
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide pt-4">
                             {t('feedback.postedOn')} {formatDate(appointment.date_feedback!)}
                           </p>
-                        </div>
-                      ) : (
+                        </div>                      ) : (
                         <div className="h-full rounded-lg bg-white p-8 border border-slate-200/80 shadow-sm space-y-6">
                           <div>
                             <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-4">
@@ -330,3 +328,4 @@ export default function FeedbackPage() {
     </ClientPageWrapper>
   );
 }
+

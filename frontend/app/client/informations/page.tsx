@@ -155,8 +155,8 @@ export default function InformationsPage() {
             </h1>
             <p className="text-slate-500 font-semibold text-base leading-relaxed">
               {t('informations.usefulDesc')}
-            </p>
-          </div>
+            </p>          </div>
+        </div>
 
           <div className="shrink-0 flex items-center justify-center h-32 w-32 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-sm">
              <div className="text-center">
@@ -248,9 +248,9 @@ export default function InformationsPage() {
                     <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-400">
                        <Zap className="h-4 w-4 text-amber-500 animate-pulse" />
                        <span>{t('informations.updated')}</span>
-                    </div>
-                  </div>
-                )}
+                    </div>                  </div>
+                </div>
+              )}
 
                 {/* Contents List */}
                 <div className="space-y-6">
@@ -347,9 +347,9 @@ export default function InformationsPage() {
                 )}
               </motion.div>
             )}
-          </AnimatePresence>
-        </div>
+          </AnimatePresence>        </div>
       </div>
     </ClientPageWrapper>
   );
 }
+
