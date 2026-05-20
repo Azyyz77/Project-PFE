@@ -99,9 +99,9 @@ function ClientDashboardContent() {
   return (
     <div className="client-page-enter space-y-6 p-6">
       {/* Hero Section */}
-      <div className="client-reveal relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)]">
-        <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
+      <div className="client-reveal relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)] hover:shadow-[0_25px_50px_rgba(15,47,93,0.45)] transition-shadow duration-500">
+        <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10 animate-pulse" style={{ animationDuration: '3s' }} />
+        <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10 animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
         <div className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 opacity-10">
           <Car className="h-40 w-40" />
         </div>
@@ -117,14 +117,14 @@ function ClientDashboardContent() {
 
           <div className="flex flex-wrap gap-3">
             <Link href="/client/rendez-vous">
-              <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg">
+              <Button className="bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                 <Plus className="mr-2 h-4 w-4" />
                 {t('dashboard.takeAppointment')}
               </Button>
             </Link>
 
             <Link href="/client/vehicles">
-              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm">
+              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm transition-all duration-300 hover:scale-105">
                 <Car className="mr-2 h-4 w-4" />
                 {t('dashboard.myVehicles')}
               </Button>
@@ -135,7 +135,7 @@ function ClientDashboardContent() {
 
       {/* Stats Cards */}
       <div className="client-reveal client-reveal-delay-1 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
+        <Card className="rounded-2xl border border-slate-200/70 shadow-md">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -149,7 +149,7 @@ function ClientDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
+        <Card className="rounded-2xl border border-slate-200/70 shadow-md">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -163,7 +163,7 @@ function ClientDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
+        <Card className="rounded-2xl border border-slate-200/70 shadow-md">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -177,7 +177,7 @@ function ClientDashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="client-card-hover rounded-2xl border border-slate-200/70 shadow-sm">
+        <Card className="rounded-2xl border border-slate-200/70 shadow-md">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -249,7 +249,7 @@ function ClientDashboardContent() {
                     return (
                       <div
                         key={appointment.id}
-                        className={`flex items-center gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm ${
+                        className={`flex items-center gap-4 rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
                           index === recentAppointments.length - 1 ? '' : ''
                         }`}
                       >
@@ -302,7 +302,7 @@ function ClientDashboardContent() {
               <h2 className="mb-4 text-lg font-semibold text-slate-900">{t('dashboard.quickActions')}</h2>
               <div className="space-y-3">
                 <Link href="/client/rendez-vous" className="block">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
                         <Calendar className="h-5 w-5 text-blue-600" />
@@ -317,7 +317,7 @@ function ClientDashboardContent() {
                 </Link>
 
                 <Link href="/client/complaints" className="block">
-                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition hover:shadow-sm">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
                         <MessageSquare className="h-5 w-5 text-amber-600" />
@@ -380,7 +380,7 @@ function ClientDashboardContent() {
                     .join(' ');
 
                   return (
-                    <div key={vehicle.id} className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                    <div key={vehicle.id} className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-white p-4 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
                           <Car className="h-6 w-6 text-slate-500" />
