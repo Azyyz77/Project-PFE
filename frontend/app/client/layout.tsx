@@ -287,7 +287,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const currentItem = allNavItems.find(item => pathname === item.href || pathname.startsWith(item.href + '/'));
   const pageTitle = currentItem ? t(currentItem.labelKey) : t('nav.dashboard');
 
-<<<<<<< HEAD
   return (
     <div className="flex h-screen overflow-hidden bg-[#F0F2F5]">
       {/* Desktop Sidebar */}
@@ -298,11 +297,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="flex min-w-0 flex-1 flex-col relative">
         {/* Modern Top Header */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b border-[#E4E6EB] shadow-sm">
-=======
-      <div className="flex min-w-0 flex-1 flex-col min-h-0">
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 backdrop-blur-sm px-6 py-3.5 shadow-sm">
->>>>>>> b126f468d46a18e615b47bac0ad2fb52ab5d9b44
           <div className="flex items-center gap-4">
             <ClientMobileMenu />
             <div className="hidden sm:block">
@@ -322,15 +316,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               <NotificationBell />
             </div>
 
-<<<<<<< HEAD
             <div className="h-6 w-px bg-[#E4E6EB]" />
 
-            <Link href="/client/profile" className="relative group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1877F2] transition-transform group-hover:scale-105">
-                <span className="text-sm font-semibold text-white uppercase">
-                  {user.prenom?.[0]}{user.nom?.[0]}
-                </span>
-=======
             {/* Settings Icon */}
             <button 
               type="button" 
@@ -344,7 +331,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <Link href="/client/profile">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-xs font-bold text-white cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-110 hover:rotate-12">
                 {user?.prenom?.[0]}{user?.nom?.[0]}
->>>>>>> b126f468d46a18e615b47bac0ad2fb52ab5d9b44
               </div>
             </Link>
           </div>

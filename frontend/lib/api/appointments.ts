@@ -94,19 +94,33 @@ export async function getAvailablePackages(token: string) {
   }
 }
 
-export async function getMyAppointments(token: string) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/appointments/my`, {
-      method: 'GET',
-      headers: buildAuthHeaders(token),
-    });
+const appointmentsCache = new Map<string, { promise: Promise<any>; timestamp: number }>();
 
-    const result = await parseJson<MyAppointmentsResponse>(response);
-    return result.appointments;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, 'Erreur de connexion au serveur');
+export async function getMyAppointments(token: string) {
+  const now = Date.now();
+  const cached = appointmentsCache.get(token);
+  if (cached && (now - cached.timestamp < 3000)) {
+    return cached.promise;
   }
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/appointments/my`, {
+        method: 'GET',
+        headers: buildAuthHeaders(token),
+      });
+
+      const result = await parseJson<MyAppointmentsResponse>(response);
+      return result.appointments;
+    } catch (error) {
+      appointmentsCache.delete(token);
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, 'Erreur de connexion au serveur');
+    }
+  })();
+
+  appointmentsCache.set(token, { promise, timestamp: now });
+  return promise;
 }
 
 export async function createAppointment(payload: CreateAppointmentPayload, token: string) {

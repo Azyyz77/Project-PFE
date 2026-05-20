@@ -87,8 +87,8 @@ export default function VehicleHistoryListPage() {
 
   const filteredVehicles = vehicles.filter(v => 
     v.immatriculation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    v.marque?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    v.modele?.toLowerCase().includes(searchQuery.toLowerCase())
+    v.marque_nom?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    v.modele_nom?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) return <ClientLoadingState message={t('common.loading')} />;
@@ -174,7 +174,7 @@ export default function VehicleHistoryListPage() {
                       <div>
                         <p className="text-[10px] font-extrabold uppercase tracking-wide text-blue-500 mb-0.5">{t('vehicles.vehicle')} {vehicle.annee}</p>
                         <h3 className="text-lg font-extrabold text-slate-900 tracking-tight leading-none">
-                          {vehicle.marque} {vehicle.modele}
+                          {vehicle.marque_nom} {vehicle.modele_nom}
                         </h3>
                       </div>
                     </div>

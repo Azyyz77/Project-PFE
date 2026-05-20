@@ -23,25 +23,40 @@ function buildAuthHeaders(token: string) {
   };
 }
 
+const vehiclesCache = new Map<string, { promise: Promise<Vehicle[]>; timestamp: number }>();
+
 export async function getVehiclesByUser(userId: number, token: string): Promise<Vehicle[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/vehicles/user/${userId}`, {
-      method: 'GET',
-      headers: buildAuthHeaders(token),
-    });
-
-    const result: VehiclesResponse | { error?: string; message?: string } = await response.json();
-
-    if (!response.ok) {
-      const err = result as { error?: string; message?: string };
-      throw new ApiError(response.status, err.error || err.message || 'Erreur lors du chargement des véhicules');
-    }
-
-    return (result as VehiclesResponse).vehicles;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, 'Erreur de connexion au serveur');
+  const cacheKey = `${userId}-${token}`;
+  const now = Date.now();
+  const cached = vehiclesCache.get(cacheKey);
+  if (cached && (now - cached.timestamp < 3000)) {
+    return cached.promise;
   }
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/vehicles/user/${userId}`, {
+        method: 'GET',
+        headers: buildAuthHeaders(token),
+      });
+
+      const result: VehiclesResponse | { error?: string; message?: string } = await response.json();
+
+      if (!response.ok) {
+        const err = result as { error?: string; message?: string };
+        throw new ApiError(response.status, err.error || err.message || 'Erreur lors du chargement des véhicules');
+      }
+
+      return (result as VehiclesResponse).vehicles;
+    } catch (error) {
+      vehiclesCache.delete(cacheKey);
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, 'Erreur de connexion au serveur');
+    }
+  })();
+
+  vehiclesCache.set(cacheKey, { promise, timestamp: now });
+  return promise;
 }
 
 export async function getVehicleById(id: number, token: string): Promise<Vehicle> {

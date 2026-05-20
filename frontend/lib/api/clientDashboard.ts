@@ -41,15 +41,24 @@ export async function submitComplaint(
   }
 }
 
+const complaintsCache = new Map<string, { promise: Promise<ComplaintData[]>; timestamp: number }>();
+
 export async function fetchClientComplaints(token: string): Promise<ComplaintData[]> {
-  try {
-    const r = await axios.get(`${BASE}/client-dashboard/complaints`, {
-      headers: headers(token)
-    });
-    return r.data.data;
-  } catch (error: any) {
+  const now = Date.now();
+  const cached = complaintsCache.get(token);
+  if (cached && (now - cached.timestamp < 3000)) {
+    return cached.promise;
+  }
+
+  const promise = axios.get(`${BASE}/client-dashboard/complaints`, {
+    headers: headers(token)
+  }).then(r => r.data.data).catch(error => {
+    complaintsCache.delete(token);
     const message = error.response?.data?.error || error.message || 'Erreur lors du chargement des réclamations';
     throw new Error(message);
-  }
+  });
+
+  complaintsCache.set(token, { promise, timestamp: now });
+  return promise;
 }
 

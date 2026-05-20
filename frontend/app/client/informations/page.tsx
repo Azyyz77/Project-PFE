@@ -156,7 +156,6 @@ export default function InformationsPage() {
             <p className="text-slate-500 font-semibold text-base leading-relaxed">
               {t('informations.usefulDesc')}
             </p>          </div>
-        </div>
 
           <div className="shrink-0 flex items-center justify-center h-32 w-32 rounded-2xl bg-slate-50 border border-slate-200/60 shadow-sm">
              <div className="text-center">
@@ -249,7 +248,6 @@ export default function InformationsPage() {
                        <Zap className="h-4 w-4 text-amber-500 animate-pulse" />
                        <span>{t('informations.updated')}</span>
                     </div>                  </div>
-                </div>
               )}
 
                 {/* Contents List */}

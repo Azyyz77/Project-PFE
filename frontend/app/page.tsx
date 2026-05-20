@@ -17,7 +17,12 @@ import {
   CheckCircle2,
   Mail,
   Phone,
-  MapPinIcon,} from "lucide-react";
+  MapPinIcon,
+  Clock3,
+  MapPin,
+  MonitorSmartphone,
+  ArrowRight,
+} from "lucide-react";
 
 const heroSlides = [
   {
@@ -307,17 +312,20 @@ export default function HomePage() {
                 <p className="mt-2 text-sm text-red-100 sm:text-base">
                   Connectez-vous et programmez votre visite atelier en moins de 2 minutes.                </p>
               </div>
-            </Link>
 
-            <div className="hidden md:flex items-center gap-8">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
-              >
-                <Wrench className="h-5 w-5" />
-                Commencer              </Link>
+              <div className="hidden md:flex items-center gap-8">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                >
+                  <Wrench className="h-5 w-5" />
+                  Commencer
+                </Link>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
       {/* Models Section */}
       <section 
@@ -395,8 +403,6 @@ export default function HomePage() {
                 <p className="mt-2 text-sm font-semibold text-slate-900">{step}</p>              </div>
             ))}
           </div>
-        </section>
-      </main>
 
           <div className="mt-6 grid gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900 sm:grid-cols-3">
             <div className="inline-flex items-center gap-2 font-semibold">
@@ -409,8 +415,11 @@ export default function HomePage() {
             </div>
             <div className="inline-flex items-center gap-2 font-semibold">
               <CheckCircle2 className="h-5 w-5" />
-              Assistance rapide            </div>
+              Assistance rapide
+            </div>
           </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer 

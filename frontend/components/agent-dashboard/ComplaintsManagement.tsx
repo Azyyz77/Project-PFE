@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { fetchComplaints, updateComplaintStatus } from '@/lib/api/agentDashboard';
+import { fetchComplaints, updateComplaintStatus, answerComplaint } from '@/lib/api/agentDashboard';
 import type { Complaint, ComplaintStatus } from '@/types/agentDashboard';
 
 interface Props {
@@ -14,6 +14,8 @@ export default function ComplaintsManagement({ token: _token }: Props) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ComplaintStatus | ''>('');
   const [activeComplaint, setActiveComplaint] = useState<Complaint | null>(null);
+  const [responseText, setResponseText] = useState('');
+  const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
 
   useEffect(() => {
     loadComplaints();
@@ -248,6 +250,29 @@ export default function ComplaintsManagement({ token: _token }: Props) {
                           <p className="text-sm text-slate-300 whitespace-pre-line">{r.message}</p>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulaire de réponse */}
+                {activeComplaint.statut !== 'FERMEE' && (
+                  <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <h4 className="text-sm font-semibold text-slate-300 mb-3">Ajouter une réponse</h4>
+                    <textarea
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 min-h-[100px] mb-3"
+                      placeholder="Votre réponse au client..."
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      disabled={isSubmittingResponse}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleSendResponse}
+                        disabled={!responseText.trim() || isSubmittingResponse}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {isSubmittingResponse ? 'Envoi...' : 'Envoyer la réponse'}
+                      </button>
                     </div>
                   </div>
                 )}
