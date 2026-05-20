@@ -47,31 +47,40 @@ export default function ClientDocumentsPage() {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'Garantie': 'bg-blue-900 text-blue-200',
-      'Assurance': 'bg-green-900 text-green-200',
-      'SAV': 'bg-orange-900 text-orange-200',
-      'Manuel': 'bg-purple-900 text-purple-200',
+      'Garantie': 'bg-blue-100 text-blue-700',
+      'Assurance': 'bg-green-100 text-green-700',
+      'SAV': 'bg-orange-100 text-orange-700',
+      'Manuel': 'bg-purple-100 text-purple-700',
     };
-    return colors[category] || 'bg-slate-800 text-slate-300';
+    return colors[category] || 'bg-slate-100 text-slate-700';
   };
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-100 mb-2">{t('documents.title')}</h1>
-        <p className="text-slate-400">{t('documents.accessImportantDocuments')}</p>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg">
+            <FileText className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">{t('documents.title')}</h1>
+            <p className="text-slate-600">{t('documents.accessImportantDocuments')}</p>
+          </div>
+        </div>
       </div>
 
       {/* Filtres par catégorie */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {categories.map(cat => (
+        {categories.map((cat, index) => (
           <button
             key={cat}
+            style={{ animationDelay: `${index * 50}ms` }}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-300 animate-fade-in hover:scale-105 hover:shadow-md ${
               selectedCategory === cat
-                ? 'bg-cyan-600 text-white'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                ? 'bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white shadow-lg scale-105'
+                : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
             }`}
           >
             {cat === 'all' ? t('documents.all') : cat}
@@ -80,33 +89,43 @@ export default function ClientDocumentsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-slate-300">{t('documents.loading')}</div>
+        <div className="flex items-center justify-center py-12">
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-2 border-[#0f2543]/20" />
+            <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-[#0f2543]" />
+          </div>
+        </div>
       ) : filteredDocuments.length === 0 ? (
-        <div className="bg-slate-900 rounded-lg border border-slate-800 p-12 text-center">
-          <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400">{t('documents.noDocuments')}</p>
+        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto mb-4">
+            <FileText className="w-8 h-8 text-slate-400" />
+          </div>
+          <p className="text-slate-600 text-lg">{t('documents.noDocuments')}</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredDocuments.map(doc => (
+          {filteredDocuments.map((doc, index) => (
             <div
               key={doc.id}
-              className="bg-slate-900 border border-slate-800 rounded-lg p-6 hover:border-cyan-600 transition-colors"
+              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-white border border-slate-200 rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#0f2543] animate-fade-in"
             >
               <div className="flex items-start justify-between mb-4">
-                <FileText className="w-8 h-8 text-cyan-500" />
-                <span className={`px-2 py-1 rounded text-xs ${getCategoryColor(doc.categorie)}`}>
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-md">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(doc.categorie)}`}>
                   {doc.categorie}
                 </span>
               </div>
               
-              <h3 className="font-semibold text-lg mb-2 text-slate-100">{doc.titre}</h3>
+              <h3 className="font-semibold text-lg mb-2 text-slate-800">{doc.titre}</h3>
               
               {doc.description && (
-                <p className="text-slate-400 text-sm mb-4 line-clamp-2">{doc.description}</p>
+                <p className="text-slate-600 text-sm mb-4 line-clamp-2">{doc.description}</p>
               )}
               
-              <div className="text-xs text-slate-500 mb-4">
+              <div className="text-xs text-slate-500 mb-4 space-y-1">
                 <div>{t('documents.addedOn')}: {new Date(doc.date_creation).toLocaleDateString()}</div>
                 {doc.taille_mo && <div>{t('documents.size')}: {doc.taille_mo.toFixed(2)} Mo</div>}
               </div>
@@ -116,7 +135,7 @@ export default function ClientDocumentsPage() {
                   href={doc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white rounded-lg hover:shadow-lg text-sm transition-all duration-300 hover:scale-105"
                 >
                   <Eye className="w-4 h-4" />
                   {t('documents.view')}
@@ -124,7 +143,7 @@ export default function ClientDocumentsPage() {
                 <a
                   href={doc.url}
                   download
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 text-sm"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white text-slate-700 rounded-lg hover:bg-slate-50 text-sm border border-slate-200 transition-all duration-300 hover:scale-105 hover:shadow-md"
                 >
                   <Download className="w-4 h-4" />
                   {t('documents.download')}

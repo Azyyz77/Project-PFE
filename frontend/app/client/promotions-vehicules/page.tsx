@@ -55,52 +55,55 @@ export default function PromotionsVehiculesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#E30613] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">{t('promotions.loadingPromotions')}</p>
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-2 border-[#0f2543]/20" />
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-[#0f2543]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-[#f5f7fa]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#E30613] to-[#C00510] text-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-10 h-10" />
-            <h1 className="text-4xl font-bold">{t('promotions.title')}</h1>
+      <div className="mb-6 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">{t('promotions.title')}</h1>
+              <p className="text-slate-600">{t('promotions.discoverOffers')}</p>
+            </div>
           </div>
-          <p className="text-white/90 text-lg">
-            {t('promotions.discoverOffers')}
-          </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-6 pb-8">
         {/* Filtres */}
         {marques.length > 0 && (
           <div className="mb-8 flex flex-wrap gap-3">
             <button
               onClick={() => setSelectedMarque('all')}
-              className={`px-6 py-2 rounded-full font-medium transition-all ${
+              className={`px-6 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 ${
                 selectedMarque === 'all'
-                  ? 'bg-[#E30613] text-white shadow-lg'
-                  : 'bg-white text-slate-700 hover:bg-slate-100'
+                  ? 'bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white shadow-lg scale-105'
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
               }`}
             >
               {t('promotions.allBrands')}
             </button>
-            {marques.map(marque => (
+            {marques.map((marque, index) => (
               <button
                 key={marque}
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => setSelectedMarque(marque!)}
-                className={`px-6 py-2 rounded-full font-medium transition-all ${
+                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 hover:scale-105 animate-fade-in ${
                   selectedMarque === marque
-                    ? 'bg-[#E30613] text-white shadow-lg'
-                    : 'bg-white text-slate-700 hover:bg-slate-100'
+                    ? 'bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white shadow-lg scale-105'
+                    : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200'
                 }`}
               >
                 {marque}
@@ -119,8 +122,10 @@ export default function PromotionsVehiculesPage() {
 
         {/* Empty State */}
         {!loading && filteredPromotions.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center">
-            <Car className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto mb-4">
+              <Car className="w-8 h-8 text-slate-400" />
+            </div>
             <h3 className="text-xl font-semibold text-slate-700 mb-2">
               {t('promotions.noPromotions')}
             </h3>
@@ -132,10 +137,11 @@ export default function PromotionsVehiculesPage() {
 
         {/* Promotions Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPromotions.map(promo => (
+          {filteredPromotions.map((promo, index) => (
             <div
               key={promo.id}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden group"
+              style={{ animationDelay: `${index * 100}ms` }}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#0f2543] animate-fade-in"
             >
               {/* Image */}
               <div className="relative h-48 bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden">
@@ -153,7 +159,7 @@ export default function PromotionsVehiculesPage() {
                 
                 {/* Badge Réduction */}
                 {promo.pourcentage_reduction && (
-                  <div className="absolute top-4 right-4 bg-[#E30613] text-white px-4 py-2 rounded-full font-bold shadow-lg">
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-full font-bold shadow-lg">
                     -{promo.pourcentage_reduction}%
                   </div>
                 )}
@@ -162,7 +168,7 @@ export default function PromotionsVehiculesPage() {
               {/* Content */}
               <div className="p-6">
                 {/* Titre */}
-                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                <h3 className="text-xl font-bold text-slate-800 mb-2">
                   {promo.titre}
                 </h3>
 
@@ -190,7 +196,7 @@ export default function PromotionsVehiculesPage() {
                       {formatPrice(promo.prix_original)}
                     </div>
                   )}
-                  <div className="text-2xl font-bold text-[#E30613]">
+                  <div className="text-2xl font-bold text-red-600">
                     {formatPrice(promo.prix_promotion)}
                   </div>
                 </div>
@@ -230,7 +236,7 @@ export default function PromotionsVehiculesPage() {
                     {promo.agence_telephone && (
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Phone className="w-4 h-4" />
-                        <a href={`tel:${promo.agence_telephone}`} className="hover:text-[#E30613]">
+                        <a href={`tel:${promo.agence_telephone}`} className="hover:text-[#0f2543]">
                           {promo.agence_telephone}
                         </a>
                       </div>
@@ -241,12 +247,12 @@ export default function PromotionsVehiculesPage() {
                 {/* Conditions */}
                 {promo.conditions && (
                   <div className="mt-4 text-xs text-slate-500 italic">
-                    {promo.conditions}
+                    {t('promotions.conditions')}: {promo.conditions}
                   </div>
                 )}
 
                 {/* CTA Button */}
-                <button className="w-full mt-4 bg-[#E30613] hover:bg-[#C00510] text-white py-3 rounded-xl font-semibold transition-colors">
+                <button className="w-full mt-4 bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.02]">
                   {t('promotions.contactUs')}
                 </button>
               </div>

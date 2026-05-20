@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PhoneVerificationRequired } from '@/components/PhoneVerificationRequired';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,6 +89,33 @@ const isDateInPast = (dateString: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return date < today;
+};
+
+const formatImmatriculation = (immat: string): string => {
+  // Format: 123 تونس 4567 (3 numbers + تونس + 4 numbers)
+  if (!immat) return '';
+  
+  // Extract all digits from the string
+  const digits = immat.replace(/\D/g, '');
+  
+  // Check if we have at least 7 digits (3 + 4)
+  if (digits.length >= 7) {
+    // Take first 3 digits and last 4 digits
+    const firstPart = digits.slice(0, 3);
+    const lastPart = digits.slice(-4);
+    return `${firstPart} تونس ${lastPart}`;
+  }
+  
+  // If less than 7 digits, try to split what we have
+  if (digits.length >= 4) {
+    const splitPoint = digits.length - 4;
+    const firstPart = digits.slice(0, splitPoint);
+    const lastPart = digits.slice(splitPoint);
+    return `${firstPart} تونس ${lastPart}`;
+  }
+  
+  // If pattern doesn't match, return original
+  return immat;
 };
 
 export default function RendezVousPage() {
@@ -770,7 +798,7 @@ function RendezVousContent() {
                                     <div className="flex flex-wrap gap-2 mt-2 text-xs text-slate-600 dark:text-slate-400">
                                       <span className="flex items-center gap-1">
                                         <Car className="size-3" />
-                                        {appointment.immatriculation || 'Véhicule'}
+                                        {appointment.immatriculation ? formatImmatriculation(appointment.immatriculation) : 'Véhicule'}
                                       </span>
                                       <span className="flex items-center gap-1">
                                         <MapPin className="size-3" />
@@ -799,39 +827,90 @@ function RendezVousContent() {
         )}
       {/* Booking Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('appointments.bookAppointment')}</DialogTitle>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{t('appointments.step')} {step} {t('appointments.of')} 3</p>
-          </DialogHeader>
-
-          {/* Step Indicator */}
-          <div className="flex gap-4 my-6">
-            {[1, 2, 3].map((item) => {
-              const state = item < step ? 'done' : item === step ? 'active' : 'idle';
-              return (
-                <div key={item} className="flex flex-1 items-center gap-3">
-                  <div
-                    className={`flex items-center justify-center size-8 rounded-full font-bold text-sm transition-all ${
-                      state === 'done'
-                        ? 'bg-green-600 text-white'
-                        : state === 'active'
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    {state === 'done' ? '✓' : item}
-                  </div>
-                  {item !== 3 && (
-                    <div className={`h-0.5 flex-1 ${state !== 'idle' ? 'bg-slate-300 dark:bg-slate-600' : ''}`} />
-                  )}
+        <DialogContent className="!w-[50vw] !max-w-2xl max-h-[88vh] overflow-hidden bg-white border-slate-200 p-0 flex flex-col">
+          {/* Header with gradient and animated background - v2 */}
+          <div key={`header-${step}`} className="relative overflow-hidden bg-gradient-to-br from-[#0f2543] via-[#17325a] to-[#1b355d] p-3 text-white" style={{ minHeight: '64px' }}>
+            {/* Animated floating circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 animate-pulse" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-white/3 rounded-full -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            
+            {/* Animated pattern overlay */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-full h-full" style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+                backgroundSize: '40px 40px'
+              }} />
+            </div>
+            
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shadow-lg transition-transform duration-300 hover:scale-110">
+                  <Calendar className="h-5 w-5 animate-pulse" />
                 </div>
-              );
-            })}
+                <h2 className="text-xl font-bold tracking-tight">{t('appointments.bookAppointment')}</h2>
+              </div>
+              <div className="text-white text-base font-bold tracking-wide bg-[#1b355d]/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20 shadow-lg">
+                {t('appointments.step')} <span className="text-xl font-extrabold">{step}</span> / <span className="text-xl font-extrabold">3</span>
+              </div>
+            </div>
           </div>
 
+          {/* Step Indicator with enhanced animations */}
+          <div className="px-5 py-2.5 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+            <div className="max-w-xl mx-auto">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              {[1, 2, 3].map((item, index) => {
+                const state = item < step ? 'done' : item === step ? 'active' : 'idle';
+                const labels = ['Véhicule & Service', 'Date & Heure', 'Confirmation'];
+                
+                return (
+                  <div key={item} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <div
+                        className={`relative flex items-center justify-center size-9 rounded-full font-bold text-xs transition-all duration-500 ${
+                          state === 'done'
+                            ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-sm scale-105'
+                            : state === 'active'
+                            ? 'bg-gradient-to-br from-[#0f2543] to-[#1b355d] text-white shadow-sm scale-105'
+                            : 'bg-slate-200 text-slate-400 scale-90'
+                        }`}
+                      >
+                        {state === 'active' && (
+                          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#0f2543] to-[#1b355d] animate-ping opacity-75" />
+                        )}
+                        <div className="relative z-10">
+                          {state === 'done' ? <CheckCircle className="h-3.5 w-3.5" /> : item}
+                        </div>
+                      </div>
+                      <span className={`text-xs mt-1 font-semibold text-center transition-all duration-300 ${
+                        state === 'active' ? 'text-[#0f2543] scale-105' : state === 'done' ? 'text-green-600' : 'text-slate-400'
+                      }`}>
+                        {labels[index]}
+                      </span>
+                    </div>
+                    {item !== 3 && (
+                      <div className="relative h-1 flex-1 mx-3 bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-700 ease-out ${
+                            state !== 'idle' ? 'translate-x-0' : '-translate-x-full'
+                          }`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            </div>
+          </div>
+
+          {/* Content Area with much bigger height */}
+          <div className="overflow-y-auto flex-1 px-5 py-3 custom-scrollbar" style={{ maxHeight: 'calc(88vh - 180px)' }}>
+            <div className="max-w-xl mx-auto">
+
           {globalError && (
-            <Alert variant="destructive" className="mb-4">
+            <Alert variant="destructive" className="mb-6 animate-fade-in">
               <AlertTriangle className="size-4" />
               <AlertDescription>{globalError}</AlertDescription>
             </Alert>
@@ -839,15 +918,23 @@ function RendezVousContent() {
 
           {/* Step 1: Vehicle & Service */}
           {step === 1 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t('appointments.selectVehicleAndService')}</h3>
+            <div className="space-y-3 animate-fade-in">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-sm">
+                  <Wrench className="h-3.5 w-3.5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800">{t('appointments.selectVehicleAndService')}</h3>
+              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">{t('appointments.agency')} *</label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-[#0f2543]" />
+                  {t('appointments.agency')} *
+                </label>
                 <select
                   value={selectedAgencyId}
                   onChange={(e) => setSelectedAgencyId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs focus:border-[#0f2543] focus:ring-2 focus:ring-[#0f2543]/10 focus:outline-none transition-all duration-300 hover:border-slate-300 bg-white shadow-sm"
                 >
                   <option value="">{t('appointments.selectAgency')}</option>
                   {agencies.map((agency) => (
@@ -858,33 +945,38 @@ function RendezVousContent() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">{t('appointments.vehicle')} *</label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <Car className="h-3 w-3 text-[#0f2543]" />
+                  {t('appointments.vehicle')} *
+                </label>
                 <select
                   value={selectedVehicleId}
                   onChange={(e) => setSelectedVehicleId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs focus:border-[#0f2543] focus:ring-2 focus:ring-[#0f2543]/10 focus:outline-none transition-all duration-300 hover:border-slate-300 bg-white shadow-sm"
                 >
                   <option value="">{t('appointments.selectVehicle')}</option>
                   {validatedVehicles.map((vehicle) => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.immatriculation} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
+                      {formatImmatriculation(vehicle.immatriculation)} - {vehicle.marque_nom || ''} {vehicle.modele_nom || ''}
                     </option>
                   ))}
                 </select>
               </div>
 
               {selectedVehicle && (
-                <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-                  <CardContent className="p-4 pt-4">
-                    <div className="flex items-center gap-3">
-                      <Car className="size-5 text-blue-600 dark:text-blue-400" />
+                <Card className="bg-gradient-to-br from-[#0f2543]/5 via-[#17325a]/5 to-[#1b355d]/10 border-[#0f2543]/20 animate-fade-in shadow-sm">
+                  <CardContent className="p-2 pt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-sm">
+                        <Car className="h-3.5 w-3.5 text-white" />
+                      </div>
                       <div>
-                        <p className="font-semibold text-sm">
+                        <p className="font-bold text-slate-800 text-xs">
                           {selectedVehicle.marque_nom} {selectedVehicle.modele_nom}
                         </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {selectedVehicle.immatriculation}
+                        <p className="text-xs text-slate-600">
+                          {formatImmatriculation(selectedVehicle.immatriculation)}
                         </p>
                       </div>
                     </div>
@@ -892,12 +984,15 @@ function RendezVousContent() {
                 </Card>
               )}
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">{t('appointments.serviceType')} *</label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <Wrench className="h-3 w-3 text-[#0f2543]" />
+                  {t('appointments.serviceType')} *
+                </label>
                 <select
                   value={selectedServiceSubtypeId}
                   onChange={(e) => setSelectedServiceSubtypeId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 px-4 py-2 text-sm"
+                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs focus:border-[#0f2543] focus:ring-2 focus:ring-[#0f2543]/10 focus:outline-none transition-all duration-300 hover:border-slate-300 bg-white shadow-sm"
                 >
                   <option value="">{t('appointments.selectServiceType')}</option>
                   {serviceOptions.map((option) => (
@@ -908,51 +1003,57 @@ function RendezVousContent() {
                 </select>
               </div>
 
-              {/* Packages Section */}
+              {/* Packages Section - Made more compact */}
               {packages.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="space-y-2 pt-3 border-t border-slate-100">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold">{t('appointments.packagesAvailable')}</label>
+                    <label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white shadow-sm border border-slate-200">
+                        <img src="/logo-sta.png?v=3" alt="STA" width="20" height="20" className="object-contain" />
+                      </div>
+                      {t('appointments.packagesAvailable')} <span className="text-xs text-slate-500 font-normal">(Optionnel)</span>
+                    </label>
                     {selectedPackageIds.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm animate-fade-in text-xs px-2 py-0.5">
                         {selectedPackageIds.length} {t('appointments.packagesSelected')}
                       </Badge>
                     )}
                   </div>
                   
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {packages.map((pkg) => {
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1.5 custom-scrollbar">
+                    {packages.map((pkg, index) => {
                       const isSelected = selectedPackageIds.includes(pkg.id);
                       return (
                         <Card
                           key={pkg.id}
-                          className={`cursor-pointer transition-all ${
+                          style={{ animationDelay: `${index * 50}ms` }}
+                          className={`cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-in ${
                             isSelected 
-                              ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' 
-                              : 'hover:border-slate-400 dark:hover:border-slate-500'
+                              ? 'border border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm scale-[1.01]' 
+                              : 'border border-slate-200 hover:border-[#0f2543] shadow-sm'
                           }`}
                           onClick={() => togglePackage(pkg.id)}
                         >
-                          <CardContent className="p-3">
-                            <div className="flex items-start gap-3">
-                              <div className={`mt-0.5 size-5 rounded border-2 flex items-center justify-center transition-all ${
+                          <CardContent className="p-2 pt-2">
+                            <div className="flex items-start gap-2">
+                              <div className={`mt-0.5 size-4 rounded border flex items-center justify-center transition-all duration-300 ${
                                 isSelected 
-                                  ? 'border-orange-500 bg-orange-500' 
-                                  : 'border-slate-300 dark:border-slate-600'
+                                  ? 'border-orange-500 bg-orange-500 scale-110 shadow-sm' 
+                                  : 'border-slate-300 hover:border-orange-400'
                               }`}>
                                 {isSelected && (
                                   <CheckCircle className="size-3 text-white" />
                                 )}
                               </div>
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between gap-2">
-                                  <p className="font-semibold text-sm">{pkg.nom}</p>
-                                  <Badge variant="outline" className="text-xs font-bold">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-start justify-between gap-1.5">
+                                  <p className="font-bold text-slate-800 text-xs">{pkg.nom}</p>
+                                  <Badge variant="outline" className="font-bold text-orange-600 border-orange-600 shadow-sm text-xs whitespace-nowrap px-1.5 py-0">
                                     {pkg.prix.toFixed(3)} TND
                                   </Badge>
                                 </div>
                                 {pkg.description && (
-                                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                                  <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
                                     {pkg.description}
                                   </p>
                                 )}
@@ -964,19 +1065,19 @@ function RendezVousContent() {
                     })}
                   </div>
 
-                  {/* Price Summary */}
+                  {/* Price Summary - More compact */}
                   {selectedPackageIds.length > 0 && (
-                    <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-                      <CardContent className="p-4">
+                    <Card className="bg-gradient-to-br from-[#0f2543] to-[#1b355d] text-white animate-fade-in border-0 shadow-md">
+                      <CardContent className="p-2.5 pt-2.5">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.estimatedTotalPrice')}</p>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                            <p className="text-xs text-white/90 font-medium">{t('appointments.estimatedTotalPrice')}</p>
+                            <p className="text-xs text-white/70 mt-0.5">
                               {selectedPackageIds.length} {t('appointments.packagesSelectedCount')}
                             </p>
                           </div>
-                          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                            {totalPrice.toFixed(3)} TND
+                          <p className="text-2xl font-bold">
+                            {totalPrice.toFixed(3)} <span className="text-xs font-semibold">TND</span>
                           </p>
                         </div>
                       </CardContent>
@@ -989,88 +1090,96 @@ function RendezVousContent() {
 
           {/* Step 2: Date & Time */}
           {step === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t('appointments.selectDateAndTime')}</h3>
+            <div className="space-y-3 animate-fade-in">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-sm">
+                  <Clock className="h-3.5 w-3.5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800">{t('appointments.selectDateAndTime')}</h3>
+              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold">{t('appointments.date')} *</label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-[#0f2543]" />
+                  {t('appointments.date')} *
+                </label>
                 <Input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   min={minDateISO}
-                  className="rounded-lg"
+                  className="rounded-lg border border-slate-200 focus:border-[#0f2543] focus:ring-2 focus:ring-[#0f2543]/10 h-8 shadow-sm hover:border-slate-300 transition-all duration-300 text-xs"
                 />
               </div>
 
               {isSlotsLoading ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold">{t('appointments.timeSlot')} *</p>
-                  <div className="grid grid-cols-4 gap-2">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-slate-700">{t('appointments.timeSlot')} *</p>
+                  <div className="grid grid-cols-4 gap-1.5">
                     {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="h-9 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                      <div key={i} className="h-14 bg-slate-200 rounded-lg animate-pulse" />
                     ))}
                   </div>
                 </div>
               ) : slots.length > 0 ? (
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold">{t('appointments.timeSlot')} *</label>
-                  <div className="grid grid-cols-4 gap-3">
-                    {slots.map((slot) => (
-                      <div key={slot.hour} className="flex flex-col">
-                        <Button
-                          type="button"
-                          variant={selectedHour === slot.label ? 'default' : 'outline'}
-                          onClick={() => selectSlot(slot)}
-                          disabled={slot.is_full}
-                          title={
-                            slot.is_full
-                              ? `${t('appointments.slotFull')}: ${slot.reserved}/${slot.capacity} ${t('appointments.reservations')}`
-                              : `${slot.available} ${t('appointments.placesRemaining')} ${slot.capacity}`
-                          }
-                          className={
-                            selectedHour === slot.label
-                              ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                              : slot.is_full
-                              ? 'opacity-40 cursor-not-allowed'
-                              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
-                          }
-                          size="sm"
-                        >
-                          <span className="text-xs font-semibold">{slot.label}</span>
-                        </Button>
-                        <span className="text-[10px] text-center mt-1 text-slate-600 dark:text-slate-400">
-                          {slot.is_full 
-                            ? t('appointments.full')
-                            : `${slot.available}/${slot.capacity} ${t('appointments.available')}`
-                          }
-                        </span>
-                      </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-[#0f2543]" />
+                    {t('appointments.timeSlot')} *
+                  </label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {slots.map((slot, index) => (
+                      <button
+                        key={slot.hour}
+                        type="button"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        onClick={() => selectSlot(slot)}
+                        disabled={slot.is_full}
+                        className={`relative flex flex-col items-center justify-center p-1.5 rounded-lg border transition-all duration-300 animate-fade-in ${
+                          selectedHour === slot.label
+                            ? 'bg-gradient-to-br from-[#0f2543] to-[#1b355d] border-[#0f2543] text-white shadow-md scale-105'
+                            : slot.is_full
+                            ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                            : 'bg-white border-slate-200 hover:border-green-500 hover:shadow-sm hover:scale-105 text-slate-700 shadow-sm'
+                        }`}
+                      >
+                        <div className="relative z-10 flex flex-col items-center">
+                          <Clock className={`h-3 w-3 mb-0.5 transition-transform duration-300 ${
+                            selectedHour === slot.label ? 'text-white' : slot.is_full ? 'text-slate-400' : 'text-green-600'
+                          }`} />
+                          <span className="text-xs font-bold">{slot.label}</span>
+                          <span className={`text-xs mt-0.5 font-medium ${
+                            selectedHour === slot.label ? 'text-white/90' : 'text-slate-500'
+                          }`}>
+                            {slot.is_full 
+                              ? t('appointments.full')
+                              : `${slot.available}/${slot.capacity}`
+                            }
+                          </span>
+                        </div>
+                      </button>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-                    {slots.some((s) => !s.is_full) ? t('appointments.selectAvailableSlot') : t('appointments.noSlotsAvailable')}
-                  </p>
                 </div>
               ) : (
-                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
-                  <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-200 bg-amber-50 animate-fade-in shadow-sm">
+                  <AlertTriangle className="size-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
                     {t('appointments.noSlotsForDate')}
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold">{t('appointments.additionalNotes')}</label>
+                <label className="text-sm font-semibold text-slate-700">{t('appointments.additionalNotes')}</label>
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('appointments.specialRequest')}
-                  className="min-h-24"
+                  className="min-h-24 rounded-xl border-2 border-slate-200 focus:border-[#0f2543] focus:ring-4 focus:ring-[#0f2543]/10 shadow-sm hover:border-slate-300 transition-all duration-300"
                   maxLength={500}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 text-right font-medium">
                   {notes.length}/500 {t('appointments.characters')}
                 </p>
               </div>
@@ -1079,84 +1188,114 @@ function RendezVousContent() {
 
           {/* Step 3: Confirmation */}
           {step === 3 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">{t('appointments.verifyAndConfirm')}</h3>
+            <div className="space-y-3 animate-fade-in">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600 shadow-sm">
+                  <CheckCircle className="h-3.5 w-3.5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800">{t('appointments.verifyAndConfirm')}</h3>
+              </div>
 
               {isBookingWith24h && (
-                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900">
-                  <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-200 bg-amber-50 shadow-sm animate-fade-in py-2 px-3">
+                  <AlertTriangle className="size-3 text-amber-600" />
+                  <AlertDescription className="text-amber-800 text-xs">
                     {t('appointments.within24h')}
                   </AlertDescription>
                 </Alert>
               )}
 
-              <Card className="bg-slate-50 dark:bg-slate-900/30">
-                <CardContent className="p-4 space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.vehicle')}</p>
-                      <p className="font-semibold text-sm">
+              <Card className="border border-slate-200 shadow-sm">
+                <CardContent className="p-3 space-y-2.5 pt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="space-y-1 p-2 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+                      <p className="text-xs text-slate-500 flex items-center gap-1 font-semibold uppercase tracking-wide">
+                        <Car className="h-3 w-3" />
+                        {t('appointments.vehicle')}
+                      </p>
+                      <p className="font-bold text-slate-800 text-xs">
                         {selectedVehicle?.marque_nom} {selectedVehicle?.modele_nom}
                       </p>
-                      <p className="text-xs text-slate-500">
-                        {selectedVehicle?.immatriculation}
+                      <p className="text-xs text-slate-600">
+                        {selectedVehicle && formatImmatriculation(selectedVehicle.immatriculation)}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.agency')}</p>
-                      <p className="font-semibold text-sm">{selectedAgency?.nom}</p>
-                      <p className="text-xs text-slate-500">{selectedAgency?.ville}</p>
+                    <div className="space-y-1 p-2 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg">
+                      <p className="text-xs text-slate-500 flex items-center gap-1 font-semibold uppercase tracking-wide">
+                        <MapPin className="h-3 w-3" />
+                        {t('appointments.agency')}
+                      </p>
+                      <p className="font-bold text-slate-800 text-xs">{selectedAgency?.nom}</p>
+                      <p className="text-xs text-slate-600">{selectedAgency?.ville}</p>
                     </div>
                   </div>
-                  <Separator />
-                  <div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.service')}</p>
-                    <p className="font-semibold text-sm">{selectedService?.label}</p>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="space-y-1 p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                    <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide flex items-center gap-1">
+                      <Wrench className="h-3 w-3" />
+                      {t('appointments.service')}
+                    </p>
+                    <p className="font-bold text-slate-800 text-xs">{selectedService?.label}</p>
                   </div>
+                  
                   {selectedPackageIds.length > 0 && (
                     <>
-                      <Separator />
-                      <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">{t('appointments.selectedPackages')}</p>
+                      <Separator className="my-2" />
+                      <div className="space-y-1.5">
+                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">{t('appointments.selectedPackages')}</p>
                         <div className="space-y-1">
-                          {selectedPackageIds.map(packageId => {
+                          {selectedPackageIds.map((packageId, index) => {
                             const pkg = packages.find(p => p.id === packageId);
                             if (!pkg) return null;
                             return (
-                              <div key={packageId} className="flex items-center justify-between text-sm">
-                                <span>{pkg.nom}</span>
-                                <span className="font-semibold">{pkg.prix.toFixed(3)} TND</span>
+                              <div 
+                                key={packageId} 
+                                style={{ animationDelay: `${index * 50}ms` }}
+                                className="flex items-center justify-between p-1.5 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200 animate-fade-in"
+                              >
+                                <span className="text-xs text-slate-700 font-semibold">{pkg.nom}</span>
+                                <span className="font-bold text-orange-600 text-xs">{pkg.prix.toFixed(3)} TND</span>
                               </div>
                             );
                           })}
                         </div>
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                          <span className="font-semibold text-sm">{t('appointments.estimatedPrice')}</span>
-                          <span className="font-bold text-lg text-blue-700 dark:text-blue-400">
-                            {totalPrice.toFixed(3)} TND
+                        <div className="flex items-center justify-between p-2 bg-gradient-to-r from-[#0f2543] to-[#1b355d] rounded-lg text-white mt-1.5 shadow-md">
+                          <span className="font-bold text-xs">{t('appointments.estimatedPrice')}</span>
+                          <span className="font-bold text-lg">
+                            {totalPrice.toFixed(3)} <span className="text-xs">TND</span>
                           </span>
                         </div>
                       </div>
                     </>
                   )}
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.date')}</p>
-                      <p className="font-semibold text-sm">{selectedDate}</p>
+                  
+                  <Separator className="my-2" />
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1 p-2 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                      <p className="text-xs text-green-600 flex items-center gap-1 font-semibold uppercase tracking-wide">
+                        <Calendar className="h-3 w-3" />
+                        {t('appointments.date')}
+                      </p>
+                      <p className="font-bold text-slate-800 text-xs">{selectedDate}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.time')}</p>
-                      <p className="font-semibold text-sm">{selectedHour}</p>
+                    <div className="space-y-1 p-2 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                      <p className="text-xs text-green-600 flex items-center gap-1 font-semibold uppercase tracking-wide">
+                        <Clock className="h-3 w-3" />
+                        {t('appointments.time')}
+                      </p>
+                      <p className="font-bold text-slate-800 text-xs">{selectedHour}</p>
                     </div>
                   </div>
+                  
                   {notes && (
                     <>
-                      <Separator />
-                      <div>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{t('appointments.remarks')}</p>
-                        <p className="text-sm mt-1">{notes}</p>
+                      <Separator className="my-2" />
+                      <div className="space-y-1">
+                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">{t('appointments.remarks')}</p>
+                        <p className="text-xs text-slate-700 bg-slate-50 p-2 rounded-lg border border-slate-200 leading-relaxed">{notes}</p>
                       </div>
                     </>
                   )}
@@ -1164,40 +1303,55 @@ function RendezVousContent() {
               </Card>
             </div>
           )}
+          </div>
+        </div>
 
-          {/* Footer Buttons */}
-          <DialogFooter className="gap-2 sm:gap-0">
-            {step > 1 && (
-              <Button
-                variant="outline"
-                onClick={goBackStep}
-                disabled={isSubmitting}
-              >
-                {t('appointments.back')}
-              </Button>
-            )}
-            {step < 3 && (
-              <Button
-                onClick={goNextStep}
-                disabled={isSubmitting}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {t('appointments.next')}
-              </Button>
-            )}
-            {step === 3 && (
-              <Button
-                onClick={submitAppointment}
-                disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                {isSubmitting ? t('appointments.processing') : t('appointments.confirmAppointment')}
-                {!isSubmitting && <CheckCircle className="size-4 ml-2" />}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Footer Buttons - Fixed at bottom */}
+        <div className="px-5 py-2.5 bg-gradient-to-b from-white to-slate-50 border-t-2 border-slate-100 flex-shrink-0">
+          <div className="max-w-xl mx-auto flex items-center justify-between gap-2.5">
+          {step > 1 && (
+            <Button
+              variant="outline"
+              onClick={goBackStep}
+              disabled={isSubmitting}
+              className="flex-1 h-12 rounded-xl border-2 hover:bg-slate-50 hover:border-slate-300 transition-all duration-300 hover:shadow-md font-semibold"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              {t('appointments.back')}
+            </Button>
+          )}
+          {step < 3 ? (
+            <Button
+              onClick={goNextStep}
+              disabled={isSubmitting}
+              className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-xl transition-all duration-300 hover:scale-105 text-white font-semibold"
+            >
+              {t('appointments.next')}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              onClick={submitAppointment}
+              disabled={isSubmitting}
+              className="flex-1 h-12 rounded-xl bg-gradient-to-r from-green-600 to-green-700 hover:shadow-xl transition-all duration-300 hover:scale-105 text-white font-semibold"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  {t('appointments.processing')}
+                </>
+              ) : (
+                <>
+                  {t('appointments.confirmAppointment')}
+                  <CheckCircle className="size-5 ml-2" />
+                </>
+              )}
+            </Button>
+          )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
 
       {/* Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
@@ -1234,7 +1388,7 @@ function RendezVousContent() {
                           {selectedAppointmentDetail.marque_nom} {selectedAppointmentDetail.modele_nom}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {selectedAppointmentDetail.immatriculation}
+                          {selectedAppointmentDetail.immatriculation && formatImmatriculation(selectedAppointmentDetail.immatriculation)}
                         </p>
                       </div>
                     </div>

@@ -186,19 +186,24 @@ export default function ComplaintsPage() {
   };
 
   return (
-    <div className="w-full h-full overflow-auto bg-slate-900">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-100 mb-2">{t('complaints.title')}</h1>
-            <p className="text-slate-400">
-              {t('complaints.manageComplaints')}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg">
+              <AlertCircle className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">{t('complaints.title')}</h1>
+              <p className="text-slate-600">
+                {t('complaints.manageComplaints')}
+              </p>
+            </div>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center rounded-lg bg-cyan-600 hover:bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors">
+            <DialogTrigger className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:scale-105">
               <Plus className="w-4 h-4 mr-2" />
               {t('complaints.newComplaint')}
             </DialogTrigger>
@@ -262,7 +267,7 @@ export default function ComplaintsPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
+                    className="flex-1 bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg text-white"
                   >
                     {isSubmitting ? (
                       <>
@@ -285,22 +290,25 @@ export default function ComplaintsPage() {
         {/* Complaints List */}
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+            <div className="relative h-12 w-12">
+              <div className="absolute inset-0 rounded-full border-2 border-[#0f2543]/20" />
+              <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-[#0f2543]" />
+            </div>
           </div>
         ) : complaints.length === 0 ? (
-          <div className="text-center py-20 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700">
-            <div className="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto mb-4">
               <MessageSquare className="w-8 h-8 text-slate-400" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-100 mb-2">
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">
               {t('complaints.noComplaints')}
             </h3>
-            <p className="text-slate-400 mb-4">
+            <p className="text-slate-600 mb-4">
               {t('complaints.notCreatedYet')}
             </p>
             <Button
               onClick={() => setIsDialogOpen(true)}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white"
+              className="bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg text-white transition-all duration-300 hover:scale-105"
             >
               <Plus className="w-4 h-4 mr-2" />
               {t('complaints.create')}
@@ -308,7 +316,7 @@ export default function ComplaintsPage() {
           </div>
         ) : (
           <div className="grid gap-4">
-            {complaints.map((complaint) => {
+            {complaints.map((complaint, index) => {
               const statusInfo = getStatusInfo(complaint.statut);
               const createdDate = new Date(complaint.date_creation).toLocaleDateString('fr-FR', {
                 day: 'numeric',
@@ -317,17 +325,21 @@ export default function ComplaintsPage() {
               });
 
               return (
-                <div key={complaint.id} className="bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-colors">
+                <div
+                  key={complaint.id}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="bg-white rounded-xl p-6 border border-slate-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#0f2543] animate-fade-in"
+                >
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-slate-100">{complaint.sujet}</h3>
+                        <h3 className="text-xl font-semibold text-slate-800">{complaint.sujet}</h3>
                         <Badge className={statusInfo.className}>
                           {statusInfo.icon}
                           <span className="ml-1">{statusInfo.label}</span>
                         </Badge>
                       </div>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-600">
                         {t('complaints.createdOn')} {createdDate} • {t('complaints.complaintNumber')} #{complaint.id}
                       </p>
                     </div>
@@ -335,25 +347,25 @@ export default function ComplaintsPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-slate-300 mb-2">
+                      <h4 className="text-sm font-semibold text-slate-700 mb-2">
                         Description
                       </h4>
-                      <p className="text-slate-400 whitespace-pre-wrap">
+                      <p className="text-slate-600 whitespace-pre-wrap">
                         {complaint.description}
                       </p>
                     </div>
 
                     {complaint.reponse && (
-                      <div className="bg-cyan-900/20 border border-cyan-800 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-cyan-300 mb-2 flex items-center gap-2">
+                      <div className="bg-gradient-to-r from-[#0f2543]/5 to-[#1b355d]/5 border border-[#0f2543]/20 rounded-lg p-4">
+                        <h4 className="text-sm font-semibold text-[#0f2543] mb-2 flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
                           Réponse de l'équipe
                         </h4>
-                        <p className="text-cyan-200 whitespace-pre-wrap">
+                        <p className="text-slate-700 whitespace-pre-wrap">
                           {complaint.reponse}
                         </p>
                         {complaint.date_resolution && (
-                          <p className="text-xs text-cyan-400 mt-2">
+                          <p className="text-xs text-slate-500 mt-2">
                             Répondu le {new Date(complaint.date_resolution).toLocaleDateString('fr-FR')}
                           </p>
                         )}
@@ -361,7 +373,7 @@ export default function ComplaintsPage() {
                     )}
 
                     {/* File Attachments Section */}
-                    <div className="border-t border-slate-700 pt-4">
+                    <div className="border-t border-slate-200 pt-4">
                       <ComplaintAttachments complaintId={complaint.id} />
                     </div>
                   </div>

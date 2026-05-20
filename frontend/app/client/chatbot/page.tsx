@@ -29,6 +29,50 @@ export default function ChatbotPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Add CSS for animations
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+      .animate-slide-down {
+        animation: slideDown 0.3s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     setMessages((prev) => {
       if (prev.length === 0) return prev;
@@ -144,164 +188,263 @@ export default function ChatbotPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#E30613] to-[#C00510] text-white py-4 px-4 shadow-lg">
-        <div className="max-w-4xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Header - Compact and Beautiful */}
+      <div className="relative bg-gradient-to-r from-[#0f2543] via-[#1b355d] to-[#0f2543] text-white shadow-2xl overflow-hidden flex-shrink-0">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-32 translate-x-32 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-2xl translate-y-24 -translate-x-24 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => window.history.back()}
-              className="text-white/90 hover:text-white transition-colors flex items-center gap-2"
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-all duration-300 group px-3 py-2 rounded-lg hover:bg-white/10 hover:shadow-lg hover:-translate-y-0.5"
             >
-              ← {t('common.back') || 'Retour'}
+              <span className="text-lg group-hover:scale-110 transition-transform duration-300">←</span>
+              <span className="text-sm font-medium">Retour</span>
             </button>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              <span className="text-sm font-medium">Propulsé par Groq AI</span>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">Assistant SAV Chery</h1>
+                <p className="text-xs text-white/80">Disponible 24h/24, 7j/7</p>
+              </div>
             </div>
-          </div>
-          <div className="text-center mt-3">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <MessageCircle className="h-6 w-6" />
-              <h1 className="text-2xl font-bold">{t('chatbot.title') || 'Assistant Chery'}</h1>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-yellow-300 animate-pulse" />
+              <span className="text-xs font-medium">Groq AI</span>
             </div>
-            <p className="text-sm text-white/90">{t('common.available247') || 'Disponible 24/7 pour vous aider'}</p>
           </div>
         </div>
       </div>
 
-      {/* Error Banner */}
+      {/* Error Banner - Compact */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 mx-4 mt-4 rounded-lg shadow-md">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-6 w-6 text-red-500 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-red-800 mb-1">Erreur de connexion</p>
-              <p className="text-sm text-red-700">{error}</p>
-              {error.includes('backend') && (
-                <div className="mt-3 p-3 bg-white rounded border border-red-200">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">💡 Solution:</p>
-                  <ol className="text-xs text-gray-600 space-y-1 list-decimal list-inside">
-                    <li>Ouvrez un nouveau terminal</li>
-                    <li>Exécutez: <code className="bg-gray-100 px-1 py-0.5 rounded">cd backend && npm start</code></li>
-                    <li>Attendez le message "Serveur démarré sur le port 3000"</li>
-                    <li>Rechargez cette page</li>
-                  </ol>
-                </div>
-              )}
-            </div>
+        <div className="mx-6 mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg shadow-md animate-slide-down flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+            <p className="text-xs text-red-700 font-medium">{error}</p>
           </div>
         </div>
       )}
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 1 && (
-          <div className="max-w-2xl mx-auto mb-6">
-            <p className="text-center text-gray-600 mb-4 text-sm">
-              💡 Questions rapides :
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {quickQuestions.map((question, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleQuickQuestion(question)}
-                  className="text-left p-3 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700 transition-colors"
-                >
-                  {question}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {messages.map(message => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.role === 'user' ? 'justify-end' : 'justify-start'
-            } animate-fadeIn`}
-          >
-            <div
-              className={`max-w-[85%] sm:max-w-[75%] ${
-                message.role === 'user'
-                  ? 'bg-gradient-to-r from-[#E30613] to-[#C00510] text-white rounded-2xl rounded-br-sm'
-                  : message.error
-                  ? 'bg-red-50 text-red-900 border border-red-200 rounded-2xl rounded-bl-sm'
-                  : 'bg-white text-gray-800 rounded-2xl rounded-bl-sm shadow-md border border-gray-100'
-              } px-4 py-3`}
-            >
-              {message.role === 'bot' && !message.error && (
-                <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-                  <MessageCircle className="h-3 w-3" />
-                  <span>Assistant Chery</span>
+      {/* Main Chat Container - Perfectly Fitted */}
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {/* Quick Questions - Compact and Beautiful */}
+            {messages.length === 1 && (
+              <div className="animate-fade-in-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-md">
+                    <span className="text-white text-xs">💡</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800">Questions rapides</h3>
                 </div>
-              )}
-              <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                {message.text}
-              </p>
-              {message.timestamp && (
-                <p className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-white/70' : 'text-gray-400'
-                }`}>
-                  {formatTime(message.timestamp)}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {/* Typing Indicator */}
-        {loading && (
-          <div className="flex justify-start animate-fadeIn">
-            <div className="bg-white rounded-2xl rounded-bl-sm shadow-md border border-gray-100 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-[#E30613] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                  <div className="w-2 h-2 bg-[#E30613] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                  <div className="w-2 h-2 bg-[#E30613] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {quickQuestions.map((question, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickQuestion(question)}
+                      className="group relative text-left p-3 bg-white border-2 border-slate-200 hover:border-[#0f2543] rounded-xl transition-all duration-300 shadow-sm hover:shadow-xl transform hover:-translate-y-1.5"
+                      style={{
+                        animation: 'fadeInUp 0.5s ease-out forwards',
+                        animationDelay: `${index * 100}ms`,
+                        opacity: 0
+                      }}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-gradient-to-br group-hover:from-[#0f2543] group-hover:to-[#1b355d] transition-all duration-300 flex-shrink-0 group-hover:scale-110 group-hover:rotate-3">
+                          <MessageCircle className="h-3.5 w-3.5 text-slate-600 group-hover:text-white transition-colors" />
+                        </div>
+                        <span className="text-xs text-gray-700 group-hover:text-[#0f2543] font-medium transition-colors leading-relaxed">
+                          {question}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <span className="text-sm text-gray-600">
-                  {t('chatbot.typing') || 'En train d&apos;écrire...'}
-                </span>
               </div>
+            )}
+
+            {/* Messages - Compact and Beautiful */}
+            <div className="space-y-3">
+              {messages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  style={{
+                    animation: 'fadeInUp 0.4s ease-out forwards',
+                    animationDelay: `${Math.min(index * 50, 300)}ms`,
+                    opacity: 0
+                  }}
+                >
+                  {message.role === 'bot' && (
+                    <div className="flex items-start gap-2.5 max-w-[85%]">
+                      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg flex-shrink-0 mt-0.5">
+                        <MessageCircle className="h-4 w-4 text-white" />
+                      </div>
+                      <div className={`flex-1 ${
+                        message.error
+                          ? 'bg-red-50 border-2 border-red-200'
+                          : 'bg-white border-2 border-slate-200 hover:border-[#0f2543]/30'
+                      } rounded-2xl rounded-tl-sm shadow-md p-3.5 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1`}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-xs font-bold text-[#0f2543]">Assistant Chery</span>
+                          {message.timestamp && (
+                            <span className="text-xs text-gray-400">• {formatTime(message.timestamp)}</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {message.role === 'user' && (
+                    <div className="flex items-start gap-2.5 max-w-[85%]">
+                      <div className="flex-1 bg-gradient-to-br from-[#0f2543] to-[#1b355d] rounded-2xl rounded-tr-sm shadow-lg p-3.5 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
+                        {message.timestamp && (
+                          <p className="text-xs text-white/60 mt-1.5 text-right">
+                            {formatTime(message.timestamp)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">V</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Typing Indicator - Compact */}
+              {loading && (
+                <div className="flex justify-start animate-fade-in">
+                  <div className="flex items-start gap-2.5 max-w-[85%]">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg flex-shrink-0">
+                      <MessageCircle className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="bg-white border-2 border-slate-200 rounded-2xl rounded-tl-sm shadow-md p-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex space-x-1.5">
+                          <div className="w-2 h-2 bg-[#0f2543] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-2 h-2 bg-[#1b355d] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-2 h-2 bg-[#0f2543] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                        <span className="text-xs text-gray-600">En train d&apos;écrire...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Input Area - Fixed Bottom, Perfectly Fitted */}
+        <div className="bg-white border-t-2 border-slate-200 shadow-2xl flex-shrink-0">
+          <div className="max-w-4xl mx-auto px-6 py-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Écrivez votre message..."
+                  className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0f2543] focus:border-[#0f2543] transition-all placeholder:text-gray-400 max-h-24"
+                  rows={1}
+                  disabled={loading}
+                />
+              </div>
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white font-semibold px-5 py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group flex-shrink-0"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="text-sm">Envoyer</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="flex items-center justify-center gap-1.5 mt-2">
+              <Sparkles className="h-3 w-3 text-yellow-500" />
+              <p className="text-xs text-gray-500">Propulsé par Groq AI</p>
             </div>
           </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
-        <div className="flex items-end gap-2 max-w-4xl mx-auto">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={t('common.writeMessage') || 'Écrivez votre message...'}
-            className="flex-1 bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-[15px] resize-none focus:outline-none focus:ring-2 focus:ring-[#E30613] focus:border-transparent max-h-32 transition-all"
-            rows={1}
-            disabled={loading}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={loading || !input.trim()}
-            className="bg-gradient-to-r from-[#E30613] to-[#C00510] text-white font-semibold px-6 py-3 rounded-2xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-            <span className="hidden sm:inline">{t('common.send') || 'Envoyer'}</span>
-          </button>
         </div>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          ⚡ Réponses rapides grâce à Groq AI
-        </p>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-slide-down {
+          animation: slideDown 0.3s ease-out forwards;
+        }
+        
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 }

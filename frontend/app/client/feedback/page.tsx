@@ -126,41 +126,55 @@ export default function FeedbackPage() {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-900">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-2 border-[#0f2543]/20" />
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-[#0f2543]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full overflow-auto bg-slate-900">
-      <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-100 mb-2">{t('feedback.title')}</h1>
-          <p className="text-slate-400">{t('feedback.shareExperience')}</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg">
+              <Star className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">{t('feedback.title')}</h1>
+              <p className="text-slate-600">{t('feedback.shareExperience')}</p>
+            </div>
+          </div>
         </div>
 
         {appointments.length === 0 ? (
-          <div className="text-center py-20 bg-slate-800 rounded-3xl border-2 border-dashed border-slate-700">
-            <MessageSquare className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg">{t('feedback.noCompletedAppointments')}</p>
+          <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-600 text-lg">{t('feedback.noCompletedAppointments')}</p>
             <p className="text-slate-500 text-sm mt-2">{t('feedback.leaveReviewAfterService')}</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {appointments.map((appointment) => (
+            {appointments.map((appointment, index) => (
               <div
                 key={appointment.id}
-                className="bg-slate-800 rounded-xl p-6 border border-slate-700"
+                style={{ animationDelay: `${index * 100}ms` }}
+                className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#0f2543] animate-fade-in"
               >
                 {/* Appointment Info */}
                 <div className="mb-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-slate-100 mb-2">
+                      <h3 className="text-xl font-semibold text-slate-800 mb-2">
                         Rendez-vous #{appointment.id}
                       </h3>
-                      <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+                      <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           {formatDate(appointment.date_heure)}
@@ -179,7 +193,7 @@ export default function FeedbackPage() {
                     </div>
                     
                     {appointment.feedback_note && (
-                      <div className="flex items-center gap-2 bg-green-900/30 text-green-400 px-3 py-1 rounded-full text-sm">
+                      <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
                         <CheckCircle className="w-4 h-4" />
                         {t('feedback.reviewGiven')}
                       </div>
@@ -190,15 +204,15 @@ export default function FeedbackPage() {
                 {/* Feedback Form or Display */}
                 {appointment.feedback_note ? (
                   // Display existing feedback
-                  <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                  <div className="bg-gradient-to-r from-[#0f2543]/5 to-[#1b355d]/5 rounded-lg p-4 border border-[#0f2543]/20">
                     <div className="mb-3">
-                      <p className="text-sm text-slate-400 mb-2">{t('feedback.yourRating')}</p>
+                      <p className="text-sm text-slate-600 mb-2">{t('feedback.yourRating')}</p>
                       {renderStars(appointment.id, appointment.feedback_note, false)}
                     </div>
                     {appointment.feedback_commentaire && (
                       <div>
-                        <p className="text-sm text-slate-400 mb-2">{t('feedback.yourComment')}</p>
-                        <p className="text-slate-300">{appointment.feedback_commentaire}</p>
+                        <p className="text-sm text-slate-600 mb-2">{t('feedback.yourComment')}</p>
+                        <p className="text-slate-700">{appointment.feedback_commentaire}</p>
                       </div>
                     )}
                     {appointment.date_feedback && (
@@ -209,16 +223,16 @@ export default function FeedbackPage() {
                   </div>
                 ) : (
                   // Feedback form
-                  <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-slate-300 mb-3">
+                      <label className="block text-sm font-medium text-slate-700 mb-3">
                         {t('feedback.howRateService')}
                       </label>
                       {renderStars(appointment.id, null, true)}
                     </div>
 
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         {t('feedback.commentOptional')}
                       </label>
                       <textarea
@@ -227,7 +241,7 @@ export default function FeedbackPage() {
                         placeholder={t('feedback.shareYourExperience')}
                         rows={3}
                         maxLength={500}
-                        className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f2543] focus:border-transparent"
                       />
                       <p className="text-xs text-slate-500 mt-1">
                         {(comments[appointment.id] || '').length}/500 {t('feedback.characters')}
@@ -237,7 +251,7 @@ export default function FeedbackPage() {
                     <button
                       onClick={() => handleSubmitFeedback(appointment.id)}
                       disabled={!selectedRating[appointment.id] || submitting === appointment.id}
-                      className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      className="w-full bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02]"
                     >
                       {submitting === appointment.id ? (
                         <>
