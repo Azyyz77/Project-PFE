@@ -5,31 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getMyAppointments } from '@/lib/api/appointments';
 import { feedbackApi, SubmitFeedbackData } from '@/lib/api/feedback';
-import { 
-  Star, 
-  MessageSquare, 
-  Send, 
-  CheckCircle, 
-  Loader2, 
-  Calendar, 
-  MapPin, 
-  Wrench,
-  Sparkles,
-  ArrowRight,
-  ThumbsUp,
-  Award
-} from 'lucide-react';
-import {
-  ClientPageWrapper,
-  ClientCard,
-  ClientButton,
-  ClientStatCard,
-  ClientEmptyState,
-  ClientLoadingState,
-} from '@/components/client';
-import { Textarea } from '@/components/ui/textarea';
+import { Star, MessageSquare, Send, CheckCircle, Loader2, Calendar, MapPin, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // Extend the Appointment interface to include feedback fields
 interface AppointmentWithFeedback {
@@ -48,7 +25,7 @@ interface AppointmentWithFeedback {
 
 export default function FeedbackPage() {
   const { token } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [appointments, setAppointments] = useState<AppointmentWithFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<number | null>(null);
@@ -69,7 +46,7 @@ export default function FeedbackPage() {
       const completed = data.filter((apt: any) => apt.statut === 'TERMINE') as AppointmentWithFeedback[];
       setAppointments(completed);
     } catch (error: any) {
-      toast.error(error.message || t('orders.loadingError') || 'Erreur lors du chargement des rendez-vous');
+      toast.error(error.message || 'Erreur lors du chargement des rendez-vous');
     } finally {
       setLoading(false);
     }
@@ -80,7 +57,7 @@ export default function FeedbackPage() {
     
     const note = selectedRating[rdv_id];
     if (!note) {
-      toast.error(t('feedback.selectRatingError'));
+      toast.error('Veuillez sélectionner une note');
       return;
     }
 
@@ -92,15 +69,22 @@ export default function FeedbackPage() {
         commentaire: comments[rdv_id] || undefined
       };
       
-      await feedbackApi.submitFeedback(data, token);
-      toast.success(t('feedback.thankYou'));
+      console.log('Envoi du feedback:', data); // Debug
       
+      const result = await feedbackApi.submitFeedback(data, token);
+      console.log('Résultat:', result); // Debug
+      
+      toast.success('Merci pour votre avis !');
+      
+      // Reload appointments to update feedback status
       await loadAppointments();
       
+      // Clear form
       setSelectedRating(prev => ({ ...prev, [rdv_id]: 0 }));
       setComments(prev => ({ ...prev, [rdv_id]: '' }));
     } catch (error: any) {
-      toast.error(error.message || t('feedback.sendingError') || 'Erreur lors de l\'envoi');
+      console.error('Erreur feedback:', error); // Debug
+      toast.error(error.message || 'Erreur lors de l\'envoi de l\'avis');
     } finally {
       setSubmitting(null);
     }
@@ -110,33 +94,30 @@ export default function FeedbackPage() {
     const rating = currentRating || selectedRating[rdv_id] || 0;
     
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <motion.button
+          <button
             key={star}
             type="button"
             disabled={!editable}
-            whileHover={editable ? { scale: 1.2, rotate: 15 } : {}}
-            whileTap={editable ? { scale: 0.9 } : {}}
             onClick={() => editable && setSelectedRating(prev => ({ ...prev, [rdv_id]: star }))}
-            className={`transition-all ${editable ? 'cursor-pointer' : 'cursor-default'}`}
+            className={`transition-all ${editable ? 'hover:scale-110 cursor-pointer' : 'cursor-default'}`}
           >
             <Star
-              className={`w-10 h-10 ${
+              className={`w-8 h-8 ${
                 star <= rating
-                  ? 'fill-red-500 text-blue-500 shadow-sm'
-                  : 'text-slate-200 fill-slate-50'
-              } transition-colors duration-300`}
+                  ? 'fill-yellow-400 text-yellow-400'
+                  : 'text-slate-300'
+              }`}
             />
-          </motion.button>
+          </button>
         ))}
       </div>
     );
   };
 
   const formatDate = (dateStr: string) => {
-    const localeMap: any = { fr: 'fr-FR', ar: 'ar-TN', en: 'en-US' };
-    return new Date(dateStr).toLocaleDateString(localeMap[language] || 'fr-FR', {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
@@ -144,188 +125,153 @@ export default function FeedbackPage() {
   };
 
   if (loading) {
-    return <ClientLoadingState message={t('feedback.loadingAppointments')} />;
+    return (
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-2 border-[#0f2543]/20" />
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-t-[#0f2543]" />
+        </div>
+      </div>
+    );
   }
 
-  const pendingFeedbackCount = appointments.filter(a => !a.feedback_note).length;
-
   return (
-    <ClientPageWrapper className="space-y-10 pb-20">
-      {/* ─── Premium Header ─── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-slate-800 border border-slate-200/80 shadow-sm"
-      >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/5 blur-[80px]" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="max-w-2xl text-center md:text-left">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200/60 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-blue-600 backdrop-blur-md">
-              <Award className="h-3.5 w-3.5" />
-              {t('feedback.title')}
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg">
+              <Star className="h-6 w-6 text-white" />
             </div>
-            <h1 className="mb-4 text-4xl sm:text-3xl font-extrabold tracking-tight leading-none text-slate-900">
-              {t('feedback.title')}
-            </h1>
-            <p className="text-slate-500 font-semibold text-lg leading-relaxed">
-              {t('feedback.shareExperience')}
-            </p>
-          </div>
-
-          <div className="flex gap-4">
-            <ClientStatCard
-              label={t('feedback.toEvaluate')}
-              value={pendingFeedbackCount}
-              icon={MessageSquare}
-              iconColor="text-blue-500"
-              className="bg-slate-50 border-slate-200/80 text-slate-800 min-w-[140px]"
-            />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">{t('feedback.title')}</h1>
+              <p className="text-slate-600">{t('feedback.shareExperience')}</p>
+            </div>
           </div>
         </div>
-      </motion.div>
- 
-      {/* ─── Main Content ─── */}
-      {appointments.length === 0 ? (
-        <ClientEmptyState
-          icon={ThumbsUp}
-          title={t('feedback.noCompletedAppointments')}
-          description={t('feedback.leaveReviewAfterService')}
-        />
-      ) : (
-        <div className="grid gap-4">
-          <AnimatePresence>
-            {appointments.map((appointment, idx) => (
-              <motion.div
-                key={appointment.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <ClientCard className="overflow-hidden border border-slate-200/80 bg-white shadow-sm hover:border-slate-300 transition-all">
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Left: Info */}
-                    <div className="flex-1 space-y-6">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">
-                            {t('feedback.appointment')} #{appointment.id}
-                          </h3>
-                          <div className="flex flex-wrap gap-4">
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
-                              <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                              {formatDate(appointment.date_heure)}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wide">
-                              <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                              {appointment.agence_nom}
-                            </div>
-                          </div>                        </div>
 
-                        {appointment.feedback_note && (
-                          <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full border border-emerald-100">
-                            <CheckCircle className="w-4 h-4" />
-                            <span className="text-[10px] font-bold uppercase tracking-wide">{t('feedback.reviewGiven')}</span>
+        {appointments.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-slate-400" />
+            </div>
+            <p className="text-slate-600 text-lg">{t('feedback.noCompletedAppointments')}</p>
+            <p className="text-slate-500 text-sm mt-2">{t('feedback.leaveReviewAfterService')}</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {appointments.map((appointment, index) => (
+              <div
+                key={appointment.id}
+                style={{ animationDelay: `${index * 100}ms` }}
+                className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-[#0f2543] animate-fade-in"
+              >
+                {/* Appointment Info */}
+                <div className="mb-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                        Rendez-vous #{appointment.id}
+                      </h3>
+                      <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(appointment.date_heure)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {appointment.agence_nom} - {appointment.agence_ville}
+                        </div>
+                        {appointment.marque_nom && (
+                          <div className="flex items-center gap-1">
+                            <Wrench className="w-4 h-4" />
+                            {appointment.marque_nom} {appointment.modele_nom}
                           </div>
                         )}
                       </div>
-
-                      <div className="rounded-lg bg-slate-50 p-6 border border-slate-200/60 flex items-center gap-6">
-                        <div className="h-16 w-16 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center shadow-sm">
-                          <Wrench className="h-8 w-8 text-slate-400" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">{t('feedback.vehicleConcerned')}</p>
-                          <p className="text-lg font-bold text-slate-700">
-                            {appointment.marque_nom} {appointment.modele_nom}
-                          </p>
-                          <p className="text-sm font-bold text-slate-400">{appointment.immatriculation}</p>
-                        </div>
+                    </div>
+                    
+                    {appointment.feedback_note && (
+                      <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        {t('feedback.reviewGiven')}
                       </div>
-                    </div>
-
-                    {/* Right: Feedback Form or Display */}
-                    <div className="w-full lg:w-[450px] shrink-0">
-                      {appointment.feedback_note ? (
-                        <div className="h-full rounded-lg bg-slate-50 p-8 border border-slate-200/60 flex flex-col justify-center items-center text-center space-y-6">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-4">{t('feedback.yourRating')}</p>
-                            <div className="flex justify-center">
-                              {renderStars(appointment.id, appointment.feedback_note, false)}
-                            </div>
-                          </div>
-                          
-                          {appointment.feedback_commentaire && (
-                            <div className="w-full">
-                              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-3">{t('feedback.yourComment')}</p>
-                              <div className="bg-white p-5 rounded-lg border border-slate-200/60 shadow-sm italic text-slate-600 font-semibold">
-                                "{appointment.feedback_commentaire}"
-                              </div>
-                            </div>
-                          )}
-                          
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide pt-4">
-                            {t('feedback.postedOn')} {formatDate(appointment.date_feedback!)}
-                          </p>
-                        </div>                      ) : (
-                        <div className="h-full rounded-lg bg-white p-8 border border-slate-200/80 shadow-sm space-y-6">
-                          <div>
-                            <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-4">
-                              {t('feedback.howRateService')}
-                            </label>
-                            <div className="flex justify-center lg:justify-start">
-                              {renderStars(appointment.id, null, true)}
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            <label className="block text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                              {t('feedback.commentOptional')}
-                            </label>
-                            <Textarea
-                              value={comments[appointment.id] || ''}
-                              onChange={(e) => setComments(prev => ({ ...prev, [appointment.id]: e.target.value }))}
-                              placeholder={t('feedback.shareYourExperience')}
-                              rows={3}
-                              maxLength={500}
-                              className="rounded-lg bg-slate-50 border-slate-200/60 p-4 font-semibold text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all resize-none"
-                            />
-                            <div className="flex justify-end">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                                {(comments[appointment.id] || '').length}/500
-                              </span>
-                            </div>
-                          </div>
-
-                          <ClientButton
-                            onClick={() => handleSubmitFeedback(appointment.id)}
-                            disabled={!selectedRating[appointment.id] || submitting === appointment.id}
-                            variant="primary"
-                            fullWidth
-                            size="large"
-                            icon={submitting === appointment.id ? undefined : Send}
-                          >
-                            {submitting === appointment.id ? (
-                              <span className="flex items-center gap-2">
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                {t('feedback.sending')}
-                              </span>
-                            ) : (
-                              t('feedback.sendReview')
-                            )}
-                          </ClientButton>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </ClientCard>
-              </motion.div>
+                </div>
+
+                {/* Feedback Form or Display */}
+                {appointment.feedback_note ? (
+                  // Display existing feedback
+                  <div className="bg-gradient-to-r from-[#0f2543]/5 to-[#1b355d]/5 rounded-lg p-4 border border-[#0f2543]/20">
+                    <div className="mb-3">
+                      <p className="text-sm text-slate-600 mb-2">{t('feedback.yourRating')}</p>
+                      {renderStars(appointment.id, appointment.feedback_note, false)}
+                    </div>
+                    {appointment.feedback_commentaire && (
+                      <div>
+                        <p className="text-sm text-slate-600 mb-2">{t('feedback.yourComment')}</p>
+                        <p className="text-slate-700">{appointment.feedback_commentaire}</p>
+                      </div>
+                    )}
+                    {appointment.date_feedback && (
+                      <p className="text-xs text-slate-500 mt-3">
+                        {t('feedback.reviewGivenOn')} {formatDate(appointment.date_feedback)}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  // Feedback form
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-slate-700 mb-3">
+                        {t('feedback.howRateService')}
+                      </label>
+                      {renderStars(appointment.id, null, true)}
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        {t('feedback.commentOptional')}
+                      </label>
+                      <textarea
+                        value={comments[appointment.id] || ''}
+                        onChange={(e) => setComments(prev => ({ ...prev, [appointment.id]: e.target.value }))}
+                        placeholder={t('feedback.shareYourExperience')}
+                        rows={3}
+                        maxLength={500}
+                        className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f2543] focus:border-transparent"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        {(comments[appointment.id] || '').length}/500 {t('feedback.characters')}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleSubmitFeedback(appointment.id)}
+                      disabled={!selectedRating[appointment.id] || submitting === appointment.id}
+                      className="w-full bg-gradient-to-r from-[#0f2543] to-[#1b355d] hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02]"
+                    >
+                      {submitting === appointment.id ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          {t('feedback.sending')}
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5" />
+                          {t('feedback.sendReview')}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
-          </AnimatePresence>
-        </div>
-      )}
-    </ClientPageWrapper>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
-

@@ -36,7 +36,7 @@ export default function AppointmentsList({ token }: Props) {
     
     try {
       setLoading(true);
-      const data = await fetchAppointments({ statut: filter || undefined });
+      const data = await fetchAppointments(token, { statut: filter || undefined });
       setAppointments(data);
     } catch (error) {
       console.error(error);
@@ -101,13 +101,13 @@ export default function AppointmentsList({ token }: Props) {
           label = 'Intervention terminée';
           break;
         case 'cancel':
-          actionFn = (id: number) =>
-            cancelAppointment(id, 'Annulé par agent');
+          actionFn = (t: string, id: number) =>
+            cancelAppointment(t, id, 'Annulé par agent');
           label = 'Rendez-vous annulé';
           break;
       }
 
-      await actionFn(confirmDialog.id);
+      await actionFn(token, confirmDialog.id);
       toast.success(label);
       loadAppointments();
     } catch (e: any) {

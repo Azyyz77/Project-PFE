@@ -3,24 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatbotApi } from '@/lib/api/chatbot';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  AlertCircle, 
-  Sparkles,
-  ArrowLeft,
-  Bot,
-  User,
-  Zap,
-  RotateCcw
-} from 'lucide-react';
-import {
-  ClientPageWrapper,
-  ClientButton,
-  ClientCard,
-} from '@/components/client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MessageCircle, Send, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -36,7 +19,7 @@ export default function ChatbotPage() {
     {
       id: '0',
       role: 'bot',
-      text: t('chatbot.greeting') || 'Bonjour ! Je suis votre assistant virtuel STA Chery. Comment puis-je vous accompagner aujourd’hui ?',
+      text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?',
       timestamp: new Date()
     }
   ]);
@@ -97,7 +80,7 @@ export default function ChatbotPage() {
       if (updated[0].id === '0' && updated[0].role === 'bot') {
         updated[0] = { 
           ...updated[0], 
-          text: t('chatbot.greeting') || 'Bonjour ! Je suis votre assistant virtuel STA Chery. Comment puis-je vous accompagner aujourd’hui ?' 
+          text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?' 
         };
       }
       return updated;
@@ -113,9 +96,11 @@ export default function ChatbotPage() {
   }, [messages]);
 
   useEffect(() => {
+    // Focus input on mount
     inputRef.current?.focus();
   }, []);
 
+  // Convert messages to history format
   const getHistory = (): [string, string][] => {
     const history: [string, string][] = [];
     const msgs = messages.filter(m => m.id !== '0' && !m.error);
@@ -166,13 +151,14 @@ export default function ChatbotPage() {
         {
           id: (Date.now() + 1).toString(),
           role: 'bot',
-          text: t('chatbot.fallback') || '⚠️ Désolé, je rencontre un problème technique. Veuillez réessayer dans quelques instants.',
+          text: t('chatbot.fallback') || '⚠️ Désolé, je rencontre un problème technique. Veuillez réessayer dans quelques instants ou contactez notre service client.',
           timestamp: new Date(),
           error: true
         }
       ]);
     } finally {
       setLoading(false);
+      // Refocus input after sending
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
@@ -190,185 +176,275 @@ export default function ChatbotPage() {
   };
 
   const quickQuestions = [
-    'Prendre un rendez-vous',
-    'Modèles disponibles',
-    'Garantie véhicule',
-    'Agence la plus proche'
+    'Comment prendre un rendez-vous ?',
+    'Quels sont les modèles Chery disponibles ?',
+    'Quelle est la garantie sur les véhicules ?',
+    'Où se trouve l&apos;agence la plus proche ?'
   ];
 
-  return (
-    <ClientPageWrapper noPadding fullHeight className="flex flex-col bg-[#f8fafc] overflow-hidden rounded-lg shadow-md border border-[#E4E6EB]">
-      {/* ─── Chat Header ─── */}
-      <div className="bg-white p-6 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-10 -mt-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="absolute bottom-0 left-0 -ml-10 -mb-10 h-40 w-40 rounded-full bg-blue-600/20 blur-3xl" />
-        
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="h-12 w-12 rounded-lg bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <Bot className="h-6 w-6 text-white" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-[#0b1221]" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight leading-none mb-1">AI Assistant</h1>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wide text-[#B0B3B8]">STA Chery Intelligent Agent</span>
-              </div>
-            </div>
-          </div>
+  const handleQuickQuestion = (question: string) => {
+    setInput(question);
+    inputRef.current?.focus();
+  };
 
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setMessages([messages[0]])}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
-              title="Réinitialiser"
+  return (
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Header - Compact and Beautiful */}
+      <div className="relative bg-gradient-to-r from-[#0f2543] via-[#1b355d] to-[#0f2543] text-white shadow-2xl overflow-hidden flex-shrink-0">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-y-32 translate-x-32 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full blur-2xl translate-y-24 -translate-x-24 animate-pulse" style={{ animationDelay: '1s' }}></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-2 text-white/80 hover:text-white transition-all duration-300 group px-3 py-2 rounded-lg hover:bg-white/10 hover:shadow-lg hover:-translate-y-0.5"
             >
-              <RotateCcw className="h-4 w-4 text-slate-300" />
+              <span className="text-lg group-hover:scale-110 transition-transform duration-300">←</span>
+              <span className="text-sm font-medium">Retour</span>
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-              <Zap className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wide">Groq Powered</span>            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 shadow-lg">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold">Assistant SAV Chery</h1>
+                <p className="text-xs text-white/80">Disponible 24h/24, 7j/7</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-yellow-300 animate-pulse" />
+              <span className="text-xs font-medium">Groq AI</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── Messages Container ─── */}
-      <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 custom-scrollbar">
-        <AnimatePresence initial={false}>
-          {messages.map((message, idx) => (
-            <motion.div
-              key={message.id}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`flex gap-3 max-w-[85%] sm:max-w-[70%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                {/* Avatar */}
-                <div className={`shrink-0 h-8 w-8 rounded-xl flex items-center justify-center shadow-sm ${
-                  message.role === 'user' 
-                    ? 'bg-white border border-[#E4E6EB]' 
-                    : 'bg-white'
-                }`}>
-                  {message.role === 'user' 
-                    ? <User className="h-4 w-4 text-[#65676B]" /> 
-                    : <Bot className="h-4 w-4 text-blue-500" />
-                  }
-                </div>
+      {/* Error Banner - Compact */}
+      {error && (
+        <div className="mx-6 mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg shadow-md animate-slide-down flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+            <p className="text-xs text-red-700 font-medium">{error}</p>
+          </div>
+        </div>
+      )}
 
-                {/* Bubble */}
-                <div className="space-y-1">
-                  <div className={`px-5 py-3.5 rounded-[1.5rem] shadow-sm font-medium text-[15px] leading-relaxed ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-tr-none'
-                      : message.error
-                      ? 'bg-blue-50 text-blue-700 border border-blue-100 rounded-tl-none'
-                      : 'bg-white text-[#050505] border border-[#E4E6EB] rounded-tl-none'
-                  }`}>
-                    {message.text}
+      {/* Main Chat Container - Perfectly Fitted */}
+      <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+          <div className="max-w-4xl mx-auto space-y-4">
+            {/* Quick Questions - Compact and Beautiful */}
+            {messages.length === 1 && (
+              <div className="animate-fade-in-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-md">
+                    <span className="text-white text-xs">💡</span>
                   </div>
-                  {message.timestamp && (
-                    <p className={`text-[10px] font-bold uppercase tracking-wide opacity-40 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                      {formatTime(message.timestamp)}
-                    </p>
+                  <h3 className="text-sm font-bold text-gray-800">Questions rapides</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {quickQuestions.map((question, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickQuestion(question)}
+                      className="group relative text-left p-3 bg-white border-2 border-slate-200 hover:border-[#0f2543] rounded-xl transition-all duration-300 shadow-sm hover:shadow-xl transform hover:-translate-y-1.5"
+                      style={{
+                        animation: 'fadeInUp 0.5s ease-out forwards',
+                        animationDelay: `${index * 100}ms`,
+                        opacity: 0
+                      }}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-gradient-to-br group-hover:from-[#0f2543] group-hover:to-[#1b355d] transition-all duration-300 flex-shrink-0 group-hover:scale-110 group-hover:rotate-3">
+                          <MessageCircle className="h-3.5 w-3.5 text-slate-600 group-hover:text-white transition-colors" />
+                        </div>
+                        <span className="text-xs text-gray-700 group-hover:text-[#0f2543] font-medium transition-colors leading-relaxed">
+                          {question}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Messages - Compact and Beautiful */}
+            <div className="space-y-3">
+              {messages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  style={{
+                    animation: 'fadeInUp 0.4s ease-out forwards',
+                    animationDelay: `${Math.min(index * 50, 300)}ms`,
+                    opacity: 0
+                  }}
+                >
+                  {message.role === 'bot' && (
+                    <div className="flex items-start gap-2.5 max-w-[85%]">
+                      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg flex-shrink-0 mt-0.5">
+                        <MessageCircle className="h-4 w-4 text-white" />
+                      </div>
+                      <div className={`flex-1 ${
+                        message.error
+                          ? 'bg-red-50 border-2 border-red-200'
+                          : 'bg-white border-2 border-slate-200 hover:border-[#0f2543]/30'
+                      } rounded-2xl rounded-tl-sm shadow-md p-3.5 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1`}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-xs font-bold text-[#0f2543]">Assistant Chery</span>
+                          {message.timestamp && (
+                            <span className="text-xs text-gray-400">• {formatTime(message.timestamp)}</span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {message.role === 'user' && (
+                    <div className="flex items-start gap-2.5 max-w-[85%]">
+                      <div className="flex-1 bg-gradient-to-br from-[#0f2543] to-[#1b355d] rounded-2xl rounded-tr-sm shadow-lg p-3.5 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </p>
+                        {message.timestamp && (
+                          <p className="text-xs text-white/60 mt-1.5 text-right">
+                            {formatTime(message.timestamp)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">V</span>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              ))}
 
-        {/* Typing Indicator */}
-        {loading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start items-center gap-3"
-          >
-            <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center shadow-sm">
-              <Bot className="h-4 w-4 text-blue-500" />
+              {/* Typing Indicator - Compact */}
+              {loading && (
+                <div className="flex justify-start animate-fade-in">
+                  <div className="flex items-start gap-2.5 max-w-[85%]">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#0f2543] to-[#1b355d] shadow-lg flex-shrink-0">
+                      <MessageCircle className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="bg-white border-2 border-slate-200 rounded-2xl rounded-tl-sm shadow-md p-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex space-x-1.5">
+                          <div className="w-2 h-2 bg-[#0f2543] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-2 h-2 bg-[#1b355d] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-2 h-2 bg-[#0f2543] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
+                        <span className="text-xs text-gray-600">En train d&apos;écrire...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="px-5 py-3.5 bg-white border border-[#E4E6EB] rounded-[1.5rem] rounded-tl-none shadow-sm flex items-center gap-2">
-              <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-              <span className="text-xs font-bold text-[#B0B3B8] uppercase tracking-wide">Assistant réfléchit...</span>
-            </div>
-          </motion.div>
-        )}
 
-        {/* Quick Actions (only when empty or greeting) */}
-        {messages.length === 1 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-wrap gap-2 pt-4 justify-center sm:justify-start"
-          >
-            {quickQuestions.map((q, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setInput(q);
-                  inputRef.current?.focus();
-                }}
-                className="px-4 py-2 rounded-full bg-white border border-[#E4E6EB] text-xs font-bold text-[#65676B] hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm active:scale-95"
-              >
-                {q}
-              </button>
-            ))}
-          </motion.div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* ─── Input Area ─── */}
-      <div className="p-6 bg-white border-t border-[#E4E6EB]">
-        <div className="max-w-4xl mx-auto relative group">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Posez votre question ici..."
-            className="w-full bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg pl-6 pr-20 py-4 text-[15px] font-medium resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white transition-all max-h-32 min-h-[60px]"
-            rows={1}
-            disabled={loading}
-          />
-          <div className="absolute right-2 bottom-2">
-            <ClientButton
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              variant="primary"
-              size="small"
-              className="rounded-lg h-[44px] w-[44px] !p-0 flex items-center justify-center shadow-blue-500/20"
-            >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-            </ClientButton>
+            <div ref={messagesEndRef} />
           </div>
         </div>
-        <p className="text-[10px] text-center text-[#B0B3B8] font-bold uppercase tracking-wide mt-4">
-          L'IA peut faire des erreurs. Vérifiez les informations importantes.
-        </p>
+
+        {/* Input Area - Fixed Bottom, Perfectly Fitted */}
+        <div className="bg-white border-t-2 border-slate-200 shadow-2xl flex-shrink-0">
+          <div className="max-w-4xl mx-auto px-6 py-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Écrivez votre message..."
+                  className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#0f2543] focus:border-[#0f2543] transition-all placeholder:text-gray-400 max-h-24"
+                  rows={1}
+                  disabled={loading}
+                />
+              </div>
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#0f2543] to-[#1b355d] text-white font-semibold px-5 py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 group flex-shrink-0"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="text-sm">Envoyer</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="flex items-center justify-center gap-1.5 mt-2">
+              <Sparkles className="h-3 w-3 text-yellow-500" />
+              <p className="text-xs text-gray-500">Propulsé par Groq AI</p>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* CSS Animations */}
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-slide-down {
+          animation: slideDown 0.3s ease-out forwards;
+        }
+        
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
           background: transparent;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 10px;
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
         }
       `}</style>
-    </ClientPageWrapper>  );
+    </div>
+  );
 }
-

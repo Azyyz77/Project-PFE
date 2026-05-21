@@ -3,68 +3,42 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { repairOrdersApi } from '@/lib/api/repairOrders';
 import type { RepairOrder, RepairOrderStatus } from '@/types/repairOrder';
-import {
-  ClientPageWrapper,
-  ClientCard,
-  ClientCardHeader,
-  ClientCardContent,
-  ClientButton,
-  ClientLoadingState,
-  ClientEmptyState,
-} from '@/components/client';
-import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   ArrowLeft, 
   FileText,
+  Download,
   AlertCircle,
   CheckCircle2,
-  Clock,
-  Car,
-  MapPin,
-  Wrench,
-  Package,
-  ShieldCheck,
-  CreditCard,
-  Zap,
-  XCircle
+  Clock
 } from 'lucide-react';
 
-const STATUS_COLORS: Record<RepairOrderStatus, { bg: string; text: string; icon: any }> = {
-  BROUILLON: { bg: 'bg-[#E4E6EB]', text: 'text-slate-700', icon: AlertCircle },
-  EN_COURS: { bg: 'bg-blue-100', text: 'text-blue-700', icon: Clock },
-  TERMINEE: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: CheckCircle2 },
-  FACTUREE: { bg: 'bg-purple-100', text: 'text-purple-700', icon: CreditCard },
-  ANNULEE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: XCircle },
+const STATUS_COLORS: Record<RepairOrderStatus, string> = {
+  BROUILLON: 'bg-gray-500',
+  EN_COURS: 'bg-blue-500',
+  TERMINEE: 'bg-green-500',
+  FACTUREE: 'bg-purple-500',
+  ANNULEE: 'bg-red-500',
+};
+
+const STATUS_LABELS: Record<RepairOrderStatus, string> = {
+  BROUILLON: 'En préparation',
+  EN_COURS: 'En cours',
+  TERMINEE: 'Terminée',
+  FACTUREE: 'Facturée',
+  ANNULEE: 'Annulée',
 };
 
 export default function ClientRepairOrderDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user, token, isLoading } = useAuth();
-  const { t } = useLanguage();
   const [commande, setCommande] = useState<RepairOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const STATUS_LABELS: Record<RepairOrderStatus, string> = {
-    BROUILLON: t('repairOrders.status.brouillon'),
-    EN_COURS: t('repairOrders.status.enCours'),
-    TERMINEE: t('repairOrders.status.terminee'),
-    FACTUREE: t('repairOrders.status.facturee'),
-    ANNULEE: t('repairOrders.status.annulee'),
-  };
-
-  const STATUS_DESCS: Record<RepairOrderStatus, string> = {
-    BROUILLON: t('repairOrders.statusDesc.brouillon'),
-    EN_COURS: t('repairOrders.statusDesc.enCours'),
-    TERMINEE: t('repairOrders.statusDesc.terminee'),
-    FACTUREE: t('repairOrders.statusDesc.facturee'),
-    ANNULEE: t('repairOrders.statusDesc.annulee'),
-  };
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== 'CLIENT')) {
@@ -86,258 +60,268 @@ export default function ClientRepairOrderDetailsPage() {
       setCommande(data);
     } catch (err: any) {
       console.error('Erreur:', err);
-      setError(err.response?.data?.error || t('repairOrders.errorLoading'));
+      setError(err.response?.data?.error || 'Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
   };
 
-  if (isLoading || !user || !token || loading) {
-    return <ClientLoadingState message={t('repairOrders.detailsLoading')} />;
+  if (isLoading || !user || !token) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Chargement...</div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Chargement de la commande...</div>
+      </div>
+    );
   }
 
   if (error || !commande) {
     return (
-      <ClientPageWrapper className="flex items-center justify-center min-h-[60vh]">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-12 text-center bg-blue-50 rounded-xl border border-blue-100 max-w-xl w-full"
-        >
-          <AlertCircle className="h-16 w-16 text-blue-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-blue-700 mb-2">{t('repairOrders.error')}</h2>
-          <p className="text-blue-600 font-medium">{error || t('repairOrders.notFound')}</p>
-          <ClientButton onClick={() => router.back()} variant="secondary" className="mt-8" icon={ArrowLeft}>
-            {t('repairOrders.back')}
-          </ClientButton>
-        </motion.div>
-      </ClientPageWrapper>
+      <div className="min-h-screen bg-slate-950 p-6">
+        <div className="max-w-7xl mx-auto">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-400">{error || 'Commande non trouvée'}</p>
+                <Button
+                  onClick={() => router.back()}
+                  className="mt-4"
+                  variant="outline"
+                >
+                  Retour
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     );
   }
 
-  const status = STATUS_COLORS[commande.statut] || STATUS_COLORS.BROUILLON;
-  const StatusIcon = status.icon;
-
   return (
-    <ClientPageWrapper className="space-y-10 pb-20">
-      {/* ─── Premium Header ─── */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-xl bg-white p-6 sm:p-8 text-[#050505] shadow-md border border-[#E4E6EB]"
-      >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-80 w-80 rounded-full bg-blue-600/10 blur-[80px]" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="max-w-2xl text-left">
-            <ClientButton 
-              variant="outline" 
-              onClick={() => router.back()} 
-              icon={ArrowLeft}
-              className="mb-8 bg-slate-100 hover:bg-slate-200 border-none text-[#050505]"
-              size="small"
+    <div className="min-h-screen bg-slate-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="border-slate-700"
             >
-              {t('repairOrders.back')}
-            </ClientButton>
-            
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <h1 className="text-4xl sm:text-3xl font-bold tracking-tight leading-none font-mono">
-                #{commande.numero}
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                Commande {commande.numero}
+                <span className={`px-3 py-1 rounded-full text-sm ${STATUS_COLORS[commande.statut]} text-white`}>
+                  {STATUS_LABELS[commande.statut]}
+                </span>
               </h1>
-              <Badge className={`${status.bg} ${status.text} rounded-full border-none px-4 py-1.5 text-xs font-bold uppercase tracking-wide`}>
-                {STATUS_LABELS[commande.statut] || commande.statut}
-              </Badge>
-            </div>
-            
-            <p className="text-[#65676B] font-medium text-lg leading-relaxed flex items-center gap-2">
-              <Car className="h-5 w-5 text-blue-500" />
-              {commande.immatriculation} - {commande.marque_nom} {commande.modele_nom}
-            </p>
-          </div>
-
-          <div className="shrink-0 flex items-center justify-center p-8 rounded-lg bg-slate-50 border border-slate-200 backdrop-blur-xl w-full md:w-auto">
-            <div className="text-center">
-              <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide mb-1">{t('repairOrders.totalAmount')}</p>
-              <p className="text-4xl font-bold text-[#050505]">{commande.montant_total?.toFixed(2) || '0.00'}</p>
-              <p className="text-[10px] font-bold text-[#65676B]">TND</p>
+              <p className="text-slate-400 mt-1">
+                {commande.immatriculation} - {commande.marque_nom} {commande.modele_nom}
+              </p>
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* ─── Grid Layout ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Left Column (Information) */}
-        <div className="lg:col-span-1 space-y-8">
-          <ClientCard>
-            <ClientCardHeader title={t('repairOrders.vehicleInfo')} />
-            <ClientCardContent>
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-[#F0F2F5] flex items-center justify-center shrink-0">
-                    <Car className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.plaque')}</p>
-                    <p className="text-lg font-bold text-[#050505]">{commande.immatriculation}</p>
-                  </div>
-                </div>
-                <div className="pl-16">
-                  <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.model')}</p>
-                  <p className="font-bold text-slate-700">{commande.marque_nom} {commande.modele_nom}</p>
-                </div>
-                <div className="pl-16">
-                  <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.chassis')}</p>
-                  <p className="font-mono text-sm text-[#65676B] bg-[#F0F2F5] px-3 py-1.5 rounded-lg inline-block border border-[#E4E6EB]">{commande.numero_chassis}</p>
+        {/* Statut de la commande */}
+        <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm mb-2">Statut de votre réparation</p>
+                <div className="flex items-center gap-3">
+                  {commande.statut === 'BROUILLON' && (
+                    <>
+                      <Clock className="w-6 h-6 text-gray-400" />
+                      <div>
+                        <p className="text-white font-semibold">En préparation</p>
+                        <p className="text-slate-400 text-sm">Votre commande est en cours de préparation</p>
+                      </div>
+                    </>
+                  )}
+                  {commande.statut === 'EN_COURS' && (
+                    <>
+                      <Clock className="w-6 h-6 text-blue-400 animate-pulse" />
+                      <div>
+                        <p className="text-white font-semibold">Réparation en cours</p>
+                        <p className="text-slate-400 text-sm">Nos techniciens travaillent sur votre véhicule</p>
+                      </div>
+                    </>
+                  )}
+                  {commande.statut === 'TERMINEE' && (
+                    <>
+                      <CheckCircle2 className="w-6 h-6 text-green-400" />
+                      <div>
+                        <p className="text-white font-semibold">Réparation terminée</p>
+                        <p className="text-slate-400 text-sm">Votre véhicule est prêt</p>
+                      </div>
+                    </>
+                  )}
+                  {commande.statut === 'FACTUREE' && (
+                    <>
+                      <FileText className="w-6 h-6 text-purple-400" />
+                      <div>
+                        <p className="text-white font-semibold">Facturée</p>
+                        <p className="text-slate-400 text-sm">Votre facture est disponible</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-            </ClientCardContent>
-          </ClientCard>
-
-          <ClientCard>
-            <ClientCardHeader title={t('repairOrders.agency')} />
-            <ClientCardContent>
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-[#F0F2F5] flex items-center justify-center shrink-0">
-                    <MapPin className="h-6 w-6 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.center')}</p>
-                    <p className="text-base font-bold text-[#050505]">{commande.agence_nom}</p>
-                  </div>
-                </div>
-                {commande.agence_adresse && (
-                  <div className="pl-16">
-                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.address')}</p>
-                    <p className="font-medium text-[#65676B] text-sm leading-relaxed">{commande.agence_adresse}</p>
-                  </div>
-                )}
-                {commande.agence_telephone && (
-                  <div className="pl-16">
-                    <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.phone')}</p>
-                    <p className="font-medium text-[#65676B]">{commande.agence_telephone}</p>
-                  </div>
-                )}
+              
+              <div className="text-right">
+                <p className="text-slate-400 text-sm">Montant total</p>
+                <p className="text-white text-3xl font-bold">
+                  {commande.montant_total?.toFixed(2) || '0.00'} TND
+                </p>
               </div>
-            </ClientCardContent>
-          </ClientCard>
+            </div>
+          </CardContent>
+        </Card>
 
-          {(commande.date_creation || commande.date_debut || commande.date_fin) && (
-            <ClientCard>
-              <ClientCardHeader title={t('repairOrders.timeTracking')} />
-              <ClientCardContent>
-                <div className="space-y-4">
-                  {commande.date_creation && (
-                    <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.creation')}</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_creation).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
-                    </div>
-                  )}
-                  {commande.date_debut && (
-                    <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.start')}</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_debut).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
-                    </div>
-                  )}
-                  {commande.date_fin && (
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs font-bold text-[#65676B] uppercase tracking-wide">{t('repairOrders.close')}</p>
-                      <p className="font-bold text-[#050505]">{new Date(commande.date_fin).toLocaleDateString(t('locale') === 'ar' ? 'ar-TN' : 'fr-FR')}</p>
-                    </div>
-                  )}
-                </div>
-              </ClientCardContent>
-            </ClientCard>
-          )}
+        {/* Informations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white text-sm">Véhicule</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-white font-semibold text-lg">{commande.immatriculation}</p>
+              <p className="text-slate-400">
+                {commande.marque_nom} {commande.modele_nom}
+              </p>
+              <p className="text-slate-500 text-sm mt-2">
+                Châssis: {commande.numero_chassis}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white text-sm">Agence</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-white font-semibold">{commande.agence_nom}</p>
+              {commande.agence_adresse && (
+                <p className="text-slate-400 text-sm">{commande.agence_adresse}</p>
+              )}
+              {commande.agence_telephone && (
+                <p className="text-slate-400 text-sm">{commande.agence_telephone}</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right Column (Details) */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Status Tracker */}
-          <ClientCard className={`${status.bg} border-none`}>
-            <ClientCardContent className="p-8">
-              <div className="flex items-start gap-6">
-                <div className="h-16 w-16 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm border border-[#E4E6EB]">
-                  <StatusIcon className={`h-8 w-8 ${status.text}`} />
-                </div>
-                <div>
-                  <h3 className={`text-xl font-bold mb-1 ${status.text}`}>{STATUS_LABELS[commande.statut]}</h3>
-                  <p className="text-[#65676B] font-medium">
-                    {STATUS_DESCS[commande.statut] || commande.statut}
-                  </p>
-                </div>
+        {/* Détail des travaux */}
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-white">Détail des travaux</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {commande.lignes.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                Aucun détail disponible pour le moment
               </div>
-            </ClientCardContent>
-          </ClientCard>
-
-          {/* Travaux Overview */}
-          <ClientCard>
-            <ClientCardHeader title={t('repairOrders.worksAndParts')} />
-            <ClientCardContent>
-              {commande.lignes.length === 0 ? (
-                <ClientEmptyState 
-                  icon={Wrench} 
-                  title={t('repairOrders.noDetails')} 
-                  description={t('repairOrders.noDetailsDesc')} 
-                  className="bg-[#F0F2F5] border border-[#E4E6EB] rounded-lg"
-                />
-              ) : (
-                <div className="space-y-4">
-                  {commande.lignes.map((ligne, idx) => (
-                    <motion.div
-                      key={ligne.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-lg bg-white border border-[#E4E6EB] hover:border-[#E4E6EB] hover:shadow-sm hover:shadow-slate-100 transition-all gap-4"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          ligne.type === 'INTERVENTION' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'
+            ) : (
+              <div className="space-y-3">
+                {commande.lignes.map((ligne) => (
+                  <div
+                    key={ligne.id}
+                    className="flex items-center justify-between p-4 bg-slate-800 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          ligne.type === 'INTERVENTION' 
+                            ? 'bg-blue-500/20 text-blue-400' 
+                            : 'bg-green-500/20 text-green-400'
                         }`}>
-                          {ligne.type === 'INTERVENTION' ? <Wrench className="h-5 w-5" /> : <Package className="h-5 w-5" />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[#050505] mb-1">{ligne.description}</p>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className={`border-none px-2 py-0.5 text-[10px] uppercase font-bold tracking-wide ${
-                              ligne.type === 'INTERVENTION' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'
-                            }`}>
-                              {ligne.type === 'INTERVENTION' ? t('repairOrders.labor') : t('repairOrders.part')}
-                            </Badge>
-                            <span className="text-xs font-bold text-[#65676B]">
-                              {t('repairOrders.qty')}: {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
+                          {ligne.type === 'INTERVENTION' ? 'Main d\'œuvre' : 'Pièce'}
+                        </span>
+                        <span className="text-white font-medium">{ligne.description}</span>
                       </div>
-                      
-                      <div className="sm:text-right pt-4 sm:pt-0 border-t border-slate-50 sm:border-none">
-                        <p className="text-xl font-bold text-[#050505]">{ligne.prix_total.toFixed(2)}</p>
-                        <p className="text-[10px] font-bold text-[#65676B] uppercase tracking-wide">TND</p>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  <div className="mt-8 p-6 rounded-lg bg-[#F0F2F5] border border-[#E4E6EB] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-bold text-[#050505]">{t('repairOrders.totalToPay')}</p>
-                      <p className="text-xs font-medium text-[#65676B]">{t('repairOrders.includingVat')}</p>
+                      <p className="text-slate-400 text-sm">
+                        {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)} TND
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-3xl font-bold text-blue-600 tracking-tight">
-                        {commande.montant_total?.toFixed(2) || '0.00'} <span className="text-sm text-[#65676B]">TND</span>
+                      <p className="text-white font-semibold text-lg">
+                        {ligne.prix_total.toFixed(2)} TND
                       </p>
                     </div>
                   </div>
-                </div>
-              )}
-            </ClientCardContent>
-          </ClientCard>
-        </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Récapitulatif */}
+        <Card className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <CardTitle className="text-white">Récapitulatif</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between text-white text-xl font-bold">
+                <span>Montant Total</span>
+                <span>{commande.montant_total?.toFixed(2) || '0.00'} TND</span>
+              </div>
+              <p className="text-slate-400 text-sm mt-2">
+                Montant TTC (TVA incluse)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dates */}
+        {(commande.date_creation || commande.date_fin) && (
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white text-sm">Dates</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                {commande.date_creation && (
+                  <div>
+                    <p className="text-slate-400">Créée le</p>
+                    <p className="text-white font-medium">
+                      {new Date(commande.date_creation).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                )}
+                {commande.date_debut && (
+                  <div>
+                    <p className="text-slate-400">Démarrée le</p>
+                    <p className="text-white font-medium">
+                      {new Date(commande.date_debut).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                )}
+                {commande.date_fin && (
+                  <div>
+                    <p className="text-slate-400">Terminée le</p>
+                    <p className="text-white font-medium">
+                      {new Date(commande.date_fin).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </ClientPageWrapper>
+    </div>
   );
 }

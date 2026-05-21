@@ -132,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggingOut(true);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    document.cookie ='token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     setToken(null);
     setUser(null);
     
@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     try {
       console.log('AuthContext: Refreshing user data');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/users/${user.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/users/${user.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },

@@ -48,7 +48,7 @@ export default function CreateFromAppointmentModal({
       setLoading(true);
       setError(null);
       // Utiliser l'endpoint agent-dashboard pour récupérer tous les RDV de l'agence
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/agent-dashboard/appointments`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/agent-dashboard/appointments`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export default function CreateFromAppointmentModal({
       // Filtrer les RDV confirmés ou terminés qui n'ont pas encore de commande
       const allAppointments = data.appointments || data.data || data;
       const validAppointments = allAppointments.filter(
-        (apt: any) => ['CONFIRME', 'TERMINE'].includes(apt.statut) && !apt.commande_id
+        (apt: any) => ['CONFIRME', 'TERMINE'].includes(apt.statut)
       );
       
       console.log('Rendez-vous valides:', validAppointments);

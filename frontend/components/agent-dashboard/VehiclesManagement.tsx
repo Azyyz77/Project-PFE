@@ -5,7 +5,11 @@ import { fetchVehicles, validateVehicle, rejectVehicle } from '@/lib/api/agentDa
 import { Vehicle } from '@/types/agentDashboard';
 import { toast } from 'sonner';
 
-export default function VehiclesManagement() {
+interface Props {
+  token: string;
+}
+
+export default function VehiclesManagement({ token }: Props) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -18,7 +22,7 @@ export default function VehiclesManagement() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      const data = await fetchVehicles(filter || undefined);
+      const data = await fetchVehicles(token, filter || undefined);
       setVehicles(data);
       if (selectedVehicle) {
         setSelectedVehicle(
@@ -47,12 +51,12 @@ export default function VehiclesManagement() {
     try {
       if (action === 'validate') {
         if (!confirm('Valider ce véhicule ?')) return;
-        await validateVehicle(id);
+        await validateVehicle(token, id);
         toast.success('Véhicule validé');
       } else {
         const motif = prompt('Motif du refus ?');
         if (motif === null) return;
-        await rejectVehicle(id, motif);
+        await rejectVehicle(token, id, motif);
         toast.success('Véhicule refusé');
       }
       loadVehicles();
