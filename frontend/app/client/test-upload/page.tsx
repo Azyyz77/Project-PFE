@@ -42,7 +42,7 @@ export default function TestUploadPage() {
   const getIcon = (status: string) => {
     switch (status) {
       case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'error': return <XCircle className="w-4 h-4 text-blue-500" />;
+      case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
       case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       default: return null;
     }
@@ -75,7 +75,7 @@ export default function TestUploadPage() {
 
         {/* Test Results */}
         {testResults.length > 0 && (
-          <Card className="bg-[#F0F2F5] border-slate-700">
+          <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white">Résultats des Tests</CardTitle>
               <Button onClick={clearResults} variant="outline" size="sm">
@@ -96,7 +96,7 @@ export default function TestUploadPage() {
         )}
 
         {/* Upload Test */}
-        <Card className="bg-[#F0F2F5] border-slate-700">
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white">Test d'Upload</CardTitle>
           </CardHeader>
@@ -112,7 +112,7 @@ export default function TestUploadPage() {
         </Card>
 
         {/* Attachments List Test */}
-        <Card className="bg-[#F0F2F5] border-slate-700">
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white">Liste des Pièces Jointes</CardTitle>
           </CardHeader>
@@ -127,7 +127,7 @@ export default function TestUploadPage() {
         </Card>
 
         {/* Instructions */}
-        <Card className="bg-[#F0F2F5] border-slate-700">
+        <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white">Instructions de Test</CardTitle>
           </CardHeader>

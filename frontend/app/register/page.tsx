@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { AlertCircle, CheckCircle2, UserPlus, Users, Mail, Lock, Phone } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import {
   RegisterFormState,
   EMPTY_REGISTER_FORM,
@@ -22,7 +21,6 @@ import {
 } from '@/lib/auth-utils';
 
 export default function RegisterPage() {
-  const { t } = useLanguage();
   const [form, setForm] = useState<RegisterFormState>(EMPTY_REGISTER_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
@@ -42,7 +40,7 @@ export default function RegisterPage() {
     return (
       <AuthThemeShell videoBackground={true} videoOverlayOpacity={0.6}>
         <div className="relative z-10 flex min-h-screen items-center justify-center text-white">
-          {t('auth.loginRedirecting')}
+          Redirection vers votre espace...
         </div>
       </AuthThemeShell>
     );
@@ -94,16 +92,13 @@ export default function RegisterPage() {
         <section className="hidden flex-1 lg:flex flex-col justify-center pr-12">
           <div className="space-y-6">
             <div>
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.32em] text-red-400">
-                CHERY SERVICE
-              </p>
-              <h1 className="mt-4 text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-                {t('auth.registerTitle').split(' ').slice(0, 2).join(' ')}
+              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
+                Creez votre
                 <br />
-                <span className="text-red-500">{t('auth.registerTitle').split(' ').slice(2).join(' ')}</span>
+                <span className="text-red-500">garage digital</span>
               </h1>
               <p className="mt-4 text-base text-white/90 max-w-lg leading-relaxed drop-shadow-md">
-                {t('auth.registerDesc')}
+                Rejoignez l&apos;univers du service precision et creez votre profil SAV.
               </p>
             </div>
 
@@ -114,7 +109,7 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureAppointments')}</p>
+                <p className="text-white/90 text-sm">Gestion complete de vos vehicules</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -122,7 +117,7 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureTracking')}</p>
+                <p className="text-white/90 text-sm">Prise de rendez-vous simplifiee</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -130,7 +125,7 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureHistory')}</p>
+                <p className="text-white/90 text-sm">Suivi en temps reel des interventions</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -138,7 +133,7 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureDiagnostics')}</p>
+                <p className="text-white/90 text-sm">Historique detaille de maintenance</p>
               </div>
             </div>
           </div>
@@ -158,7 +153,7 @@ export default function RegisterPage() {
               {success && (
                 <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <p className="text-sm">{t('auth.successRegisterRedirect')}</p>
+                  <p className="text-sm">Inscription reussie. Redirection vers la connexion.</p>
                 </Alert>
               )}
 
@@ -190,7 +185,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      {t('auth.firstName')}
+                      Prenom
                     </Label>
                   </div>
                   {errors.prenom && <p className="text-xs text-red-400">{errors.prenom}</p>}
@@ -215,7 +210,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      {t('auth.lastName')}
+                      Nom
                     </Label>
                   </div>
                   {errors.nom && <p className="text-xs text-red-400">{errors.nom}</p>}
@@ -242,7 +237,7 @@ export default function RegisterPage() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    {t('auth.phone')}
+                    Telephone
                   </Label>
                 </div>
                 {errors.telephone && <p className="text-xs text-red-400">{errors.telephone}</p>}
@@ -268,7 +263,7 @@ export default function RegisterPage() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    {t('auth.emailLabel')}
+                    Adresse email
                   </Label>
                 </div>
                 {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
@@ -295,7 +290,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      {t('auth.passwordLabel')}
+                      Mot de passe
                     </Label>
                   </div>
                   {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
@@ -320,7 +315,7 @@ export default function RegisterPage() {
                       peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-[10px] peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                       peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                     >
-                      {t('auth.confirmPassword')}
+                      Confirmation
                     </Label>
                   </div>
                   {errors.confirmPassword && <p className="text-xs text-red-400">{errors.confirmPassword}</p>}
@@ -329,19 +324,19 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                className="mt-2 h-12 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 text-[0.8rem] uppercase tracking-[0.2em] cursor-pointer"
+                className="mt-2 h-12 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 text-[0.8rem] uppercase tracking-[0.2em]"
                 disabled={isSubmitting || success}
                 size="lg"
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                {isSubmitting ? t('auth.registering') : t('auth.signUpToChery')}
+                {isSubmitting ? 'Inscription en cours...' : 'S\'inscrire a Chery Service'}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-zinc-400">
-              {t('auth.alreadyHaveAccount')}{' '}
+              Vous avez deja un compte ?{' '}
               <Link href="/login" className="font-semibold text-red-400 hover:text-red-300 transition-colors underline underline-offset-4">
-                {t('auth.loginBtn')}
+                Se connecter
               </Link>
             </p>
           </div>

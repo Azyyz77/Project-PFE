@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Alert } from '@/components/ui/alert';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { AlertCircle, CheckCircle2, Mail, Lock, LogIn, CalendarDays } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import {
   LoginFormState,
   EMPTY_LOGIN_FORM,
@@ -26,7 +25,6 @@ export default function LoginPage() {
 }
 
 function LoginPageContent() {
-  const { t } = useLanguage();
   const [form, setForm] = useState<LoginFormState>(EMPTY_LOGIN_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
@@ -82,7 +80,7 @@ function LoginPageContent() {
         <div className="flex min-h-screen items-center justify-center text-white">
           <div className="text-center">
             <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
-            <p>{t('auth.loginRedirecting')}</p>
+            <p>Redirection vers votre espace...</p>
           </div>
         </div>
       </AuthThemeShell>
@@ -136,11 +134,11 @@ function LoginPageContent() {
               </div>
               
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-                {t('auth.welcomeTitle').split('SAV')[0]} <br />
-                <span className="text-red-500">SAV {t('auth.welcomeTitle').split('SAV')[1] || ''}</span>
+                Bienvenue sur votre <br />
+                <span className="text-red-500">plateforme SAV</span>
               </h1>
               <p className="mt-4 text-base text-white/90 max-w-lg leading-relaxed drop-shadow-md">
-                {t('auth.welcomeDesc')}
+                Gérez vos rendez-vous, suivez vos interventions et bénéficiez d'une expérience premium.
               </p>
             </div>
 
@@ -151,7 +149,7 @@ function LoginPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureAppointments')}</p>
+                <p className="text-white/90 text-sm">Prise de rendez-vous en ligne 24h/7j</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -159,7 +157,7 @@ function LoginPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureTracking')}</p>
+                <p className="text-white/90 text-sm">Suivi en temps réel de votre véhicule</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -167,7 +165,7 @@ function LoginPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureHistory')}</p>
+                <p className="text-white/90 text-sm">Historique complet des interventions</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full border-2 border-emerald-400/60 flex items-center justify-center">
@@ -175,22 +173,22 @@ function LoginPageContent() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white/90 text-sm">{t('auth.featureDiagnostics')}</p>
+                <p className="text-white/90 text-sm">Diagnostics et rapports détaillés</p>
               </div>
             </div>
 
             <div className="flex gap-6 pt-2">
               <div>
                 <div className="text-3xl font-bold text-white">12K+</div>
-                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">{t('auth.statClients')}</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">Clients</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white">48K+</div>
-                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">{t('auth.statAppointments')}</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">RDV Traités</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-white">98%</div>
-                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">{t('auth.statSatisfaction')}</div>
+                <div className="text-xs text-white/70 uppercase tracking-wider mt-0.5">Satisfaction</div>
               </div>
             </div>
           </div>
@@ -198,28 +196,28 @@ function LoginPageContent() {
 
         <section className="w-full max-w-md mx-auto lg:mx-0 mt-16">
           <div className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-black via-zinc-950 to-black backdrop-blur-md p-8 shadow-2xl shadow-red-500/20 sm:p-10">
-            <h2 className="text-2xl font-bold text-white text-center">{t('auth.loginTitle')}</h2>
+            <h2 className="text-2xl font-bold text-white text-center">Connexion</h2>
             <p className="mt-2 text-sm text-zinc-400 text-center">
-              {t('auth.loginDesc')}
+              Entrez vos identifiants pour accéder à votre espace.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               {registered && (
                 <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <p className="text-sm">{t('auth.successRegister')}</p>
+                  <p className="text-sm">Inscription réussie. Vous pouvez vous connecter.</p>
                 </Alert>
               )}
               {reset && (
                 <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <p className="text-sm">{t('auth.successPasswordReset')}</p>
+                  <p className="text-sm">Mot de passe réinitialisé avec succès.</p>
                 </Alert>
               )}
               {phoneVerified && (
                 <Alert className="border-emerald-500/50 bg-emerald-950/50 text-emerald-300">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <p className="text-sm">{t('auth.successPhoneVerified')}</p>
+                  <p className="text-sm">Téléphone vérifié avec succès ! Vous pouvez maintenant vous connecter.</p>
                 </Alert>
               )}
 
@@ -251,7 +249,7 @@ function LoginPageContent() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-xs peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    {t('auth.emailLabel')}
+                    Adresse email
                   </Label>
                 </div>
                 {errors.email && <p className="text-xs text-red-400">{errors.email}</p>}
@@ -264,7 +262,7 @@ function LoginPageContent() {
                     href="/forgot-password"
                     className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
                   >
-                    {t('auth.forgotPasswordBtn')}
+                    Mot de passe oublié ?
                   </Link>
                 </div>
                 <div className="relative">
@@ -287,7 +285,7 @@ function LoginPageContent() {
                     peer-focus:top-[-10px] peer-focus:left-2 peer-focus:text-xs peer-focus:text-red-400 peer-focus:bg-black peer-focus:px-2
                     peer-[:not(:placeholder-shown)]:top-[-10px] peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-zinc-300 peer-[:not(:placeholder-shown)]:bg-black peer-[:not(:placeholder-shown)]:px-2"
                   >
-                    {t('auth.passwordLabel')}
+                    Mot de passe
                   </Label>
                 </div>
                 {errors.password && <p className="text-xs text-red-400">{errors.password}</p>}
@@ -295,17 +293,17 @@ function LoginPageContent() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200 cursor-pointer"
+                className="w-full h-11 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg shadow-red-500/30 transition-all duration-200"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? t('auth.loggingIn') : t('auth.loginBtn')}
+                {isSubmitting ? 'Connexion en cours...' : 'Se connecter'}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-zinc-400">
-              {t('auth.noAccount')}{' '}
+              Vous n'avez pas de compte ?{' '}
               <Link href="/register" className="font-semibold text-red-400 hover:text-red-300 transition-colors">
-                {t('auth.registerBtn')}
+                S'inscrire
               </Link>
             </p>
           </div>

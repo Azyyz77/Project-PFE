@@ -3,25 +3,19 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import {
-  Button,
-  Card,
-  Chip,
-  Separator,
-} from "@heroui/react";
-import {
+  ArrowRight,
   CalendarClock,
   CarFront,
   ShieldCheck,
   Wrench,
+  Clock3,
+  MapPin,
+  MonitorSmartphone,
   Sparkles,
   CheckCircle2,
   Mail,
   Phone,
   MapPinIcon,
-  Clock3,
-  MapPin,
-  MonitorSmartphone,
-  ArrowRight,
 } from "lucide-react";
 
 const heroSlides = [
@@ -52,26 +46,27 @@ const modeles = [
   "ARRIZO 8 SVA LUXURY",
   "ARRIZO 8 UVM COMFORT",
   "ARRIZO 8 LUXURY",
-  "TIGGO 1X",];
+  "TIGGO 1X",
+];
 
 const services = [
   {
     titre: "Prise de rendez-vous SAV",
-    texte: "Sélectionnez votre date et votre atelier en quelques secondes.",    href: "/login",
+    texte: "Sélectionnez votre date et votre atelier en quelques secondes.",
+    href: "/login",
     icon: CalendarClock,
-    className: "md:col-span-2 bg-muted/30 border-none",
   },
   {
     titre: "Suivi de véhicule",
-    texte: "Consultez l'historique et le statut de vos interventions.",    href: "/login",
+    texte: "Consultez l'historique et le statut de vos interventions.",
+    href: "/login",
     icon: CarFront,
-    className: "bg-white border-border/50 shadow-sm",
   },
   {
     titre: "Assistance & sécurité",
-    texte: "Un accompagnement complet par nos équipes techniques.",    href: "/login",
+    texte: "Un accompagnement complet par nos équipes techniques.",
+    href: "/login",
     icon: ShieldCheck,
-    className: "bg-white border-border/50 shadow-sm",
   },
 ];
 
@@ -85,10 +80,12 @@ export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const observerRef = useRef<IntersectionObserver | null>(null);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 6000);
+    }, 5500);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -310,18 +307,16 @@ export default function HomePage() {
               <div>
                 <h3 className="text-2xl font-semibold">Besoin d&apos;une intervention rapide ?</h3>
                 <p className="mt-2 text-sm text-red-100 sm:text-base">
-                  Connectez-vous et programmez votre visite atelier en moins de 2 minutes.                </p>
+                  Connectez-vous et programmez votre visite atelier en moins de 2 minutes.
+                </p>
               </div>
-
-              <div className="hidden md:flex items-center gap-8">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
-                >
-                  <Wrench className="h-5 w-5" />
-                  Commencer
-                </Link>
-              </div>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                <Wrench className="h-5 w-5" />
+                Commencer
+              </Link>
             </div>
           </div>
         </div>
@@ -400,7 +395,8 @@ export default function HomePage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-600">
                   Étape {String(index + 1).padStart(2, "0")}
                 </p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{step}</p>              </div>
+                <p className="mt-2 text-sm font-semibold text-slate-900">{step}</p>
+              </div>
             ))}
           </div>
 
@@ -583,7 +579,8 @@ export default function HomePage() {
             <div className="mt-2 flex flex-wrap justify-center gap-4">
               <a href="#" className="transition hover:text-red-400">Mentions légales</a>
               <a href="#" className="transition hover:text-red-400">Politique de confidentialité</a>
-              <a href="#" className="transition hover:text-red-400">Conditions d&apos;utilisation</a>            </div>
+              <a href="#" className="transition hover:text-red-400">Conditions d&apos;utilisation</a>
+            </div>
           </div>
         </div>
       </footer>

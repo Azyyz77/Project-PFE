@@ -15,20 +15,22 @@ interface Notification {
 }
 
 export default function NotificationsBell() {
-  const { isAuthenticated } = useAuth();
+  const { token } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (token) {
       loadNotifications();
     }
-  }, [isAuthenticated]);
+  }, [token]);
 
   const loadNotifications = async () => {
     try {
-      const data = await fetchNotifications();
-      setNotifications(data);
+      if (token) {
+        const data = await fetchNotifications(token);
+        setNotifications(data);
+      }
     } catch (error) {
       console.error('Err notifications', error);
     }
@@ -38,7 +40,8 @@ export default function NotificationsBell() {
 
   const handleRead = async (id: number) => {
     try {
-      await markNotificationRead(id);
+      if (!token) return;
+      await markNotificationRead(token, id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, lu: true } : n)));
     } catch (error) {
       console.error(error);
@@ -47,7 +50,8 @@ export default function NotificationsBell() {
 
   const handleReadAll = async () => {
     try {
-      await markAllNotificationsRead();
+      if (!token) return;
+      await markAllNotificationsRead(token);
       setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
     } catch (error) {
       console.error(error);
