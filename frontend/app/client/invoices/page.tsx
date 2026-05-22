@@ -16,6 +16,7 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
+import type { ComponentType } from 'react';
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
   EMISE: 'bg-blue-500',
@@ -31,7 +32,7 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
   ANNULEE: 'Annulée',
 };
 
-const STATUS_ICONS: Record<InvoiceStatus, any> = {
+const STATUS_ICONS: Record<InvoiceStatus, ComponentType<{ className?: string }>> = {
   EMISE: Clock,
   ENVOYEE: Clock,
   PAYEE: CheckCircle,
@@ -64,9 +65,9 @@ export default function ClientInvoicesPage() {
       setError(null);
       const data = await invoicesApi.getMyInvoices();
       setFactures(data);
-    } catch (err: any) {
-      console.error('Erreur:', err);
-      setError(err.response?.data?.error || 'Erreur lors du chargement');
+    } catch (error: unknown) {
+      console.error('Erreur:', error);
+      setError(error instanceof Error ? error.message : 'Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
@@ -83,8 +84,8 @@ export default function ClientInvoicesPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Erreur lors du téléchargement');
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Erreur lors du téléchargement');
     }
   };
 
@@ -103,73 +104,76 @@ export default function ClientInvoicesPage() {
 
   if (isLoading || !user || !token) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="text-slate-500">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <FileText className="w-8 h-8" />
-            Mes Factures
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Consultez et téléchargez vos factures
-          </p>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)] transition-shadow duration-500">
+          <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Mes Factures</h1>
+              <p className="text-sm text-blue-100">Consultez et téléchargez vos factures</p>
+            </div>
+          </div>
         </div>
 
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Total factures</p>
-                  <p className="text-2xl font-bold text-white">{totalFactures}</p>
+                  <p className="text-slate-600 text-sm">Total factures</p>
+                  <p className="text-2xl font-bold text-slate-900">{totalFactures}</p>
                 </div>
-                <FileText className="w-8 h-8 text-blue-500" />
+                <FileText className="w-8 h-8 text-[#1d4f98]" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">Payées</p>
-                  <p className="text-2xl font-bold text-green-500">{facturesPayees}</p>
+                  <p className="text-slate-600 text-sm">Payées</p>
+                  <p className="text-2xl font-bold text-emerald-600">{facturesPayees}</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-500" />
+                <CheckCircle className="w-8 h-8 text-emerald-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-400 text-sm">En attente</p>
-                  <p className="text-2xl font-bold text-orange-500">{facturesEnAttente}</p>
+                  <p className="text-slate-600 text-sm">En attente</p>
+                  <p className="text-2xl font-bold text-amber-600">{facturesEnAttente}</p>
                 </div>
-                <Clock className="w-8 h-8 text-orange-500" />
+                <Clock className="w-8 h-8 text-amber-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
             <CardContent className="p-4">
               <div>
-                <p className="text-slate-400 text-sm">Montant total</p>
-                <p className="text-2xl font-bold text-white">{montantTotal.toFixed(2)} TND</p>
+                <p className="text-slate-600 text-sm">Montant total</p>
+                <p className="text-2xl font-bold text-slate-900">{montantTotal.toFixed(2)} TND</p>
                 <div className="mt-2 text-xs">
-                  <span className="text-green-500">Payé: {montantPaye.toFixed(2)} TND</span>
+                  <span className="text-emerald-600">Payé: {montantPaye.toFixed(2)} TND</span>
                   <br />
-                  <span className="text-orange-500">En attente: {montantEnAttente.toFixed(2)} TND</span>
+                  <span className="text-amber-600">En attente: {montantEnAttente.toFixed(2)} TND</span>
                 </div>
               </div>
             </CardContent>
@@ -177,39 +181,39 @@ export default function ClientInvoicesPage() {
         </div>
 
         {/* Recherche */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardContent className="p-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Rechercher par numéro de facture ou commande..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0f2543]"
               />
             </div>
           </CardContent>
         </Card>
 
         {/* Liste des factures */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white">
+            <CardTitle className="text-slate-900">
               {filteredFactures.length} facture(s)
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-500">
                 Chargement des factures...
               </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-400">
+              <div className="text-center py-8 text-red-600">
                 {error}
               </div>
             ) : filteredFactures.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-500">
                 Aucune facture trouvée
               </div>
             ) : (
@@ -219,44 +223,44 @@ export default function ClientInvoicesPage() {
                   return (
                     <div
                       key={facture.id}
-                      className="p-4 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+                      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[#0f2543] hover:shadow-md"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-white font-semibold text-lg">
+                            <h3 className="text-slate-900 font-semibold text-lg">
                               {facture.numero}
                             </h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[facture.statut]} text-white flex items-center gap-1`}>
+                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-white ${STATUS_COLORS[facture.statut]}`}>
                               <StatusIcon className="w-3 h-3" />
                               {STATUS_LABELS[facture.statut]}
                             </span>
                           </div>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                              <p className="text-slate-400">Commande</p>
-                              <p className="text-white">{facture.commande_numero}</p>
+                              <p className="text-slate-500">Commande</p>
+                              <p className="text-slate-900">{facture.commande_numero}</p>
                             </div>
                             <div>
-                              <p className="text-slate-400">Véhicule</p>
-                              <p className="text-white">{facture.vehicule_immatriculation}</p>
+                              <p className="text-slate-500">Véhicule</p>
+                              <p className="text-slate-900">{facture.vehicule_immatriculation}</p>
                             </div>
                             <div>
-                              <p className="text-slate-400">Date</p>
-                              <p className="text-white">
+                              <p className="text-slate-500">Date</p>
+                              <p className="text-slate-900">
                                 {new Date(facture.date_emission).toLocaleDateString('fr-FR')}
                               </p>
                             </div>
                             <div>
-                              <p className="text-slate-400">Montant</p>
-                              <p className="text-white font-semibold">
+                              <p className="text-slate-500">Montant</p>
+                              <p className="text-slate-900 font-semibold">
                                 {facture.montant_ttc.toFixed(2)} TND
                               </p>
                             </div>
                           </div>
                           {facture.date_paiement && (
                             <div className="mt-2 text-sm">
-                              <span className="text-green-400">
+                              <span className="text-emerald-600">
                                 ✓ Payée le {new Date(facture.date_paiement).toLocaleDateString('fr-FR')}
                               </span>
                             </div>
@@ -267,7 +271,7 @@ export default function ClientInvoicesPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => router.push(`/client/invoices/${facture.id}`)}
-                            className="border-slate-700"
+                            className="rounded-xl border-slate-200 bg-white text-slate-700 hover:border-[#0f2543] hover:text-[#0f2543]"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             Voir
@@ -275,7 +279,7 @@ export default function ClientInvoicesPage() {
                           <Button
                             size="sm"
                             onClick={() => handleDownloadPDF(facture.id, facture.numero)}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="rounded-xl bg-gradient-to-r from-[#0f2543] to-[#1d4f98] text-white hover:shadow-lg"
                           >
                             <Download className="w-4 h-4 mr-2" />
                             PDF

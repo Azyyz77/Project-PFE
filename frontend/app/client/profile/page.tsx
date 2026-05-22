@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useCallback } from 'react';
+import { useState, FormEvent } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -131,7 +131,7 @@ function ProfileContent() {
 
   const initials = `${user.prenom.charAt(0)}${user.nom.charAt(0) || ''}`.toUpperCase();
 
-  const handleProfileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileForm((p) => ({ ...p, [name]: value }));
     if (profileErrors[name]) {
@@ -141,7 +141,7 @@ function ProfileContent() {
         return newErrors;
       });
     }
-  }, [profileErrors]);
+  };
 
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -164,8 +164,8 @@ function ProfileContent() {
         const updated = { ...parsed, ...result.user };
         localStorage.setItem('user', JSON.stringify(updated));
       }
-    } catch (err: any) {
-      const msg = err.message || 'Erreur lors de la mise à jour';
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erreur lors de la mise à jour';
       setProfileError(msg);
       toast.error('Erreur', { description: msg });
     } finally {
@@ -215,8 +215,8 @@ function ProfileContent() {
       toast.success('Mot de passe modifié avec succès.');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setShowPassword({ current: false, new: false, confirm: false });
-    } catch (err: any) {
-      const msg = err.message || 'Erreur lors du changement de mot de passe';
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Erreur lors du changement de mot de passe';
       setPasswordError(msg);
       toast.error('Erreur', { description: msg });
     } finally {
@@ -225,12 +225,12 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070c14]">
+    <div className="min-h-screen bg-[#f5f7fa]">
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-[#0c1527] dark:via-[#111e35] dark:to-[#0a1120] py-16">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] py-16">
         {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-white/10 dark:bg-[#1c4a9f]/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-10 h-72 w-72 rounded-full bg-white/10 dark:bg-[#f33e49]/12 blur-3xl" />
+        <div className="pointer-events-none absolute -top-20 -left-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
 
         <div className="relative mx-auto max-w-4xl px-6 sm:px-8 lg:px-12">
           <div className="flex flex-col sm:flex-row items-center gap-8 text-white">
@@ -239,7 +239,7 @@ function ProfileContent() {
               <div className="flex h-32 w-32 items-center justify-center rounded-2xl ring-4 ring-white/30 bg-gradient-to-br from-[#f33e49] to-[#ff8a92] text-white text-5xl font-bold shadow-2xl shadow-black/20">
                 {initials}
               </div>
-              <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-green-500 border-4 border-white dark:border-[#0c1527] flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-green-500">
                 <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -284,7 +284,7 @@ function ProfileContent() {
       <main className="mx-auto max-w-7xl px-6 py-10 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Left Column - Change Password Card */}
-          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500" />
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
@@ -460,7 +460,7 @@ function ProfileContent() {
         </Card>
 
           {/* Right Column - Edit Profile Card */}
-          <Card className="rounded-2xl border border-slate-200 dark:border-white/[0.07] shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
             <div className="h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">

@@ -105,7 +105,7 @@ function CatalogContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7fa] p-6">
+    <main className="client-page-enter min-h-screen bg-[#f5f7fa] p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="mb-6">
@@ -156,7 +156,7 @@ function CatalogContent() {
 
         {/* Tabs */}
         <Tabs defaultValue="packages" className="space-y-4">
-          <TabsList className="bg-white border border-slate-200 shadow-sm">
+          <TabsList className="rounded-2xl bg-white border border-slate-200 shadow-sm">
             <TabsTrigger value="packages">{t('catalog.packages')}</TabsTrigger>
             <TabsTrigger value="types">{t('catalog.serviceTypes')}</TabsTrigger>
             <TabsTrigger value="services">{t('catalog.allServices')}</TabsTrigger>
@@ -164,7 +164,7 @@ function CatalogContent() {
 
           {/* Packages Tab */}
           <TabsContent value="packages">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <div className="mb-6">
                 <h2 className="text-xl font-bold text-slate-800">{t('catalog.maintenancePackages')}</h2>
                 <p className="text-sm text-slate-600">{t('catalog.saveWithBundles')}</p>
@@ -231,7 +231,7 @@ function CatalogContent() {
 
           {/* Types Tab */}
           <TabsContent value="types">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-800 mb-6">{t('catalog.serviceTypes')}</h2>
               {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -280,7 +280,7 @@ function CatalogContent() {
 
           {/* Services Tab */}
           <TabsContent value="services">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
               <h2 className="text-xl font-bold text-slate-800 mb-6">{t('catalog.allServices')}</h2>
               {loading ? (
                 <div className="flex items-center justify-center py-12">

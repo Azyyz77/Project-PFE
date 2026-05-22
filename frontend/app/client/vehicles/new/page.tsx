@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,7 +59,6 @@ export default function NewVehiclePage() {
   });
 
   // Images
-  const [imageVehicule, setImageVehicule] = useState<File | null>(null);
   const [imageCarteGrise, setImageCarteGrise] = useState<File | null>(null);
   const [previewVehicule, setPreviewVehicule] = useState<string>('');
   const [previewCarteGrise, setPreviewCarteGrise] = useState<string>('');
@@ -68,11 +68,7 @@ export default function NewVehiclePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Load version catalog on mount
-  useEffect(() => {
-    loadVersionCatalog();
-    loadColors();
-  }, [token]);
+  // (moved) Load version catalog on mount — will be invoked after loaders are defined
 
   // Extract unique marques when catalog loads
   useEffect(() => {
@@ -118,22 +114,23 @@ export default function NewVehiclePage() {
     }
   }, [form.modele, form.marque, versionCatalog]);
 
-  const loadVersionCatalog = async () => {
+  const loadVersionCatalog = useCallback(async () => {
     if (!token) return;
 
     setIsLoadingCatalog(true);
     try {
       const data = await getVersionCatalog(token);
       setVersionCatalog(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading catalog:', err);
-      toast.error(t('common.error'), { description: t('common.error') });
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(t('common.error'), { description: msg || t('common.error') });
     } finally {
       setIsLoadingCatalog(false);
     }
-  };
+  }, [token, t]);
 
-  const loadColors = async () => {
+  const loadColors = useCallback(async () => {
     if (!token) return;
 
     setIsLoadingColors(true);
@@ -141,13 +138,14 @@ export default function NewVehiclePage() {
       const data = await getAllColors();
       // Filtrer seulement les couleurs actives
       setColors(data.filter(c => c.actif));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading colors:', err);
-      toast.error(t('common.error'), { description: t('common.error') });
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(t('common.error'), { description: msg || t('common.error') });
     } finally {
       setIsLoadingColors(false);
     }
-  };
+  }, [t, token]);
 
   const buildImmatriculation = (): string => {
     if (plateType === 'TUNIS') {
@@ -192,7 +190,6 @@ export default function NewVehiclePage() {
     const reader = new FileReader();
     reader.onloadend = () => {
       if (type === 'vehicule') {
-        setImageVehicule(file);
         setPreviewVehicule(reader.result as string);
       } else {
         setImageCarteGrise(file);
@@ -213,7 +210,6 @@ export default function NewVehiclePage() {
 
   const removeImage = (type: 'vehicule' | 'carte_grise') => {
     if (type === 'vehicule') {
-      setImageVehicule(null);
       setPreviewVehicule('');
     } else {
       setImageCarteGrise(null);
@@ -275,6 +271,12 @@ export default function NewVehiclePage() {
     return newErrors;
   };
 
+  // Load version catalog on mount (after loaders are declared)
+  useEffect(() => {
+    loadVersionCatalog();
+    loadColors();
+  }, [token, loadVersionCatalog, loadColors]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError('');
@@ -300,8 +302,10 @@ export default function NewVehiclePage() {
       const image_vehicule_base64 = previewVehicule || undefined;
       const image_carte_grise_base64 = previewCarteGrise || undefined;
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/vehicles`, {
+      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawApiUrl.replace(/\/$/, '');
+      const vehiclesEndpoint = API_URL.endsWith('/api') ? `${API_URL}/vehicles` : `${API_URL}/api/vehicles`;
+      const response = await fetch(vehiclesEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -332,8 +336,8 @@ export default function NewVehiclePage() {
       setTimeout(() => {
         router.push('/client/vehicles');
       }, 2000);
-    } catch (err: any) {
-      const msg = err.message || t('common.error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err) || t('common.error');
       setApiError(msg);
       toast.error(t('common.error'), { description: msg });
     } finally {
@@ -705,10 +709,13 @@ export default function NewVehiclePage() {
                   <p className="text-xs text-slate-500">{t('vehicles.imageFormat')}</p>
                   {previewVehicule && (
                     <div className="relative inline-block">
-                      <img 
-                        src={previewVehicule} 
-                        alt={t('vehicles.preview')} 
-                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
+                      <Image
+                        src={previewVehicule}
+                        alt={t('vehicles.preview')}
+                        width={320}
+                        height={240}
+                        unoptimized
+                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700"
                       />
                       <button
                         type="button"
@@ -739,10 +746,13 @@ export default function NewVehiclePage() {
                   )}
                   {previewCarteGrise && (
                     <div className="relative inline-block">
-                      <img 
-                        src={previewCarteGrise} 
-                        alt={t('vehicles.preview')} 
-                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700" 
+                      <Image
+                        src={previewCarteGrise}
+                        alt={t('vehicles.preview')}
+                        width={320}
+                        height={240}
+                        unoptimized
+                        className="max-w-xs max-h-48 rounded border border-slate-300 dark:border-slate-700"
                       />
                       <button
                         type="button"

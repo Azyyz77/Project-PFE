@@ -103,33 +103,39 @@ export default function InspectionPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 font-mono print:bg-white print:text-black">
+    <div className="min-h-screen bg-[#f5f7fa] text-slate-800 print:bg-white print:text-black">
 
       {/* ═══ HEADER ══════════════════════════════════════════════════════════ */}
-      <header className="border-b border-gray-800 px-6 py-4 flex items-center justify-between print:hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-sm">
-            SAV
-          </div>
-          <div>
-            <p className="text-sm font-semibold tracking-widest uppercase">Inspection Véhicule</p>
-            <p className="text-xs text-gray-500">Détection IA — Roboflow YOLOv11</p>
+      <header className="mx-auto max-w-5xl px-6 pt-6 print:hidden">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] px-6 py-6 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)] transition-shadow duration-500">
+          <div className="pointer-events-none absolute -right-8 top-0 h-36 w-36 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-10 right-24 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm font-bold text-sm ring-1 ring-white/20">
+                SAV
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-100">Inspection Véhicule</p>
+                <p className="text-xs text-blue-100/80">Détection IA — Roboflow YOLOv11</p>
+              </div>
+            </div>
+            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm">
+              mAP@50 · 78.2%
+            </span>
           </div>
         </div>
-        <span className="text-xs text-gray-600 bg-gray-900 px-3 py-1.5 rounded-full border border-gray-800">
-          mAP@50 · 78.2%
-        </span>
       </header>
 
       {/* ═══ MAIN ════════════════════════════════════════════════════════════ */}
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6 print:hidden">
+      <main className="mx-auto max-w-5xl space-y-6 px-6 py-8 print:hidden">
 
         {/* ── Zone upload ──────────────────────────────────────────────── */}
         <section
-          className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200
+          className={`rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-200 shadow-sm
             ${preview
-              ? "border-blue-600 bg-blue-950/20"
-              : "border-gray-700 hover:border-gray-500 bg-gray-900"}`}
+              ? "border-[#0f2543] bg-[#0f2543]/5"
+              : "border-slate-200 bg-white hover:border-[#0f2543]/40 hover:shadow-md"}`}
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => document.getElementById("fileInput")?.click()}
@@ -142,19 +148,19 @@ export default function InspectionPage() {
             onChange={handleInput}
           />
           {preview ? (
-            <div className="flex items-center justify-center gap-3 text-blue-400">
+            <div className="flex items-center justify-center gap-3 text-[#0f2543]">
               <span className="text-2xl">✓</span>
               <div className="text-left">
                 <p className="text-sm font-semibold">{file?.name}</p>
-                <p className="text-xs text-blue-600 mt-0.5">Clique pour changer l&apos;image</p>
+                <p className="mt-0.5 text-xs text-[#1d4f98]">Clique pour changer l&apos;image</p>
               </div>
             </div>
           ) : (
             <>
               <div className="text-5xl mb-4">📷</div>
-              <p className="text-gray-300 font-semibold">Glisse une photo de véhicule ici</p>
-              <p className="text-gray-500 text-sm mt-1">ou clique pour sélectionner</p>
-              <p className="text-gray-700 text-xs mt-3">JPG · PNG · WEBP — max 20 MB</p>
+              <p className="font-semibold text-slate-800">Glisse une photo de véhicule ici</p>
+              <p className="mt-1 text-sm text-slate-500">ou clique pour sélectionner</p>
+              <p className="mt-3 text-xs text-slate-400">JPG · PNG · WEBP — max 20 MB</p>
             </>
           )}
         </section>
@@ -164,9 +170,7 @@ export default function InspectionPage() {
           <button
             onClick={analyze}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl text-sm font-bold tracking-widest uppercase transition-all
-              bg-blue-600 hover:bg-blue-500 active:scale-[.99]
-              disabled:bg-gray-800 disabled:text-gray-600 disabled:cursor-not-allowed"
+            className="w-full rounded-xl bg-gradient-to-r from-[#0f2543] to-[#1d4f98] py-3.5 text-sm font-bold tracking-widest uppercase text-white transition-all hover:shadow-lg active:scale-[.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -180,12 +184,12 @@ export default function InspectionPage() {
 
         {/* ── Erreur ───────────────────────────────────────────────────── */}
         {error && (
-          <div className="flex items-start gap-3 bg-red-950/60 border border-red-800 text-red-300 rounded-xl px-4 py-3 text-sm">
+          <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
             <span className="text-lg">⚠️</span>
             <div>
               <p className="font-semibold">Erreur de détection</p>
-              <p className="text-xs text-red-400 mt-0.5">{error}</p>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="mt-0.5 text-xs text-red-500">{error}</p>
+              <p className="mt-1 text-xs text-red-600">
                 Vérifier que le backend tourne sur {BACKEND_URL}
               </p>
             </div>
@@ -194,7 +198,7 @@ export default function InspectionPage() {
 
         {/* ── Image + canvas bounding boxes ────────────────────────────── */}
         {preview && (
-          <section className="relative rounded-xl overflow-hidden border border-gray-800 shadow-xl">
+          <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
             <img
               ref={imgRef}
               src={preview}
@@ -206,10 +210,10 @@ export default function InspectionPage() {
               className="absolute inset-0 w-full h-full pointer-events-none"
             />
             {loading && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
                 <div className="text-center">
                   <div className="text-4xl animate-pulse mb-3">🔍</div>
-                  <p className="text-sm text-gray-300">Analyse en cours...</p>
+                  <p className="text-sm text-slate-700">Analyse en cours...</p>
                 </div>
               </div>
             )}
@@ -221,12 +225,12 @@ export default function InspectionPage() {
           <section className="space-y-4">
 
             {/* Bannière résumé */}
-            <div className={`rounded-xl border px-5 py-4 flex items-center gap-4
+            <div className={`rounded-2xl border px-5 py-4 flex items-center gap-4 shadow-sm
               ${reportMeta.critique
-                ? "bg-red-950/40 border-red-700"
+                ? "bg-red-50 border-red-200"
                 : reportMeta.total > 0
-                  ? "bg-yellow-950/30 border-yellow-700"
-                  : "bg-green-950/30 border-green-700"}`}
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-emerald-50 border-emerald-200"}`}
             >
               <span className="text-3xl">
                 {reportMeta.critique ? "🔴" : reportMeta.total > 0 ? "🟡" : "🟢"}
@@ -237,12 +241,12 @@ export default function InspectionPage() {
                     ? "Aucun dommage détecté"
                     : `${reportMeta.total} dommage${reportMeta.total > 1 ? "s" : ""} détecté${reportMeta.total > 1 ? "s" : ""}`}
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="mt-0.5 text-xs text-slate-500">
                   {reportMeta.date} · {reportMeta.fichier}
                 </p>
               </div>
               {reportMeta.critique && (
-                <span className="text-xs bg-red-800 text-red-200 px-3 py-1 rounded-full font-semibold">
+                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
                   CRITIQUE
                 </span>
               )}
@@ -250,8 +254,8 @@ export default function InspectionPage() {
 
             {/* Tableau des dommages */}
             {formatted.length > 0 && (
-              <div className="rounded-xl border border-gray-800 overflow-hidden">
-                <div className="bg-gray-900 px-5 py-2.5 grid grid-cols-4 gap-2 text-xs text-gray-500 uppercase tracking-widest">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="grid grid-cols-4 gap-2 bg-slate-50 px-5 py-2.5 text-xs uppercase tracking-widest text-slate-500">
                   <span>Type</span>
                   <span>Sévérité</span>
                   <span>Confiance</span>
@@ -262,7 +266,7 @@ export default function InspectionPage() {
                   return (
                     <div
                       key={i}
-                      className="border-t border-gray-800 px-5 py-3 grid grid-cols-4 gap-2 items-center hover:bg-gray-900/40 transition-colors"
+                      className="grid grid-cols-4 items-center gap-2 border-t border-slate-200 px-5 py-3 transition-colors hover:bg-slate-50"
                     >
                       <span className="flex items-center gap-2 text-sm font-medium">
                         <span
@@ -272,19 +276,19 @@ export default function InspectionPage() {
                         {d.label}
                       </span>
                       <span
-                        className="text-xs font-semibold px-2.5 py-0.5 rounded-full w-fit"
+                        className="w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold"
                         style={{ backgroundColor: meta.color + "22", color: meta.color }}
                       >
                         {d.severity}
                       </span>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-800 rounded-full h-1.5">
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-200">
                           <div
                             className="h-1.5 rounded-full transition-all duration-500"
                             style={{ width: `${d.confidence}%`, backgroundColor: meta.color }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 w-8 text-right tabular-nums">
+                        <span className="w-8 text-right text-xs tabular-nums text-slate-500">
                           {d.confidence}%
                         </span>
                       </div>
@@ -300,8 +304,7 @@ export default function InspectionPage() {
             {/* Bouton rapport PDF */}
             <button
               onClick={() => window.print()}
-              className="w-full py-3 rounded-xl text-sm font-bold tracking-widest uppercase
-                bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-all"
+              className="w-full rounded-xl border border-slate-200 bg-gradient-to-r from-[#0f2543] to-[#1d4f98] py-3 text-sm font-bold tracking-widest uppercase text-white transition-all hover:shadow-lg"
             >
               🖨️  Générer le rapport PDF
             </button>

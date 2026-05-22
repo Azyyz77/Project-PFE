@@ -15,6 +15,7 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
+import type { ComponentType } from 'react';
 
 const STATUS_COLORS: Record<RepairOrderStatus, string> = {
   BROUILLON: 'bg-gray-500',
@@ -32,7 +33,7 @@ const STATUS_LABELS: Record<RepairOrderStatus, string> = {
   ANNULEE: 'Annulée',
 };
 
-const STATUS_ICONS: Record<RepairOrderStatus, any> = {
+const STATUS_ICONS: Record<RepairOrderStatus, ComponentType<{ className?: string }>> = {
   BROUILLON: AlertCircle,
   EN_COURS: Clock,
   TERMINEE: CheckCircle2,
@@ -65,9 +66,10 @@ export default function ClientRepairOrdersPage() {
       setError(null);
       const data = await repairOrdersApi.getMyOrders();
       setCommandes(data);
-    } catch (err: any) {
-      console.error('Erreur chargement commandes:', err);
-      setError(err.response?.data?.error || 'Erreur lors du chargement des commandes');
+    } catch (error: unknown) {
+      console.error('Erreur chargement commandes:', error);
+      const message = error instanceof Error ? error.message : 'Erreur lors du chargement des commandes';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -75,24 +77,29 @@ export default function ClientRepairOrdersPage() {
 
   if (isLoading || !user || !token) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="text-slate-500">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <FileText className="w-8 h-8 text-blue-500" />
-            Mes Commandes de Réparation
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Consultez l'historique de vos réparations et factures
-          </p>
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)] transition-shadow duration-500">
+          <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">Mes Commandes de Réparation</h1>
+                <p className="text-sm text-blue-100">Consultez l&apos;historique de vos réparations et factures</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Statistiques */}
@@ -101,14 +108,14 @@ export default function ClientRepairOrdersPage() {
             const count = commandes.filter(c => c.statut === status).length;
             const Icon = STATUS_ICONS[status];
             return (
-              <Card key={status} className="bg-slate-900 border-slate-800">
+              <Card key={status} className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-slate-400 text-sm">{STATUS_LABELS[status]}</p>
-                      <p className="text-2xl font-bold text-white mt-1">{count}</p>
+                      <p className="text-slate-600 text-sm">{STATUS_LABELS[status]}</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">{count}</p>
                     </div>
-                    <div className={`w-10 h-10 rounded-lg ${STATUS_COLORS[status]}/10 flex items-center justify-center`}>
+                    <div className={`w-10 h-10 rounded-2xl ${STATUS_COLORS[status]}/10 flex items-center justify-center`}>
                       <Icon className={`w-5 h-5 ${STATUS_COLORS[status].replace('bg-', 'text-')}`} />
                     </div>
                   </div>
@@ -119,25 +126,25 @@ export default function ClientRepairOrdersPage() {
         </div>
 
         {/* Liste des commandes */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white">
+            <CardTitle className="text-slate-900">
               Historique ({commandes.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-500">
                 Chargement de vos commandes...
               </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-400">
+              <div className="text-center py-8 text-red-600">
                 {error}
               </div>
             ) : commandes.length === 0 ? (
               <div className="text-center py-12">
-                <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg">Aucune commande pour le moment</p>
+                <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <p className="text-slate-700 text-lg">Aucune commande pour le moment</p>
                 <p className="text-slate-500 text-sm mt-2">
                   Vos commandes de réparation apparaîtront ici
                 </p>
@@ -149,15 +156,15 @@ export default function ClientRepairOrdersPage() {
                   return (
                     <div
                       key={commande.id}
-                      className="p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                      className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-[#0f2543] hover:shadow-md"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="text-white font-mono font-semibold">
+                            <span className="font-mono font-semibold text-slate-900">
                               {commande.numero}
                             </span>
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white ${STATUS_COLORS[commande.statut]}`}>
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium text-white ${STATUS_COLORS[commande.statut]}`}>
                               <Icon className="w-3 h-3" />
                               {STATUS_LABELS[commande.statut]}
                             </span>
@@ -165,29 +172,29 @@ export default function ClientRepairOrdersPage() {
                           
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                             <div>
-                              <p className="text-slate-400 text-sm">Véhicule</p>
-                              <p className="text-white font-medium">{commande.immatriculation}</p>
-                              <p className="text-slate-400 text-sm">
+                              <p className="text-slate-500 text-sm">Véhicule</p>
+                              <p className="font-medium text-slate-900">{commande.immatriculation}</p>
+                              <p className="text-slate-500 text-sm">
                                 {commande.marque_nom} {commande.modele_nom}
                               </p>
                             </div>
                             
                             <div>
-                              <p className="text-slate-400 text-sm">Agence</p>
-                              <p className="text-white font-medium">{commande.agence_nom}</p>
+                              <p className="text-slate-500 text-sm">Agence</p>
+                              <p className="font-medium text-slate-900">{commande.agence_nom}</p>
                             </div>
                             
                             <div>
-                              <p className="text-slate-400 text-sm">Date</p>
-                              <p className="text-white font-medium">
+                              <p className="text-slate-500 text-sm">Date</p>
+                              <p className="font-medium text-slate-900">
                                 {new Date(commande.date_creation).toLocaleDateString('fr-FR')}
                               </p>
                             </div>
                           </div>
                           
-                          <div className="mt-3 pt-3 border-t border-slate-700">
-                            <p className="text-slate-400 text-sm">Montant total</p>
-                            <p className="text-white text-2xl font-bold">
+                          <div className="mt-3 pt-3 border-t border-slate-200">
+                            <p className="text-slate-500 text-sm">Montant total</p>
+                            <p className="text-slate-900 text-2xl font-bold">
                               {commande.montant_total?.toFixed(2) || '0.00'} TND
                             </p>
                           </div>
@@ -195,7 +202,7 @@ export default function ClientRepairOrdersPage() {
                         
                         <Button
                           onClick={() => router.push(`/client/repair-orders/${commande.id}`)}
-                          className="bg-blue-600 hover:bg-blue-700 ml-4"
+                          className="ml-4 bg-gradient-to-r from-[#0f2543] to-[#1d4f98] text-white hover:shadow-lg"
                         >
                           <Eye className="w-4 h-4 mr-2" />
                           Détails

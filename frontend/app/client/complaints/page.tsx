@@ -49,14 +49,14 @@ export default function ComplaintsPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
+  const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/api\/?$/, '');
 
   const loadComplaints = useCallback(async () => {
     if (!token) return;
 
     setIsLoading(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/complaints/my-complaints`, {
+      const response = await fetch(`${API_BASE_URL}/api/complaints/my-complaints`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ export default function ComplaintsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, API_BASE_URL]);
 
   useEffect(() => {
     loadComplaints();
@@ -128,8 +128,7 @@ export default function ComplaintsPage() {
     setIsSubmitting(true);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/complaints`, {
+      const response = await fetch(`${API_BASE_URL}/api/complaints`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -359,7 +358,7 @@ export default function ComplaintsPage() {
                       <div className="bg-gradient-to-r from-[#0f2543]/5 to-[#1b355d]/5 border border-[#0f2543]/20 rounded-lg p-4">
                         <h4 className="text-sm font-semibold text-[#0f2543] mb-2 flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
-                          Réponse de l'équipe
+                          Réponse de l&apos;équipe
                         </h4>
                         <p className="text-slate-700 whitespace-pre-wrap">
                           {complaint.reponse}

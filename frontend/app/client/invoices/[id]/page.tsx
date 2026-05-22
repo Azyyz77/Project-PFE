@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { invoicesApi } from '@/lib/api/invoices';
@@ -43,25 +43,25 @@ export default function ClientInvoiceDetailsPage() {
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    if (params.id && token) {
-      loadFacture();
-    }
-  }, [params.id, token]);
-
-  const loadFacture = async () => {
+  const loadFacture = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await invoicesApi.getById(Number(params.id));
       setFacture(data);
-    } catch (err: any) {
-      console.error('Erreur:', err);
-      setError(err.response?.data?.error || 'Erreur lors du chargement');
+    } catch (error: unknown) {
+      console.error('Erreur:', error);
+      setError(error instanceof Error ? error.message : 'Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    if (params.id && token) {
+      loadFacture();
+    }
+  }, [params.id, token, loadFacture]);
 
   const handleDownloadPDF = async () => {
     if (!facture) return;
@@ -75,36 +75,36 @@ export default function ClientInvoiceDetailsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Erreur lors du téléchargement');
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Erreur lors du téléchargement');
     }
   };
 
   if (isLoading || !user || !token) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement...</div>
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="text-slate-500">Chargement...</div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Chargement de la facture...</div>
+      <div className="min-h-screen bg-[#f5f7fa] flex items-center justify-center">
+        <div className="text-slate-500">Chargement de la facture...</div>
       </div>
     );
   }
 
   if (error || !facture) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <div className="min-h-screen bg-[#f5f7fa] p-6">
         <div className="max-w-7xl mx-auto">
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-md">
             <CardContent className="p-6">
               <div className="text-center">
-                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-400">{error || 'Facture non trouvée'}</p>
+                <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+                <p className="text-red-600">{error || 'Facture non trouvée'}</p>
                 <Button
                   onClick={() => router.back()}
                   className="mt-4"
@@ -121,27 +121,29 @@ export default function ClientInvoiceDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-[#f5f7fa] p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0f2f5d] via-[#173d7a] to-[#1d4f98] p-8 text-white shadow-[0_18px_40px_rgba(15,47,93,0.35)] transition-shadow duration-500">
+          <div className="pointer-events-none absolute -right-10 top-4 h-44 w-44 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute right-24 bottom-6 h-24 w-24 rounded-full bg-white/10" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
             <Button
               variant="outline"
               onClick={() => router.back()}
-              className="border-slate-700"
+              className="rounded-xl border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
                 Facture {facture.numero}
-                <span className={`px-3 py-1 rounded-full text-sm ${STATUS_COLORS[facture.statut]} text-white`}>
+                <span className={`rounded-full px-3 py-1 text-sm ${STATUS_COLORS[facture.statut]} text-white`}>
                   {STATUS_LABELS[facture.statut]}
                 </span>
               </h1>
-              <p className="text-slate-400 mt-1">
+              <p className="mt-1 text-blue-100">
                 Commande: {facture.commande_numero}
               </p>
             </div>
@@ -149,22 +151,23 @@ export default function ClientInvoiceDetailsPage() {
 
           <Button
             onClick={handleDownloadPDF}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="rounded-xl bg-gradient-to-r from-[#0f2543] to-[#1d4f98] text-white hover:shadow-lg"
           >
             <Download className="w-4 h-4 mr-2" />
             Télécharger PDF
           </Button>
+          </div>
         </div>
 
         {/* Statut de paiement */}
         {facture.statut === 'PAYEE' ? (
-          <Card className="bg-green-900/20 border-green-800">
+          <Card className="rounded-2xl border border-emerald-200 bg-emerald-50 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-500" />
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
                 <div>
-                  <p className="text-green-400 font-semibold">Facture payée</p>
-                  <p className="text-green-300 text-sm">
+                  <p className="text-emerald-700 font-semibold">Facture payée</p>
+                  <p className="text-emerald-700 text-sm">
                     Payée le {new Date(facture.date_paiement!).toLocaleDateString('fr-FR')}
                     {facture.mode_paiement && ` par ${facture.mode_paiement}`}
                   </p>
@@ -173,28 +176,28 @@ export default function ClientInvoiceDetailsPage() {
             </CardContent>
           </Card>
         ) : facture.statut === 'ANNULEE' ? (
-          <Card className="bg-red-900/20 border-red-800">
+          <Card className="rounded-2xl border border-red-200 bg-red-50 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <AlertCircle className="w-6 h-6 text-red-500" />
+                <AlertCircle className="w-6 h-6 text-red-600" />
                 <div>
-                  <p className="text-red-400 font-semibold">Facture annulée</p>
+                  <p className="text-red-700 font-semibold">Facture annulée</p>
                   {facture.notes && (
-                    <p className="text-red-300 text-sm">{facture.notes}</p>
+                    <p className="text-red-700 text-sm">{facture.notes}</p>
                   )}
                 </div>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-orange-900/20 border-orange-800">
+          <Card className="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-orange-500" />
+                <Clock className="w-6 h-6 text-amber-600" />
                 <div>
-                  <p className="text-orange-400 font-semibold">Paiement en attente</p>
-                  <p className="text-orange-300 text-sm">
-                    Veuillez régler cette facture auprès de l'agence
+                  <p className="text-amber-700 font-semibold">Paiement en attente</p>
+                  <p className="text-amber-700 text-sm">
+                    Veuillez régler cette facture auprès de l&apos;agence
                   </p>
                 </div>
               </div>
@@ -203,40 +206,40 @@ export default function ClientInvoiceDetailsPage() {
         )}
 
         {/* Montant */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white">Montant à payer</CardTitle>
+            <CardTitle className="text-slate-900">Montant à payer</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-4">
-              <p className="text-4xl font-bold text-white">
+              <p className="text-4xl font-bold text-slate-900">
                 {facture.montant_ttc.toFixed(2)} TND
               </p>
-              <p className="text-slate-400 mt-2">TTC</p>
+              <p className="text-slate-500 mt-2">TTC</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Détails */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white">Détails de la facture</CardTitle>
+            <CardTitle className="text-slate-900">Détails de la facture</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-slate-400">Date d'émission</p>
-                  <p className="text-white font-medium">
+                  <p className="text-slate-500">Date d&apos;émission</p>
+                  <p className="text-slate-900 font-medium">
                     {new Date(facture.date_emission).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-slate-400">Véhicule</p>
-                  <p className="text-white font-medium">
+                  <p className="text-slate-500">Véhicule</p>
+                  <p className="text-slate-900 font-medium">
                     {facture.vehicule_immatriculation}
                   </p>
-                  <p className="text-slate-400 text-xs">
+                  <p className="text-slate-500 text-xs">
                     {facture.vehicule_marque} {facture.vehicule_modele}
                   </p>
                 </div>
@@ -246,13 +249,13 @@ export default function ClientInvoiceDetailsPage() {
         </Card>
 
         {/* Lignes */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white">Détail des prestations</CardTitle>
+            <CardTitle className="text-slate-900">Détail des prestations</CardTitle>
           </CardHeader>
           <CardContent>
             {!facture.lignes || facture.lignes.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-500">
                 Aucune ligne
               </div>
             ) : (
@@ -260,16 +263,16 @@ export default function ClientInvoiceDetailsPage() {
                 {facture.lignes.map((ligne) => (
                   <div
                     key={ligne.id}
-                    className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-3"
                   >
                     <div className="flex-1">
-                      <p className="text-white font-medium">{ligne.description}</p>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-slate-900 font-medium">{ligne.description}</p>
+                      <p className="text-slate-500 text-sm">
                         {ligne.quantite} × {ligne.prix_unitaire.toFixed(2)} TND
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-white font-semibold">
+                      <p className="text-slate-900 font-semibold">
                         {ligne.prix_total.toFixed(2)} TND
                       </p>
                     </div>
@@ -281,17 +284,17 @@ export default function ClientInvoiceDetailsPage() {
         </Card>
 
         {/* Agence */}
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="rounded-2xl border border-slate-200/70 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle className="text-white text-sm">Agence</CardTitle>
+            <CardTitle className="text-slate-900 text-sm">Agence</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-white font-semibold">{facture.agence_nom}</p>
+            <p className="text-slate-900 font-semibold">{facture.agence_nom}</p>
             {facture.agence_adresse && (
-              <p className="text-slate-400 text-sm">{facture.agence_adresse}</p>
+              <p className="text-slate-500 text-sm">{facture.agence_adresse}</p>
             )}
             {facture.agence_telephone && (
-              <p className="text-slate-400 text-sm">Tél: {facture.agence_telephone}</p>
+              <p className="text-slate-500 text-sm">Tél: {facture.agence_telephone}</p>
             )}
           </CardContent>
         </Card>
