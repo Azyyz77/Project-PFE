@@ -4,7 +4,10 @@
 
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const rawBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE = rawBase.endsWith('/api')
+  ? rawBase.replace(/\/$/, '')
+  : `${rawBase.replace(/\/$/, '')}/api`;
 
 function headers(token: string) {
   return { Authorization: `Bearer ${token}` };

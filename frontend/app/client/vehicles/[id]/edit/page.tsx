@@ -274,7 +274,20 @@ export default function EditVehiclePage() {
 
     const immatriculation = buildImmatriculation();
     if (!immatriculation) {
-      newErrors.immatriculation = 'L\'immatriculation est obligatoire';
+      newErrors.immatriculation = "L'immatriculation est obligatoire";
+    } else if (plateType === 'TUNIS') {
+      const { part1, part2 } = tunisPlate;
+      const num1 = parseInt(part1) || 0;
+      
+      if (!part1 || num1 < 1 || num1 > 260) {
+        newErrors.immatriculation = "Le numéro de série (bloc 1) doit être compris entre 1 et 260";
+      } else if (!part2 || part2.length < 3 || part2.length > 4) {
+        newErrors.immatriculation = "Le numéro d'ordre (bloc 2) doit contenir 3 ou 4 chiffres";
+      }
+    } else if (plateType === 'NT') {
+      if (!ntPlate || ntPlate.length < 4 || ntPlate.length > 5) {
+        newErrors.immatriculation = "Le numéro de plaque (NT) doit contenir 4 ou 5 chiffres";
+      }
     }
 
     if (!form.numero_chassis.trim()) {
@@ -481,17 +494,21 @@ export default function EditVehiclePage() {
                       value={tunisPlate.part1}
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-                        setTunisPlate(prev => ({ ...prev, part1: value }));
-                        if (errors.immatriculation) {
-                          setErrors(prev => {
-                            const newErrors = { ...prev };
-                            delete newErrors.immatriculation;
-                            return newErrors;
-                          });
+                        const numValue = parseInt(value) || 0;
+                        if (value === '' || numValue <= 260) {
+                          setTunisPlate(prev => ({ ...prev, part1: value }));
+                          if (errors.immatriculation) {
+                            setErrors(prev => {
+                              const newErrors = { ...prev };
+                              delete newErrors.immatriculation;
+                              return newErrors;
+                            });
+                          }
                         }
                       }}
                       placeholder="123"
                       disabled={isSubmitting}
+                      maxLength={3}
                       className={`flex-1 text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
                     />
                     <span className="text-lg font-semibold">تونس</span>
@@ -499,7 +516,7 @@ export default function EditVehiclePage() {
                       id="tunis_part2"
                       value={tunisPlate.part2}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                         setTunisPlate(prev => ({ ...prev, part2: value }));
                         if (errors.immatriculation) {
                           setErrors(prev => {
@@ -509,8 +526,9 @@ export default function EditVehiclePage() {
                           });
                         }
                       }}
-                      placeholder="456"
+                      placeholder="4567"
                       disabled={isSubmitting}
+                      maxLength={4}
                       className={`flex-1 text-center ${errors.immatriculation ? 'border-red-500' : ''}`}
                     />
                   </div>

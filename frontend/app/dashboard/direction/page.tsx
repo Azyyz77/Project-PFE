@@ -142,7 +142,7 @@ export default function DirectionDashboard() {
               </svg>
             </div>
             <p className="text-4xl font-bold mb-1">
-              {(revenueGlobal.revenu_total || 0).toLocaleString('fr-FR')} €
+              {(revenueGlobal.revenu_total || 0).toLocaleString('fr-FR')} DNT
             </p>
             <p className="text-sm opacity-90">
               {revenueGlobal.total_factures || 0} factures • Moy: {(revenueGlobal.revenu_moyen || 0).toFixed(0)} €

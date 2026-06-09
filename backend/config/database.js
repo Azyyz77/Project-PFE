@@ -1,41 +1,23 @@
-const useTrustedConnection = process.env.DB_TRUSTED_CONNECTION === 'true';
-const sql = useTrustedConnection ? require('mssql/msnodesqlv8') : require('mssql');
+const sql = require('mssql');
 
-const dbConfig = useTrustedConnection
-  ? {
-      server: process.env.DB_SERVER || 'localhost',
-      database: process.env.DB_NAME || 'STA_SAV',
-      driver: 'msnodesqlv8',
-      options: {
-        trustedConnection: true,
-        trustServerCertificate: true,
-        enableArithAbort: true,
-        useUTC: false
-      },
-      pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000
-      }
-    }
-  : {
-      server: process.env.DB_SERVER || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 1433,
-      database: process.env.DB_NAME || 'STA_SAV',
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      options: {
-        encrypt: false,
-        trustServerCertificate: true,
-        enableArithAbort: true,
-        useUTC: false
-      },
-      pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000
-      }
-    };
+const dbConfig = {
+  server: process.env.DB_SERVER || 'sqlserver',
+  port: parseInt(process.env.DB_PORT, 10) || 1433,
+  database: process.env.DB_NAME || 'STA_SAV',
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || 'Daligh2004',
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
+    enableArithAbort: true,
+    useUTC: false
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000
+  }
+};
 
 let poolPromise;
 
@@ -53,15 +35,4 @@ const getConnection = async () => {
   }
 };
 
-const closeConnection = async () => {
-  try {
-    if (poolPromise) {
-      await sql.close();
-      poolPromise = null;
-    }
-  } catch (error) {
-    console.error('Erreur lors de la fermeture de la connexion:', error);
-  }
-};
-
-module.exports = { getConnection, closeConnection, sql };
+module.exports = { getConnection, sql };

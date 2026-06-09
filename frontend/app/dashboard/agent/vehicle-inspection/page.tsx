@@ -24,6 +24,6 @@ export default function VehicleInspectionPage() {
   }
 
   return (
-      <VehiclesManagement />
+      <VehiclesManagement token={token} />
   );
 }

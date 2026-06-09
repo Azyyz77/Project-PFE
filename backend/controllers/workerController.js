@@ -148,11 +148,71 @@ exports.createWorker = async (req, res) => {
     }
 
     const pool = await getConnection();
+
+    // ✅ VALIDATION DES DOUBLONS
+    
+    // 1. Vérifier si le téléphone existe déjà (si fourni et non vide)
+    if (telephone && telephone.trim()) {
+      const phoneCheck = await pool.request()
+        .input('telephone', sql.NVarChar, telephone.trim())
+        .query(`
+          SELECT id, nom, prenom FROM Ouvrier 
+          WHERE telephone = @telephone AND actif = 1
+        `);
+      
+      if (phoneCheck.recordset.length > 0) {
+        const existing = phoneCheck.recordset[0];
+        return res.status(409).json({
+          error: 'Doublon détecté',
+          message: `Un ouvrier avec ce numéro de téléphone existe déjà : ${existing.prenom} ${existing.nom}`
+        });
+      }
+    }
+
+    // 2. Vérifier si l'email existe déjà (si fourni et non vide)
+    if (email && email.trim()) {
+      const emailCheck = await pool.request()
+        .input('email', sql.NVarChar, email.trim().toLowerCase())
+        .query(`
+          SELECT id, nom, prenom FROM Ouvrier 
+          WHERE LOWER(email) = @email AND actif = 1
+        `);
+      
+      if (emailCheck.recordset.length > 0) {
+        const existing = emailCheck.recordset[0];
+        return res.status(409).json({
+          error: 'Doublon détecté',
+          message: `Un ouvrier avec cet email existe déjà : ${existing.prenom} ${existing.nom}`
+        });
+      }
+    }
+
+    // 3. Vérifier si un ouvrier avec le même nom+prénom existe dans la même agence
+    const nameCheck = await pool.request()
+      .input('nom', sql.NVarChar, nom.trim())
+      .input('prenom', sql.NVarChar, prenom.trim())
+      .input('agence_id', sql.BigInt, agence_id)
+      .query(`
+        SELECT id, nom, prenom, agence_id FROM Ouvrier 
+        WHERE LOWER(nom) = LOWER(@nom) 
+        AND LOWER(prenom) = LOWER(@prenom)
+        AND agence_id = @agence_id
+        AND actif = 1
+      `);
+    
+    if (nameCheck.recordset.length > 0) {
+      return res.status(409).json({
+        error: 'Doublon détecté',
+        message: `Un ouvrier avec le même nom et prénom existe déjà dans cette agence`
+      });
+    }
+
+    // ✅ Tout est OK, créer l'ouvrier
     const result = await pool.request()
-      .input('nom', sql.NVarChar, nom)
-      .input('prenom', sql.NVarChar, prenom)
-      .input('telephone', sql.NVarChar, telephone || null)
-      .input('email', sql.NVarChar, email || null)
+      .input('nom', sql.NVarChar, nom.trim())
+      .input('prenom', sql.NVarChar, prenom.trim())
+      .input('telephone', sql.NVarChar, telephone ? telephone.trim() : null)
+      .input('email', sql.NVarChar, email ? email.trim().toLowerCase() : null)
       .input('specialite', sql.NVarChar, specialite || null)
       .input('niveau_competence', sql.NVarChar, niveau_competence || 'Intermédiaire')
       .input('agence_id', sql.BigInt, agence_id)
@@ -208,7 +268,7 @@ exports.updateWorker = async (req, res) => {
     // Vérifier que l'ouvrier existe
     const checkResult = await pool.request()
       .input('id', sql.BigInt, ouvrierId)
-      .query('SELECT id FROM Ouvrier WHERE id = @id');
+      .query('SELECT id, agence_id FROM Ouvrier WHERE id = @id');
 
     if (checkResult.recordset.length === 0) {
       return res.status(404).json({
@@ -216,25 +276,97 @@ exports.updateWorker = async (req, res) => {
       });
     }
 
-    // Construire la requête de mise à jour dynamiquement
+    const currentWorker = checkResult.recordset[0];
+
+    // ✅ VALIDATION DES DOUBLONS
+
+    // 1. Vérifier si le téléphone existe déjà pour un autre ouvrier
+    if (telephone && telephone.trim()) {
+      const phoneCheck = await pool.request()
+        .input('telephone', sql.NVarChar, telephone.trim())
+        .input('ouvrierId', sql.BigInt, ouvrierId)
+        .query(`
+          SELECT id, nom, prenom FROM Ouvrier 
+          WHERE telephone = @telephone 
+          AND id != @ouvrierId 
+          AND actif = 1
+        `);
+      
+      if (phoneCheck.recordset.length > 0) {
+        const existing = phoneCheck.recordset[0];
+        return res.status(409).json({
+          error: 'Doublon détecté',
+          message: `Un autre ouvrier utilise déjà ce numéro de téléphone : ${existing.prenom} ${existing.nom}`
+        });
+      }
+    }
+
+    // 2. Vérifier si l'email existe déjà pour un autre ouvrier
+    if (email && email.trim()) {
+      const emailCheck = await pool.request()
+        .input('email', sql.NVarChar, email.trim().toLowerCase())
+        .input('ouvrierId', sql.BigInt, ouvrierId)
+        .query(`
+          SELECT id, nom, prenom FROM Ouvrier 
+          WHERE LOWER(email) = @email 
+          AND id != @ouvrierId 
+          AND actif = 1
+        `);
+      
+      if (emailCheck.recordset.length > 0) {
+        const existing = emailCheck.recordset[0];
+        return res.status(409).json({
+          error: 'Doublon détecté',
+          message: `Un autre ouvrier utilise déjà cet email : ${existing.prenom} ${existing.nom}`
+        });
+      }
+    }
+
+    // 3. Vérifier si un autre ouvrier avec le même nom+prénom existe dans la même agence
+    if (nom && prenom) {
+      const targetAgenceId = agence_id !== undefined ? agence_id : currentWorker.agence_id;
+      
+      const nameCheck = await pool.request()
+        .input('nom', sql.NVarChar, nom.trim())
+        .input('prenom', sql.NVarChar, prenom.trim())
+        .input('agence_id', sql.BigInt, targetAgenceId)
+        .input('ouvrierId', sql.BigInt, ouvrierId)
+        .query(`
+          SELECT id, nom, prenom FROM Ouvrier 
+          WHERE LOWER(nom) = LOWER(@nom) 
+          AND LOWER(prenom) = LOWER(@prenom)
+          AND agence_id = @agence_id
+          AND id != @ouvrierId
+          AND actif = 1
+        `);
+      
+      if (nameCheck.recordset.length > 0) {
+        return res.status(409).json({
+          error: 'Doublon détecté',
+          message: `Un autre ouvrier avec le même nom et prénom existe déjà dans cette agence`
+        });
+      }
+    }
+
+    // ✅ Tout est OK, construire la requête de mise à jour
     let updateFields = [];
     const request = pool.request().input('id', sql.BigInt, ouvrierId);
 
     if (nom !== undefined) {
       updateFields.push('nom = @nom');
-      request.input('nom', sql.NVarChar, nom);
+      request.input('nom', sql.NVarChar, nom.trim());
     }
     if (prenom !== undefined) {
       updateFields.push('prenom = @prenom');
-      request.input('prenom', sql.NVarChar, prenom);
+      request.input('prenom', sql.NVarChar, prenom.trim());
     }
     if (telephone !== undefined) {
       updateFields.push('telephone = @telephone');
-      request.input('telephone', sql.NVarChar, telephone);
+      request.input('telephone', sql.NVarChar, telephone ? telephone.trim() : null);
     }
     if (email !== undefined) {
       updateFields.push('email = @email');
-      request.input('email', sql.NVarChar, email);
+      request.input('email', sql.NVarChar, email ? email.trim().toLowerCase() : null);
     }
     if (specialite !== undefined) {
       updateFields.push('specialite = @specialite');

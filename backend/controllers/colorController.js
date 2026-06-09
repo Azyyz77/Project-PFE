@@ -24,6 +24,19 @@ exports.createColor = async (req, res) => {
     }
 
     const pool = await getConnection();
+
+    const duplicateCheck = await pool.request()
+      .input('nom', sql.NVarChar(50), nom)
+      .query(`
+        SELECT COUNT(*) AS count
+        FROM Couleur
+        WHERE LOWER(LTRIM(RTRIM(nom))) = LOWER(LTRIM(RTRIM(@nom)))
+      `);
+
+    if (duplicateCheck.recordset[0].count > 0) {
+      return res.status(400).json({ message: 'Cette couleur existe deja' });
+    }
+
     const result = await pool.request()
       .input('nom', sql.NVarChar(50), nom)
       .input('code_hex', sql.VarChar(7), code_hex || null)
@@ -50,6 +63,23 @@ exports.updateColor = async (req, res) => {
     const { nom, code_hex, actif } = req.body;
 
     const pool = await getConnection();
+
+    if (nom) {
+      const duplicateCheck = await pool.request()
+        .input('id', sql.BigInt, id)
+        .input('nom', sql.NVarChar(50), nom)
+        .query(`
+          SELECT COUNT(*) AS count
+          FROM Couleur
+          WHERE id <> @id
+            AND LOWER(LTRIM(RTRIM(nom))) = LOWER(LTRIM(RTRIM(@nom)))
+        `);
+
+      if (duplicateCheck.recordset[0].count > 0) {
+        return res.status(400).json({ message: 'Cette couleur existe deja' });
+      }
+    }
+
     await pool.request()
       .input('id', sql.BigInt, id)
       .input('nom', sql.NVarChar(50), nom)

@@ -291,7 +291,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   if (!user || user.role !== 'CLIENT') return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f5f7fa]">
+    <div className="flex h-screen overflow-hidden bg-[#f5f7fa] w-full min-w-0 overflow-x-hidden">
       <ClientSidebar />
 
       <div className="flex min-w-0 flex-1 flex-col min-h-0">
@@ -329,7 +329,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           <PhoneVerificationBanner />
           <div
             key={pathname}

@@ -481,10 +481,10 @@ export default function DirectionBillingPage() {
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Revenu Total</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {billingStats.montant_total.toLocaleString('fr-TN')} TND
+                    {(billingStats.montant_total || 0).toLocaleString('fr-TN')} TND
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {billingStats.total_factures} factures
+                    {billingStats.total_factures || 0} factures
                   </p>
                 </div>
                 <DollarSign className="h-8 w-8 text-green-500" />
@@ -498,10 +498,10 @@ export default function DirectionBillingPage() {
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Montant Payé</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {billingStats.montant_paye.toLocaleString('fr-TN')} TND
+                    {(billingStats.montant_paye || 0).toLocaleString('fr-TN')} TND
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {billingStats.factures_payees} factures
+                    {billingStats.factures_payees || 0} factures
                   </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
@@ -515,10 +515,10 @@ export default function DirectionBillingPage() {
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Montant Impayé</p>
                   <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                    {billingStats.montant_impaye.toLocaleString('fr-TN')} TND
+                    {(billingStats.montant_impaye || 0).toLocaleString('fr-TN')} TND
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {billingStats.factures_impayees} factures
+                    {billingStats.factures_impayees || 0} factures
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-orange-500" />
@@ -532,10 +532,10 @@ export default function DirectionBillingPage() {
                 <div>
                   <p className="text-sm text-slate-600 dark:text-slate-400">Taux de Paiement</p>
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {billingStats.taux_paiement.toFixed(1)}%
+                    {(billingStats.taux_paiement || 0).toFixed(1)}%
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Moyenne: {billingStats.montant_moyen.toLocaleString('fr-TN')} TND
+                    Moyenne: {(billingStats.montant_moyen || 0).toLocaleString('fr-TN')} TND
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-blue-500" />

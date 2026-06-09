@@ -1,7 +1,21 @@
 // routes/chatbot.js
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const aiAssistantService = require('../services/aiAssistantService');
+
+// Extract userId from Authorization header if present (optional auth)
+function extractUserId(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.id || decoded.userId || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Chatbot endpoint - Uses Groq AI for fast responses
@@ -17,19 +31,24 @@ router.post('/chat', async (req, res) => {
       });
     }
 
-    console.log('📨 Chatbot request:', { 
-      message: message?.substring(0, 50) + '...', 
+    console.log('📨 Chatbot request:', {
+      message: message?.substring(0, 50) + '...',
       historyLength: history?.length || 0
     });
+
+    const userId = extractUserId(req);
 
     // Build context from conversation history
     const context = {
       userType: 'client',
+      userId,
       conversationHistory: history || []
     };
 
     // Get response from AI service (Groq or fallback)
-    const reply = await aiAssistantService.getResponse(message, context);
+    let reply = await aiAssistantService.getResponse(message, context);
+    // Normalize: getResponse may return a string or {reply, rag} object
+    if (reply && typeof reply === 'object' && reply.reply) reply = reply.reply;
 
     console.log('✅ Chatbot response received');
     

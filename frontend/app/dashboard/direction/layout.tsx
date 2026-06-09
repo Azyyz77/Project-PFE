@@ -69,7 +69,7 @@ function DirectionSidebar() {
   };
 
   return (
-    <aside className="hidden min-h-screen w-72 flex-col border-r border-slate-200 bg-white px-4 py-5 dark:border-white/[0.08] dark:bg-[#070c14] lg:flex">
+    <aside className="hidden min-h-screen w-72 flex-col border-r border-slate-200 bg-white px-4 py-5 dark:border-white/[0.08] dark:bg-[#070c14] lg:flex min-w-0 overflow-hidden">
       {/* Logo */}
       <div className="mb-6 px-3">
         <div className="flex items-start justify-between gap-2">
@@ -230,10 +230,10 @@ export default function DirectionLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#070c14]">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-[#070c14] w-full min-w-0 overflow-x-hidden">
       <DirectionSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-white p-4 dark:border-white/[0.08] dark:bg-[#070c14] lg:hidden">
           <h1 className="text-base font-semibold text-slate-900 dark:text-white">STA Chery - Direction</h1>
@@ -244,7 +244,7 @@ export default function DirectionLayout({
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

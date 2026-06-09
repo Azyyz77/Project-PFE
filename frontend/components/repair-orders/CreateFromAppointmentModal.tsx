@@ -48,7 +48,11 @@ export default function CreateFromAppointmentModal({
       setLoading(true);
       setError(null);
       // Utiliser l'endpoint agent-dashboard pour récupérer tous les RDV de l'agence
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/agent-dashboard/appointments`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/agent-dashboard/appointments`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

@@ -105,9 +105,9 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 w-full min-w-0 overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             Statistiques Globales
@@ -123,7 +123,7 @@ export default function StatisticsPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex-1 min-w-[200px]">
@@ -156,20 +156,20 @@ export default function StatisticsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="global">Global</TabsTrigger>
-          <TabsTrigger value="revenue">Revenus</TabsTrigger>
-          <TabsTrigger value="satisfaction">Satisfaction</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
+        <TabsList className="flex w-full mb-6 overflow-x-auto">
+          <TabsTrigger value="global" className="flex-1 min-w-0">Global</TabsTrigger>
+          <TabsTrigger value="revenue" className="flex-1 min-w-0">Revenus</TabsTrigger>
+          <TabsTrigger value="satisfaction" className="flex-1 min-w-0">Satisfaction</TabsTrigger>
+          <TabsTrigger value="performance" className="flex-1 min-w-0">Performance</TabsTrigger>
         </TabsList>
 
         {/* Global Tab */}
-        <TabsContent value="global" className="space-y-6">
+        <TabsContent value="global" className="w-full min-w-0 overflow-hidden">
           {globalStats && (
             <>
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 min-w-0">
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Total RDV
@@ -183,7 +183,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Clients Uniques
@@ -197,7 +197,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Véhicules
@@ -211,7 +211,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Durée Moyenne
@@ -227,12 +227,12 @@ export default function StatisticsPage() {
               </div>
 
               {/* Status Distribution */}
-              <Card>
+              <Card className="mb-6 min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Répartition par Statut</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 min-w-0">
                     {globalStats.par_statut.map((stat) => (
                       <div key={stat.statut} className="text-center p-4 rounded-lg border border-slate-200 dark:border-slate-700">
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
@@ -251,7 +251,7 @@ export default function StatisticsPage() {
               </Card>
 
               {/* Monthly Evolution */}
-              <Card>
+              <Card className="min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Évolution Mensuelle</CardTitle>
                 </CardHeader>
@@ -280,12 +280,12 @@ export default function StatisticsPage() {
         </TabsContent>
 
         {/* Revenue Tab */}
-        <TabsContent value="revenue" className="space-y-6">
+        <TabsContent value="revenue" className="w-full min-w-0 overflow-hidden">
           {revenueStats && (
             <>
               {/* Revenue Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 min-w-0">
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Revenu Total
@@ -299,7 +299,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Revenu Moyen
@@ -313,7 +313,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Revenu Min
@@ -326,7 +326,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Revenu Max
@@ -341,7 +341,7 @@ export default function StatisticsPage() {
               </div>
 
               {/* Revenue by Agency */}
-              <Card>
+              <Card className="mb-6 min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Revenus par Agence</CardTitle>
                 </CardHeader>
@@ -367,7 +367,7 @@ export default function StatisticsPage() {
               </Card>
 
               {/* Revenue by Type */}
-              <Card>
+              <Card className="min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Revenus par Type d'Intervention</CardTitle>
                 </CardHeader>
@@ -396,12 +396,12 @@ export default function StatisticsPage() {
         </TabsContent>
 
         {/* Satisfaction Tab */}
-        <TabsContent value="satisfaction" className="space-y-6">
+        <TabsContent value="satisfaction" className="w-full min-w-0 overflow-hidden">
           {satisfactionStats && (
             <>
               {/* Satisfaction Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 min-w-0">
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Note Moyenne
@@ -415,7 +415,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Taux de Satisfaction
@@ -429,7 +429,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Total Feedbacks
@@ -443,7 +443,7 @@ export default function StatisticsPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="min-w-0 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
                       Réclamations
@@ -462,12 +462,12 @@ export default function StatisticsPage() {
               </div>
 
               {/* Feedback Distribution */}
-              <Card>
+              <Card className="mb-6 min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Distribution des Feedbacks</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-4 min-w-0">
                     <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
                       <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -494,7 +494,7 @@ export default function StatisticsPage() {
               </Card>
 
               {/* Satisfaction by Agency */}
-              <Card>
+              <Card className="min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Satisfaction par Agence</CardTitle>
                 </CardHeader>
@@ -526,11 +526,11 @@ export default function StatisticsPage() {
         </TabsContent>
 
         {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-6">
+        <TabsContent value="performance" className="w-full min-w-0 overflow-hidden">
           {performanceStats && (
             <>
               {/* Top Agents */}
-              <Card>
+              <Card className="mb-6 min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-yellow-500" />
@@ -570,13 +570,13 @@ export default function StatisticsPage() {
               </Card>
 
               {/* Agent Performance */}
-              <Card>
+              <Card className="min-w-0 overflow-hidden">
                 <CardHeader>
                   <CardTitle>Performance des Agents</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div className="overflow-x-auto min-w-0">
+                    <table className="w-full min-w-0">
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-700">
                           <th className="text-left p-3 text-sm font-semibold text-slate-700 dark:text-slate-300">

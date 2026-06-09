@@ -36,7 +36,7 @@ export default function AppointmentsList({ token }: Props) {
     
     try {
       setLoading(true);
-      const data = await fetchAppointments(token, { statut: filter || undefined });
+      const data = await fetchAppointments({ statut: filter || undefined });
       setAppointments(data);
     } catch (error) {
       console.error(error);
@@ -84,30 +84,26 @@ export default function AppointmentsList({ token }: Props) {
     if (!confirmDialog.id || !confirmDialog.action || !token) return;
 
     try {
-      let actionFn;
       let label = '';
 
       switch (confirmDialog.action) {
         case 'confirm':
-          actionFn = confirmAppointment;
+          await confirmAppointment(confirmDialog.id);
           label = 'Rendez-vous confirmé';
           break;
         case 'start':
-          actionFn = startIntervention;
+          await startIntervention(confirmDialog.id);
           label = 'Intervention démarrée';
           break;
         case 'finish':
-          actionFn = finishIntervention;
+          await finishIntervention(confirmDialog.id);
           label = 'Intervention terminée';
           break;
         case 'cancel':
-          actionFn = (t: string, id: number) =>
-            cancelAppointment(t, id, 'Annulé par agent');
+          await cancelAppointment(confirmDialog.id, 'Annulé par agent');
           label = 'Rendez-vous annulé';
           break;
       }
-
-      await actionFn(token, confirmDialog.id);
       toast.success(label);
       loadAppointments();
     } catch (e: any) {

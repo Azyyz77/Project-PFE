@@ -45,6 +45,9 @@ const authMiddleware = async (req, res, next) => {
       const cachedUser = await redis.get(cacheKey);
       if (cachedUser) {
         req.user = JSON.parse(cachedUser);
+        if (typeof req.user.role === 'string') {
+          req.user.role = req.user.role.toUpperCase();
+        }
         console.log(`[AuthMiddleware] Cache hit for user:`, req.user.id, req.user.role);
         return next();
       }
@@ -54,10 +57,14 @@ const authMiddleware = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    const normalizedRole = typeof decoded.role === 'string'
+      ? decoded.role.toUpperCase()
+      : decoded.role;
+
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      role: decoded.role,
+      role: normalizedRole,
       agence_id: decoded.agence_id  // ✅ IMPORTANT: Extraire agence_id pour l'isolation multi-agences
     };
 

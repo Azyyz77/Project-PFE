@@ -21,6 +21,14 @@ interface WorkerFormData extends CreateWorkerData {
   actif?: boolean;
 }
 
+interface ValidationErrors {
+  nom?: string;
+  prenom?: string;
+  telephone?: string;
+  email?: string;
+  date_embauche?: string;
+}
+
 export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agencies }: WorkerModalProps) {
   const [formData, setFormData] = useState<WorkerFormData>({
     nom: '',
@@ -36,6 +44,89 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+
+  // Validation functions
+  const validateName = (name: string | undefined): string | undefined => {
+    if (!name || !name.trim()) {
+      return 'Ce champ est requis';
+    }
+    if (name.trim().length < 2) {
+      return 'Minimum 2 caractères';
+    }
+    if (name.trim().length > 50) {
+      return 'Maximum 50 caractères';
+    }
+    if (!/^[a-zA-ZÀ-ÿ\s\-']+$/.test(name)) {
+      return 'Caractères invalides (lettres uniquement)';
+    }
+    return undefined;
+  };
+
+  const validatePhone = (phone: string | undefined): string | undefined => {
+    if (!phone || !phone.trim()) {
+      return undefined; // Phone is optional
+    }
+    // Tunisian phone format: +216 XX XXX XXX or 216XXXXXXXX or XXXXXXXX
+    const phoneRegex = /^(\+216|216)?[2-9]\d{7}$/;
+    const cleanPhone = phone.replace(/\s/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
+      return 'Format invalide (ex: +216 XX XXX XXX)';
+    }
+    return undefined;
+  };
+
+  const validateEmail = (email: string | undefined): string | undefined => {
+    if (!email || !email.trim()) {
+      return undefined; // Email is optional
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Format email invalide';
+    }
+    if (email.length > 100) {
+      return 'Maximum 100 caractères';
+    }
+    return undefined;
+  };
+
+  const validateDateEmbauche = (date: string | undefined): string | undefined => {
+    if (!date || !date.trim()) {
+      return undefined; // Date is optional
+    }
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate > today) {
+      return 'La date ne peut pas être dans le futur';
+    }
+    const minDate = new Date('1950-01-01');
+    if (selectedDate < minDate) {
+      return 'Date invalide';
+    }
+    return undefined;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {};
+    
+    const prenomError = validateName(formData.prenom);
+    const nomError = validateName(formData.nom);
+    const telephoneError = validatePhone(formData.telephone);
+    const emailError = validateEmail(formData.email);
+    const dateError = validateDateEmbauche(formData.date_embauche);
+    
+    if (prenomError) errors.prenom = prenomError as string;
+    if (nomError) errors.nom = nomError as string;
+    if (telephoneError) errors.telephone = telephoneError as string;
+    if (emailError) errors.email = emailError as string;
+    if (dateError) errors.date_embauche = dateError as string;
+
+    setValidationErrors(errors);
+    
+    // Return true if no errors
+    return Object.keys(errors).length === 0;
+  };
 
   // Reset form when modal opens/closes or worker changes
   useEffect(() => {
@@ -70,13 +161,21 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
         });
       }
       setError(null);
+      setValidationErrors({});
     }
   }, [isOpen, worker, agencies]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setError(null);
+
+    // Validate form
+    if (!validateForm()) {
+      setError('Veuillez corriger les erreurs de saisie');
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
       if (worker) {
@@ -94,6 +193,42 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleFieldBlur = (field: keyof ValidationErrors) => {
+    const errors = { ...validationErrors };
+    
+    let error: string | undefined;
+    
+    switch (field) {
+      case 'prenom':
+        error = validateName(formData.prenom);
+        if (error) errors.prenom = error as string;
+        else delete errors.prenom;
+        break;
+      case 'nom':
+        error = validateName(formData.nom);
+        if (error) errors.nom = error as string;
+        else delete errors.nom;
+        break;
+      case 'telephone':
+        error = validatePhone(formData.telephone);
+        if (error) errors.telephone = error as string;
+        else delete errors.telephone;
+        break;
+      case 'email':
+        error = validateEmail(formData.email);
+        if (error) errors.email = error as string;
+        else delete errors.email;
+        break;
+      case 'date_embauche':
+        error = validateDateEmbauche(formData.date_embauche);
+        if (error) errors.date_embauche = error as string;
+        else delete errors.date_embauche;
+        break;
+    }
+    
+    setValidationErrors(errors);
   };
 
   const handleClose = () => {
@@ -133,9 +268,18 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
                 required
                 value={formData.prenom}
                 onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onBlur={() => handleFieldBlur('prenom')}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.prenom ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
+              {validationErrors.prenom && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {validationErrors.prenom}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -146,9 +290,18 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
                 required
                 value={formData.nom}
                 onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onBlur={() => handleFieldBlur('nom')}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.nom ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
+              {validationErrors.nom && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {validationErrors.nom}
+                </p>
+              )}
             </div>
           </div>
 
@@ -161,10 +314,19 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
                 type="tel"
                 value={formData.telephone}
                 onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                onBlur={() => handleFieldBlur('telephone')}
                 placeholder="+216 XX XXX XXX"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.telephone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
+              {validationErrors.telephone && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {validationErrors.telephone}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -174,10 +336,19 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onBlur={() => handleFieldBlur('email')}
                 placeholder="ouvrier@example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
+              {validationErrors.email && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {validationErrors.email}
+                </p>
+              )}
             </div>
           </div>
 
@@ -238,9 +409,19 @@ export default function WorkerModal({ isOpen, onClose, onSuccess, worker, agenci
                 type="date"
                 value={formData.date_embauche}
                 onChange={(e) => setFormData({ ...formData, date_embauche: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onBlur={() => handleFieldBlur('date_embauche')}
+                max={new Date().toISOString().split('T')[0]}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  validationErrors.date_embauche ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                }`}
                 disabled={submitting}
               />
+              {validationErrors.date_embauche && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {validationErrors.date_embauche}
+                </p>
+              )}
             </div>
           </div>
 

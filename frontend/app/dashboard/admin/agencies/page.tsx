@@ -61,6 +61,8 @@ export default function AgenciesPage() {
     adresse: '',
   });
 
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   // Redirect if not admin
   useEffect(() => {
     console.log('[AgenciesPage] User check:', { 
@@ -117,7 +119,26 @@ export default function AgenciesPage() {
     }
   };
 
+  const validateAgencyForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.nom.trim()) {
+      newErrors.nom = "Le nom de l'agence est obligatoire";
+    }
+    if (!formData.ville.trim()) {
+      newErrors.ville = "La ville est obligatoire";
+    }
+    if (formData.telephone.trim()) {
+      const phoneRegex = /^(\+216|0)?[2-9]\d{7}$/;
+      if (!phoneRegex.test(formData.telephone.trim())) {
+        newErrors.telephone = "Numéro de téléphone invalide (format Tunisie)";
+      }
+    }
+    setFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCreate = async () => {
+    if (!validateAgencyForm()) return;
     try {
       await agenciesAPI.create(formData);
       toast.success('Agence créée avec succès');
@@ -133,6 +154,7 @@ export default function AgenciesPage() {
 
   const handleUpdate = async () => {
     if (!selectedAgency) return;
+    if (!validateAgencyForm()) return;
     try {
       await agenciesAPI.update(selectedAgency.id, formData);
       toast.success('Agence mise à jour avec succès');
@@ -169,6 +191,7 @@ export default function AgenciesPage() {
       telephone: agency.telephone || '',
       adresse: agency.adresse || '',
     });
+    setFormErrors({});
     setIsEditDialogOpen(true);
   };
 
@@ -184,6 +207,7 @@ export default function AgenciesPage() {
       telephone: '',
       adresse: '',
     });
+    setFormErrors({});
     setSelectedAgency(null);
   };
 
@@ -205,7 +229,7 @@ export default function AgenciesPage() {
             Gérez les agences Chery à travers la Tunisie
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Button onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />
           Nouvelle Agence
         </Button>
@@ -346,7 +370,12 @@ export default function AgenciesPage() {
           <DialogHeader>
             <DialogTitle>Créer une nouvelle agence</DialogTitle>
           </DialogHeader>
-          <AgencyForm formData={formData} setFormData={setFormData} />
+          <AgencyForm 
+            formData={formData} 
+            setFormData={setFormData} 
+            errors={formErrors}
+            setErrors={setFormErrors}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               Annuler
@@ -362,7 +391,12 @@ export default function AgenciesPage() {
           <DialogHeader>
             <DialogTitle>Modifier l'agence</DialogTitle>
           </DialogHeader>
-          <AgencyForm formData={formData} setFormData={setFormData} />
+          <AgencyForm 
+            formData={formData} 
+            setFormData={setFormData} 
+            errors={formErrors}
+            setErrors={setFormErrors}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Annuler
@@ -400,10 +434,25 @@ export default function AgenciesPage() {
 function AgencyForm({
   formData,
   setFormData,
+  errors,
+  setErrors,
 }: {
   formData: CreateAgencyData;
   setFormData: React.Dispatch<React.SetStateAction<CreateAgencyData>>;
+  errors: Record<string, string>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }) {
+  const handleChange = (field: keyof CreateAgencyData, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   return (
     <div className="grid gap-4 py-4">
       <div className="grid grid-cols-2 gap-4">
@@ -412,18 +461,26 @@ function AgencyForm({
           <Input
             id="nom"
             value={formData.nom}
-            onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+            onChange={(e) => handleChange('nom', e.target.value)}
             placeholder="STA Tunis"
+            className={errors.nom ? 'border-red-500 focus-visible:ring-red-500' : ''}
           />
+          {errors.nom && (
+            <p className="text-xs text-red-600 mt-1">{errors.nom}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="ville">Ville *</Label>
           <Input
             id="ville"
             value={formData.ville}
-            onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
+            onChange={(e) => handleChange('ville', e.target.value)}
             placeholder="Tunis"
+            className={errors.ville ? 'border-red-500 focus-visible:ring-red-500' : ''}
           />
+          {errors.ville && (
+            <p className="text-xs text-red-600 mt-1">{errors.ville}</p>
+          )}
         </div>
       </div>
 
@@ -432,9 +489,13 @@ function AgencyForm({
         <Input
           id="telephone"
           value={formData.telephone}
-          onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+          onChange={(e) => handleChange('telephone', e.target.value)}
           placeholder="+216 XX XXX XXX"
+          className={errors.telephone ? 'border-red-500 focus-visible:ring-red-500' : ''}
         />
+        {errors.telephone && (
+          <p className="text-xs text-red-600 mt-1">{errors.telephone}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -442,7 +503,7 @@ function AgencyForm({
         <Input
           id="adresse"
           value={formData.adresse}
-          onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+          onChange={(e) => handleChange('adresse', e.target.value)}
           placeholder="123 Avenue Habib Bourguiba"
         />
       </div>

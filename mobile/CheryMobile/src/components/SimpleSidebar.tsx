@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { colors, spacing, borderRadius, fontSize, shadows } from '../styles/theme';
 
 interface SimpleSidebarProps {
@@ -27,19 +28,22 @@ interface MenuItem {
 export default function SimpleSidebar({ visible, onClose, navigation }: SimpleSidebarProps) {
   const { user, logout } = useAuth();
   const { vehicles, appointments, notifications } = useData();
+  const { t } = useLanguage();
 
   const unreadNotifications = notifications.filter((n: any) => !n.lu).length;
 
   const menuItems: MenuItem[] = [
-    { icon: '🏠', label: 'Accueil', screen: 'Home' },
-    { icon: '🚗', label: 'Mes Véhicules', screen: 'Vehicles', badge: vehicles.length },
-    { icon: '📅', label: 'Rendez-vous', screen: 'Appointments', badge: appointments.length },
-    { icon: '🔧', label: 'Commandes', screen: 'RepairOrders' },
-    { icon: '💰', label: 'Factures', screen: 'Invoices' },
-    { icon: '📝', label: 'Réclamations', screen: 'Complaints' },
-    { icon: '🔔', label: 'Notifications', screen: 'Notifications', badge: unreadNotifications },
-    { icon: '💬', label: 'Assistant SAV', screen: 'Chatbot' },
-    { icon: '👤', label: 'Mon Profil', screen: 'Profile' },
+    { icon: '🏠', label: t('common.home'), screen: 'Home' },
+    { icon: '🚗', label: t('common.vehicles'), screen: 'Vehicles', badge: vehicles.length },
+    { icon: '📅', label: t('common.appointments'), screen: 'Appointments', badge: appointments.length },
+    { icon: '🔧', label: t('common.repairOrders'), screen: 'RepairOrders' },
+    { icon: '💰', label: t('common.invoices'), screen: 'Invoices' },
+    { icon: '📝', label: t('common.complaints'), screen: 'Complaints' },
+    { icon: '🔍', label: t('shortcuts.inspection'), screen: 'VehicleInspection' },
+    { icon: '🛡️', label: t('shortcuts.assurances'), screen: 'Assurances' },
+    { icon: '🔔', label: t('common.notifications'), screen: 'Notifications', badge: unreadNotifications },
+    { icon: '💬', label: t('common.assistant'), screen: 'Chatbot' },
+    { icon: '👤', label: t('common.profile'), screen: 'Profile' },
   ];
 
   const handleLogout = async () => {
@@ -95,24 +99,24 @@ export default function SimpleSidebar({ visible, onClose, navigation }: SimpleSi
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{vehicles.length}</Text>
-                  <Text style={styles.statLabel}>Véhicules</Text>
+                  <Text style={styles.statLabel}>{t('stats.vehicles')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{appointments.length}</Text>
-                  <Text style={styles.statLabel}>RDV</Text>
+                  <Text style={styles.statLabel}>{t('stats.appointments')}</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{unreadNotifications}</Text>
-                  <Text style={styles.statLabel}>Alertes</Text>
+                  <Text style={styles.statLabel}>{t('stats.alerts')}</Text>
                 </View>
               </View>
             </View>
 
             {/* Menu Items */}
             <View style={styles.menuSection}>
-              <Text style={styles.sectionTitle}>MENU PRINCIPAL</Text>
+              <Text style={styles.sectionTitle}>{t('common.mainMenu').toUpperCase()}</Text>
               {menuItems.map((item, index) => (
                 <TouchableOpacity
                   key={index}
@@ -136,20 +140,20 @@ export default function SimpleSidebar({ visible, onClose, navigation }: SimpleSi
 
             {/* Quick Actions */}
             <View style={styles.quickActionsSection}>
-              <Text style={styles.sectionTitle}>ACTIONS RAPIDES</Text>
+              <Text style={styles.sectionTitle}>{t('common.quickActions').toUpperCase()}</Text>
               <TouchableOpacity
                 style={styles.quickActionButton}
                 onPress={() => navigateToScreen('BookAppointmentStep1')}
                 activeOpacity={0.8}>
                 <Text style={styles.quickActionIcon}>📅</Text>
-                <Text style={styles.quickActionText}>Réserver un RDV</Text>
+                <Text style={styles.quickActionText}>{t('common.bookAppointment')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickActionButton, { backgroundColor: colors.success }]}
                 onPress={() => navigateToScreen('AddVehicle')}
                 activeOpacity={0.8}>
                 <Text style={styles.quickActionIcon}>🚗</Text>
-                <Text style={styles.quickActionText}>Ajouter un véhicule</Text>
+                <Text style={styles.quickActionText}>{t('common.addVehicle')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -160,9 +164,9 @@ export default function SimpleSidebar({ visible, onClose, navigation }: SimpleSi
                 onPress={handleLogout}
                 activeOpacity={0.7}>
                 <Text style={styles.logoutIcon}>🚪</Text>
-                <Text style={styles.logoutText}>Déconnexion</Text>
+                <Text style={styles.logoutText}>{t('common.logout')}</Text>
               </TouchableOpacity>
-              <Text style={styles.version}>Version 1.0.0</Text>
+              <Text style={styles.version}>{t('common.version')} 1.0.0</Text>
             </View>
           </ScrollView>
         </View>

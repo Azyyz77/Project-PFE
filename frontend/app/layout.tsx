@@ -32,10 +32,10 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <main className="w-full">
+              <div className="w-full min-w-0 overflow-x-hidden">
                 {children}
                 <ToastProvider />
-              </main>
+              </div>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>

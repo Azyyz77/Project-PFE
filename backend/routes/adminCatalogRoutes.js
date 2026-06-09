@@ -29,5 +29,9 @@ router.get('/brands/:brandId/models', adminCatalogController.getBrandModels);
 router.post('/models', adminCatalogController.createModel);
 router.put('/models/:id', adminCatalogController.updateModel);
 router.delete('/models/:id', adminCatalogController.deleteModel);
+router.get('/models/:modelId/versions', adminCatalogController.getModelVersions);
+router.post('/versions', adminCatalogController.createVersion);
+router.put('/versions/:id', adminCatalogController.updateVersion);
+router.delete('/versions/:id', adminCatalogController.deleteVersion);
 
 module.exports = router;

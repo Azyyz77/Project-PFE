@@ -257,10 +257,10 @@ export default function AgentLayout({
 
   console.log('AgentLayout: Rendering layout');
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 w-full min-w-0 overflow-x-hidden">
       <AgentSidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Desktop Header with Notifications */}
         <div className="hidden lg:flex bg-white border-b p-4 items-center justify-end">
           <NotificationBell />
@@ -276,7 +276,7 @@ export default function AgentLayout({
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

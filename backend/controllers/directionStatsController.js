@@ -90,20 +90,31 @@ const getGlobalStats = async (req, res) => {
       ${dateFilter}
     `);
 
-    // Statistiques par statut
-    const statutResult = await pool.request().query(`
+    // Statistiques par statut - créer un nouveau request avec les mêmes paramètres
+    const request2 = pool.request();
+    if (dateDebut) request2.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request2.input('dateFin', sql.Date, dateFin);
+    
+    const statutResult = await request2.query(`
+      WITH TotalRdv AS (
+        SELECT COUNT(*) AS total FROM RendezVous r ${dateFilter}
+      )
       SELECT 
         r.statut,
         COUNT(*) AS count,
-        CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM RendezVous ${dateFilter}) * 100 AS pourcentage
+        CAST(COUNT(*) AS FLOAT) / (SELECT total FROM TotalRdv) * 100 AS pourcentage
       FROM RendezVous r
       ${dateFilter}
       GROUP BY r.statut
       ORDER BY count DESC
     `);
 
-    // Évolution mensuelle
-    const evolutionResult = await pool.request().query(`
+    // Évolution mensuelle - créer un nouveau request avec les mêmes paramètres
+    const request3 = pool.request();
+    if (dateDebut) request3.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request3.input('dateFin', sql.Date, dateFin);
+    
+    const evolutionResult = await request3.query(`
       SELECT 
         YEAR(r.date_heure) AS annee,
         MONTH(r.date_heure) AS mois,
@@ -181,8 +192,13 @@ const getRevenueStats = async (req, res) => {
       ${whereClause}
     `);
 
-    // Revenus par agence (basés sur les factures)
-    const revenueByAgencyResult = await pool.request().query(`
+    // Revenus par agence (basés sur les factures) - créer un nouveau request avec les mêmes paramètres
+    const request2 = pool.request();
+    if (dateDebut) request2.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request2.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request2.input('agenceId', sql.BigInt, agenceId);
+    
+    const revenueByAgencyResult = await request2.query(`
       SELECT 
         ag.id AS agence_id,
         ag.nom AS agence_nom,
@@ -202,8 +218,13 @@ const getRevenueStats = async (req, res) => {
     // Cette fonctionnalité sera ajoutée plus tard quand la table sera créée
     const revenueByTypeResult = { recordset: [] };
 
-    // Évolution mensuelle des revenus (basés sur les factures)
-    const monthlyRevenueResult = await pool.request().query(`
+    // Évolution mensuelle des revenus (basés sur les factures) - créer un nouveau request avec les mêmes paramètres
+    const request3 = pool.request();
+    if (dateDebut) request3.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request3.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request3.input('agenceId', sql.BigInt, agenceId);
+    
+    const monthlyRevenueResult = await request3.query(`
       SELECT 
         YEAR(f.date_emission) AS annee,
         MONTH(f.date_emission) AS mois,
@@ -287,8 +308,13 @@ const getSatisfactionStats = async (req, res) => {
       ${whereClause}
     `);
 
-    // Satisfaction par agence
-    const satisfactionByAgencyResult = await pool.request().query(`
+    // Satisfaction par agence - créer un nouveau request avec les mêmes paramètres
+    const request2 = pool.request();
+    if (dateDebut) request2.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request2.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request2.input('agenceId', sql.BigInt, agenceId);
+    
+    const satisfactionByAgencyResult = await request2.query(`
       SELECT 
         ag.id AS agence_id,
         ag.nom AS agence_nom,
@@ -303,12 +329,23 @@ const getSatisfactionStats = async (req, res) => {
       ORDER BY note_moyenne DESC
     `);
 
-    // Distribution des notes
-    const distributionResult = await pool.request().query(`
+    // Distribution des notes - créer un nouveau request avec les mêmes paramètres
+    const request3 = pool.request();
+    if (dateDebut) request3.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request3.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request3.input('agenceId', sql.BigInt, agenceId);
+    
+    const distributionResult = await request3.query(`
+      WITH TotalFeedback AS (
+        SELECT COUNT(*) AS total 
+        FROM Feedback f 
+        LEFT JOIN RendezVous r ON f.appointment_id = r.id 
+        ${whereClause}
+      )
       SELECT 
         f.note,
         COUNT(*) AS count,
-        CAST(COUNT(*) AS FLOAT) / (SELECT COUNT(*) FROM Feedback f2 LEFT JOIN RendezVous r2 ON f2.appointment_id = r2.id ${whereClause}) * 100 AS pourcentage
+        CAST(COUNT(*) AS FLOAT) / (SELECT total FROM TotalFeedback) * 100 AS pourcentage
       FROM Feedback f
       LEFT JOIN RendezVous r ON f.appointment_id = r.id
       ${whereClause}
@@ -316,8 +353,13 @@ const getSatisfactionStats = async (req, res) => {
       ORDER BY f.note DESC
     `);
 
-    // Réclamations
-    const complaintsResult = await pool.request().query(`
+    // Réclamations - créer un nouveau request avec les mêmes paramètres
+    const request4 = pool.request();
+    if (dateDebut) request4.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request4.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request4.input('agenceId', sql.BigInt, agenceId);
+    
+    const complaintsResult = await request4.query(`
       SELECT 
         COUNT(c.id) AS total_reclamations,
         SUM(CASE WHEN c.statut = 'RESOLU' THEN 1 ELSE 0 END) AS reclamations_resolues,
@@ -392,8 +434,13 @@ const getPerformanceStats = async (req, res) => {
       ORDER BY rdv_termines DESC
     `);
 
-    // Top agents par satisfaction
-    const topAgentsResult = await pool.request().query(`
+    // Top agents par satisfaction - créer un nouveau request avec les mêmes paramètres
+    const request2 = pool.request();
+    if (dateDebut) request2.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request2.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request2.input('agenceId', sql.BigInt, agenceId);
+    
+    const topAgentsResult = await request2.query(`
       SELECT TOP 10
         u.id AS agent_id,
         u.prenom + ' ' + u.nom AS agent_nom,
@@ -410,8 +457,13 @@ const getPerformanceStats = async (req, res) => {
       ORDER BY note_moyenne DESC
     `);
 
-    // Charge de travail par agent
-    const workloadResult = await pool.request().query(`
+    // Charge de travail par agent - créer un nouveau request avec les mêmes paramètres
+    const request3 = pool.request();
+    if (dateDebut) request3.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request3.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request3.input('agenceId', sql.BigInt, agenceId);
+    
+    const workloadResult = await request3.query(`
       SELECT 
         u.id AS agent_id,
         u.prenom + ' ' + u.nom AS agent_nom,
@@ -568,8 +620,13 @@ const getBillingStats = async (req, res) => {
       ${whereClause}
     `);
 
-    // Facturation par agence
-    const billingByAgencyResult = await pool.request().query(`
+    // Facturation par agence - créer un nouveau request avec les mêmes paramètres
+    const request2 = pool.request();
+    if (dateDebut) request2.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request2.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request2.input('agenceId', sql.BigInt, agenceId);
+    
+    const billingByAgencyResult = await request2.query(`
       SELECT 
         ag.id AS agence_id,
         ag.nom AS agence_nom,
@@ -589,8 +646,13 @@ const getBillingStats = async (req, res) => {
       ORDER BY montant_total DESC
     `);
 
-    // Évolution mensuelle de la facturation
-    const monthlyBillingResult = await pool.request().query(`
+    // Évolution mensuelle de la facturation - créer un nouveau request avec les mêmes paramètres
+    const request3 = pool.request();
+    if (dateDebut) request3.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request3.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request3.input('agenceId', sql.BigInt, agenceId);
+    
+    const monthlyBillingResult = await request3.query(`
       SELECT 
         YEAR(f.date_emission) AS annee,
         MONTH(f.date_emission) AS mois,
@@ -604,8 +666,13 @@ const getBillingStats = async (req, res) => {
       ORDER BY annee DESC, mois DESC
     `);
 
-    // Modes de paiement
-    const paymentMethodsResult = await pool.request().query(`
+    // Modes de paiement - créer un nouveau request avec les mêmes paramètres
+    const request4 = pool.request();
+    if (dateDebut) request4.input('dateDebut', sql.Date, dateDebut);
+    if (dateFin) request4.input('dateFin', sql.Date, dateFin);
+    if (agenceId) request4.input('agenceId', sql.BigInt, agenceId);
+    
+    const paymentMethodsResult = await request4.query(`
       SELECT 
         ISNULL(f.mode_paiement, 'Non spécifié') AS mode_paiement,
         COUNT(f.id) AS count,

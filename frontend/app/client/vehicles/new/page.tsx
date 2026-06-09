@@ -176,13 +176,13 @@ export default function NewVehiclePage() {
 
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
-      toast.error(t('common.error'));
+      toast.error("Le fichier doit être une image");
       return;
     }
 
     // Vérifier la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(t('common.error'));
+      toast.error("L'image ne doit pas dépasser 5 Mo");
       return;
     }
 
@@ -222,50 +222,50 @@ export default function NewVehiclePage() {
 
     const immatriculation = buildImmatriculation();
     if (!immatriculation) {
-      newErrors.immatriculation = t('common.error');
+      newErrors.immatriculation = "L'immatriculation est obligatoire";
     } else if (plateType === 'TUNIS') {
       const { part1, part2 } = tunisPlate;
       const num1 = parseInt(part1) || 0;
       
       if (!part1 || num1 < 1 || num1 > 260) {
-        newErrors.immatriculation = t('common.error');
+        newErrors.immatriculation = "Le numéro de série (bloc 1) doit être compris entre 1 et 260";
       } else if (!part2 || part2.length < 3 || part2.length > 4) {
-        newErrors.immatriculation = t('common.error');
+        newErrors.immatriculation = "Le numéro d'ordre (bloc 2) doit contenir 3 ou 4 chiffres";
       }
     } else if (plateType === 'NT') {
       if (!ntPlate || ntPlate.length < 4 || ntPlate.length > 5) {
-        newErrors.immatriculation = t('common.error');
+        newErrors.immatriculation = "Le numéro de plaque (NT) doit contenir 4 ou 5 chiffres";
       }
     }
 
     if (!form.numero_chassis.trim()) {
-      newErrors.numero_chassis = t('common.error');
+      newErrors.numero_chassis = "Le numéro de châssis est obligatoire";
     }
     if (!form.marque) {
-      newErrors.marque = t('common.error');
+      newErrors.marque = "La marque est obligatoire";
     }
     if (!form.modele) {
-      newErrors.modele = t('common.error');
+      newErrors.modele = "Le modèle est obligatoire";
     }
     if (!form.version_id) {
-      newErrors.version_id = t('common.error');
+      newErrors.version_id = "La version est obligatoire";
     }
     if (!form.annee) {
-      newErrors.annee = t('common.error');
+      newErrors.annee = "L'année est obligatoire";
     } else {
       const year = parseInt(form.annee);
       const currentYear = new Date().getFullYear();
       if (year < 1900 || year > currentYear + 1) {
-        newErrors.annee = t('common.error');
+        newErrors.annee = `L'année doit être comprise entre 1900 et ${currentYear + 1}`;
       }
     }
 
     if (!form.couleur) {
-      newErrors.couleur = t('common.error');
+      newErrors.couleur = "La couleur est obligatoire";
     }
 
     if (!imageCarteGrise) {
-      newErrors.image_carte_grise = t('common.error');
+      newErrors.image_carte_grise = "La photo de la carte grise est obligatoire";
     }
 
     return newErrors;

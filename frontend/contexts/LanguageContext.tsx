@@ -515,19 +515,6 @@ const translations: Record<Language, Record<string, string>> = {
     'vehicleHistory.vehicleNotFound': 'Véhicule non trouvé',
     'vehicleHistory.exportError': 'Erreur lors de l\'export',
 
-    // Vehicles Page (continued)
-    'vehicles.vehicle': 'Véhicule',
-    'vehicles.detailsUnavailable': 'Détails indisponibles',
-    'vehicles.confirmDelete': 'Êtes-vous sûr de vouloir supprimer ce véhicule ?',
-    'vehicles.deleteSuccess': 'Véhicule supprimé avec succès',
-    'vehicles.deleteError': 'Impossible de supprimer le véhicule',
-    'vehicles.addNewVehicle': 'Ajouter un véhicule',
-    'vehicles.vehicleInfo': 'Informations du véhicule',
-    'vehicles.fillRequired': 'Remplissez tous les champs obligatoires (*)',
-    'vehicles.plateType': 'Type d\'immatriculation',
-    'vehicles.tunisFormat': 'Format Tunis',
-    'vehicles.ntFormat': 'Format NT',
-    'vehicles.chassisNumber': 'Numéro de châssis',
     // Assistance Page
     // Informations Page
     'informations.title': 'Informations et Documents',
@@ -1481,26 +1468,37 @@ const translations: Record<Language, Record<string, string>> = {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('fr');
 
-  useEffect(() => {
+  const applyDocumentLanguage = (lang: Language) => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  const resolvePreferredLanguage = (): Language => {
     const savedLang = localStorage.getItem('language');
     if (savedLang === 'ar' || savedLang === 'fr' || savedLang === 'en') {
-      // Defer locale restore until after hydration to keep SSR and first client render identical.
-      queueMicrotask(() => {
-        setLanguageState(savedLang as Language);
-      });
+      return savedLang;
     }
+
+    const browserLanguage = typeof navigator !== 'undefined' ? navigator.language.toLowerCase() : '';
+    if (browserLanguage.startsWith('ar')) return 'ar';
+    if (browserLanguage.startsWith('en')) return 'en';
+    return 'fr';
+  };
+
+  useEffect(() => {
+    const preferredLanguage = resolvePreferredLanguage();
+    setLanguageState(preferredLanguage);
+    localStorage.setItem('language', preferredLanguage);
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    applyDocumentLanguage(language);
   }, [language]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    applyDocumentLanguage(lang);
   };
 
   const t = (key: string): string => {

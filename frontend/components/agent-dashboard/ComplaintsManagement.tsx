@@ -39,10 +39,13 @@ export default function ComplaintsManagement({ token }: Props) {
   const loadComplaints = async () => {
     try {
       setLoading(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
       const url = filter 
-        ? `${API_URL}/api/complaints?statut=${filter}`
-        : `${API_URL}/api/complaints`;
+        ? `${API_URL}/api/agent-dashboard/complaints?statut=${filter}`
+        : `${API_URL}/api/agent-dashboard/complaints`;
       
       const response = await fetch(url, {
         headers: {
@@ -55,10 +58,10 @@ export default function ComplaintsManagement({ token }: Props) {
       }
 
       const data = await response.json();
-      setComplaints(data.complaints || data);
+      setComplaints(data.data || data.complaints || data);
       
       if (activeComplaint) {
-        const updated = (data.complaints || data).find((c: Complaint) => c.id === activeComplaint.id);
+        const updated = (data.data || data.complaints || data).find((c: Complaint) => c.id === activeComplaint.id);
         setActiveComplaint(updated || null);
       }
     } catch (error) {
@@ -91,8 +94,11 @@ export default function ComplaintsManagement({ token }: Props) {
     if (!confirm(`Passer au statut ${statut} ?`)) return;
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${API_URL}/api/complaints/${activeComplaint.id}/status`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/agent-dashboard/complaints/${activeComplaint.id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

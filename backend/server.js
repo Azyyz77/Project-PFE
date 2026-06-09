@@ -52,11 +52,13 @@ const appointmentHistoryRoutes = require('./routes/appointmentHistoryRoutes');
 const informationRoutes = require('./routes/informationRoutes');
 const repairOrderRoutes = require('./routes/repairOrderRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
+const cacheRoutes = require('./routes/cacheRoutes');
 const { getConnection } = require('./config/database');
 const { ensureVehicleValidationSchema } = require('./config/ensureVehicleValidationSchema');
 const { initializeWhatsAppClient, getWhatsAppStatus } = require('./services/whatsappClient');
 const { startReminderService } = require('./services/reminderService');
 const chatbotRoute = require('./routes/chatbot');
+const { register, httpRequestDuration, httpRequestsTotal, activeConnections } = require('./monitoring/metrics');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -108,6 +110,25 @@ app.use(express.urlencoded({ extended: true }));
 // Logging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
+  next();
+});
+
+// ─── Middleware Monitoring Prometheus ──────────────────────
+app.use((req, res, next) => {
+  activeConnections.inc();
+  const end = httpRequestDuration.startTimer();
+
+  res.on('finish', () => {
+    const labels = {
+      method: req.method,
+      route: req.route?.path || req.path,
+      status_code: res.statusCode,
+    };
+    end(labels);
+    httpRequestsTotal.inc(labels);
+    activeConnections.dec();
+  });
+
   next();
 });
 
@@ -163,11 +184,20 @@ app.use('/api/appointments', appointmentHistoryRoutes);
 app.use('/api/information', informationRoutes);
 app.use('/api/repair-orders', repairOrderRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/cache', cacheRoutes);
 // En haut avec les autres require
 const detectRoutes = require('./routes/detectRoutes');
 
 // Avec les autres app.use
-app.use('/api/detect', detectRoutes);// Route d'accueil
+app.use('/api/detect', detectRoutes);
+
+// ─── Endpoint Prometheus ────────────────────────────────────
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', register.contentType);
+  res.send(await register.metrics());
+});
+
+// Route d'accueil
 app.get('/', (req, res) => {
   res.json({
     service: 'Backend Monolithique - STA Chery Tunisia',
@@ -235,6 +265,20 @@ if (require.main === module) {
     } catch (error) {
       console.error('❌ Erreur de connexion à la base de données:', error.message);
       console.error('⚠️  Le serveur démarre mais la BDD n\'est pas accessible.\n');
+    }
+
+    // Auto-sync RAG data (non-blocking)
+    if (process.env.PG_URL && process.env.OLLAMA_URL) {
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Auto-sync RAG en cours...');
+          const ragService = require('./services/ragService');
+          await ragService.syncSQLServerData();
+          console.log('✅ RAG synchronisé au démarrage');
+        } catch (err) {
+          console.error('⚠️  Auto-sync RAG échoué (non bloquant):', err.message);
+        }
+      }, 5000); // Délai 5s pour laisser PG et Ollama se connecter
     }
 
     console.log('🟢 Initialisation de WhatsApp Web...');
@@ -313,5 +357,3 @@ app.post("/chat", async (req, res) => {
   }
 });
 */
-
-

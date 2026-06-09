@@ -5,6 +5,68 @@ import { chatbotApi } from '@/lib/api/chatbot';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MessageCircle, Send, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 
+// Lightweight markdown renderer — no external dependency
+function renderMarkdown(text: string): React.ReactNode {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let listItems: string[] = [];
+
+  const flushList = (key: string) => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul key={`ul-${key}`} className="list-disc list-inside space-y-1 my-1 pl-1">
+          {listItems.map((item, i) => (
+            <li key={i} className="text-sm text-gray-800 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: inlineMarkdown(item) }} />
+          ))}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  const inlineMarkdown = (str: string) =>
+    str
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code class="bg-gray-100 px-1 rounded text-xs font-mono">$1</code>');
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushList(String(idx));
+      return;
+    }
+    // Bullet list
+    if (/^[-*•]\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^[-*•]\s+/, ''));
+      return;
+    }
+    // Numbered list
+    if (/^\d+\.\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^\d+\.\s+/, ''));
+      return;
+    }
+    flushList(String(idx));
+    // Heading
+    if (/^#{1,3}\s+/.test(trimmed)) {
+      const headingText = trimmed.replace(/^#{1,3}\s+/, '');
+      elements.push(
+        <p key={idx} className="text-sm font-bold text-[#0f2543] mt-2 mb-1"
+          dangerouslySetInnerHTML={{ __html: inlineMarkdown(headingText) }} />
+      );
+      return;
+    }
+    // Regular paragraph
+    elements.push(
+      <p key={idx} className="text-sm text-gray-800 leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: inlineMarkdown(trimmed) }} />
+    );
+  });
+  flushList('end');
+  return <div className="space-y-1">{elements}</div>;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'bot';
@@ -19,7 +81,7 @@ export default function ChatbotPage() {
     {
       id: '0',
       role: 'bot',
-      text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?',
+      text: t('chatbot.greeting') || "Bonjour ! Je suis l'assistant virtuel Chery. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date()
     }
   ]);
@@ -80,7 +142,7 @@ export default function ChatbotPage() {
       if (updated[0].id === '0' && updated[0].role === 'bot') {
         updated[0] = { 
           ...updated[0], 
-          text: t('chatbot.greeting') || 'Bonjour ! Je suis l&apos;assistant virtuel Chery. Comment puis-je vous aider aujourd&apos;hui ?' 
+          text: t('chatbot.greeting') || "Bonjour ! Je suis l'assistant virtuel Chery. Comment puis-je vous aider aujourd'hui ?"
         };
       }
       return updated;
@@ -179,7 +241,7 @@ export default function ChatbotPage() {
     'Comment prendre un rendez-vous ?',
     'Quels sont les modèles Chery disponibles ?',
     'Quelle est la garantie sur les véhicules ?',
-    'Où se trouve l&apos;agence la plus proche ?'
+    "Où se trouve l'agence la plus proche ?"
   ];
 
   const handleQuickQuestion = (question: string) => {
@@ -302,9 +364,9 @@ export default function ChatbotPage() {
                             <span className="text-xs text-gray-400">• {formatTime(message.timestamp)}</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                          {message.text}
-                        </p>
+                        <div className="text-sm text-gray-800 leading-relaxed">
+                          {renderMarkdown(message.text)}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -343,7 +405,7 @@ export default function ChatbotPage() {
                           <div className="w-2 h-2 bg-[#1b355d] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                           <div className="w-2 h-2 bg-[#0f2543] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                         </div>
-                        <span className="text-xs text-gray-600">En train d&apos;écrire...</span>
+                        <span className="text-xs text-gray-600">En train d'écrire...</span>
                       </div>
                     </div>
                   </div>

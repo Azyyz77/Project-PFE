@@ -32,11 +32,20 @@ exports.sendMessage = async (req, res) => {
     // Obtenir la réponse de l'AI
     const aiResponse = await aiAssistantService.getResponse(message, userContext);
 
-    res.json({
-      success: true,
-      reply: aiResponse,
-      timestamp: new Date().toISOString()
-    });
+    if (aiResponse && typeof aiResponse === 'object' && aiResponse.reply) {
+      res.json({
+        success: true,
+        reply: aiResponse.reply,
+        rag: aiResponse.rag || null,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.json({
+        success: true,
+        reply: aiResponse,
+        timestamp: new Date().toISOString()
+      });
+    }
 
   } catch (error) {
     console.error('[AI Controller] Erreur:', error);

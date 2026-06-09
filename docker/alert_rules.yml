@@ -1,0 +1,57 @@
+groups:
+  - name: backend_alerts
+    rules:
+      - alert: BackendDown
+        expr: up{job="sta-chery-api"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend inaccessible"
+
+      - alert: HighErrorRate
+        expr: >
+          (
+            sum(rate(http_requests_total{status_code=~"4..|5.."}[2m]))
+            /
+            sum(rate(http_requests_total[2m]))
+          ) * 100 > 10
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Taux erreurs > 10%"
+
+      - alert: HighMemoryUsage
+        expr: nodejs_heap_size_used_bytes > 150000000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap > 150MB"
+
+      - alert: EventLoopLag
+        expr: nodejs_eventloop_lag_seconds > 0.05
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Event loop lag > 50ms"
+
+  - name: infra_alerts
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis inaccessible"
+
+      - alert: PostgresDown
+        expr: up{job="postgresql"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL inaccessible"

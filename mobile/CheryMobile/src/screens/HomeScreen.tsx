@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { colors, spacing, shadows } from '../styles/theme';
 import SimpleSidebar from '../components/SimpleSidebar';
 
@@ -12,6 +13,7 @@ const { width } = Dimensions.get('window');
 export default function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { vehicles, appointments, notifications, loadBookingData } = useData();
+  const { t, language, setLanguage } = useLanguage();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -27,12 +29,13 @@ export default function HomeScreen({ navigation }: any) {
   }, []);
 
   const shortcuts = [
-    { id: 'Vehicles', title: 'Véhicules', icon: 'car-outline', color: '#3B82F6', bg: '#EFF6FF', screen: 'Vehicles' },
-    { id: 'Appointments', title: 'Rendez-vous', icon: 'calendar-outline', color: '#EF4444', bg: '#FEF2F2', screen: 'Appointments' },
-    { id: 'Complaints', title: 'Réclamations', icon: 'warning-outline', color: '#F97316', bg: '#FFF7ED', screen: 'Complaints' },
-    { id: 'RepairOrders', title: 'Commandes', icon: 'bag-handle-outline', color: '#10B981', bg: '#ECFDF5', screen: 'RepairOrders' },
-    { id: 'Invoices', title: 'Factures', icon: 'document-text-outline', color: '#A855F7', bg: '#FAF5FF', screen: 'Invoices' },
-    { id: 'Assurances', title: 'Assurances', icon: 'shield-checkmark-outline', color: '#3B82F6', bg: '#EFF6FF', screen: 'Assurances' },
+    { id: 'Vehicles', title: t('shortcuts.vehicles'), icon: 'car-outline', color: '#3B82F6', bg: '#EFF6FF', screen: 'Vehicles' },
+    { id: 'Appointments', title: t('shortcuts.appointments'), icon: 'calendar-outline', color: '#EF4444', bg: '#FEF2F2', screen: 'Appointments' },
+    { id: 'Complaints', title: t('shortcuts.complaints'), icon: 'warning-outline', color: '#F97316', bg: '#FFF7ED', screen: 'Complaints' },
+    { id: 'RepairOrders', title: t('shortcuts.repairOrders'), icon: 'bag-handle-outline', color: '#10B981', bg: '#ECFDF5', screen: 'RepairOrders' },
+    { id: 'Invoices', title: t('shortcuts.invoices'), icon: 'document-text-outline', color: '#A855F7', bg: '#FAF5FF', screen: 'Invoices' },
+    { id: 'Inspection', title: t('shortcuts.inspection'), icon: 'scan-outline', color: '#0EA5E9', bg: '#E0F2FE', screen: 'VehicleInspection' },
+    { id: 'Assurances', title: t('shortcuts.assurances'), icon: 'shield-checkmark-outline', color: '#3B82F6', bg: '#EFF6FF', screen: 'Assurances' },
   ];
 
   return (
@@ -46,9 +49,20 @@ export default function HomeScreen({ navigation }: any) {
               <Image source={require('../../assets/icon.png')} style={styles.avatarImg} />
             </View>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>STA Premium Service</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>STA Premium Service</Text>
         </View>
         <View style={styles.headerRight}>
+          <View style={styles.langSwitcher}>
+            {(['fr', 'en', 'ar'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[styles.langButton, language === lang && styles.langButtonActive]}
+                onPress={() => setLanguage(lang)}
+              >
+                <Text style={[styles.langText, language === lang && styles.langTextActive]}>{lang.toUpperCase()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
           <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Notifications')}>
             <Ionicons name="notifications-outline" size={20} color="#111827" />
             {notifications.filter((n: any) => !n.lu).length > 0 && <View style={styles.notifDot} />}
@@ -72,7 +86,7 @@ export default function HomeScreen({ navigation }: any) {
                 <Image source={require('../../assets/icon.png')} style={styles.searchAvatarImg} />
               </View>
               <View style={styles.searchPlaceholderBox}>
-                <Text style={styles.searchPlaceholderText}>Quel service recherchez-vous ?</Text>
+                <Text style={styles.searchPlaceholderText}>{t('common.searchPlaceholder')}</Text>
               </View>
             </View>
             
@@ -81,7 +95,7 @@ export default function HomeScreen({ navigation }: any) {
                 style={styles.searchActionBtn}
                 onPress={() => { loadBookingData(); navigation.navigate('BookAppointmentStep1'); }}>
                 <Feather name="calendar" size={18} color="#111827" />
-                <Text style={styles.searchActionText}>Prendre RDV</Text>
+                <Text style={styles.searchActionText}>{t('common.bookAppointment')}</Text>
               </TouchableOpacity>
               
               <View style={styles.verticalDivider} />
@@ -90,16 +104,16 @@ export default function HomeScreen({ navigation }: any) {
                 style={styles.searchActionBtn}
                 onPress={() => navigation.navigate('AddVehicle')}>
                 <Ionicons name="car-outline" size={20} color="#111827" />
-                <Text style={styles.searchActionText}>Ajouter véhicule</Text>
+                <Text style={styles.searchActionText}>{t('common.addVehicle')}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Mes Véhicules */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Mes Véhicules</Text>
+            <Text style={styles.sectionTitle}>{t('common.vehicles')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Vehicles')}>
-              <Text style={styles.seeAllText}>Voir tout</Text>
+              <Text style={styles.seeAllText}>{t('common.seeAll')}</Text>
             </TouchableOpacity>
           </View>
           
@@ -128,15 +142,15 @@ export default function HomeScreen({ navigation }: any) {
                 <View style={styles.emptyVehicleIconWrap}>
                   <Ionicons name="add" size={32} color={colors.primary} />
                 </View>
-                <Text style={styles.vehicleName}>Ajouter un véhicule</Text>
-                <Text style={styles.vehicleSub}>Enregistrez votre voiture</Text>
+                <Text style={styles.vehicleName}>{t('common.addVehicle')}</Text>
+                <Text style={styles.vehicleSub}>{t('common.vehicles')}</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
 
           {/* Raccourcis */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Raccourcis</Text>
+            <Text style={styles.sectionTitle}>{t('common.shortcuts')}</Text>
           </View>
           
           <View style={styles.shortcutsGrid}>
@@ -157,10 +171,8 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.supportCard}>
             <View style={styles.supportHeaderRow}>
               <View style={{ flex: 1, paddingRight: 10 }}>
-                <Text style={styles.supportTitle}>Besoin d'assistance ?</Text>
-                <Text style={styles.supportDesc}>
-                  Nos experts STA sont disponibles 24/7 pour vous accompagner dans vos démarches.
-                </Text>
+                <Text style={styles.supportTitle}>{t('common.supportTitle')}</Text>
+                <Text style={styles.supportDesc}>{t('common.supportDesc')}</Text>
               </View>
               <View style={styles.headsetWrap}>
                 <Ionicons name="headset" size={24} color="#111827" />
@@ -170,11 +182,11 @@ export default function HomeScreen({ navigation }: any) {
             <View style={styles.supportButtonsRow}>
               <TouchableOpacity style={styles.callBtn}>
                 <Ionicons name="call-outline" size={18} color="#111827" style={{ marginRight: 8 }} />
-                <Text style={styles.callBtnText}>Appeler</Text>
+                <Text style={styles.callBtnText}>{t('common.call')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.chatBtn} onPress={() => navigation.navigate('Chatbot')}>
                 <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.chatBtnText}>Chat Live</Text>
+                <Text style={styles.chatBtnText}>{t('common.chatLive')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -206,6 +218,7 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 1,
   },
   avatarWrap: {
     width: 36,
@@ -225,10 +238,38 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: '#111827',
+    maxWidth: 180,
   },
   headerRight: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    gap: 6,
+  },
+  langSwitcher: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    ...shadows.sm,
+  },
+  langButton: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginHorizontal: 2,
+  },
+  langButtonActive: {
+    backgroundColor: '#111827',
+  },
+  langText: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '600',
+  },
+  langTextActive: {
+    color: '#fff',
   },
   iconBtn: {
     width: 36,

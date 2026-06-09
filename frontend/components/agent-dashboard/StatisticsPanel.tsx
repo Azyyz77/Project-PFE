@@ -20,7 +20,7 @@ export default function StatisticsPanel({ token }: Props) {
   const loadStats = async () => {
     try {
       setLoading(true);
-      const data = await fetchStatistics(token);
+      const data = await fetchStatistics();
       setStats(data);
     } catch (error) {
       console.error(error);

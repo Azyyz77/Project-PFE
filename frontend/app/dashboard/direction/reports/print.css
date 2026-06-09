@@ -1,0 +1,104 @@
+/* Styles spécifiques pour l'impression et l'export PDF */
+
+@media print {
+  /* Masquer les éléments non nécessaires */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Réinitialiser les marges de la page */
+  @page {
+    margin: 1cm;
+    size: A4 portrait;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Éviter les sauts de page dans les cartes */
+  .card,
+  .recharts-wrapper {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Assurer que les graphiques sont visibles */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Améliorer la lisibilité des textes */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    color: #000 !important;
+  }
+
+  /* Forcer l'affichage des couleurs */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Éviter les sauts de page après les titres */
+  .card-header {
+    page-break-after: avoid;
+  }
+
+  /* Espacer les sections */
+  .space-y-6 > * + * {
+    margin-top: 1.5rem !important;
+  }
+
+  /* Améliorer l'affichage des tableaux */
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Garantir que les bordures sont visibles */
+  .border {
+    border-color: #e5e7eb !important;
+  }
+
+  /* Améliorer le contraste pour l'impression */
+  .text-slate-600,
+  .text-slate-500 {
+    color: #666 !important;
+  }
+
+  .text-slate-900 {
+    color: #000 !important;
+  }
+
+  /* Forcer l'affichage des backgrounds colorés */
+  .bg-green-50,
+  .bg-yellow-50,
+  .bg-rose-50,
+  .bg-slate-50 {
+    background-color: #f9fafb !important;
+  }
+
+  /* Réduire l'espace en haut et en bas */
+  .p-6 {
+    padding: 1rem !important;
+  }
+}
+
+/* Styles pour l'export PDF (non print media) */
+#report-content {
+  background: white;
+  color: #000;
+}
+
+#report-content .dark\:text-white,
+#report-content .dark\:text-slate-400,
+#report-content .dark\:text-slate-300 {
+  color: inherit;
+}
+
+#report-content .dark\:bg-slate-800,
+#report-content .dark\:bg-slate-700 {
+  background-color: transparent;
+}

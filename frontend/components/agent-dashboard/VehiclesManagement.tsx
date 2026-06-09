@@ -22,7 +22,7 @@ export default function VehiclesManagement({ token }: Props) {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      const data = await fetchVehicles(token, filter || undefined);
+      const data = await fetchVehicles(filter || undefined);
       setVehicles(data);
       if (selectedVehicle) {
         setSelectedVehicle(
@@ -51,12 +51,12 @@ export default function VehiclesManagement({ token }: Props) {
     try {
       if (action === 'validate') {
         if (!confirm('Valider ce véhicule ?')) return;
-        await validateVehicle(token, id);
+        await validateVehicle(id);
         toast.success('Véhicule validé');
       } else {
         const motif = prompt('Motif du refus ?');
         if (motif === null) return;
-        await rejectVehicle(token, id, motif);
+        await rejectVehicle(id, motif);
         toast.success('Véhicule refusé');
       }
       loadVehicles();

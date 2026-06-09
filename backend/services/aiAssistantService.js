@@ -6,6 +6,9 @@
 // ═══════════════════════════════════════════════════════════
 
 const axios = require('axios');
+const { getConnection } = require('../config/database');
+// Import anticipé : démarre la connexion PG dès le chargement du module
+const ragService = process.env.PG_URL ? require('./ragService') : null;
 
 class AIAssistantService {
   constructor() {
@@ -33,6 +36,35 @@ class AIAssistantService {
       model    : this.groqApiKey ? this.groqModel : this.huggingFaceModelId,
       ragActive: !!(process.env.PG_URL && process.env.OLLAMA_URL),
     });
+  }
+
+  isAgencyQuestion(userQuestion = '') {
+    return /\b(agence|agences|garage|garages|concessionnaire|succursale|succursales)\b/i.test(userQuestion);
+  }
+
+  async getAgenciesContext() {
+    try {
+      const pool = await getConnection();
+      const result = await pool.request().query(`
+        SELECT nom, ville, adresse, telephone
+        FROM Agence
+        ORDER BY ville, nom
+      `);
+
+      if (!result.recordset.length) {
+        return '';
+      }
+
+      const lines = ['=== Nos Agences ==='];
+      result.recordset.forEach((agency) => {
+        lines.push(`• ${agency.nom} | ${agency.ville} | ${agency.adresse || 'Adresse non renseignée'} | Tél: ${agency.telephone || 'Non renseigné'}`);
+      });
+
+      return lines.join('\n');
+    } catch (error) {
+      console.error('[AI Assistant] Erreur chargement agences:', error.message);
+      return '';
+    }
   }
 
   // ─────────────────────────────────────────────
@@ -147,9 +179,8 @@ Informations générales STA Chery:
 
       // ── Étape 1 : RAG Graph + Vector Search ──
       try {
-        if (process.env.PG_URL && process.env.OLLAMA_URL) {
-          const { searchContext } = require('./ragService');
-          const rag = await searchContext(userQuestion, context.userId || null);
+        if (ragService) {
+          const rag = await ragService.searchContext(userQuestion, context.userId || null);
 
           if (rag && rag.context) {
             context.ragContext    = rag.context;
@@ -161,20 +192,44 @@ Informations générales STA Chery:
             console.log('[AI Assistant] ⚠️  RAG sans résultat — réponse générale');
           }
         } else {
-          console.log('[AI Assistant] RAG non configuré (PG_URL ou OLLAMA_URL manquant)');
+          console.log('[AI Assistant] RAG non configuré (PG_URL ou GROQ_API_KEY manquant)');
         }
       } catch (ragErr) {
         console.log('[AI Assistant] RAG indisponible:', ragErr.message);
       }
 
+      // ── Complément local pour les questions sur les agences ──
+      if (this.isAgencyQuestion(userQuestion) && !context.ragContext) {
+        const agencyContext = await this.getAgenciesContext();
+        if (agencyContext) {
+          context.ragContext = agencyContext;
+          context.intent = context.intent || 'agence';
+          console.log('[AI Assistant] ✅ Contexte agences chargé depuis SQL Server');
+        }
+      }
+
       // ── Étape 2 : Appel LLM ──
+      // Préparer un petit objet RAG pour debug si demandé
+      const _ragDebug = {
+        intent: context.intent,
+        lang: context.lang,
+        ragContext: context.ragContext,
+        systemPrompt: context.systemPrompt,
+      };
+
       if (this.groqApiKey) {
-        return await this.getResponseFromGroq(userQuestion, context);
+        const aiReply = await this.getResponseFromGroq(userQuestion, context);
+        if (context.debug) return { reply: aiReply, rag: _ragDebug };
+        return aiReply;
       }
       if (this.huggingFaceApiUrl) {
-        return await this.getResponseFromSpace(userQuestion, context);
+        const aiReply = await this.getResponseFromSpace(userQuestion, context);
+        if (context.debug) return { reply: aiReply, rag: _ragDebug };
+        return aiReply;
       }
-      return await this.getResponseFromInference(userQuestion, context);
+      const aiReply = await this.getResponseFromInference(userQuestion, context);
+      if (context.debug) return { reply: aiReply, rag: _ragDebug };
+      return aiReply;
 
     } catch (error) {
       console.error('[AI Assistant] Erreur:', error.message);
@@ -341,21 +396,21 @@ Informations générales STA Chery:
    * Enregistrer un feedback négatif pour l'auto-apprentissage
    */
   async saveFeedback(question, answer, rating, correction = null) {
+    if (!process.env.PG_URL) return;
     try {
       const { Pool } = require('pg');
-      const pgPool = new Pool({ connectionString: process.env.PG_URL });
-      await pgPool.query(
+      if (!this._feedbackPool) {
+        this._feedbackPool = new Pool({ connectionString: process.env.PG_URL });
+      }
+      await this._feedbackPool.query(
         `INSERT INTO chat_feedback (question, answer, rating, correction)
          VALUES ($1, $2, $3, $4)`,
         [question, answer, rating, correction]
       );
-      await pgPool.end();
       console.log('[AI Assistant] 💾 Feedback sauvegardé');
 
-      // Si correction fournie → apprendre immédiatement
-      if (rating === -1 && correction) {
-        const { learnFromFeedbacks } = require('./ragService');
-        await learnFromFeedbacks();
+      if (rating === -1 && correction && ragService) {
+        await ragService.learnFromFeedbacks();
       }
     } catch (err) {
       console.error('[AI Assistant] Erreur sauvegarde feedback:', err.message);

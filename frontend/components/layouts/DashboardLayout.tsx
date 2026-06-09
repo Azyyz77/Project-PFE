@@ -155,14 +155,14 @@ function Topbar() {
 
 export default function DashboardLayout({ children }: Props) {
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950">
+    <div className="flex h-screen overflow-hidden bg-slate-950 w-full min-w-0 overflow-x-hidden">
       {/* Desktop Sidebar - only visible on lg screens */}
       <div className="hidden lg:block w-72 flex-shrink-0 bg-[#0c2c5d] border-r border-blue-900/50">
         <Sidebar />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         {/* Mobile Header with Menu */}
         <div className="lg:hidden flex items-center gap-4 h-14 px-4 bg-slate-900/80 backdrop-blur border-b border-slate-800 shrink-0">
           <Sheet>
@@ -182,7 +182,7 @@ export default function DashboardLayout({ children }: Props) {
         <Topbar />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

@@ -34,7 +34,11 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/unread-count`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/notifications/unread-count`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -57,7 +61,11 @@ export default function NotificationBell() {
 
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      const response = await fetch(`${API_URL}/api/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -81,7 +89,11 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/${id}/read`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      await fetch(`${API_URL}/api/notifications/${id}/read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -100,7 +112,11 @@ export default function NotificationBell() {
     if (!token) return;
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/notifications/mark-all-read`, {
+      const rawBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = rawBaseUrl.endsWith('/api')
+        ? rawBaseUrl.slice(0, -4)
+        : rawBaseUrl.replace(/\/$/, '');
+      await fetch(`${API_URL}/api/notifications/mark-all-read`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });

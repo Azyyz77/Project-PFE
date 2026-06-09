@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import './print.css';
 import {
   getGlobalStats,
   getRevenueStats,
@@ -48,6 +49,8 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
+import { exportToPDF, generateFilename } from '@/lib/utils/pdfExport';
+import { exportMultipleSheetsToExcel, prepareReportDataForExcel, generateExcelFilename } from '@/lib/utils/excelExport';
 
 // Couleurs pour les graphiques
 const COLORS = {
@@ -64,6 +67,7 @@ const PIE_COLORS = ['#e11d48', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4
 export default function DirectionReportsPage() {
   const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [dateDebut, setDateDebut] = useState('');
   const [dateFin, setDateFin] = useState('');
   
@@ -116,12 +120,56 @@ export default function DirectionReportsPage() {
     setTimeout(() => loadData(), 100);
   };
 
-  const handleExportPDF = () => {
-    toast.info('Export PDF en cours de développement');
+  const handleExportPDF = async () => {
+    try {
+      setIsExporting(true);
+      toast.info('Génération du PDF en cours...');
+      
+      const filename = generateFilename('rapport-performance');
+      await exportToPDF('report-content', {
+        filename,
+        title: 'Rapports de Performance - Direction',
+        orientation: 'portrait',
+        quality: 2,
+      });
+      
+      toast.success('PDF exporté avec succès!');
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      toast.error('Erreur lors de l\'export PDF');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  const handleExportExcel = () => {
-    toast.info('Export Excel en cours de développement');
+  const handleExportExcel = async () => {
+    try {
+      if (!globalStats || !revenueStats || !satisfactionStats || !performanceStats) {
+        toast.error('Données non disponibles pour l\'export');
+        return;
+      }
+
+      setIsExporting(true);
+      toast.info('Génération du fichier Excel en cours...');
+
+      const sheets = prepareReportDataForExcel(
+        globalStats,
+        revenueStats,
+        satisfactionStats,
+        performanceStats,
+        agencies
+      );
+
+      const filename = generateExcelFilename('rapport-performance');
+      exportMultipleSheetsToExcel(sheets, filename);
+
+      toast.success('Fichier Excel exporté avec succès!');
+    } catch (error) {
+      console.error('Erreur export Excel:', error);
+      toast.error('Erreur lors de l\'export Excel');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handlePrint = () => {
@@ -149,20 +197,37 @@ export default function DirectionReportsPage() {
           </p>
         </div>
         <div className="flex gap-2 print:hidden">
-          <Button variant="outline" onClick={handlePrint} className="gap-2">
+          <Button variant="outline" onClick={handlePrint} className="gap-2" disabled={isExporting}>
             <FileText className="h-4 w-4" />
             Imprimer
           </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
-            <Download className="h-4 w-4" />
-            PDF
+          <Button 
+            variant="outline" 
+            onClick={handleExportPDF} 
+            className="gap-2"
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                Génération...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                PDF
+              </>
+            )}
           </Button>
-          <Button variant="outline" onClick={handleExportExcel} className="gap-2">
+          <Button variant="outline" onClick={handleExportExcel} className="gap-2" disabled={isExporting}>
             <Download className="h-4 w-4" />
             Excel
           </Button>
         </div>
       </div>
+
+      {/* Contenu à exporter */}
+      <div id="report-content" className="space-y-6">
 
       {/* Filters */}
       <Card className="print:hidden">
@@ -195,6 +260,18 @@ export default function DirectionReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Titre du rapport (pour le PDF) */}
+      <div className="hidden print:block">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          Rapports de Performance
+        </h2>
+        {dateDebut && dateFin && (
+          <p className="text-slate-600 mb-4">
+            Période: du {new Date(dateDebut).toLocaleDateString('fr-FR')} au {new Date(dateFin).toLocaleDateString('fr-FR')}
+          </p>
+        )}
+      </div>
 
       {/* Executive Summary */}
       {globalStats && revenueStats && satisfactionStats && (
@@ -468,6 +545,7 @@ export default function DirectionReportsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function StatisticsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 w-full min-w-0 overflow-x-hidden">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -90,7 +90,7 @@ export default function StatisticsPage() {
                 <Star className="w-5 h-5 text-orange-500" />
                 Satisfaction Client
               </h3>
-              <div className="grid grid-cols-6 gap-4">
+              <div className="grid grid-cols-6 gap-4 min-w-0">
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
                   <p className="text-slate-400 text-sm">Total Avis</p>
                   <p className="text-2xl font-bold text-white">{feedbackStats.total_feedbacks}</p>
@@ -138,7 +138,7 @@ export default function StatisticsPage() {
                 <Clock className="w-5 h-5 text-orange-500" />
                 Performance Temporelle
               </h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-4 gap-4 min-w-0">
                 <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
                   <p className="text-slate-400 text-sm">RDV Terminés</p>
                   <p className="text-2xl font-bold text-white">{durationStats.total_rdv_termines}</p>

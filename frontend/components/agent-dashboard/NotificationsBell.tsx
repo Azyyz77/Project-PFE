@@ -28,7 +28,7 @@ export default function NotificationsBell() {
   const loadNotifications = async () => {
     try {
       if (token) {
-        const data = await fetchNotifications(token);
+        const data = await fetchNotifications();
         setNotifications(data);
       }
     } catch (error) {
@@ -41,7 +41,7 @@ export default function NotificationsBell() {
   const handleRead = async (id: number) => {
     try {
       if (!token) return;
-      await markNotificationRead(token, id);
+      await markNotificationRead(id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, lu: true } : n)));
     } catch (error) {
       console.error(error);
@@ -51,7 +51,7 @@ export default function NotificationsBell() {
   const handleReadAll = async () => {
     try {
       if (!token) return;
-      await markAllNotificationsRead(token);
+      await markAllNotificationsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, lu: true })));
     } catch (error) {
       console.error(error);

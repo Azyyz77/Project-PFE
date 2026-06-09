@@ -80,6 +80,17 @@ export default function ColorsPage() {
       return;
     }
 
+    const normalizedName = formData.nom.trim().toLowerCase();
+    const duplicate = colors.find((color) => {
+      if (editingColor && color.id === editingColor.id) return false;
+      return color.nom.trim().toLowerCase() === normalizedName;
+    });
+
+    if (duplicate) {
+      toast.error('Cette couleur existe deja');
+      return;
+    }
+
     try {
       if (editingColor) {
         await updateColor(editingColor.id, formData);
@@ -91,7 +102,8 @@ export default function ColorsPage() {
       handleCloseModal();
       loadColors();
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la sauvegarde');
+      const message = error?.response?.data?.message || error?.message || 'Erreur lors de la sauvegarde';
+      toast.error(message);
       console.error(error);
     }
   };
@@ -106,7 +118,8 @@ export default function ColorsPage() {
       toast.success('Couleur supprimée avec succès');
       loadColors();
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la suppression');
+      const message = error?.response?.data?.message || error?.message || 'Erreur lors de la suppression';
+      toast.error(message);
       console.error(error);
     }
   };

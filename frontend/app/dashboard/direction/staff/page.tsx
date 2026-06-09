@@ -139,9 +139,13 @@ export default function DirectionStaffPage() {
   // Statistiques globales
   const totalAgents = filteredAgents.length;
   const totalRdv = filteredAgents.reduce((sum, a) => sum + a.total_rdv, 0);
-  const avgNote = filteredAgents.length > 0
-    ? filteredAgents.reduce((sum, a) => sum + (a.note_moyenne || 0), 0) / filteredAgents.length
+  
+  // Calculer la moyenne des notes en excluant les agents sans note
+  const agentsWithNotes = filteredAgents.filter(a => a.note_moyenne != null && a.note_moyenne > 0);
+  const avgNote = agentsWithNotes.length > 0
+    ? agentsWithNotes.reduce((sum, a) => sum + a.note_moyenne, 0) / agentsWithNotes.length
     : 0;
+  
   const totalFeedbacks = filteredAgents.reduce((sum, a) => sum + a.total_feedbacks, 0);
 
   return (
@@ -370,11 +374,12 @@ export default function DirectionStaffPage() {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart
                   data={filteredAgents
+                    .filter((agent) => agent.duree_moyenne_min != null && agent.duree_moyenne_min > 0)
                     .sort((a, b) => b.total_rdv - a.total_rdv)
                     .slice(0, 10)
                     .map((agent) => ({
                       nom: agent.agent_nom.length > 12 ? agent.agent_nom.substring(0, 12) + '...' : agent.agent_nom,
-                      duree: Math.round(agent.duree_moyenne_min || 0),
+                      duree: Math.round(agent.duree_moyenne_min),
                     }))}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                 >

@@ -1,0 +1,428 @@
+/* Chatbot Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Smooth scrollbar for chatbot */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Client sidebar scrollbar */
+.client-sidebar-scroll::-webkit-scrollbar {
+  width: 12px;
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  border: 3px solid rgba(11, 31, 58, 0.95);
+}
+
+.client-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.client-sidebar-scroll {
+  scrollbar-gutter: stable both-edges;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.12);
+}
+
+.client-sidebar {
+  scroll-behavior: smooth;
+  transition: background-color 200ms ease;
+}
+
+@keyframes clientPageFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes clientReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notificationPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.client-page-transition {
+  animation: clientPageFade 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-page-enter {
+  animation: clientReveal 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim) {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: clientReveal 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(1) {
+  animation-delay: 60ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.client-page-stagger > * > *:not(.client-reveal):not(.client-page-no-anim):nth-child(4) {
+  animation-delay: 240ms;
+}
+
+.client-reveal {
+  animation: clientReveal 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-reveal-delay-1 {
+  animation-delay: 100ms;
+}
+
+.client-reveal-delay-2 {
+  animation-delay: 200ms;
+}
+
+.client-reveal-delay-3 {
+  animation-delay: 300ms;
+}
+
+.client-reveal-delay-4 {
+  animation-delay: 400ms;
+}
+
+.client-card-hover {
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+.notification-panel-animate {
+  transform-origin: top right;
+  animation: notificationPanelIn 240ms ease-out both;
+  will-change: transform, opacity;
+}
+
+.notification-item-animate {
+  animation: clientReveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.client-slide-left {
+  animation: slideInFromLeft 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-slide-right {
+  animation: slideInFromRight 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.client-scale-in {
+  animation: scaleIn 350ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Page transition wrapper */
+.page-wrapper {
+  animation: clientPageFade 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-page-transition,
+  .client-reveal,
+  .client-slide-left,
+  .client-slide-right,
+  .client-scale-in,
+  .page-wrapper,
+  .client-page-stagger > * > *:not(.client-page-no-anim),
+  .client-page-enter,
+  .notification-panel-animate,
+  .notification-item-animate {
+    animation: none;
+  }
+  .client-card-hover {
+    transition: none;
+  }
+  .client-card-hover:hover {
+    transform: none;
+  }
+  .client-sidebar {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
+
+/* Auth Form Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes labelGlow {
+  0%, 100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+.animate-label-glow {
+  animation: labelGlow 4s ease-in-out infinite;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
+}
+
+.animation-delay-600 {
+  animation-delay: 600ms;
+}
+
+.animation-delay-700 {
+  animation-delay: 700ms;
+}
+
+.animation-delay-800 {
+  animation-delay: 800ms;
+}
+
+/* Disable animations for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-slide-down,
+  .animate-slide-up,
+  .animate-shake,
+  .animate-pulse-slow,
+  .animate-label-glow {
+    animation: none;
+  }
+}
+
+/* Shimmer animation for dashboard */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Custom scrollbar for appointment modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #0f2543, #1b355d);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #1b355d, #0f2543);
+}
+
+/* Fade-in animation for appointment modal */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}

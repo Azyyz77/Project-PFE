@@ -4,11 +4,13 @@ import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { forgotPassword } from '../../lib/api/auth';
+import { validateEmail } from '../../lib/auth-utils';
 import { AuthThemeShell } from '@/components/auth/AuthThemeShell';
 import { Alert } from '@/components/ui/alert';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -16,6 +18,14 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    const mailErr = validateEmail(email);
+    if (mailErr) {
+      setEmailError(mailErr);
+      return;
+    }
+    
+    setEmailError('');
     setIsSubmitting(true);
 
     try {
@@ -82,10 +92,20 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-slate-800 bg-white/5 px-3 py-2 text-slate-100 placeholder:text-slate-400 shadow-sm focus:border-red-500 focus:outline-none focus:ring-red-500/20 sm:text-sm"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
+                  className={`mt-1 block w-full rounded-lg border bg-white/5 px-3 py-2 text-slate-100 placeholder:text-slate-400 shadow-sm focus:outline-none sm:text-sm ${
+                    emailError 
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' 
+                      : 'border-slate-800 focus:border-red-500 focus:ring-red-500/20'
+                  }`}
                   placeholder="votre.email@exemple.com"
                 />
+                {emailError && (
+                  <p className="mt-1 text-xs text-red-400">{emailError}</p>
+                )}
               </div>
 
               <button

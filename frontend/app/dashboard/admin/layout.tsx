@@ -88,6 +88,11 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
     icon: <Car className="w-5 h-5" />,
   },
   {
+    label: 'Versions',
+    href: '/dashboard/admin/versions',
+    icon: <Car className="w-5 h-5" />,
+  },
+  {
     label: 'Couleurs',
     href: '/dashboard/admin/colors',
     icon: <Sparkles className="w-5 h-5" />,
@@ -405,7 +410,7 @@ export default function AdminLayout({
   const salutation = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] w-full min-w-0 overflow-x-hidden">
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -456,7 +461,7 @@ export default function AdminLayout({
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={pathname}
-            className="flex-1 overflow-auto"
+            className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}

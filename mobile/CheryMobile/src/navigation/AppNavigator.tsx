@@ -28,6 +28,8 @@ import InvoicesScreen from '../screens/InvoicesScreen';
 import InvoiceDetailScreen from '../screens/InvoiceDetailScreen';
 import RepairOrdersScreen from '../screens/RepairOrdersScreen';
 import RepairOrderDetailScreen from '../screens/RepairOrderDetailScreen';
+import AssurancesScreen from '../screens/AssurancesScreen';
+import VehicleInspectionScreen from '../screens/VehicleInspectionScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -78,6 +80,8 @@ export default function AppNavigator() {
             <Stack.Screen name="Notifications" component={NotificationsScreen} />
             <Stack.Screen name="AppointmentFeedback" component={AppointmentFeedbackScreen} />
             <Stack.Screen name="Chatbot" component={ChatbotScreen} />
+            <Stack.Screen name="Assurances" component={AssurancesScreen} />
+            <Stack.Screen name="VehicleInspection" component={VehicleInspectionScreen} />
           </>
         ) : (
           <>

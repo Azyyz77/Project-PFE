@@ -94,8 +94,9 @@ export default function SubTypesPage() {
         loadSubTypes(selectedType.id);
         loadTypes(); // Refresh counts
       }
-    } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
+    } catch (error: any) {
+      const message = error?.response?.data?.error || 'Erreur lors de la sauvegarde';
+      toast.error(message);
     }
   };
 
@@ -109,8 +110,9 @@ export default function SubTypesPage() {
         loadSubTypes(selectedType.id);
         loadTypes(); // Refresh counts
       }
-    } catch (error) {
-      toast.error('Erreur lors de la suppression');
+    } catch (error: any) {
+      const message = error?.response?.data?.error || 'Erreur lors de la suppression';
+      toast.error(message);
     }
   };
 

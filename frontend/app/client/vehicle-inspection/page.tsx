@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { getMeta, drawBoundingBoxes, formatPredictions } from "@/lib/damageUtils";
 import type { FormattedPrediction, RoboflowResponse } from "@/lib/damageUtils";
+import { toast } from "sonner";
 
 // ─── URL backend ──────────────────────────────────────────────────────────────
 const BACKEND_URL =
@@ -100,6 +101,286 @@ export default function InspectionPage() {
         critique: formatted.some((d) => d.severity === "Critique"),
       }
     : null;
+
+  const handleExportPDF = useCallback(() => {
+    if (!result || !reportMeta) {
+      toast.error("Aucun rapport disponible à exporter");
+      return;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rapport d'Inspection Véhicule</title>
+        <style>
+          @page { size: A4; margin: 16mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .page {
+            width: 100%;
+            max-width: 100%;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid #111827;
+            margin-bottom: 22px;
+          }
+          .brand {
+            font-size: 12px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #1d4f98;
+            font-weight: 700;
+            margin-bottom: 6px;
+          }
+          h1 {
+            margin: 0;
+            font-size: 26px;
+            line-height: 1.1;
+          }
+          .subtitle {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+          }
+          .meta {
+            text-align: right;
+            font-size: 12px;
+            color: #6b7280;
+            min-width: 240px;
+          }
+          .meta strong {
+            color: #111827;
+          }
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+          }
+          .card {
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 14px;
+            background: #f9fafb;
+          }
+          .card-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+          }
+          .card-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+          }
+          .card-value.critical { color: #b91c1c; }
+          .card-value.warning { color: #b45309; }
+          .card-value.success { color: #047857; }
+          .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 22px 0 10px;
+          }
+          .image-box {
+            margin-bottom: 18px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f9fafb;
+          }
+          .image-box img {
+            display: block;
+            width: 100%;
+            max-height: 320px;
+            object-fit: contain;
+            background: #fff;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+          }
+          th, td {
+            border: 1px solid #d1d5db;
+            padding: 9px 10px;
+            text-align: left;
+            vertical-align: top;
+          }
+          th {
+            background: #e5e7eb;
+            font-weight: 700;
+          }
+          tr:nth-child(even) td {
+            background: #f9fafb;
+          }
+          .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+          }
+          .footer {
+            margin-top: 28px;
+            padding-top: 10px;
+            border-top: 1px solid #d1d5db;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 11px;
+            color: #6b7280;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="header">
+            <div>
+              <div class="brand">Système SAV</div>
+              <h1>Rapport d'Inspection Véhicule</h1>
+              <div class="subtitle">Détection IA Roboflow · YOLOv11 · rapport de dommage véhicule</div>
+            </div>
+            <div class="meta">
+              <div><strong>Date:</strong> ${reportMeta.date}</div>
+              <div><strong>Fichier:</strong> ${reportMeta.fichier || "-"}</div>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="card">
+              <div class="card-label">Dommages détectés</div>
+              <p class="card-value ${reportMeta.total > 0 ? (reportMeta.critique ? 'critical' : 'warning') : 'success'}">${reportMeta.total}</p>
+            </div>
+            <div class="card">
+              <div class="card-label">Statut global</div>
+              <p class="card-value ${reportMeta.critique ? 'critical' : reportMeta.total > 0 ? 'warning' : 'success'}">${reportMeta.critique ? 'CRITIQUE' : reportMeta.total > 0 ? 'MODÉRÉ' : 'RAS'}</p>
+            </div>
+            <div class="card">
+              <div class="card-label">Modèle IA</div>
+              <p class="card-value">YOLOv11</p>
+            </div>
+          </div>
+
+          ${preview ? `
+            <div class="image-box">
+              <img src="${preview}" alt="Véhicule inspecté" />
+            </div>
+          ` : ''}
+
+          ${formatted.length > 0 ? `
+            <div class="section-title">Détail des dommages détectés</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Classe IA</th>
+                  <th>Sévérité</th>
+                  <th>Confiance</th>
+                  <th>Position</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${formatted.map((d, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${d.label}</strong></td>
+                    <td>${d.class}</td>
+                    <td><span class="badge" style="background:${d.severity === 'Critique' ? '#fee2e2' : d.severity === 'Moyenne' ? '#fef3c7' : '#dcfce7'}; color:${d.severity === 'Critique' ? '#991b1b' : d.severity === 'Moyenne' ? '#92400e' : '#166534'};">${d.severity}</span></td>
+                    <td>${d.confidence}%</td>
+                    <td>x:${d.x} y:${d.y}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : `
+            <div class="section-title">Détail des dommages détectés</div>
+            <div class="card">Aucun dommage détecté lors de cette inspection.</div>
+          `}
+
+          <div class="footer">
+            <span>Document généré automatiquement par le système SAV</span>
+            <span>${reportMeta.date}</span>
+          </div>
+        </div>
+        <script>
+          window.onload = function () {
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    // Use an invisible iframe to avoid browser popup blockers
+    try {
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.style.visibility = "hidden";
+      iframe.setAttribute("aria-hidden", "true");
+      document.body.appendChild(iframe);
+
+      const idoc = iframe.contentWindow?.document;
+      if (!idoc) {
+        document.body.removeChild(iframe);
+        toast.error("Impossible de créer le document d'impression");
+        return;
+      }
+
+      idoc.open();
+      idoc.write(htmlContent);
+      idoc.close();
+
+      const tryPrint = () => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (err) {
+          toast.error("Erreur lors de l'impression");
+        } finally {
+          setTimeout(() => {
+            if (iframe.parentNode) document.body.removeChild(iframe);
+          }, 600);
+        }
+      };
+
+      // Some browsers may not fire onload for about:blank writes; use onload + timeout fallback
+      let printed = false;
+      iframe.onload = () => {
+        if (printed) return;
+        printed = true;
+        tryPrint();
+      };
+      // Fallback: print after a short delay
+      setTimeout(() => {
+        if (!printed) tryPrint();
+      }, 350);
+    } catch (err) {
+      toast.error("Erreur lors de la génération du PDF");
+    }
+  }, [formatted, preview, reportMeta, result]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -303,7 +584,7 @@ export default function InspectionPage() {
 
             {/* Bouton rapport PDF */}
             <button
-              onClick={() => window.print()}
+              onClick={handleExportPDF}
               className="w-full rounded-xl border border-slate-200 bg-gradient-to-r from-[#0f2543] to-[#1d4f98] py-3 text-sm font-bold tracking-widest uppercase text-white transition-all hover:shadow-lg"
             >
               🖨️  Générer le rapport PDF

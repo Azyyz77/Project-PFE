@@ -15,7 +15,7 @@ export function validateEmail(email: string): string | null {
 
 export function validatePassword(password: string): string | null {
   if (!password) return 'Le mot de passe est obligatoire';
-  if (password.length < 6) return 'Le mot de passe doit contenir au least 6 caractères';
+  if (password.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères';
   return null;
 }
 
@@ -27,7 +27,7 @@ export function validatePhone(phone: string): string | null {
 
 export function validateName(name: string, fieldName: string = 'Nom'): string | null {
   if (!name.trim()) return `${fieldName} est obligatoire`;
-  if (name.trim().length < 2) return `${fieldName} doit contenir au least 2 caractères`;
+  if (name.trim().length < 2) return `${fieldName} doit contenir au moins 2 caractères`;
   return null;
 }
 

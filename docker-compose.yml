@@ -1,0 +1,186 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: projet_PFE_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Daligh2004"
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./backup:/var/opt/mssql/backup
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Daligh2004' -No -Q 'SELECT 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - projet-pfe
+
+  db-restore:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: projet_PFE_db_restore
+    user: root
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ACCEPT_EULA: "Y"
+      DB_SERVER: sqlserver
+      DB_USER: sa
+      DB_PASSWORD: Daligh2004
+      DB_NAME: STA_SAV_DB
+      BACKUP_FILE: /var/opt/mssql/backup/STA_SAV_DB.bak
+    volumes:
+      - ./backup:/var/opt/mssql/backup:ro
+      - ./docker/restore-db.sh:/scripts/restore-db.sh:ro
+    command: ["/bin/bash", "/scripts/restore-db.sh"]
+    restart: "no"
+    networks:
+      - projet-pfe
+
+  redis:
+    image: redis:7-alpine
+    container_name: projet_PFE_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - projet-pfe
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: projet_PFE_redis_exporter
+    environment:
+      REDIS_ADDR: redis://projet_PFE_redis:6379
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - projet-pfe
+
+  pgvector:
+    image: pgvector/pgvector:pg17
+    container_name: projet_PFE_pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ragdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dali2004
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ./docker/init-pgvector.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ragdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - projet-pfe
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: projet_PFE_postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: postgresql://postgres:dali2004@pgvector:5432/ragdb?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      pgvector:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - projet-pfe
+
+  backend:
+    build: ./backend
+    container_name: projet_PFE_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DB_SERVER: sqlserver
+      DB_PORT: 1433
+      DB_NAME: STA_SAV_DB
+      DB_USER: sa
+      DB_PASSWORD: Daligh2004
+      JWT_SECRET: "dev_jwt_secret_change_me"
+      FRONTEND_URL: "http://localhost:3001"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PG_URL: "postgresql://postgres:dali2004@pgvector:5432/ragdb"
+      GROQ_API_KEY: "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"
+      OLLAMA_URL: "http://host.docker.internal:11434"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      db-restore:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+      pgvector:
+        condition: service_healthy
+    volumes:
+      - ./backend/.wwebjs_auth:/app/.wwebjs_auth
+      - ./backend/uploads:/app/uploads
+    networks:
+      - projet-pfe
+
+  frontend:
+    build: ./frontend
+    container_name: projet_PFE_frontend
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - projet-pfe
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/alert_rules.yml:/etc/prometheus/alert_rules.yml  
+
+    restart: unless-stopped
+    networks:
+      - projet-pfe
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - projet-pfe
+
+volumes:
+  sqlserver_data:
+  grafana_data:
+  pgvector_data:
+
+networks:
+  projet-pfe:
+    driver: bridge

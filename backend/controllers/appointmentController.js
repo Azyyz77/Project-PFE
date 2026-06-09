@@ -148,26 +148,6 @@ const createAppointment = async (req, res) => {
       return res.status(400).json({ error: 'Ce creneau est hors plage horaire de l\'agence.' });
     }
 
-    const occupancyAtSameHour = await pool.request()
-      .input('agence_id', sql.BigInt, agencyId)
-      .input('date_ref', sql.VarChar(10), dateRef)
-      .input('hour_ref', sql.Int, hourRef)
-      .query(`
-        SELECT COUNT(*) AS total
-        FROM RendezVous
-        WHERE agence_id = @agence_id
-          AND CAST(date_heure AS DATE) = CONVERT(date, @date_ref, 23)
-          AND DATEPART(HOUR, date_heure) = @hour_ref
-          AND statut NOT IN ('ANNULE', 'NO_SHOW')
-      `);
-
-    const used = Number(occupancyAtSameHour.recordset?.[0]?.total || 0);
-    if (used >= capacity) {
-      return res.status(409).json({
-        error: `Ce creneau est complet (${used}/${capacity}). Choisissez une autre heure.`
-      });
-    }
-
     const vehicleCheck = await pool.request()
       .input('client_id', sql.BigInt, clientId)
       .input('vehicule_id', sql.BigInt, vehicleId)
@@ -207,22 +187,38 @@ const createAppointment = async (req, res) => {
       console.log('No package IDs provided or invalid format');
     }
 
-    // Now create the appointment ONLY if validation passed
+    // Atomic check + insert: UPDLOCK+HOLDLOCK prevent two concurrent requests from
+    // both seeing the slot as available and both inserting (TOCTOU race condition).
     const created = await pool.request()
       .input('client_id', sql.BigInt, clientId)
       .input('vehicule_id', sql.BigInt, vehicleId)
       .input('agence_id', sql.BigInt, agencyId)
+      .input('date_ref', sql.VarChar(10), dateRef)
+      .input('hour_ref', sql.Int, hourRef)
+      .input('capacity', sql.Int, capacity)
       .input('date_heure_str', sql.VarChar(19), normalizedDateTime)
       .input('description', sql.NVarChar(sql.MAX), description || null)
       .input('duree_est', sql.Int, estimatedDuration)
       .query(`
-        -- Parse the datetime string
+        BEGIN TRANSACTION;
+
+        DECLARE @current_count INT;
+        SELECT @current_count = COUNT(*)
+        FROM RendezVous WITH (UPDLOCK, HOLDLOCK)
+        WHERE agence_id = @agence_id
+          AND CAST(date_heure AS DATE) = CONVERT(date, @date_ref, 23)
+          AND DATEPART(HOUR, date_heure) = @hour_ref
+          AND statut NOT IN ('ANNULE', 'NO_SHOW');
+
+        IF @current_count >= @capacity
+        BEGIN
+          ROLLBACK;
+          SELECT NULL AS rdv_id, @current_count AS used_count, 0 AS success;
+          RETURN;
+        END
+
         DECLARE @date_heure datetime2;
         SET @date_heure = CAST(@date_heure_str AS datetime2);
-
-        -- Debug: Check the parsed date
-        PRINT 'Parsed date: ' + CONVERT(varchar, @date_heure, 120);
-        PRINT 'Current date: ' + CONVERT(varchar, GETDATE(), 120);
 
         INSERT INTO RendezVous (client_id, vehicule_id, agence_id, date_heure, description, duree_estimee, statut)
         VALUES (@client_id, @vehicule_id, @agence_id, @date_heure, @description, @duree_est, 'PLANIFIE');
@@ -239,10 +235,20 @@ const createAppointment = async (req, res) => {
           @newId
         );
 
-        SELECT @newId AS rdv_id;
+        COMMIT;
+        SELECT @newId AS rdv_id, @current_count AS used_count, 1 AS success;
       `);
 
-    const rdvId = created.recordset?.[0]?.rdv_id;
+    const resultRow = created.recordset?.[0];
+
+    if (!resultRow || resultRow.success === 0) {
+      const used = resultRow?.used_count ?? capacity;
+      return res.status(409).json({
+        error: `Ce creneau est complet (${used}/${capacity}). Choisissez une autre heure.`
+      });
+    }
+
+    const rdvId = resultRow.rdv_id;
 
     if (!rdvId) {
       return res.status(500).json({ error: 'Creation du rendez-vous echouee' });
