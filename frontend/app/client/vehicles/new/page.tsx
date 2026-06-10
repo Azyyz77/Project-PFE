@@ -757,7 +757,7 @@ export default function NewVehiclePage() {
                       <button
                         type="button"
                         onClick={() => removeImage('carte_grise')}
-                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
+                        className="absolute top-2 right-2 bg-Blue-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg transition-colors"
                         title={t('vehicles.removeImage')}
                       >
                         ✕

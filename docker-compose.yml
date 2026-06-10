@@ -115,7 +115,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PG_URL: "postgresql://postgres:dali2004@pgvector:5432/ragdb"
-      GROQ_API_KEY: "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"
+      GROQ_API_KEY: "your_groq_api_key_here"
       OLLAMA_URL: "http://host.docker.internal:11434"
     depends_on:
       sqlserver:

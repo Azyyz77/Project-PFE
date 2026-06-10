@@ -5,7 +5,7 @@
 
 import axios, { AxiosError } from 'axios';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 function headers(token: string) {
   return { Authorization: `Bearer ${token}` };
